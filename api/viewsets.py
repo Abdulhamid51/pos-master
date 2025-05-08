@@ -13,6 +13,8 @@ import json
 from django.conf import settings
 from main.sms_sender import sendSmsOneContact
 from rest_framework.decorators import action, api_view, permission_classes
+# from rest_framework.decorators import api_view
+# 
 
 
 class CategoryViewset(viewsets.ModelViewSet):
@@ -2081,7 +2083,6 @@ class DesktopKassaViewSet(viewsets.ModelViewSet):
     http_method_names = ['post']
 
 
-from rest_framework.decorators import api_view
 
 
 @api_view(['GET'])
@@ -2215,4 +2216,3 @@ def chiqim_add(request):
     chiqim.save()
     # kassa_var.save()
     return Response({'messages': 'succes'})
-

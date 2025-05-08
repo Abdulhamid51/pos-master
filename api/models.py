@@ -1109,12 +1109,16 @@ class PayHistory(models.Model):
     currency = models.FloatField(default=0)
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
     date = models.DateTimeField(default=timezone.now)
+
+    kassa_after = models.FloatField(default=0)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+
     som_after = models.FloatField(default=0)
     dollar_after = models.FloatField(default=0)
     money_circulation = models.ForeignKey('MoneyCirculation', on_delete=models.CASCADE, null=True, blank=True)
     deliver_all_payment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, null=True, blank=True)
     deliver_pay_History = models.ForeignKey(DeliverPayHistory, on_delete=models.CASCADE, null=True, blank=True)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     summa = models.IntegerField(default=0)

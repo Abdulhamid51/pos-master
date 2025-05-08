@@ -308,18 +308,33 @@
                                                     
                                                         </div>
                                                         <div class="modal-body">
-                                                            <input type="hidden" value="{{kirim.id}}" name="kirim_id">
-                                                            <label>Qancha (so'm)</label>
-                                                            <input value="{{kirim.qancha_som}}" class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                                                            <label>Plastik</label>
-                                                            <input value="{{kirim.plastik}}" class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
-                                                            <label>Qancha (dollar)</label>
-                                                            <input value="{{kirim.qancha_dol}}" class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                                                            <label>Qancha (hisob raqam)</label>
-                                                            <input value="{{kirim.qancha_hisob_raqamdan}}" class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
-                                                            <!-- <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br> -->
-                                                            <label>Izoh</label>
-                                                            <textarea value='{{kirim.izox}}' name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{kirim.izox}}"></textarea>
+                                                            <label for="">Mijoz (majburiy emas)</label>
+                                                            <select name="debtor" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for mijoz in debtors %}
+                                                                    <option value="{{ mijoz.id }}">{{ mijoz.fio }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Valyuta</label>
+                                                            <select name="valuta" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for v in valuta %}
+                                                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Kassa</label>
+                                                            <select name="cash" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for k in cashes %}
+                                                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Kurs</label>
+                                                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
                                                             
                                                         </div>
                                                         <div class="modal-footer">
@@ -670,10 +685,23 @@
                                 {% endfor %}
                             </select>
                             <br>
-                            <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                            <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
-                            <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                            <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
+                            <label for="">Valyuta</label>
+                            <select name="valuta" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for v in valuta %}
+                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Kassa</label>
+                            <select name="cash" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for k in cashes %}
+                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Kurs</label>
                             <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
                             <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
                             

@@ -2883,6 +2883,8 @@ def kassa(request):
         'expanse_category': FilialExpenseCategory.objects.all(),
         'delivers': Deliver.objects.all(),
         'debtors': Debtor.objects.all(),
+        'valuta': Valyuta.objects.all(),
+        'cashes': KassaNew.objects.all(),
         'data':data,
         'filters': {
             'start_date': start_date,
