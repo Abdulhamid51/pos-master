@@ -12,7 +12,16 @@
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
-    
+    <style>
+        i {
+            color:black !important
+        }
+        button {
+            background-color: white !important;
+            border-color: white !important;
+        }
+
+    </style>
 {% endblock css %}
 {% block content %}
         <div id="content" class="main-content">
@@ -97,17 +106,18 @@
                                             <th>Tahrirlash</th>
                                         </tr>
                                     </thead>
+                                  
                                     <tbody> 
                                         {% for debtors in debtors %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>
-                                                    <a href="{% url 'debtorhistory' %}?d={{ debtors.id }}">
+                                                    <a href="{% url 'debtor_detail'  debtors.id  %}">
                                                         <p class="user-name">{{ debtors.fio }}</p>
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
+                                                    <button style="background-color: white;" type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalGive{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></button>

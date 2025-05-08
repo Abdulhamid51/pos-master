@@ -2431,6 +2431,9 @@ def debtor_pay(request, id):
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment)
+    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
+    obj.summa += summa 
+    obj.save()
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_give(request, id):
@@ -2438,18 +2441,58 @@ def debtor_give(request, id):
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment, type_pay=2)
+    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
+    obj.summa -= summa 
+    obj.save()
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_detail(request, id):
     valyuta = Valyuta.objects.all()
     debt_shot = CustomerDebt.objects.filter(customer_id=id)
-    pay = PayHistory.objects.filter(debtor_id=id)
+    debtor = Debtor.objects.get(id=id)
+    today = datetime.now().date()
 
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+   
+    pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
+    shop = Shop.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
+
+    infos = sorted(chain(pay, shop), key=lambda instance: instance.date)
+    data = []
+    for i in infos:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+            
+        elif i._meta.model_name == 'shop':
+            dt['type_payment'] = 'Pul olindi'
+            dt['pay_summa'] = i.baskets_total_price
+
+        data.append(dt)
     summa_total_for_valyuta = []
     for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        pay_shop_summa = shop.filter(valyuta=val).annotate(summa=Sum(F('cart__price') * F('cart__quantity'), output_field=IntegerField())).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
         dt_sum_valyuta = {
             'valyuta':val.id,
-            'pay_pay_summa':pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+            'pay_pay_summa':pay_summa + pay_shop_summa,
             'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
         }
         summa_total_for_valyuta.append(dt_sum_valyuta)
@@ -2458,6 +2501,9 @@ def debtor_detail(request, id):
         'summa_total_for_valyuta':summa_total_for_valyuta,
         'debt_shot':debt_shot,
         'pay':pay,
+        'data':data,
+        'filters':filters,
+        'debtor':debtor,
     }
     return render(request, 'debtor_detail.html', context)
 
@@ -5291,13 +5337,6 @@ def add_product_price_type(request):
 
 
 
-
-
-
-
-
-
-
 def top_delivers(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -6851,7 +6890,7 @@ def b2b_shop_view(request):
     filial = Filial.objects.all()
     user_profile = UserProfile.objects.filter(user=request.user,staff=6)
     if user_profile:
-        filial_ids = user_profiles.values_list('filial__id', flat=True)
+        filial_ids = user_profile.values_list('filial__id', flat=True)
         filial = filial.filter(id__in=filial_ids)
        
     context = {
@@ -6995,6 +7034,7 @@ def product_remove_quantity(request, shop_id):
     obj.payment_date = shop.debt_return
     obj.from_shop = True
     obj.save()
+    debtor.refresh_debt
     return JsonResponse({'success': True})
     
 
@@ -7022,7 +7062,7 @@ def b2b_shop_ajax(request, product_id):
         'price_type':PriceType.objects.all(),
         'valyuta' : Valyuta.objects.all(),
         'product_id':product_id,
-        'kassa':KassaMerge.objects.filter(valyuta=shop.valyuta, kassa__filial=shop.filial),
+        'kassa':KassaMerge.objects.filter(kassa__filial=shop.filial),
         'shop':shop,
         'kurs':kurs.som if kurs else 0,
         'carts':carts,
@@ -7070,7 +7110,7 @@ def b2b_shop_ajax_add_one(request, product_id):
         obj.save()
         sh.is_finished = True
         sh.save()
-        sh.debtor.refresh_debt()
+    sh.debtor.refresh_debt()
     return JsonResponse({'success': True})
 
 def b2b_shop_ajax_cart_delete(request, product_id):

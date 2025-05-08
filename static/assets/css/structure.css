@@ -1058,7 +1058,7 @@ code {
 
 @media (min-width: 992px) {
   header.navbar {
-    padding: 0 0 0 207px; }
+    padding: 40px 0 0 207px; }
   .sidebar-closed #sidebar .theme-brand li.theme-text a {
     display: none; }
   .navbar .navbar-item .nav-item .form-inline.search .search-form-control {

@@ -804,6 +804,8 @@ class Shop(models.Model):
     comment = models.TextField(null=True, blank=True)
     is_savdo = models.BooleanField(default=True)
     nds_count = models.IntegerField(default=0)
+    debt_old = models.IntegerField(default=0)
+    debt_new = models.IntegerField(default=0)
 
 
     def save(self, *args, **kwargs):
@@ -1008,46 +1010,32 @@ class Debtor(models.Model):
         customer = self
         pay_history = PayHistory.objects.filter(debtor=customer).order_by('-id')
         shop = Shop.objects.filter(debtor=customer).order_by('-id')
-
         infos = sorted(chain(pay_history, shop), key=lambda instance: instance.date)
+        customer_debt = CustomerDebt.objects.filter(customer=customer)
 
-        # updated_balances = []
-        updated_infos = []
+        for valyuta in Valyuta.objects.all():
+            customer_debt = customer_debt.filter(valyuta=valyuta).last()
+            if customer_debt:
+                customer_debt.summa = customer_debt.start_summa
+                customer_debt.save()
 
-        customer.som = customer.start_som
+                for i in infos:
+                    if i.valyuta == valyuta:
+                        if i._meta.model_name == 'payhistory':
+                            i.debt_old = customer_debt.summa
+                            if i.type_pay == 1:
+                                customer_debt.summa += i.summa
+                            else:
+                                customer_debt.summa -= i.summa
+                            i.debt_new = customer_debt.summa
+                        else:
+                            i.debt_old = customer_debt.summa
+                            customer_debt.summa += i.baskets_total_price
+                            i.debt_new = customer_debt.summa
 
-        for i in infos:
-            if i._meta.model_name == 'payhistory':
-                customer.som -= i.total_som 
-                i.som_after = customer.som
-            else:
-                customer.som += i.baskets_total_price
-                i.som_after = customer.som
-                
-            updated_infos.append(i)
+                        i.save()
+                        customer_debt.save()
 
-
-        # # Bulk update balances
-        # DebtCustomer.objects.bulk_update(updated_balances, ['summa'])
-
-        # # Bulk update info objects
-        PayHistory.objects.bulk_update(
-            [i for i in updated_infos if i._meta.model_name == 'payhistory'],
-            ['som_after']
-        )
-
-        Shop.objects.bulk_update(
-            [i for i in updated_infos if i._meta.model_name == 'shop'],
-            ['som_after']
-        )
-        # CustomerDebt.objects.bulk_update(
-        #     [i for i in updated_infos if i._meta.model_name == 'customerdebt'],
-        #     ['debt_old', 'debt_new']
-        # )
-        # Bonus.objects.bulk_update(
-        #     [i for i in updated_infos if i._meta.model_name == 'bonus'],
-        #     ['debt_old', 'debt_new']
-        # )
 
     @property
     def debt_haqimiz(self):
@@ -1130,6 +1118,8 @@ class PayHistory(models.Model):
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     summa = models.IntegerField(default=0)
+    debt_old = models.IntegerField(default=0)
+    debt_new = models.IntegerField(default=0)
 
     
     @property

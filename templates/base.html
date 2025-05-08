@@ -54,78 +54,12 @@
             </h4>
 
             <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
-                {% if custom_user_profile.is_bussines %} 
-                <li class="menu {{ home }}">
-                    <a href="{% url 'home' %}" aria-expanded="{{ home_t }}" class="dropdown-toggle">
-                        <div class="">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="feather feather-home">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                            </svg>
-                            <span>Bussines Tahlili</span>
-                        </div>
-                    </a>
-                </li>
-                {% endif %}
-                {% if custom_user_profile.is_savdo %} 
-                <li class="menu {% if request.resolver_match.url_name == 'create_order' %}active{% endif %}">
-                    <a href="{% url 'create_order' %}" aria-expanded="{% if request.resolver_match.url_name == 'create_order' %}true{% endif %}" class="dropdown-toggle">
-                        <div style="display: flex; align-items: center;">
-                            <i class="fa-solid fa-cart-shopping" style="font-size: 17px;"></i>
-                            <span style="margin-left: 10px;">Savdo</span>
-                        </div>
-                    </a>
-                </li>
-                {% endif %}
-                {% if custom_user_profile.is_b2b_savdo %} 
-                        {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'b2b_shop b2b_shop_ajax' %}active{% endif %}">
-                            <a href="{% url 'b2b_shop' %}" aria-expanded="{% if url_name in 'b2b_shop b2b_shop_ajax'  %}true{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-cart-plus" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">B2B savdo</span>
-                                </div>
-                            </a>
-                        </li>
-                        {% endwith %}
-                {% endif %}
-                {% if custom_user_profile.is_filial_boshkaruvi %} 
-                <li class="menu {{ filial }}">
-                    <a href="{% url 'filial' %}" aria-expanded="{{ filial_t }}" class="dropdown-toggle">
-                        <div class="">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="feather feather-map-pin">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span>Filiallar Boshqaruvi</span>
-                        </div>
-                    </a>
-                </li>  
-                {% endif %}
+                
             </ul>
             <div class="" style="margin: 0.5rem;">
-                <input id="dollar_kurs" name="som" type="text" style="float: right" value="{{ dollar_kurs }}" class="form-control">
             </div>
-                <button type="submit" class="btn btn-success" style="float: right" data-toggle="modal">Kiritish</button>
 
-            <ul class="navbar-item flex-row navbar-dropdown">
-                <li class="nav-item dropdown user-profile-dropdown  order-lg-0 order-1">
-                    <a href="{% url 'logout' %}" class="nav-link dropdown-toggle user" id="userProfileDropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-log-out">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </a>
-                </li>
-            </ul>
+           
         </header>
     </form>
 </div>
@@ -193,34 +127,11 @@
         </nav>
         {% else %}
         <nav id="sidebar">
-            {% if custom_user_profile.is_bussines %} 
-
-            <ul class="navbar-nav theme-brand flex-row  text-center">
-                <li class="nav-item theme-logo">
-                    <a href="{% url 'home' %}">
-                        <img src="{% static 'assets/img/90x90.jpg' %}" class="navbar-logo" alt="logo">
-                    </a>
-                </li>
-                <li class="nav-item theme-text">
-                    <!-- <a href="{% url 'home' %}" class="nav-link"> Bordo </a> -->
-                </li>
-                <li class="nav-item toggle-sidebar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="feather feather-arrow-left sidebarCollapse">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                </li>
-            </ul>
-            {% endif %}
 
             <div class="shadow-bottom"></div>
                 <ul class="list-unstyled menu-categories" id="accordionExample">
-                    {% if custom_user_profile.is_bussines %} 
-
-                    <li class="menu {{ home }}" style="display: none;">
-                        <a href="{% url 'home' %}" aria-expanded="{{ home_t }}" class="dropdown-toggle">
+                    <li class="menu {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial' %}active{% endif %}">
+                        <a href="#components1" data-toggle="collapse" aria-expanded="{% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial' %}true{% endif %}" class="dropdown-toggle">
                             <div class="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -228,99 +139,35 @@
                                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                                 </svg>
-                                <span>Bussines Tahlili</span>
+                                <span>Dashboard</span>
+                            </div>
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="feather feather-chevron-right">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
                             </div>
                         </a>
-                    </li>
-                    {% endif %}
-
-                  
-
-
-                    {% if custom_user_profile.is_taminotchi_qaytuv %} 
-                        {% with url_name=request.resolver_match.url_name %}
-                            <li class="menu {% if url_name in 'deliver_return deliver_return_item_detail  deliver_return_tarix' %}active{% endif %}">
-                                <a href="#hisob-deliver_return" data-toggle="collapse" aria-expanded="{% if url_name in 'deliver_return deliver_return_item_detail  deliver_return_tarix'  %}true{% endif %}" class="dropdown-toggle">
-                                    <div style="display: flex; align-items: center;">
-                                        <i class="fa-solid fa-right-from-bracket" style="font-size: 17px;"></i>
-                                        <span style="margin-left: 10px;">Taminotchi Qaytuv</span>
-                                    </div>
-                                    <div>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="feather feather-chevron-right">
-                                            <polyline points="9 18 15 12 9 6"></polyline>
-                                        </svg>
-                                    </div>
-                                </a>
-                                <ul class="collapse submenu list-unstyled {% if url_name in 'deliver_return deliver_return_item_detail  deliver_return_tarix'  %}show{% endif %}" 
-                                id="hisob-deliver_return" data-parent="#accordionExample">
-                                    {% if custom_user_profile.is_taminotchi_qaytuv %} 
-                                        <li class="menu {% if request.resolver_match.url_name == 'deliver_return' %}active{% endif %}">
-                                            <a href="{% url 'deliver_return' %}">Qaytuv</a>
-                                        </li>
-                                        <li class="menu {% if request.resolver_match.url_name == 'deliver_return_tarix' %}active{% endif %}">
-                                            <a href="{% url 'deliver_return_tarix' %}">Tarix</a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
+                        
+                        <ul class="collapse submenu list-unstyled {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial'  %}show{% endif %}"
+                            id="components1" data-parent="#accordionExample">
+                            {% if custom_user_profile.is_bussines %} 
+                            <li class="menu {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                                <a href="{% url 'home' %}">Bussines Tahlili</a>
                             </li>
-                        {% endwith %}
+                            {% endif %}
 
-                    {% endif %}
-                    
+                            {% if custom_user_profile.is_filial_boshkaruvi %} 
+                                <li class="menu {% if request.resolver_match.url_name == 'filial' %}active{% endif %}">
+                                    <a href="{% url 'filial' %}"> Filiallar Boshqaruvi </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </li>
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'price_type product_price_type nds_page hodim valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
-                            <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-gear" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Sozlamalar</span>
-                                </div>
-                                <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="feather feather-chevron-right">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </div>
-                            </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
-                            id="narx-turi" data-parent="#accordionExample">
-                                <li class="menu {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
-                                    <a href="{% url 'price_type' %}">Narx Turi</a>
-                                </li>
-                                <li class="menu {% if request.resolver_match.url_name == 'filial_list' %}active{% endif %}">
-                                    <a href="{% url 'filial_list' %}">Filial</a>
-                                </li>
-                                
-                                {% if custom_user_profile.is_nds %} 
-                                <li class="menu {% if request.resolver_match.url_name == 'nds_page' %}active{% endif %}">
-                                    <a href="{% url 'nds_page' %}">NDS</a>
-                                </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_kadrlar %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'hodim' %}active{% endif %}">
-                                        <a href="{% url 'hodim' %}">Foydalanuvchilar</a>
-                                    </li>
-                                {% endif %}
-                                <li class="menu {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
-                                    <a href="{% url 'valyuta_list' %}">Valyuta</a>
-                                </li>
-                                <li class="menu {% if request.resolver_match.url_name == 'kassa_merge' %}active{% endif %}">
-                                    <a href="{% url 'kassa_merge' %}">Kassa Biriktirish</a>
-                                </li>
-                                <li class="menu {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
-                                    <a href="{% url 'kassa_new_list' %}">Kassa</a>
-                                </li>
-                            </ul>
-                        </li>
-                    {% endwith %}
-                    
-
-
-                    {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'today_sales shops' %}active{% endif %}">
-                            <a href="#narx-sotuvlar" data-toggle="collapse" aria-expanded="{% if url_name in 'today_sales shops'  %}true{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name in 'today_sales shops create_order b2b_shop b2b_shop_ajax' %}active{% endif %}">
+                            <a href="#narx-sotuvlar" data-toggle="collapse" aria-expanded="{% if url_name in 'today_sales shops create_order b2b_shop b2b_shop_ajax'  %}true{% endif %}" class="dropdown-toggle">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-cart-shopping" style="font-size: 17px;"></i>
                                     <span style="margin-left: 10px;">Sotuvlar</span>
@@ -333,9 +180,9 @@
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'today_sales shops'  %}show{% endif %}" 
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'today_sales shops create_order b2b_shop b2b_shop_ajax'  %}show{% endif %}" 
                             id="narx-sotuvlar" data-parent="#accordionExample">
-                               
+                            
                                 {% if custom_user_profile.is_bugungi_sotuvlar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'today_sales' %}active{% endif %}">
                                         <a href="{% url 'today_sales' %}">Bugungi Sotuvlar</a>
@@ -346,9 +193,146 @@
                                         <a href="{% url 'shops' %}">Buyurtmalarr</a>
                                     </li>
                                 {% endif %}
+                                {% if custom_user_profile.is_savdo %} 
+                                <li class="menu {% if request.resolver_match.url_name == 'create_order' %}active{% endif %}">
+                                    <a href="{% url 'create_order' %}">Savdo</a>
+                                </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_b2b_savdo %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'b2b_shop' or  request.resolver_match.url_name == 'b2b_shop_ajax' %}active{% endif %}">
+                                        <a href="{% url 'b2b_shop' %}">B2B Savdo</a>
+                                    </li>
+                                {% endif %}
                             </ul>
                         </li>
                     {% endwith %}
+                    {% with url_name=request.resolver_match.url_name %}
+                        <li class="menu {% if url_name in 'deliver debtor_account debtor externalincomeuser' %}active{% endif %}">
+                            <a href="#narx-hamkorlar" data-toggle="collapse" aria-expanded="{% if url_name in 'deliver debtor_account debtor externalincomeuser'  %}true{% endif %}" class="dropdown-toggle">
+                                <div style="display: flex; align-items: center;">
+                                    <i class="fa-solid fa-handshake" style="font-size: 17px;"></i>
+                                    <span style="margin-left: 10px;">Hamkorlar</span>
+                                </div>
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-chevron-right">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </div>
+                            </a>
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'deliver debtor_account debtor externalincomeuser'  %}show{% endif %}" 
+                            id="narx-hamkorlar" data-parent="#accordionExample">
+                                {% if custom_user_profile.is_yetkazib_beruvchilar %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'deliver' %}active{% endif %}">
+                                        <a href="{% url 'deliver' %}">Yetkazib beruvchilar</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_mijozlar_tahlili %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'debtor_account' %}active{% endif %}">
+                                        <a href="{% url 'debtor_account' %}">Mijozlar tahlili</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_mijozlar_qarzdorligi %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'debtor' %}active{% endif %}">
+                                        <a href="{% url 'debtor' %}">Mijozlar qarzdorligi</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_mijozlar_qarzdorligi %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'externalincomeuser' %}active{% endif %}">
+                                        <a href="{% url 'externalincomeuser' %}">Turli shaxslar</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endwith %}
+                        
+                    {% with url_name=request.resolver_match.url_name %}
+                        <li class="menu {% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve deliver_return deliver_return_item_detail  deliver_return_tarix' %}active{% endif %}">
+                            <a href="#components" data-toggle="collapse" aria-expanded="{% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve deliver_return deliver_return_item_detail  deliver_return_tarix' %}true{% endif %}" class="dropdown-toggle">
+                                <div style="display: flex; align-items: center;">
+                                    <i class="fa-solid fa-warehouse" style="font-size: 17px;"></i>
+                                    <span style="margin-left: 10px;">Ombor</span>
+                                </div>
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-chevron-right">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </div>
+                            </a>
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve deliver_return deliver_return_item_detail  deliver_return_tarix' %}show{% endif %}"
+                                id="components" data-parent="#accordionExample">
+                                {% if custom_user_profile.is_ombor_boshkaruvi_ombor %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'ombor'  %}active{% endif %}">
+                                        <a href="{% url 'ombor' %}"> Ombor </a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_ombor_boshkaruvi_qabul %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'omborqabul'  %}active{% endif %}">
+                                        <a href="{% url 'omborqabul' %}"> Ombor Qabul </a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_ombor_boshkaruvi_ombordan_analiz %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'omborminus'  %}active{% endif %}">
+                                        <a href="{% url 'omborminus' %}"> Omborda mahsulotlar analizi </a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_maxsutlo_tahlili %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'product_filial'  %}active{% endif %}">
+                                        <a href="{% url 'product_filial' %}"> Maxsulot tahlili </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_maxsulot_tahriri %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'product_editing_page'  %}active{% endif %}">
+                                        <a href="{% url 'product_editing_page' %}"> Maxsulot tahriri </a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_maxsulot_boshkaruvi %} 
+                                <li class="menu {% if request.resolver_match.url_name == 'product'  %}active{% endif %}">
+                                    <a href="{% url 'product' %}"> Maxsulotlar boshqaruvi </a>
+                                </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_ot_prixod %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'tovar_prixod' %}active{% endif %}">
+                                        <a href="{% url 'tovar_prixod' %}">Kirim</a>
+                                    </li>
+                                {% endif %}
+    
+                                {% if custom_user_profile.is_ot_tarix %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'tovar_prixod_tarix' %}active{% endif %}">
+                                        <a href="{% url 'tovar_prixod_tarix' %}">Kirim Tarixi</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_hisobdan_chiqish %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'write_off' %}active{% endif %}">
+                                        <a href="{% url 'write_off' %}">Hisobdan chiqarish</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_hisobdan_tarix %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'write_off_tarix' %}active{% endif %}">
+                                        <a href="{% url 'write_off_tarix' %}">Tarix</a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_qabul %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'recieve' %}active{% endif %}">
+                                        <a href="{% url 'recieve' %}">Qabul</a>
+                                    </li>
+                               {% endif %}
+                               {% if custom_user_profile.is_taminotchi_qaytuv %} 
+                                <li class="menu {% if request.resolver_match.url_name == 'deliver_return' %}active{% endif %}">
+                                    <a href="{% url 'deliver_return' %}">Taminotchi Qaytuv</a>
+                                </li>
+                                <li class="menu {% if request.resolver_match.url_name == 'deliver_return_tarix' %}active{% endif %}">
+                                    <a href="{% url 'deliver_return_tarix' %}">Taminotchi Tarix</a>
+                                </li>
+                            {% endif %}
+                            </ul>
+                        </li>
+                    {% endwith %}
+                  
                     
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin money_circulation one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}active{% endif %}">
@@ -440,7 +424,6 @@
                         </a>
                     </li> {% endcomment %}
                     {% if custom_user_profile.is_filial_boshkaruvi %} 
-
                     <li class="menu {{ filial }}" style="display: none;">
                         <a href="{% url 'filial' %}" aria-expanded="{{ filial_t }}" class="dropdown-toggle">
                             <div class="">
@@ -455,144 +438,8 @@
                         </a>
                     </li>  
                     {% endif %}
-
-    <!--               <li class="menu {{ saler }}">
-                        <a href="{% url 'saler' %}" aria-expanded="{{ saler_t }}" class="dropdown-toggle">
-                            <div class="">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" class="feather feather-users">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                                <span>KPI</span>
-                            </div>
-                        </a>
-                    </li> -->
-                   
-                   
-                   
                   
-                    {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'deliver debtor_account debtor externalincomeuser' %}active{% endif %}">
-                            <a href="#narx-hamkorlar" data-toggle="collapse" aria-expanded="{% if url_name in 'deliver debtor_account debtor externalincomeuser'  %}true{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-handshake" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Hamkorlar</span>
-                                </div>
-                                <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="feather feather-chevron-right">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </div>
-                            </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'deliver debtor_account debtor externalincomeuser'  %}show{% endif %}" 
-                            id="narx-hamkorlar" data-parent="#accordionExample">
-                                {% if custom_user_profile.is_yetkazib_beruvchilar %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'deliver' %}active{% endif %}">
-                                        <a href="{% url 'deliver' %}">Yetkazib beruvchilar</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_mijozlar_tahlili %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'debtor_account' %}active{% endif %}">
-                                        <a href="{% url 'debtor_account' %}">Mijozlar tahlili</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_mijozlar_qarzdorligi %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'debtor' %}active{% endif %}">
-                                        <a href="{% url 'debtor' %}">Mijozlar qarzdorligi</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_mijozlar_qarzdorligi %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'externalincomeuser' %}active{% endif %}">
-                                        <a href="{% url 'externalincomeuser' %}">Turli shaxslar</a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </li>
-                    {% endwith %}
-
-                    {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve' %}active{% endif %}">
-                            <a href="#components" data-toggle="collapse" aria-expanded="{% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve' %}true{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-warehouse" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Ombor</span>
-                                </div>
-                                <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="feather feather-chevron-right">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </div>
-                            </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'ombor omborqabul omborminus product_filial product_editing_page product tovar_prixod tovar_prixod_tarix write_off write_off_tarix recieve' %}show{% endif %}"
-                                id="components" data-parent="#accordionExample">
-                                {% if custom_user_profile.is_ombor_boshkaruvi_ombor %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'ombor'  %}active{% endif %}">
-                                        <a href="{% url 'ombor' %}"> Ombor </a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_ombor_boshkaruvi_qabul %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'omborqabul'  %}active{% endif %}">
-                                        <a href="{% url 'omborqabul' %}"> Ombor Qabul </a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_ombor_boshkaruvi_ombordan_analiz %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'omborminus'  %}active{% endif %}">
-                                        <a href="{% url 'omborminus' %}"> Omborda mahsulotlar analizi </a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_maxsutlo_tahlili %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'product_filial'  %}active{% endif %}">
-                                        <a href="{% url 'product_filial' %}"> Maxsulot tahlili </a>
-                                    </li>
-                                {% endif %}
-                                
-                                {% if custom_user_profile.is_maxsulot_tahriri %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'product_editing_page'  %}active{% endif %}">
-                                        <a href="{% url 'product_editing_page' %}"> Maxsulot tahriri </a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_maxsulot_boshkaruvi %} 
-                                <li class="menu {% if request.resolver_match.url_name == 'product'  %}active{% endif %}">
-                                    <a href="{% url 'product' %}"> Maxsulotlar boshqaruvi </a>
-                                </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_ot_prixod %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'tovar_prixod' %}active{% endif %}">
-                                        <a href="{% url 'tovar_prixod' %}">Kirim</a>
-                                    </li>
-                                {% endif %}
-    
-                                {% if custom_user_profile.is_ot_tarix %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'tovar_prixod_tarix' %}active{% endif %}">
-                                        <a href="{% url 'tovar_prixod_tarix' %}">Kirim Tarixi</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_hisobdan_chiqish %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'write_off' %}active{% endif %}">
-                                        <a href="{% url 'write_off' %}">Hisobdan chiqarish</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_hisobdan_tarix %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'write_off_tarix' %}active{% endif %}">
-                                        <a href="{% url 'write_off_tarix' %}">Tarix</a>
-                                    </li>
-                                {% endif %}
-                                {% if custom_user_profile.is_qabul %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'recieve' %}active{% endif %}">
-                                        <a href="{% url 'recieve' %}">Qabul</a>
-                                    </li>
-                               {% endif %}
-                            </ul>
-                        </li>
-                    {% endwith %}
+               
 
 
                     {% if custom_user_profile.is_reyting_maxsulotlar or custom_user_profile.is_reyting_yetkazib_beruvchilar or custom_user_profile.is_reyting_mijozlar %} 
@@ -695,53 +542,63 @@
                     </li>
                     {% endif %}
 
-                    {% if custom_user_profile.is_savdo %} 
-
-                    <li class="menu {% if request.resolver_match.url_name == 'create_order' %}active{% endif %}" style="display: none;">
-                        <a href="{% url 'create_order' %}" aria-expanded="{% if request.resolver_match.url_name == 'create_order' %}true{% endif %}" class="dropdown-toggle">
-                            <div class="feather feather-layers">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" class="">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                                <span>Savdo</span>
-                            </div>
-                        </a>
-                    </li>
-                    {% endif %}
+                    
 
                  
 
-                    {% if custom_user_profile.is_b2b_savdo %} 
-                        {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'b2b_shop b2b_shop_ajax' %}active{% endif %}" style="display: none;">
-                            <a href="{% url 'b2b_shop' %}" aria-expanded="{% if url_name in 'b2b_shop b2b_shop_ajax'  %}true{% endif %}" class="dropdown-toggle">
-                                <div class="feather feather-layers">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                    <span>B2B savdo</span>
-                                </div>
-                            </a>
-                        </li>
-                        {% endwith %}
-                    {% endif %}
+                   
 
                    
 
                    
 
                   
-                   
+                    {% with url_name=request.resolver_match.url_name %}
+                    <li class="menu {% if url_name in 'price_type product_price_type nds_page hodim valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
+                        <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fa-solid fa-gear" style="font-size: 17px;"></i>
+                                <span style="margin-left: 10px;">Sozlamalar</span>
+                            </div>
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="feather feather-chevron-right">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </div>
+                        </a>
+                        <ul class="collapse submenu list-unstyled {% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
+                        id="narx-turi" data-parent="#accordionExample">
+                            <li class="menu {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
+                                <a href="{% url 'price_type' %}">Narx Turi</a>
+                            </li>
+                            <li class="menu {% if request.resolver_match.url_name == 'filial_list' %}active{% endif %}">
+                                <a href="{% url 'filial_list' %}">Filial</a>
+                            </li>
+                            
+                            {% if custom_user_profile.is_nds %} 
+                            <li class="menu {% if request.resolver_match.url_name == 'nds_page' %}active{% endif %}">
+                                <a href="{% url 'nds_page' %}">NDS</a>
+                            </li>
+                            {% endif %}
+                            {% if custom_user_profile.is_kadrlar %} 
+                                <li class="menu {% if request.resolver_match.url_name == 'hodim' %}active{% endif %}">
+                                    <a href="{% url 'hodim' %}">Foydalanuvchilar</a>
+                                </li>
+                            {% endif %}
+                            <li class="menu {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
+                                <a href="{% url 'valyuta_list' %}">Valyuta</a>
+                            </li>
+                            <li class="menu {% if request.resolver_match.url_name == 'kassa_merge' %}active{% endif %}">
+                                <a href="{% url 'kassa_merge' %}">Kassa Biriktirish</a>
+                            </li>
+                            <li class="menu {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
+                                <a href="{% url 'kassa_new_list' %}">Kassa</a>
+                            </li>
+                        </ul>
+                    </li>
+                {% endwith %}
                     
                     <li class="menu ">
                         <a href="{% url 'logout' %}" aria-expanded="false" class="dropdown-toggle">
