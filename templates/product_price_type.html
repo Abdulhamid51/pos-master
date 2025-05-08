@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap" onclick="saveBackend()" >Yakunlash</button>
+                                    </div>
+                                </div>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table" id="filter_data_table" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>Nomi</th>
+                                            <th>Dollar</th>
+                                            <th>som</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for price in product %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ price.name }}
+
+                                                    <p style="display: none;" class="product_id">{{ price.id }}</p>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="price_dollar"  onchange="pushBackend(this)" style="border-radius: 10px; width: 100px; text-align: center;"  value="{{ price.price_type_dollar|default_if_none:'0'}}">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="price_som"  onchange="pushBackend(this)" style="border-radius: 10px; width: 100px; text-align: center;"  value="{{ price.price_type_som|default_if_none:'0' }}">
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <script>
+                                    const data_price = [];
+
+                                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                    function pushBackend(element) {
+                                        const row = element.closest('tr');
+                                        const product_id = row.querySelector('p[class="product_id"]').textContent;
+                                        const price_dollar = parseFloat(row.querySelector('input[name="price_dollar"]').value);
+                                        const price_som = parseFloat(row.querySelector('input[name="price_som"]').value);
+                                        const type_payment_id = {{type_payment_id}}
+                                        let dt = {
+                                            id:type_payment_id,
+                                            product_id:product_id,
+                                            price_som:price_som,
+                                            price_dollar:price_dollar,
+                                            
+                                        }
+                                        const existingElement = data_price.find(item => item.id === type_payment_id && item.product_id === product_id);
+                                        if (existingElement) {
+                                            existingElement.price_som = price_som;
+                                            existingElement.price_dollar = price_dollar;
+                                        } else {
+                                            data_price.push(dt);
+                                        }
+                                        console.log(data_price)
+
+                                    }
+                                    function saveBackend () {
+                                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                        $.ajax({
+                                            url:'{% url 'add_product_price_type' %}',
+                                            type:'post',
+                                            data: JSON.stringify(data_price),
+                                            headers: {
+                                                'X-CSRFToken': csrfToken 
+                                            },
+                                            success:function(response){
+                                                    Swal.fire({
+                                                        position: "top-center",
+                                                        icon: "success",
+                                                        title: "Ma'lumotlar saqlandi",
+                                                        showConfirmButton: false,
+                                                        timer: 2000
+                                                    });
+                                            },
+                                            error:function(error){
+                                                Swal.fire({
+                                                    position: "top-center",
+                                                    icon: "error",
+                                                    title: "Ma'lumotlar saqlanmadi",
+                                                    showConfirmButton: true
+                                                });
+                                            }
+                                        })
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        $('#filter_data_table').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' }
+                   
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
+{% endblock js %}

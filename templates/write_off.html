@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% block title %}
+    <title>Qabul | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="{% static 'plugins/perfect-scrollbar/perfect-scrollbar.css'%}" rel="stylesheet" type="text/css" />
+
+    <link href="{% static 'assets/css/apps/invoice.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row invoice layout-top-spacing">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="app-hamburger-container">
+                            <div class="hamburger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu chat-menu d-xl-none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+                        </div>
+                        <div class="doc-container">
+                            <div class="tab-title">
+                                <div class="row">
+                                    <div class="col-md-12 col-sm-12 col-12">
+                                        <div class="">
+                                            <button style="width: 100%;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_add">
+                                                Yangi
+                                            </button>
+                                              <div class="modal fade" id="new_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                  <form action="{% url 'write_off_add' %}" class="modal-content" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="exampleModalLongTitle">Yangi qoshish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="form-group">
+                                                        <label for="">Raqam</label>
+                                                        <input type="text" class="form-control" name="number" required>
+                                                      </div>
+                                                      <div class="form-group">
+                                                        <label for="">Sana</label>
+                                                        <input type="datetime-local" class="form-control" name="date_time" value="{{ today|date:'Y-m-d H:i' }}">
+                                                      </div>
+                                                      <!-- <div class="form-group">
+                                                        <label for="">Kurs</label>
+                                                        <input type="text" class="form-control" name="kurs">
+                                                      </div> -->
+                                                      <div class="form-group">
+                                                        <label for="">Pul Muomalasi</label>
+                                                        <select name="money_type" class="form-control">
+                                                            <option value="">------</option>
+                                                            {% for money in money %}
+                                                                <option value="{{money.id }}">{{money.name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                      </div>
+                                                      <div class="form-group">
+                                                        <label for="">Ombor</label>
+                                                        <select name="product_filial" class="form-control">
+                                                            <option value="">------</option>
+                                                            {% for ombor in ombor %}
+                                                                <option value="{{ombor.id }}">{{ombor.name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                      </div>
+                                                      <div class="form-group">
+                                                        <label for="">Izoh</label>
+                                                        <textarea name="izoh"  class="form-control"></textarea>
+                                                      </div>
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                      </div>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+                                        </div>
+                                        <div class="search">
+                                            <input type="text" class="form-control" placeholder="Izlash">
+                                        </div>
+                                        <ul class="nav nav-pills inv-list-container d-block" id="pills-tab" role="tablist">
+                                            {% for write_off in write_off %}
+                                                <li data-id="{{write_off.id}}" class="nav-item nav_items
+                                                {% if forloop.first %}
+                                                    active
+                                                {% endif %}
+                                                    ">
+                                                    <div class="nav-link list-actions" id="invoice-{{ write_off.id }}" data-invoice-id="{{ write_off.id }}">
+                                                        <div class="f-m-body">
+                                                            <div class="f-body">
+                                                                <p class="invoice-customer-name">Raqam: {{ write_off.number }} <button type="button" class="btn" data-toggle="modal" data-target="#delete_modal{{write_off.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button> </p>
+                                                                <p class="invoice-customer-name"><span>Ombor:</span> {{ write_off.product_filial }}</p>
+                                                                <p class="invoice-generated-date">Sana: {{ write_off.date_time|date:'Y-m-d H:i' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <div class="modal fade" id="delete_modal{{write_off.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                      <div class="modal-content">
+                                                        <div class="modal-header">
+                                                          <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                        </div>
+                                                        <div class="modal-footer d-flex justify-content-between">
+                                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                          <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'write_off_delete'  write_off.id %}">O'chirish</a>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                            {% endfor %}
+                                        </ul>
+                                       
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="invoice-container">
+                                <div class="invoice-inbox">
+
+                                    <div class="inv-not-selected">
+                                        <p>Qabulni tanlang</p>
+                                    </div>
+
+                                    <div class="invoice-header-section">
+                                        <h4 class="inv-number"></h4>
+                                        <h4></h4>
+                                        <div class="invoice-action">
+{#                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-printer action-print" data-toggle="tooltip" data-placement="top" data-original-title="Reply"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>#}
+                                        </div>
+                                    </div>
+
+                                    <div id="ct" class="">
+                                        {% for recieve in write_off %}
+                                            <div class="invoice-{{ recieve.id }}" id="{% if active_one == recieve %}active_page{% endif %}">
+                                                <div class="content-section  animated animatedFadeInUp fadeInUp">
+                                                    <div class="row">
+                                                        <div class="col-sm-6 col-6">
+                                                            <h3 class="in-heading">{{ recieve.number }}</h3>
+                                                        </div>
+                                                        <div class="col-sm-6 col-6 d-flex justify-content-end text-right">
+                                                            <a href="{% url 'write_off_exit' recieve.id %}">
+                                                                <button type="button" class="btn btn-primary">
+                                                                    Yakunlash  
+                                                                </button>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <select onchange="add_modal(this)" class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
+                                                                <option value="">Maxsulot tanlash</option>
+                                                                {% for i in products %}
+                                                                    <option value="{{i.id}}">{{ i.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <div class="table-responsive">
+                                                                <table class="table">
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col">Mahsulot {{recieve.write_off_item}}</th>
+                                                                            <th class="text-right" scope="col">Narx Dollar</th>
+                                                                            <th class="text-right" scope="col">Narx Som</th>
+                                                                            <th class="text-right" scope="col">Soni</th>
+                                                                            <th class="text-right" scope="col">Jami Som</th>
+                                                                            <th class="text-right" scope="col">Jami Dollar</th>
+                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th class="text-right" scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.writeoffitem.all %}
+                                                                                <tr>
+                                                                                    <td>
+                                                                                        <label for="item{{item.id}}"></label>
+                                                                                        <input type="checkbox" id="item{{item.id}}">
+                                                                                    </td>
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.product }}</td>
+                                                                                    <td class="text-right"> {{ item.product.dollar|intcomma }} $</td>
+                                                                                    <td class="text-right">{{ item.product.som|intcomma }} som</td>
+                                                                                    <td class="text-right">{{ item.quantity|floatformat:0|intcomma }}</td>
+                                                                                    <td class="text-right">{{  item.summa_total_som|floatformat:0|intcomma  }}</td>
+                                                                                    <td class="text-right">{{  item.summa_total_dollar|floatformat:0|intcomma  }}</td>
+                                                                                    <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th scope="col">Jami</th>
+                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th class="text-right" scope="col">{{ recieve.summa_quantity|intcomma }}</th>
+                                                                            <th class="text-right" scope="col">{{ recieve.summa_product_som|intcomma }}</th>
+                                                                            <th class="text-right" scope="col">{{ recieve.summa_product|intcomma }}</th>
+                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th class="text-right" scope="col"></th>
+
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-4">
+                                                        <div class="col-sm-5 col-12 order-sm-0 order-1">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+                    Yangi
+                </button>
+                  <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'write_off_item_add' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <div class="form-group" id="recieve_item_add_product_div">
+                              <input type="hidden" name="write_off_id" class="form-control" value="{{ active_id }}">
+                              <input type="hidden" name="product_filial" id="recieve_item_add_product_id" class="form-control">
+
+                              <label for="">Miqdori</label>
+                              <input type="number" name="quantity" class="form-control">
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                              <button type="submit" class="btn btn-primary">Saqlash</button>
+                            </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <form action="{% url 'new_product_add' %}" class="modal-content" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                            <label for="">Nomi</label>
+                            <input type="text" class="form-control" name="name" required>
+
+
+                            <label for="">Ishlab chiqaruvchi</label>
+                            <select class="form-control searchable" required name="deliver" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in delivers %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="">Ulchov</label>
+                            <select class="form-control searchable" required name="measurement" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in measurements %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+
+                            <label for="">Min miqdor</label>
+                            <input type="number" class="form-control" name="min_count" required>
+
+
+                            <label for="">Guruh</label>
+                            <select class="form-control searchable" required name="group" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in groups %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="">Shtrix kod</label>
+                            <input type="text" class="form-control" name="barcode" value="{{new_barcode}}" required>
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                            <button type="submit" class="btn btn-primary">Saqlash</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+
+
+                {% for recieve in write_off %}
+                {% for item in recieve.writeoffitem.all %}
+
+
+                    <div class="modal fade" id="delete_item_modal{{item.id}}" tabindex="0" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                            <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'write_off_item_delete'  item.id %}">O'chirish</a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal fade" id="recieve_item_add_modal_edit{{item.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <form class="modal-content" method="post" action="{% url 'write_off_item_edit' item.id %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" >Tahrirlash</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" >
+                                <div class="form-group">
+                                    <label for="">Miqdori</label>
+                                    <input type="text" value="{{ item.quantity|floatformat:0 }}" name="quantity" class="form-control">
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+{% endblock content %}
+{% block js %}
+
+    <script src="{% static 'assets/js/apps/invoice.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+     <script>
+        $('.nav_items').click(function() {
+            let item = $(this)
+            let id = item.attr('data-id')
+            const currentUrl = new URL(window.location.href);
+
+            const paramName = 'active';
+            const paramValue = id;
+
+            currentUrl.searchParams.set(paramName, paramValue);
+
+            window.history.replaceState({}, '', currentUrl.toString());
+
+            })
+    </script>
+    <script>
+        let active = $('#active_page')
+        if (active.length) {
+            $(`#invoice-${"{{active_one.id}}"}`).click()
+        }
+    </script>
+<script>
+    function add_modal(item) {
+        $('#recieve_item_add_button').click();
+        $('#recieve_item_add_product_id').val(item.value);
+    }
+</script>
+<script>
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); 
+}
+</script>
+<script>
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100);
+}
+</script>
+
+{% endblock js %}

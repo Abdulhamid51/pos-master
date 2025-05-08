@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css' %}">
+    <link href="{% static 'assets/css/tables/table-basic.css' %}" rel="stylesheet" type="text/css"/>
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="{% static 'plugins/flatpickr/flatpickr.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css' %}" rel="stylesheet" type="text/css">
+    <!-- END THEME GLOBAL STYLES -->
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css' %}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+    <!--  BEGIN CONTENT AREA  -->
+    <div id="content" class="main-content">
+        <div class="container">
+            {#                <div class="loyout-px-spacing">#}
+            <div class="row layout-top-spacing" style="width: 100%;">
+                <div class="col-12 layout-spacing">
+                    <div class="statbox widget box box-shadow p-2">
+                        <!-- <input id="rangeCalendarFlatpickr" class="form-control flatpickr flatpickr-input active"
+                               type="text" placeholder="Sanani tanlang"> -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <form class="row">
+                                    <input type="hidden" name="d" value="{{ d_id }}">
+                                    <div class="col-4">
+                                            <input type="date" name="start_date" class="form-control">
+                                    </div>
+                                    <div class="col-4">
+                                            <input type="date" name="end_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="submit" class="btn btn-primary">Filterlash</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-success" style="float: right" data-toggle="modal"
+                                        data-target="#modal-center">Qarz to'lash
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                        <div class="statbox widget box box-shadow">
+                            <!-- <div class="widget-header">
+                                <div class="row">
+                                    <div class="col-4 mt-3">
+                                        <h6>To'lov Tarix</h6>
+                                    </div>
+                                    <div class="col-4 mt-3">
+                                        <h6><span style="float: right">So'm : <a id="psom">{{ psom|intcomma }}</a></span></h6>
+                                    
+                                </div> -->
+                            </div>
+                            <div class="widget-content widget-content-area">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-4" id="table1">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>Sana (olindi)</th>
+                                            <th>Summasi</th>
+                                            <th>Jami</th>
+                                            <th>Sana (berildi)</th>
+                                            <th>Qancha</th>
+                                            <th>Qoldi</th>
+                                            <th>Izoh</th>
+                                            <th>Sana (qaytarildi)</th>
+                                            <th>Qancha</th>
+                                            <th>Qoldi</th>
+                                            <th>Izoh</th>
+                                            <th></th>
+
+                                            <!-- <th>To'lov usuli</th>
+                                            <th>Izoh</th> -->
+                                        </tr>
+                                        </thead>
+                                        <tbody id="pay">
+                                            {% for p in payments %}
+                                                    {% csrf_token %}
+                                                    <tr>
+                                                        <input type="hidden" value="{{p.id}}" name="payment_id">
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ p.date|date:'d-m-Y, h-i' }}</td>
+                                                        
+                                                        {% if p.recieve %} 
+                                                            <td> 
+                                                                    <a href="{% url 'omborqabul_recieve_detail' p.recieve.id %}"> {{ p.received_total| intcomma }}</a>
+                                                            </td>
+                                                            {{ else }} 
+                                                            <td>
+                                                                {{ p.received_total| intcomma }} 
+                                                            </td>
+                                                        {% endif %} 
+                                                        
+                                                        {% if p.received_total %}
+                                                            <td>{{ p.left | intcomma }}</td>
+                                                            {% else %}
+                                                            <td>0.0</td>
+                                                        {% endif %}
+                                                            
+                                                        <td>{{ p.date|date:'d-m-Y h:i' }}</td>
+                                                        <td>{{ p.gave_total | intcomma }}</td>
+
+                                                        {% if p.gave_total %}
+                                                            <td>{{ p.left | intcomma }}</td>
+                                                            {% else %}
+                                                            <td>0.0</td>
+                                                        {% endif %}
+
+                                                        <td>{{ p.comment }}</td>
+                                                        <td>{{ p.date|date:'d-m-Y, h-i' }}</td>
+                                                        <td>{{ p.return_total | intcomma }}</td>
+                                                        <td>{{ p.left | intcomma }}</td>
+                                                        <!-- {% if p.return_total %}
+                                                            {% else %}
+                                                            <td>0.0</td>
+                                                        {% endif %} -->
+                                                        <td>{{ p.check_comment|default_if_none:''}}</td>
+                                                        <td>
+                                                            <button class="btn btn-succes" type="button" data-toggle="modal" data-target="#KirimModal{{p.id}}" class="form_id" data-id="{{pay.id}}">
+                                                                <i class="fa fa-check"></i>
+                                                            </button>
+                                                        </td>
+
+                                                        <!-- <td>{{ p.date }}</td> -->
+                                                    </tr>
+                                                    
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% for p in payments %}
+                <div class="modal fade" id="KirimModal{{p.id}}" tabindex="-1" aria-labelledby="KirimModal{{p.id}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form action="{% url 'add_payment_comment' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{p.id}}" name="payment_id" id="payment_id">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="KirimModalLabel">Izoh qo'shish</h5>
+                            
+                                </div>
+                                <div class="modal-body">
+                                    <input placeholder="izoh" name='comment' value="{{p.check_comment|default_if_none:''}}" style='padding:0.2rem 0.5rem'
+                                    type="text" class="form-control">
+                                    <!-- <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br> -->
+                                    <!-- <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
+                                    <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
+                                    <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
+                                    <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea> -->
+                                    
+                                </div>
+                                <div class="modal-footer">
+                                    
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            
+            {% endfor %}
+
+                <script>
+                    document.querySelector('.form_id').addEventListener('click', function() {
+                        alert('aa')
+                    })
+                </script>
+            
+                <!-- <div class="col-lg-12">
+                    <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-header">
+                                <div class="row">
+                                    <div class="col-4 mt-3">
+                                        <h6>Qarz Tarix</h6>
+                                    </div>
+                                    <div class="col-4 mt-3">
+                                        <h6><span style="float: right">So'm : <a id="dsom">{{ dsom | intcomma }}</a></span></h6>
+                                    </div>
+                                    
+                                    
+                                </div>
+                            </div>
+                            <div class="widget-content widget-content-area">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-4">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>So'm</th>
+                                            <th>Dollar</th>
+                                            <th>Sana</th>
+                                            <th>So'm</th>
+                                            <th>Dollar</th>
+                                            <th></th>
+
+                                        </tr>
+                                        </thead>
+                                        <tbody id="debt">
+                                        {% for d in debts %}
+                                            <form action="{% url 'edit_deliver_history' %}" method="post">
+                                                {% csrf_token %} 
+                                                
+                                                <tr>
+                                                    <input type="hidden" name="history_id" value="{{d.id}}">
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ d.som|intcomma }}</td>
+                                                    <td>{{ d.dollar|floatformat:2|intcomma }}</td>
+                                                    
+                                                    <td>{{ d.date|date:'d-m-Y, h:m' }}</td>
+
+                                                    <td><input name="debt_som" type="number" class="form-control" style="height: 2rem;padding:0.2rem 0.5rem; width:7rem"></td>
+                                                    <td><input name="debt_dollar" type="number" class="form-control" style="height: 2rem;padding:0.2rem 0.5rem; width:7rem"></td>
+
+                                                    <td><button class="btn btn-primary" type="submit"><i class="fa fa-edit"></i></button></td>
+                                                </tr>
+                                                
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-header">
+                                <div class="row">
+                                    <div class="col-4 mt-3">
+                                        <h6>To'lov Tarix</h6>
+                                    </div>
+                                    <div class="col-4 mt-3">
+                                        <h6><span style="float: right">So'm : <a id="psom">{{ psom|intcomma }}</a></span></h6>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="widget-content widget-content-area">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-4">
+                                        <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>So'm</th>
+                                            <th>Dollar</th>
+                                            <th>Kurs</th>
+                                            <th>Jami</th>
+                                            <th>To'lov usuli</th>
+                                            <th>Izoh</th>
+                                            <th>Sana</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="pay">
+                                        {% for p in pays %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ p.som| intcomma }}</td>
+                                                <td>{{ p.dollar| intcomma }}</td>
+                                                <td>{{ p.kurs | intcomma }}</td>
+                                                <td>{{ p.total | intcomma }}</td>
+                                                <td>{{ p.turi }}</td>
+                                                <td>{{ p.izoh }}</td>
+                                                <td>{{ p.date }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+            {#                </div>#}
+        </div>
+        <!-- Modal -->
+        <style>
+           .custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-wrapper input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    background: #fff;
+    display: none;
+    z-index: 10;
+}
+
+.dropdown-option {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.dropdown-option:hover {
+    background-color: #f0f0f0;
+}
+
+        </style>
+         
+         <script>
+           document.addEventListener("DOMContentLoaded", () => {
+    // Dropdown yaratish funksiyasi (universal)
+    const setupCustomDropdown = (searchInputId, dropdownId, hiddenInputId) => {
+        const searchInput = document.getElementById(searchInputId);
+        const dropdown = document.getElementById(dropdownId);
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const options = dropdown.querySelectorAll(".dropdown-option");
+
+        // Qidirish funksiyasi
+        searchInput.addEventListener("input", () => {
+            const searchValue = searchInput.value.toLowerCase();
+            let found = false;
+
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchValue)) {
+                    option.style.display = "block";
+                    found = true;
+                } else {
+                    option.style.display = "none";
+                }
+            });
+
+            dropdown.style.display = found ? "block" : "none";
+        });
+
+        // Variant tanlash
+        options.forEach(option => {
+            option.addEventListener("click", () => {
+                searchInput.value = option.textContent;
+                hiddenInput.value = option.getAttribute("data-value");
+                dropdown.style.display = "none";
+            });
+        });
+
+        // Dropdown ochish va yopish
+        searchInput.addEventListener("focus", () => dropdown.style.display = "block");
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest(".custom-select-wrapper")) {
+                dropdown.style.display = "none";
+            }
+        });
+    };
+
+    // Pul momilasi dropdownini ishga tushirish
+    setupCustomDropdown("searchInput", "dropdown", "selectedValue");
+
+    // Valyuta dropdownini ishga tushirish
+    setupCustomDropdown("valyutaSearchInput", "valyutaDropdown", "valyutaSelectedValue");
+});
+
+
+        </script>
+        <div class="modal center-modal fade" id="modal-center" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">To'lov qabul qilish</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{% url 'add_tolov' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{ d_id }}" name="deliver_id">
+                            <div class="form-group">
+                                <label>So'm</label>
+                                <input type="number" value="0" name="som" class="form-control" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Dollar</label>
+                                <input type="number" value="0" name="dollor" class="form-control" step="0.01">
+                            </div>
+                            <div class="form-group form-group-float">
+                                <label class="form-group-float-label">To'lov usuli</label>
+                                <select class="form-control" name="turi">
+                                    <option value="Naqd" selected>Naqd</option>
+                                    <option value="Plastik">Plastik</option>
+                                    <option value="Pul o'tkazish">Pul o'tkazish</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group form-group-float">
+                                <label class="form-group-float-label">Turi</label>
+                                <select class="form-control" name="type">
+                                    <option value="1" selected>Qarz tolash</option>
+                                    <option value="2">Vozvrat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-group-label">Pul momilasi</label>
+                                <div class="custom-select-wrapper">
+                                    <input type="text" id="searchInput" placeholder="Qidirish uchun yozing..." class="form-control" />
+                                    <div class="custom-select-dropdown" id="dropdown">
+                                        {% for i in money_circulation %}
+                                        <div class="dropdown-option" data-value="{{ i.id }}">{{ i.name }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <input type="hidden" name="money_circulation" id="selectedValue" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-group-label">Valyuta</label>
+                                <div class="custom-select-wrapper">
+                                    <input type="text" id="valyutaSearchInput" placeholder="Qidirish uchun yozing..." class="form-control" />
+                                    <div class="custom-select-dropdown" id="valyutaDropdown">
+                                        {% for i in valyuta %}
+                                        <div class="dropdown-option" data-value="{{ i.id }}">{{ i.name }}</div>
+                                        {% endfor %}
+                                     </div>
+                                </div>
+                                <input type="hidden" name="valyuta" id="valyutaSelectedValue" />
+                            </div>
+                            
+                            
+                            <div class="form-group">
+                                <label class="form-group-float-label">Izoh</label>
+                                <textarea class="form-control" name="izoh" id="" cols="10" rows="2"></textarea>
+                            </div>
+
+                            <button type="button" class="btn btn-rounded btn-secondary" data-dismiss="modal">Yopish
+                            </button>
+                            <input type="submit" class="btn btn-rounded btn-primary float-right" value="Saqlash">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal -->
+    </div>
+
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/highlight/highlight.pack.js' %}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js' %}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js' %}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+
+    <script src="{% static 'assets/js/scrollspyNav.js' %}"></script>
+    <script>
+        checkall('todoAll', 'todochkbox');
+        $('[data-toggle="tooltip"]').tooltip()
+    </script>
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{% static 'plugins/flatpickr/flatpickr.js' %}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js' %}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+    <script>
+        function getCSRFToken() {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    if (cookie.substring(0, 10) == ('csrftoken' + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        $(document).ready(function () {
+            $('#rangeCalendarFlatpickr').on("change", function () {
+                var csrfToken = getCSRFToken();
+                var date1 = $('#rangeCalendarFlatpickr').val().slice(0, 10);
+                var date2 = $('#rangeCalendarFlatpickr').val().slice(14, 24);
+                var dt = JSON.stringify({
+                    date1: date1,
+                    date2: date2,
+                    d_id:{{ d_id }},
+                })
+                
+                $.ajax({
+                    headers: {"X-CSRFToken": csrfToken},
+                    type: "POST",
+                    url: "{% url 'nasiyatarix' %}",
+                    data: dt,
+                    success: function (data) {
+                        var dsom = data['dsom'];
+                        var ddollar = data['ddollar'];
+                        var psom = data['psom'];
+                        var pdollar = data['pdollar'];
+                        var debts = data['debts'];
+                        var pays = data['pays'];
+                        $("#dsom").empty();
+                        $("#dsom").append(dsom);
+                        $("#ddollar").empty();
+                        $("#ddollar").append(ddollar);
+                        $("#psom").empty();
+                        $("#psom").append(psom);
+                        $("#pdollar").empty();
+                        $("#pdollar").append(pdollar);
+                        $("#debt").empty();
+                        $("#pay").empty();
+                        var i = 1;
+                        for (dt of debts) {
+                            var tr = `<tr>
+                            <td><div>` + i + `</div></td>
+                            <td><div>` + String(dt.som) + `</div></td>
+                            <td><div>` + String(dt.dollar) + `</div></td>
+                            <td><div>` + String(dt.date) + `</div></td>
+                        </tr>`
+                            $('#debt').append(tr);
+                            i++;
+                        }
+                        var j = 1;
+                        for (dt of pays) {
+                            var tr = `<tr>
+                            <td><div>` + j + `</div></td>
+                            <td><div>` + String(dt.som) + `</div></td>
+                            <td><div>` + String(dt.dollar) + `</div></td>
+                            <td><div>` + String(dt.date) + `</div></td>
+                        </tr>`
+                            $('#pay').append(tr);
+                            j++;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/custom_miscellaneous.js'%}"></script>
+        <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+
+
+    <script>
+        $('#table1').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
+{% endblock js %}

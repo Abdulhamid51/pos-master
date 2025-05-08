@@ -1,0 +1,239 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    
+{% endblock css %}
+{% block content %}
+<script src="{% static 'multiselect.js' %}"></script>
+<div id="content" class="main-content">
+    <div class="container">
+        <div class="row layout-top-spacing" style="width: 100%;">
+            <div class="col-lg-12">
+                <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                    <div class="statbox widget box box-shadow">
+                        <div class="widget-content widget-content-area">
+                            <div class="row">
+                                <div class="col-md-12" style="display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; padding: 10px;">
+                                    <button class="btn btn-warning"><a href="{% url 'money_circulation' %}" style="color: white !important;">Manba</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'kassa_fin' %}" style="color: white !important;">Kassa</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'data_fin' %}" style="color: white !important;">Data</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'debet_kredit_fin' %}" style="color: white !important;">Debet-Kredit</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'cf_fin' %}" style="color: white !important;">CF</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'daily_cf_fin' %}" style="color: white !important;">Daily CF</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'xarid_fin' %}" style="color: white !important;">Xarid</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'sotuv_fin' %}" style="color: white !important;">Sotuv</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'pl_fin' %}" style="color: white !important;">P/L</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'balans_fin' %}" style="color: white !important;">Balans</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'majburiyat_fin' %}" style="color: white !important;">Majburiyat</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'tolov_kalendar_fin' %}" style="color: white !important;">Tolov Kalendari</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'reja_tushum_fin' %}" style="color: white !important;">Reja Tushum</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'reja_chiqim_fin' %}" style="color: white !important;">Reja Chiqim</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'asosiy_vosita_fin' %}" style="color: white !important;">Asosiy Vosita</a></button>
+                                    <button class="btn btn-warning"><a href="{% url 'ombor_fin' %}" style="color: white !important;">Sklad</a></button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+{% endblock js %}
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <style>
+        .tab {
+            display: flex;
+            gap: 10px;
+            /* border-bottom: 2px solid #ddd; */
+            margin-bottom: 10px;
+            width: 100%;
+
+        }
+        .tab button {
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+        .tab button.active {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+        .tab button:hover {
+            color: #0056b3;
+        }
+        #response_html {
+            display: none;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<div id="content" class="main-content">
+    <div class="container">
+        <div class="row layout-top-spacing" style="width: 100%;">
+            <div class="col-lg-12">
+                <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                    <div class="statbox widget box box-shadow">
+                        <div class="widget-content widget-content-area">
+                            <div class="tab">
+                                <button onclick="switchTab(event)" data-url="{% url 'money_circulation' %}">Manba</button>
+                                <button onclick="switchTab(event)" data-url="{% url 'kassa_fin' %}">Kassa</button>
+                                <button onclick="switchTab(event)" data-url="{% url 'data_fin' %}">Data</button>
+                                <button onclick="switchTab(event)">Debet-Kredit</button>
+                                <button onclick="switchTab(event)">CF</button>
+                                <button onclick="switchTab(event)">Daily CF</button>
+                                <button onclick="switchTab(event)">Xarid</button>
+                                <button onclick="switchTab(event)">Sotuv</button>
+                                <button onclick="switchTab(event)">P/L</button>
+                                <button onclick="switchTab(event)">Balans</button>
+                                <button onclick="switchTab(event)">Majburiyat</button>
+                                <button onclick="switchTab(event)">Tolov Kalendari</button>
+                                <button onclick="switchTab(event)">Reja Tushum</button>
+                                <button onclick="switchTab(event)">Reja Chiqim</button>
+                                <button onclick="switchTab(event)">Asosiy Vosita</button>
+                                <button onclick="switchTab(event)">Sklad</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12" id="response_html">
+                <div class="col-lg-12 col-12 layout-spacing">
+
+                </div>
+            </div>
+        </div>
+       
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const response_html = document.getElementById('response_html');
+
+
+    function switchTab(event) {
+    document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const url = event.target.getAttribute('data-url');
+
+    $.ajax({
+        url: url,
+        type: "GET",
+        headers: {
+            "X-CSRFToken": csrfToken
+        },
+        success: function(response) {
+            response_html.innerHTML = '';
+            response_html.style.display = 'block';
+            response_html.insertAdjacentHTML('beforeend', response.html);          
+            attachEventListeners(url)  
+        },
+        error: function () {
+            console.log('Xatolik yuz berdi!');
+        }
+    });
+}
+function attachEventListeners(url) {
+    const filterForm = document.getElementById('filter-form');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                data: formData,
+                success: function(response) {
+                    response_html.innerHTML = '';
+                    response_html.style.display = 'block';
+                    response_html.insertAdjacentHTML('beforeend', response.html);
+                    attachEventListeners(url);  
+                },
+                error: function () {
+                    console.log('Xatolik yuz berdi!');
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageNumber = this.getAttribute('data-page');
+            const formData = $('#filter-form').serialize() + '&page=' + pageNumber;
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                data: formData,
+                success: function(response) {
+                    response_html.innerHTML = '';
+                    response_html.style.display = 'block';
+                    response_html.insertAdjacentHTML('beforeend', response.html);
+                    attachEventListeners(url); 
+                },
+                error: function () {
+                    console.log('Xatolik yuz berdi!');
+                }
+            });
+        });
+    });
+}
+function exportTableToExcel() {
+    let table = document.getElementById("html5-extension");
+    let workbook = XLSX.utils.book_new();
+    let worksheet = XLSX.utils.table_to_sheet(table);
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jadval");
+
+    XLSX.writeFile(workbook, "jadval.xlsx");
+}
+
+</script>
+
+
+{% endblock js %}

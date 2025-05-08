@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+{% load humanize %}
+    <title>Ombor qabul | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM STYLES -->
+    <link href="{% static 'plugins/apex/apexcharts.css'%}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/widgets/modules-widgets.css'%}">
+    <!-- END PAGE LEVEL PLUGINS/CUSTOM STYLES -->
+
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <!-- END THEME GLOBAL STYLES -->
+
+    <!--  BEGIN CUSTOM STYLE FILE  -->
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/custom-nouiSlider.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/bootstrap-range-Slider/bootstrap-slider.css'%}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+    </style>
+    <!--  END CUSTOM STYLE FILE  -->
+
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row sales layout-top-spacing">
+                    <div class="col-12 layout-spacing">
+                        <div class="widget widget-table-two">
+                            <div class="widget-content pb-2">
+                                <form class="row" method="get">
+                                    <div class="form-group mb-0 col-3">
+                                        <input type="date" name="start_date" class="form-control" value="{{start_date}}">
+                                    </div>
+                                    <div class="form-group mb-0 col-3">
+                                        <input type="date" name="end_date" class="form-control" value="{{end_date}}">
+                                    </div>
+                                    <div class="form-group mb-0 col-3">
+                                        <select name="deliver" id="" class="form-control">
+                                            <option label="Yetgazib beruvchi"></option>
+                                            
+                                            {% for d in delivers %}
+                                                <option 
+                                                {% if d.id == deliver %}
+                                                    selected
+                                                {% endif %}
+                                                     value="{{d.id}}">{{d.name}}</option>
+                                            {% endfor %}
+                                                
+                                        </select>
+                                    </div>
+                                    <div class="form-group mb-0 col-3">
+                                        <button type="submit" class="btn btn-primary">Filterlash</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="widget-content">
+                                <div id="filter_ajax" class="table-responsive">
+                                    <table class="table" id="filter_data_table">
+                                        <thead>
+                                            <tr>
+                                                <th><div>№</div></th>
+                                                <th><div>Nomi</div></th>
+                                                <th><div>Yetkazib beruvchi</div></th>
+                                                <th><div>So`m</div></th>
+                                                <th><div>Sotish som</div></th>
+                                                <th><div>Jami soni</div></th>
+                                                <th><div style="text-align: center;">Sana</div></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="war">
+                                            {% for w in wares %}
+                                                <tr>
+                                                    <td><div class="td-content">{{ forloop.counter }}</div></td>
+                                                    <td><a href="{% url 'omborqabuldetail' w.id %}" target="_blank" rel="noopener noreferrer"><div class="td-content">{{ w.name }}</a></div></td>
+                                                    <td><div class="td-content">{{ w.deliver }}</div></td>
+                                                    <td><div class="td-content">{{ w.som|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.sum_sotish_som|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.total_quantity|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.date }}</div></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <td></td>
+                                            <td>Jami:</td>
+                                            <td></td>
+                                            <td>{{total_som|intcomma}}</td>
+                                            <td>{{total_som_sotish|intcomma}}</td>
+                                            <td>{{total_quantity|intcomma}}</td>
+                                            <td></td>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="col-7 layout-spacing" style = "position: sticky;top: 65px;width: 100%;height: 100%;">
+                        <div class="widget widget-table-two">
+                            <div class="widget-content">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th><div>№</div></th>
+                                                <th><div>Product</div></th>
+                                                <th><div>So`m</div></th>
+                                                <th><div>Dollar</div></th>
+                                                <th><div>Kurs</div></th>
+                                                <th><div>Soni</div></th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody id="waritem">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+
+            </div>
+{% endblock content %}
+{% block js %}
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/apex/apexcharts.min.js'%}"></script>
+    <script src="{% static 'assets/js/widgets/modules-widgets.js'%}"></script>
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
+
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
+    <script src="{% static 'plugins/flatpickr/flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/nouislider.min.js'%}"></script>
+
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+    <script>
+
+    function getCSRFToken() {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, 10) == ('csrftoken' + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+            }
+        }
+      return cookieValue;
+    }
+    function Item(id){
+        var csrfToken = getCSRFToken();
+        var dt = JSON.stringify({
+                id:id,
+            })
+        $.ajax({
+            headers: { "X-CSRFToken": csrfToken },
+            type: "POST",
+            url: "{% url 'getitem' %}",
+            data: dt,
+            success: function(data) {
+                var wares = data['items'];
+
+                $("#waritem").empty();
+                var i = 1;
+                for(dt of wares){
+                        var tr = `
+                            <tr>
+                                <td><div class="td-content">` + i + `</div></td>
+                                <td><div class="td-content">` + dt.product + `</div></td>
+                                <td><div class="td-content">` + String(dt.som) + `</div></td>
+                                <td><div class="td-content">` + String(dt.dollar) + `</div></td>
+                                <td><div class="td-content">` + String(dt.kurs) + `</div></td>
+                                <td><div class="td-content">` + String(dt.quantity) + `</div></td>
+                            </tr>
+                        `
+                        $('#waritem').append(tr);
+                        i++;
+                    }
+            }
+        });
+    }
+    // $(document).ready(function(){
+    //     $('#rangeCalendarFlatpickr').on("change", function (){
+    //         var csrfToken = getCSRFToken();
+    //         var date1 = $('#rangeCalendarFlatpickr').val().slice(0, 10);
+    //         var date2 = $('#rangeCalendarFlatpickr').val().slice(14, 24);
+    //         var dt = JSON.stringify({
+    //             date1:date1,
+    //             date2:date2,
+    //         })
+    //         $.ajax({
+    //             headers: { "X-CSRFToken": csrfToken },
+    //             type: "POST",
+    //             url: "{% url 'dataware' %}",
+    //             data: dt,
+    //             success: function(data) {
+    //                 var wares = data['wares'];
+    //                 var i = 1;
+    //                 $("#war").empty();
+    //                 for(dt of wares){
+    //                     var tr = `<tr onclick="Item(` + dt.id +`)">
+    //                         <td><div class="td-content">` + i + `</div></td>
+    //                         <td><div class="td-content"> <a href="/omborqabul/${dt.id}" target="_blank" rel="noopener noreferrer"><div class="td-content">` + String(dt.name) + `</a></div></td>
+    //                         <td><div class="td-content ">` + String(dt.deliver) + `</div></td>
+    //                         <td><div class="td-content">` + String(dt.som) + `</div></td>
+    //                         <td><div class="td-content">` + String(dt.dollar) + `</div></td>
+    //                         <td><div class="td-content">` + String(dt.sotish_som) + `</div></td>
+    //                         <td><div class="td-content">` + String(dt.sotish_dollar) + `</div></td>
+    //                         <td><div class="td-content">` + String(dt.date) + `</div></td>
+    //                     </tr>`
+    //                     $('#war').append(tr);
+    //                     i++;
+    //                 }
+    //             }
+    //         });
+    //     });
+    // });
+    // </script>
+
+<script>
+$(document).ready(function(){
+    $('#rangeCalendarFlatpickr').on("change", function (){
+        var csrfToken = getCSRFToken();
+        var date1 = $('#rangeCalendarFlatpickr').val().slice(0, 10);
+        var date2 = $('#rangeCalendarFlatpickr').val().slice(14, 24);
+        var dt = JSON.stringify({
+            date1:date1,
+            date2:date2,
+        })
+        if (date1 != '' & date2 != '') {
+            $.ajax({
+                headers: { "X-CSRFToken": csrfToken },
+                type: "POST",
+                url: "{% url 'dataware_html' %}",
+                data: dt,
+                success: function (data) {
+                    $("#filter_ajax").empty();
+
+                    $("#filter_ajax").append(data);
+                    // var table= $("#filter_ajax").DataTable();
+                }
+            });
+        }
+    });
+});
+</script>
+
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        $('#filter_data_table').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' }
+                   
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
+
+
+{% endblock js %}

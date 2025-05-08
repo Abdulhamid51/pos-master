@@ -1,0 +1,978 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+     <style>
+        .selectize-input {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            line-height: 2.7rem !important;
+        }
+
+    .btn-check:checked + .btn {
+        background-color: #007bff;
+        color: white;
+    }
+
+
+    .price_type_input {
+        display: none;
+    }
+
+    #alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        width: 30rem;
+    }
+
+     </style>
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div id="alert-container"></div>
+                    <div class="col-xl-8 col-lg-8 col-sm-12  layout-spacing">
+
+                        <div class="row">
+                            <div class="col-md-2">
+                                <!-- <label for="">Valuta</label> -->
+                                <select name="valuta" id="main_valuta" class="form-control" 
+                                {% if order %}
+                                    disabled
+                                {% endif %}
+                                    >
+                                    <option value="som">Som</option>
+                                    <option value="dollar">Dollar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <select onchange="add_modal(this)" class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}"
+                                
+                                {% if not order %}
+                                    disabled
+                                {% endif %}>
+                                    <option value=""></option>
+                                    
+                                    {% for i in products %}
+                                        <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}">{{ i.name }} - {{i.barcode}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <!-- <div class="col-md-2">
+                                <input value="{{dollar_kurs}}" type="number" name="dollar_kurs" class="form-control">
+                            </div> -->
+                            <!-- <div class="col-md-5 d-flex" style="padding-bottom: 0.5rem;" >
+                                <div class="form-check" style="padding: 1rem 1rem;">
+                                    <input class="form-check-input" id="oddiy" type="radio" name="price_type" value="{{i.id}}" checked>
+                                    <label class="form-check-label" for="oddiy">
+                                        Oddiy
+                                    </label>
+                                </div>
+                                {% for i in price_types %}
+                                    <div class="form-check" style="padding: 1rem 1rem;">
+                                        <input class="form-check-input" id="{{i.name}}{{i.id}}" type="radio" name="price_type" value="{{i.id}}" >
+                                        <label class="form-check-label" for="{{i.name}}{{i.id}}">
+                                            {{i.name}}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div> -->
+                            <div class="btn-group col-md-5" role="group" aria-label="Price Types">
+                                <input type="radio" class="btn-check price_type_input" name="price_type" id="oddiy" value="" autocomplete="off" checked>
+                                <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
+                                {% for i in price_types %}
+                                    <input type="radio" class="btn-check price_type_input" name="price_type" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="widget-content widget-content-area br-6">
+                            
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Maxsulot nomi</th>
+                                            <th>Shtrix kod</th>
+                                            <th>Qo'shish</th>
+                                            <th>Miqdori</th>
+                                            <th>Ayrish</th>
+                                            <th>Narx</th>
+                                            <th>Kelishilgan narx</th>
+                                            <th>Skidka</th>
+                                            <th>Jami</th>
+                                            <th>Ochirish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        
+                                        {% for i in carts %}
+                                        <tr data-id="{{i.id}}">
+                                            <td>{{ forllop.counter }}</td>
+                                            <td>{{ i.product.name }}</td>
+                                            <td>{{ i.product.barcode }}</td>
+                                            <td class="text-right"><button type="button" class="btn btn-primary quantity-minus">-</button></td>
+                                            <td contenteditable="true" class="quantity text-center product_quantity">{{ i.quantity }}</td>
+                                            <td><button type="button" class="btn btn-primary quantity-plus">+</button></td>
+                                            <td>{{ i.price_without_skidka }}</td>
+                                            <td>{{ i.price }}</td>
+                                            <td class="discount" data-value="{{i.skidka}}">{{ i.skidka|intcomma }}</td>
+                                            <td class="total" data-value="{{i.total_price}}">{{ i.total_price|intcomma }}</td>
+                                            <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+                                        </tr>
+                                        {% endfor %}
+                                            
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td>Jami</td>
+                                            <th></th>
+                                            <td></td>
+                                            <td></td>
+                                            <th class="text-center" id="quantity_total"></th>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td id="skidka_total">{{ order.baskets_total_skidka|intcomma }}</td>
+                                            <td id="all_total">{{ order.baskets_total_price|intcomma }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 d-flex" id="yakunlash">
+                            {% if order and not order.is_finished %}
+                                <a href="{% url 'finish_order' order.id %}" style="width: 33%;" class="btn btn-primary">Yakunlash</a>
+                            {% endif %}
+                            {% if order_id_check %}
+                            <button type="button" class="btn btn-success" onclick="fetchReceipt()" style="width: 33%;">Chek chiqarish</button>
+                            <button type="button" class="btn btn-warning" style="width: 33%; "> 
+                                <a href="{% url 'shop_nakladnoy' order_id_check %}" target="_blank" rel="noopener noreferrer" style="color: white !important;">Chek chiqarish V2</a>
+                            </button>
+                            {% endif %}
+                        </div>
+                        <script>
+                            async function fetchReceipt() {
+                                try {
+                                    let response = await fetch('/create_check/' + "{{ order_id_check }}");
+                                    let data = await response.json();
+                                    generateReceipt(data);
+                                } catch (error) {
+                                    console.error("Xatolik:", error);
+                                }
+                            }
+                        
+                            function generateReceipt(data) {
+                                let receiptWindow = window.open('', '', 'width=800,height=1000');
+                                receiptWindow.document.write(`
+                                    <html>
+                                    <head>
+                                        <style>
+                                            @media print {
+                                                body {
+                                                    font-family: Arial, sans-serif;
+                                                    margin: 0;
+                                                    padding: 20mm;
+                                                    width: 210mm;
+                                                    height: 297mm;
+                                                }
+                                                .receipt {
+                                                    width: 100%;
+                                                    max-width: 190mm;
+                                                    font-size: 14pt;
+                                                    margin: auto;
+                                                }
+                                                .header {
+                                                    font-size: 22pt;
+                                                    font-weight: bold;
+                                                    text-align: center;
+                                                    margin-bottom: 10mm;
+                                                }
+                                                .line {
+                                                    border-top: 2px solid black;
+                                                    margin: 5mm 0;
+                                                }
+                                                .item {
+                                                    display: flex;
+                                                    justify-content: space-between;
+                                                    font-size: 14pt;
+                                                }
+                                                .bold {
+                                                    font-weight: bold;
+                                                    font-size: 16pt;
+                                                }
+                                            }
+                                            
+                                            body {
+                                                font-family: Arial, sans-serif;
+                                                margin: 0;
+                                                padding: 20mm;
+                                                width: 210mm;
+                                                height: 297mm;
+                                            }
+                                            .receipt {
+                                                width: 100%;
+                                                max-width: 190mm;
+                                                font-size: 14pt;
+                                                margin: auto;
+                                            }
+                                            .header {
+                                                font-size: 22pt;
+                                                font-weight: bold;
+                                                text-align: center;
+                                                margin-bottom: 10mm;
+                                            }
+                                            .line {
+                                                border-top: 2px solid black;
+                                                margin: 5mm 0;
+                                            }
+                                            .item {
+                                                display: flex;
+                                                justify-content: space-between;
+                                                font-size: 14pt;
+                                            }
+                                            .bold {
+                                                font-weight: bold;
+                                                font-size: 16pt;
+                                            }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <div class="receipt">
+                                            <div class="header">🛒 Bardo jamoasi</div>
+                                            <div class="bold">Chek: ${data.chek}</div>
+                                            <div>Sotuvchi: ${data.seller}</div>
+                                            <div>Sana: ${data.date}</div>
+                                            <div class="line"></div>
+                                `);
+                        
+                                let totalAmount = 0;
+                        
+                                data.items.forEach((item, index) => {
+                                    totalAmount += item.total;
+                                    receiptWindow.document.write(`
+                                        <div class="item">
+                                            <span>${index + 1}. ${item.name}</span>
+                                            <span>${item.quantity} x ${item.price} = ${item.total.toLocaleString('en-US')}</span>
+                                        </div>
+                                    `);
+                                });
+                        
+                                receiptWindow.document.write(`
+                                        <div class="line"></div>
+                                        <div class="bold">Jami summa: ${totalAmount.toLocaleString('en-US')}</div>
+                                        <div class="line"></div>
+                                        <div class="bold">Tolandi:</div>
+                                        <br>
+                                        <div class="bold">Som: ${data.som.toLocaleString('en-US')}</div>
+                                        <div class="bold">Dollar: ${data.dollar.toLocaleString('en-US')}</div>
+                                        <br>
+                                        <div class="bold">Skidka Som: ${data.skidka_som.toLocaleString('en-US')}</div>
+                                        <div class="bold">Skidka Dollar: ${data.skidka_dollar.toLocaleString('en-US')}</div>
+                                        <div class="line"></div>
+                                        <div style="font-size: 14pt; text-align: center;">Biz bilan hamkorlik qilayotganingizdan xursandmiz!</div>
+                                        <div style="font-size: 14pt; text-align: center;">📞 +998901254042</div>
+                                        <div style="font-size: 14pt; text-align: center;">📞 +998901252647</div>
+                                        <div style="font-size: 14pt; text-align: center;">📞 +998910197071</div>
+                                        <div class="line"></div>
+                                    </div>
+                                    </body>
+                                    </html>
+                                `);
+                        
+                                receiptWindow.document.close();
+                                receiptWindow.print();
+                            }
+                        </script>
+                    </div>
+                    
+                    <div class="col-xl-4 col-lg-4 col-sm-12  layout-spacing">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="widget-content widget-content-area br-6">
+                                    <label for="">Mijoz</label>
+                                    <select class="form-control searchable" name="product" id="customer" data-recieve="{{recieve.id}}" 
+                                    {% if order.is_finished %}
+                                        disabled
+                                    {% endif %}
+                                        >
+                                        <option value=""></option>
+                                        
+                                        {% for i in customers %}
+                                            <option value="{{i.id}}"
+                                            
+                                            {% if order.debtor.id == i.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{ i.fio }}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+
+                                    <label for="">To'lov sanasi</label>
+                                    <input value="{{order.debt_return|date:'Y-m-d'}}" id="payment_date" type="date" class="form-control">
+
+                                    <label for="">Call center</label>
+                                    <select class="form-control searchable" name="product" id="call_center" data-recieve="{{recieve.id}}">
+                                        <option value=""></option>
+                                        
+                                        {% for i in call_center %}
+                                            <option value="{{i.id}}"
+                                            
+                                            {% if order.call_center|add:'0' == i.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{ i }}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+                                    
+                                    {% if not order %}
+                                        <button id="order_save" style="width: 100%;" class="btn btn-primary">Saqlash</button>
+                                    {% endif %}
+
+                                    <br><hr style="color: black;">
+                                    <label for="">Naqd so'm</label>
+                                    <input value="{{order.naqd_som}}" type="number" class="form-control" id="naqd_som" name="naqd_som">
+
+                                    <label for="">Naqd dollar</label>
+                                    <input value="{{order.naqd_dollar}}" type="number" class="form-control" id="naqd_dollar" name="naqd_dollar">
+
+                                    <label for="">Karta</label>
+                                    <input value="{{order.click}}" type="number" class="form-control" id="click" name="click">
+
+                                    <label for="">Bank</label>
+                                    <input value="{{order.plastik|floatformat:0}}" type="number" class="form-control" id="transfer" name="transfer">
+
+                                    <label for="">Jami</label>
+                                    <input value="{{order.total_naqd}}" type="number" class="form-control" id="tolov_total" name="transfer" disabled>
+
+                                    <br><hr>
+
+                                    <label for="">Nasiya so'm</label>
+                                    <input value="{{order.nasiya_som}}" type="number" class="form-control" id="nasiya_som" name="nasiya_som" disabled>
+
+                                    <label for="">Nasiya dollar</label>
+                                    <input value="{{order.nasiya_dollar}}" type="number" class="form-control" id="nasiya_dollar" name="nasiya_dollar" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+            Yangi 
+        </button>
+
+
+          <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <form id="add_form" class="modal-content" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-header">
+                  <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body" >
+                        <div class="form-group" id="recieve_item_add_product_div">
+                          <input type="hidden" name="product" id="recieve_item_add_product_id">
+                          
+                          <label for="">Shtrix kod</label>
+                          <input id="product_barcode" type="number" name="barcode" class="form-control" disabled>
+                          
+                          <label for="">Omborda qoldiq</label>
+                          <input id="ombor_qoldiq" type="number" name="qoldiq" class="form-control" disabled>
+
+                          <label for="">Narx</label>
+                          <input id="sotuv_sotish_som" type="number" name="sotish_som" class="form-control" disabled>
+
+                          <label for="">Kelishilgan narxi</label>
+                          <input id="sotuv_kelishilgan_som" type="number" name="sotish_som" class="form-control">
+
+                          <!-- <label for="">Kurs</label>
+                          <input value="{{dollar_kurs}}" type="number" name="dollar_kurs" class="form-control"> -->
+
+                          <label for="">Miqdori</label>
+                          <input type="number" id="modal_quantity_input" name="quantity" class="form-control">
+
+                          
+                          <!-- <label for="">Kurs</label>
+                          <input value="12800" type="number" name="kurs" class="form-control"> -->
+
+
+                          
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                          <button id="modal_delete" type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button type="submit" class="btn btn-primary">Saqlash</button>
+                        </div>
+
+                </div>
+              </form>
+            </div>
+          </div>
+          <input type="hidden" id="order_id" value="{{order.id}}">
+
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+    <script>
+        if ("{{order}}") {
+            parseFloat($("input[id='dollar_kurs']").val({{order.kurs}}))
+        }
+    </script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+    </script>
+
+
+<script>
+    function add_modal(item) {
+        const itemValue = $(item).val(); // Get the value of the passed item
+        const [pr_id, pr_name, quantity, barcode] = itemValue.split('&');
+        const price_type = document.querySelector('input[name="price_type"]:checked').value
+        console.log(price_type, 'ppp')
+        if (pr_id) {
+            $('#recieve_item_add_button').click();
+            $('#recieve_item_add_product_id').val(pr_id);
+            $('#product_barcode').val(barcode);
+            $('#ombor_qoldiq').val(quantity);
+            $('#recieve_item_add_product_name').text(pr_name);
+
+            $('#sotuv_sotish_som').val(); 
+            $('#recieve_item_add_product_div .pr_type').remove();
+            let price_types = $.get("{% url 'check_price' %}", { product:  pr_id, type: price_type}, function(data) {
+                let price = parseInt(data['price'])
+                $('#sotuv_sotish_som').val(price); 
+                $('#sotuv_kelishilgan_som').val(price); 
+            });
+
+        }
+    }
+</script>
+
+
+<script>
+    function getValutaRate() {
+        let kurs = parseFloat($("input[id='dollar_kurs']").val()) || 1;
+        let valuta = $("select[name='valuta']").val();
+        return valuta === "dollar" ? kurs : 1;
+    }
+    $(document).ready(function () {
+    function formatNumber(num) {
+        return new Intl.NumberFormat("en-US").format(num);
+    }
+
+
+    function updateTotals() {
+        let totalQuantity = 0;
+        let totalDiscount = 0;
+        let totalSum = 0;
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let quantity = parseInt($(this).find(".quantity").text()) || 0;
+            let discount = parseFloat($(this).find(".discount").attr("data-value")) || 0;
+            let total = parseFloat($(this).find(".total").attr("data-value")) || 0;
+
+            totalQuantity += quantity;
+            totalDiscount += discount;
+            totalSum += total;
+        });
+
+        $("#quantity_total").text(formatNumber(totalQuantity));
+        $("#skidka_total").text(formatNumber((totalDiscount / kurs).toFixed(2)));
+        $("#all_total").text(formatNumber((totalSum / kurs).toFixed(2)));
+
+        calculateRemaining();
+    }
+
+    function calculateRemaining() {
+        let total = parseFloat($("#all_total").text().replace(/,/g, "")) || 0;
+        let valuta = $('select[name="valuta"]').val();
+        let kurs = parseFloat($("input[id='dollar_kurs']").val()) || 1;
+        
+        let naqd_som = parseFloat($("#naqd_som").val()) || 0;
+        let naqd_dollar = parseFloat($("#naqd_dollar").val()) || 0;
+        let click = parseFloat($("#click").val()) || 0;
+        let transfer = parseFloat($("#transfer").val()) || 0;
+
+        // let totalPaid = valuta === "som" ? naqd_som + click + transfer + naqd_dollar * kurs : naqd_dollar * kurs + naqd_som + click + transfer;
+        let totalPaid;
+        console.log(kurs, 'aaaa')
+        if (valuta === "som") {
+            totalPaid = naqd_som + click + transfer + naqd_dollar * kurs;
+        } else {
+            totalPaid = naqd_dollar + (naqd_som + click + transfer) / kurs;
+        }
+        console.log(total)
+
+        let remaining = Math.max(total - totalPaid, 0);
+        // console.log(total)
+        // console.log(remaining, 'a', totalPaid)
+        $('#tolov_total').val((totalPaid.toFixed(2)));
+        if (valuta === "som") {
+            $("#nasiya_som").val(remaining.toFixed(2));
+            console.log(remaining.toFixed(2))
+            $("#nasiya_dollar").val("");
+        } else {
+            $("#nasiya_dollar").val((remaining).toFixed(2));
+            $("#nasiya_som").val("");
+        }
+    }
+
+    $("#add_form").submit(function (event) {
+        event.preventDefault();
+        $('#modal_delete').click();
+
+        let productid = $("#recieve_item_add_product_id").val();
+        let productName = $("#recieve_item_add_product_name").val();
+        let barcode = $("#product_barcode").val();
+        let quantity = parseInt($("input[name='quantity']").val()) || 0;
+        let price = parseFloat($("#sotuv_sotish_som").val()) || 0;
+        let agreedPrice = parseFloat($("#sotuv_kelishilgan_som").val()) || 0;
+        let discount = (price - agreedPrice) * quantity;
+        let total = agreedPrice * quantity;
+        let kurs = getValutaRate();
+        let orderId = $("#order_id").val();  // Order ID olamiz
+        let productId = $("#recieve_item_add_product_id").val(); // Mahsulot ID olamiz
+
+        // AJAX orqali backendga so‘rov yuborish
+        $.ajax({
+            url: `/order_detail_ajax/${orderId}/`,
+            type: "POST",
+            data: {
+                action: "add",
+                order_id: orderId,
+                product_id: productId,
+                quantity: quantity,
+                product_price: price,
+                agreed_price: agreedPrice,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val() // CSRF token
+            },
+            success: function (response) {
+                console.log(response.success, 'aaaa')
+                if (response.success == true) {
+                    showAlert(response.message, "success");
+
+                    let newRow = `
+                        <tr data-id="${response.cart_id}">
+                            <td>${$("tbody tr").length + 1}</td>
+                            <td>${productName}</td>
+                            <td>${barcode}</td>
+                            <td class="text-right"><button type="button" class="btn btn-primary quantity-minus">-</button></td>
+                            <td contenteditable="true" class="quantity text-center product_quantity">${quantity}</td>
+                            <td><button type="button" class="btn btn-primary quantity-plus">+</button></td>
+                            <td>${formatNumber(price.toFixed(2))}</td>
+                            <td>${formatNumber(agreedPrice.toFixed(2))}</td>
+                            <td class="discount" data-value="${discount.toFixed(2)}">${formatNumber((discount / kurs).toFixed(2))}</td>
+                            <td class="total" data-value="${total.toFixed(2)}">${formatNumber((total / kurs).toFixed(2))}</td>
+                            <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+                        </tr>`;
+                    
+                    $("tbody").append(newRow);
+                    $('#modal_quantity_input').val("");
+                    updateTotals();
+                } else {
+                    showAlert(response.message, "danger");
+
+                }
+            },
+            error: function () {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+
+            }
+        });
+    });
+
+
+    $(document).on("click", ".quantity-plus, .quantity-minus", function () {
+        let row = $(this).closest("tr");
+        let quantityElem = row.find(".quantity");
+        let quantity = parseInt(quantityElem.text()) + ($(this).hasClass("quantity-plus") ? 1 : -1);
+        
+        if (quantity > 0) {
+            quantityElem.text(quantity);
+            let agreedPrice = parseFloat(row.find("td:eq(7)").text().replace(/,/g, "")) || 0;
+            let total = agreedPrice * quantity;
+            
+            row.find(".total").attr("data-value", total.toFixed(2)).text(formatNumber((total / getValutaRate()).toFixed(2)));
+            updateTotals();
+        }
+    });
+
+    $(document).on("click", ".product-delete", function () {
+        const tr_item = $(this).closest("tr")
+        let cart_id = tr_item.data("id");
+        let orderId = $("#order_id").val();
+        $.ajax({
+            url: `/order_detail_ajax/${orderId}/`,
+            type: "POST",
+            data: {
+                action: "delete",
+                cart_id: cart_id,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val() // CSRF token
+            },
+            success: function (response) {
+                if (response.success == true) {
+                    showAlert(response.message, "success");
+                    tr_item.remove();
+                    updateTotals();
+                } else {
+                    showAlert(response.message, "danger");
+
+                }
+            },
+            error: function () {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+
+            }
+        });
+        updateTotals();
+    });
+
+    $("#naqd_som, #naqd_dollar, #click, #transfer, select[name='valuta']").on("input change", function () {
+        calculateRemaining();
+    });
+
+    $("select[name='valuta']").change(function () {
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let row = $(this);
+            let discount = parseFloat(row.find(".discount").attr("data-value")) || 0;
+            let total = parseFloat(row.find(".total").attr("data-value")) || 0;
+
+            row.find(".discount").text(formatNumber((discount / kurs).toFixed(2)));
+            row.find(".total").text(formatNumber((total / kurs).toFixed(2)));
+        });
+
+        updateTotals();
+    });
+
+    updateTotals();
+});
+
+</script>
+
+
+<script>
+    const showAlert = (message, type) => {
+        const alertElement = $(`
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
+
+        $("#alert-container").append(alertElement);
+
+        setTimeout(() => {
+            alertElement.fadeOut(500, function () { $(this).remove(); });
+        }, 3000); // 3 soniyadan keyin yo'qoladi
+    };
+    $(document).ready(function () {
+        // updateTotals();
+
+        // $("#order_save").click(function () {
+        //     const customer = $("#customer").val();
+        //     const paymentDate = $("#payment_date").val();
+        //     const callCenter = $("#call_center").val();
+        //     const valuta = $("#main_valuta").val();
+
+        //     const naqd_som = $("#naqd_som").val();
+        //     const naqd_dollar = $("#naqd_dollar").val();
+        //     const plastik = $("#transfer").val();
+        //     const click = $("#click").val();
+        //     const nasiya_som = $("#nasiya_som").val();
+        //     const nasiya_dollar = $("#nasiya_dollar").val();
+        //     let orderId = $("#order_id").val();
+
+
+        //     if (customer && paymentDate && callCenter) {
+        //         $.ajax({
+        //             url: "{% url 'create_order_ajax' %}",
+        //             type: "POST",
+        //             data: {
+        //                 'csrfmiddlewaretoken': '{{ csrf_token }}',
+        //                 'customer': customer,
+        //                 'payment_date': paymentDate,
+        //                 'call_center': callCenter,
+        //                 'kurs': getValutaRate(),
+        //                 'main_valuta': valuta,
+
+        //                 'naqd_som': naqd_som,
+        //                 'naqd_dollar': naqd_dollar,
+        //                 'plastik': plastik,
+        //                 'click': click,
+        //                 'nasiya_som': nasiya_som,
+        //                 'nasiya_dollar': nasiya_dollar,
+        //                 'order_id': orderId
+        //             },
+        //             success: function (response) {
+        //                 if (response.success) {
+        //                     $("#order_id").val(response.order_id); // Order ID inputga yoziladi
+        //                     const selectizeInstance = $('#products')[0].selectize;
+        //                     selectizeInstance.enable();
+        //                     showAlert(`Buyurtma muvaffaqiyatli saqlandi! Order ID: ${response.order_id}`, "success");
+        //                     $('#order_id').val(response.order_id)
+        //                     const newUrl = `/order_detail_ajax/${response.order_id}/`;
+        //                     window.history.replaceState(null, '', newUrl);
+
+        //                 } else {
+        //                     showAlert(response.message || "Xatolik yuz berdi", "danger");
+        //                 }
+        //             },
+        //             error: function () {
+        //                 showAlert("Server bilan bog'lanishda xatolik", "danger");
+        //             }
+        //         });
+        //     } else {
+        //         showAlert("Iltimos, mijoz, to'lov sanasi va call center tanlang", "danger");
+        //     }
+        // });
+
+        function saveOrder() {
+    const customer = $("#customer").val();
+    const paymentDate = $("#payment_date").val();
+    const callCenter = $("#call_center").val();
+    const valuta = $("#main_valuta").val();
+
+    const naqd_som = $("#naqd_som").val();
+    const naqd_dollar = $("#naqd_dollar").val();
+    const plastik = $("#transfer").val();
+    const click = $("#click").val();
+    const nasiya_som = $("#nasiya_som").val();
+    const nasiya_dollar = $("#nasiya_dollar").val();
+    const orderId = $("#order_id").val();
+
+    const fields = {
+        'csrfmiddlewaretoken': '{{ csrf_token }}',
+        'customer': $("#customer").val(),
+        'payment_date': $("#payment_date").val(),
+        'call_center': $("#call_center").val(),
+        'kurs': parseFloat($("input[id='dollar_kurs']").val()) || 1,
+        'main_valuta': $("#main_valuta").val(),
+        'naqd_som': $("#naqd_som").val(),
+        'naqd_dollar': $("#naqd_dollar").val(),
+        'plastik': $("#transfer").val(),
+        'click': $("#click").val(),
+        'nasiya_som': $("#nasiya_som").val(),
+        'nasiya_dollar': $("#nasiya_dollar").val(),
+        'order_id': $("#order_id").val()
+    };
+
+    // Faqat qiymati bo'lgan maydonlarni qoldirish
+    const data = Object.fromEntries(
+        Object.entries(fields).filter(([_, value]) => value !== null && value !== undefined && value !== "")
+    );
+
+    if (customer && paymentDate && callCenter) {
+        $.ajax({
+            url: "{% url 'create_order_ajax' %}",
+            type: "POST",
+            data: data,
+            success: function (response) {
+                if (response.success) { 
+                    console.log('ppppppp')
+                    if ($('#yakunlash').children().length === 0) {
+                        console.log('ooooooo');  // ✅ endi chiqadi
+                        $('#yakunlash').append(`
+                            <a href="finish_order/${orderId}/" style="width: 100%; padding: 1rem 0;" class="btn btn-primary">
+                                Yakunlash
+                            </a>
+                        `);
+                    }
+
+                    $('#main_valuta').attr('disabled',true);
+                    $('#order_save').addClass('d-none')
+                    $("#order_id").val(response.order_id); 
+                    const selectizeInstance = $('#products')[0].selectize;
+                    selectizeInstance.enable();
+                    showAlert(`Buyurtma muvaffaqiyatli saqlandi!`, "success");
+                    const newUrl = `/order_detail_ajax/${response.order_id}/`;
+                    window.history.replaceState(null, '', newUrl);
+                } else {
+                    showAlert(response.message || "Xatolik yuz berdi", "danger");
+                }
+            },
+            error: function () {
+                showAlert("Server bilan bog'lanishda xatolik", "danger");
+            }
+            });
+        } else {
+            showAlert("Iltimos, mijoz, to'lov sanasi va call center tanlang", "danger");
+        }
+    }
+
+        $("#order_save").click(saveOrder);
+
+        // Change eventlarni qo'shish
+        $("#naqd_som, #naqd_dollar, #transfer, #click, #main_valuta").change(saveOrder);
+
+
+    });
+</script>
+
+<script>
+// $(document).ready(function () {
+//     // Matn o'zgarishini kuzatish uchun funksiya
+//     function observeTextChange(element) {
+//         const $element = $(element);
+//         let lastText = $element.text().trim(); // Dastlabki matnni saqlash
+
+//         // MutationObserver bilan matn o'zgarishini kuzatish
+//         const observer = new MutationObserver(() => {
+//             const currentText = $element.text().trim();
+//             if (currentText !== lastText) { // Agar matn o'zgargan bo'lsa
+//                 alert(`Matn o'zgardi: ${currentText}`);
+//                 lastText = currentText; // So'nggi matnni yangilash
+//             }
+//         });
+
+//         observer.observe(element, { characterData: true, subtree: true, childList: true });
+
+//         // input hodisasi bilan contenteditable elementni kuzatish (yanada barqaror)
+//         $element.on("input", function () {
+//             const currentText = $element.text().trim();
+//             if (currentText !== lastText) {
+//                 alert(`Matn o'zgardi: ${currentText}`);
+//                 lastText = currentText;
+//             }
+//         });
+//     }
+
+//     // Barcha contenteditable bo'lgan .product_quantity elementlarini kuzatish
+//     $(".product_quantity[contenteditable='true']").each(function () {
+//         observeTextChange(this);
+//     });
+// });
+
+$(document).ready(function () {
+    function observeTextChange(element) {
+        console.log('ooooooooo')
+        const $element = $(element);
+        let lastText = $element.text().trim();
+        let timeoutId = null;
+        const cart_id = $(element).closest('tr').data('id'); 
+        const orderId = $("#order_id").val();
+
+
+        function triggerAlert() {
+            // alert(`Matn o'zgardi: ${$element.text().trim()}`);
+            $.ajax({
+            url: `/order_detail_ajax/${orderId}/`,
+            type: "POST",
+            data: {
+                action: "edit",
+                quantity: lastText,
+                cart_id: cart_id,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val() // CSRF token
+            },
+            success: function (response) {
+                console.log(response.success, 'aaaa')
+                if (response.success == true) {
+                    showAlert(response.message, "success");
+                    
+                    // updateTotals();
+                } else {
+                    showAlert(response.message, "danger");
+
+                }
+            },
+            error: function () {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+
+            }
+        });
+        }
+
+        function handleChange() {
+            const currentText = $element.text().trim();
+            if (currentText !== lastText) {
+                clearTimeout(timeoutId); // Oldingi taymerni tozalash
+                timeoutId = setTimeout(triggerAlert, 1500);
+                lastText = currentText; // Matnni yangilash
+            }
+        }
+
+        // MutationObserver bilan JS orqali matn o'zgarishini kuzatish
+        const observer = new MutationObserver(handleChange);
+        observer.observe(element, { characterData: true, subtree: true, childList: true });
+
+        // input hodisasi bilan contenteditable o'zgarishini aniqlash
+        $element.on("input", handleChange);
+    }
+
+    // Barcha contenteditable bo'lgan .product_quantity elementlarini kuzatish
+    $(".product_quantity[contenteditable='true']").each(function () {
+        observeTextChange(this);
+    });
+});
+</script>
+
+
+{% endblock js %}

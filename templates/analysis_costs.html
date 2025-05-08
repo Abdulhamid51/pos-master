@@ -1,0 +1,140 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-12 layout-spacing">
+                            <div class="col-md-12">
+                                <form class="row">
+                                    <div class="col-6">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <button class="btn btn-primary" type="submit" style="height: 40px;">filter</button>
+                                    </div>
+                                </form>
+                                
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-header">
+                                        <br>
+                                        <h6>Davr xarajatlari
+                                            
+                                        </h6>
+                                    </div>
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-4" id="example122">
+                                                <thead>
+                                                    <tr>
+                                                        <th colspan="2" style="text-align: center;">Valyuta</th>
+                                                        <th colspan="2"></th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>№</th>
+                                                        <th>Pul muomalasi</th>
+                                                        <th>Summa</th>
+                                                        <th>%</th>
+                                                    </tr>
+                                                  
+                                                </thead>
+                                                <tbody>
+                                                    <tr style="background-color: rgb(246, 235, 221) !important;">
+                                                        <th colspan="2"  style="text-align: center;">Sum {{ suma_perecent}}</th>
+                                                        <th>{{ summa_total.sum|intcomma }}</th>
+                                                        <th>100.00</th>
+                                                    </tr>
+                                                    {% for i in data %}
+                                                        {% if i.sum > 0  %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td>{{ i.name }}</td>
+                                                                <td>{{ i.sum|intcomma }}</td>
+                                                                <td>{{ i.percent_sum }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    <tr style="background-color: rgb(246, 235, 221) !important;">
+                                                        <th colspan="2"  style="text-align: center;">Dollar</th>
+                                                        <th>{{ summa_total.dollar|intcomma }}</th>
+                                                        <th>100.00</th>
+                                                    </tr>
+                                                    {% for i in data %}
+                                                        {% if i.dollar > 0  %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td>{{ i.name }}</td>
+                                                                <td>{{ i.dollar|intcomma  }}</td>
+                                                                <td>{{ i.percent_dollar }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+
+                                                    <tr style="background-color: rgb(246, 235, 221) !important;">
+                                                        <th colspan="2 "  style="text-align: center;">Plastik</th>
+                                                        <th>{{ summa_total.plastik|intcomma }}</th>
+                                                        <th>100.00</th>
+                                                    </tr>
+                                                    {% for i in data %}
+                                                        {% if i.plastik > 0  %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td>{{ i.name }}</td>
+                                                                <td>{{ i.plastik|intcomma }}</td>
+                                                                <td>{{ i.percent_plastik }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+
+                                                    <tr style="background-color: rgb(246, 235, 221) !important;">
+                                                        <th colspan="2"  style="text-align: center;">Hisob Raqam</th>
+                                                        <th>{{ summa_total.hisob_raqamdan|intcomma }}</th>
+                                                        <th>100.00</th>
+                                                    </tr>
+                                                    {% for i in data %}
+                                                        {% if i.hisob_raqamdan > 0  %}
+                                                            <tr>
+                                                                <td>{{ forloop.counter }}</td>
+                                                                <td>{{ i.name }}</td>
+                                                                <td>{{ i.hisob_raqamdan|intcomma  }}</td>
+                                                                <td>{{ i.percent_hisob_raqamdan }}</td>
+                                                            </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
+{% endblock content %}
+{% block js %}
+
+{% endblock js %}

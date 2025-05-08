@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Yaratish</button>
+                                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-body">
+                                                        <form action="{% url 'money_circulation_add' %}" method="post" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <div class="form-group">
+                                                                <label for="recipient-name" class="col-form-label">Nomi</label>
+                                                                <input type="text" class="form-control" id="recipient-name" name="name" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-manba" class="col-form-label">Manba</label>
+                                                                <input type="text" class="form-control" id="recipient-manba" name="manba" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
+                                                                <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
+                                                                <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
+                                                                    {% for i in chiqim_turi %}
+                                                                    <option value="{{ i.id }}">{{ i.nomi }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
+                                                                <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;">
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>Nomi</th>
+                                            <th>Manba Turi</th>
+                                            <th>Manba</th>
+                                            <th>Sub Manba</th>
+                                            <th>Xarajat Turi</th>
+                                            <th>Chiqim Turi</th>
+                                            <th>Tahrirlash</th>
+                                            <th>Ochirish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for money in money %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <th>{{ money.name }}</th>
+                                                <th>{{ money.manba }}</th>
+                                                <th>{{ money.manba_turi }}</th>
+                                                <th>{{ money.sub_manba }}</th>
+                                                <th>{{ money.xarajat_turi }}</th>
+                                                <th>{{ money.chiqim_turi }}</th>
+                                                <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ money.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
+                                                <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ money.id }}"><i class="fa-solid fa-trash"></i></button></th>
+                                            </tr>
+
+                                            <div class="modal fade" id="exampleModalEdit{{ money.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body">
+                                                            <form action="{% url 'money_circulation_edit' money.id %}" method="post" enctype="multipart/form-data">
+                                                                {% csrf_token %}
+                                                                <div class="form-group">
+                                                                    <label for="recipient-name" class="col-form-label">Nomi</label>
+                                                                    <input type="text" class="form-control" id="recipient-name" name="name" value="{{ money.name }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-manba" class="col-form-label">Manba</label>
+                                                                    <input type="text" class="form-control" id="recipient-manba" name="manba" value="{{ money.manba }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
+                                                                    <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba" value="{{ money.sub_manba }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
+                                                                    <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
+                                                                        {% for i in chiqim_turi %}
+                                                                        <option value="{{ i.id }}" {% if money.chiqim_turi == i %} selected {% endif %}>{{ i.nomi }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
+                                                                    <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;" {% if money.manba_turi  %} checked {% endif %}>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal fade" id="exampleModalDelete{{ money.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body">
+                                                           <h5>Siz ma’lumotni ochirmoqchimisiz</h5>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                            <button type="submit" class="btn btn-primary"><a href="{% url 'money_circulation_delete' money.id %}" style="color: white !important;">Saqlash</a></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+        let data = []
+
+        var rows = trs.cell( {selected:true} ).data();
+
+        console.log(rows.length);
+
+        
+        let input = $('.form-control[type=search]')
+        input.on('keyup', function() {
+
+            trs.rows({"search":"applied"}).every(()=>data.push(this.data()))
+            
+            let som = 0
+            console.log();
+        })
+    </script>
+{% endblock js %}

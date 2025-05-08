@@ -1,0 +1,102 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <style>
+        th , td {
+            text-align: center;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-12 layout-spacing">
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-responsive">
+                                            <div class="row">
+                                                <div class="col-md-2">
+                                                    <div style="max-height: 500px; overflow-y: auto; position: relative;">
+                                                        <table class="table table-bordered mb-4" style="width: 100%; border-collapse: collapse;">
+                                                            <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">
+                                                                <tr>
+                                                                    <th>Mijozlar</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for clients in clients %}
+                                                                    <tr>
+                                                                        <td>{{ clients.fio }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div style="max-height: 500px; overflow-y: auto; position: relative;">
+                                                        <table class="table table-bordered mb-4" style="width: 100%; border-collapse: collapse;">
+                                                            <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">
+                                                                <tr>
+                                                                    <th>Taminotchilar</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for deliver in deliver %}
+                                                                    <tr>
+                                                                        <td>{{ deliver.name }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div style="max-height: 500px; overflow-y: auto; position: relative;">
+                                                        <table class="table table-bordered mb-4" style="width: 100%; border-collapse: collapse;">
+                                                            <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 1;">
+                                                                <tr>
+                                                                    <th>Xodimlar</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for employee in employee %}
+                                                                    <tr>
+                                                                        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                          
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+    </div>
+        
+{% endblock content %}
+{% block js %}
+{% endblock js %}

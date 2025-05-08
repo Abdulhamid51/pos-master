@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+
+
+                        <div class="widget-content widget-content-area br-6">
+                            <form action="" method="get">
+                                    <div class="col-md-4 d-flex">
+                                    <select style="width:10rem" name="employe" class="form-control">
+                                        <option value="" selected>- - - - - - - -</option>
+                                        {% for del in data %}
+                                            <!-- {% if del.id == deliver.id %} -->
+                                                <option value="{{ del.employee.id }}">{{ del.employee.username }}</option>
+                                            <!-- {% endif %}
+                                            <option value="{{ del.id }}">{{ del.username }}</option> -->
+                                        {% endfor %}
+                                    </select>
+                                    <input style="margin-left: 1rem;" value="{{month}}"  type="month" min="2021-01" class="form-control" id="filter_month" name="month">
+                                    <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
+                                </div>
+                        </form>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="html5-extension" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>ISm</th>
+                                           {% for i in date %}
+                                            <th data-target="#Sana{{i}}">{{ i }}</th>
+                                            {% endfor %}
+                                            <th>Flex</th>
+                                            <th>Soni</th>
+                                            <th>Flex jami</th>
+                                            <th>Fix</th>
+                                            <th>Topgan puli</th>
+                                            <th>Tolangan Puli</th>
+                                            <th>Qoldiq</th>
+                                            <th>Dovomat Qlish</th>
+                                            <th>Batafsil Malumot</th>
+                                            <th>Tolov Qlish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for dt in data %}
+                                            <tr class="qwerty">
+                                                <td>
+                                                    {{ dt.employee.username  }}
+                                                    <!-- <br> {{ dt.employee.last_name  }} -->
+                                                </td>
+                                                {% for d in dt.days %}
+                                                {% if d.is_status %}
+                                                <td><i class="fa-solid fa-check"></i>
+                                                    <br>
+                                                    {{d.total}}
+                                                </td>
+												{% elif  d.is_status == False or not  d %}
+												<td><i class="fa-solid fa-x"></i></td>
+												{% endif %}
+                                                {% endfor %}
+                                                <td>{{ dt.employee.flex_price|intcomma  }}</td>
+                                                <td><a href="{% url 'detail_call_center_count' dt.employee.id %}">{{ dt.count|intcomma  }} </a></td>
+                                                <td>{{ dt.flex|intcomma  }}</td>
+                                                <td>{{ dt.employee.fix_price|intcomma  }}</td>
+                                                {% if dt.monthly > 0 %}
+                                                <td>{{ dt.monthly|intcomma  }}</td>
+                                                {% else %}
+                                                <td>0</td>
+                                                {% endif %}
+                                                <td>{{ dt.tolangan_pul|intcomma  }}</td>
+                                                <td>{{ dt.total_oylik|intcomma  }}</td>
+
+                                                <td>
+                                                <button data-toggle="modal" data-target="#Ozgartirish{{dt.employee.id}}" class="btn btn-primary">
+                                                    Ozgartirish
+                                                </button></td>
+                                                <td><button class="btn btn-primary"><a href="{% url 'detail_employee' dt.employee.id %}" style="color: white;">Batafsil</a></button></td>
+                                                <td>
+                                                    <button data-toggle="modal" data-target="#KirimModal{{dt.employee.id}}" class="btn btn-primary">
+                                                        Tolov
+                                                    </button>
+                                                </td> 
+                                            </tr>
+                                            <div class="modal fade" id="Ozgartirish{{dt.employee.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                <form action="{% url 'flex_status_change' dt.employee.id %}" method="post"  enctype="multipart/form-data">
+                                                    {% csrf_token %}
+
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                        <h5 class="modal-title" id="KirimModalLabel">Tahrirlash</h5>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <label>Sana</label>
+                                                            <input class="form-control"  type="date" name="sana" required><br>
+    
+                                                        </div>
+                                                        <div class="modal-footer">
+    
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                </div>
+                                            </div>
+                                            <div class="modal fade" id="KirimModal{{dt.employee.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                            <form action="{% url 'payment_employee' dt.employee.id %}" method="POST"  enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="KirimModalLabel">Tahrirlash</h5>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        
+                                                        <select class="form-control" name="chiqim_turi" id="" required>
+                                                            <!-- <option value="1">Oylik tolov</option>
+                                                            <option value="2">avans</option> -->
+                                                            
+                                                            {% for ch in chiqim_turlari %}
+                                                                <option value="{{ch.id}}">{{ch.nomi}}</option>
+                                                            {% endfor %}
+                                                                
+                                                        </select><br>
+                                                        <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
+                                                        <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
+                                                        <input class="form-control" type="number" name="qancha_plastik" placeholder="Qancha Plastik"><br>
+                                                        <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
+                                                        <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Jami</th>
+                                            {% for d in totals.days %}
+                                                <th>{{ d.total|intcomma }}</th>
+                                            {% endfor %}
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+
+                                </table>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+        let data = []
+
+        var rows = trs.cell( {selected:true} ).data();
+
+        console.log(rows.length);
+
+        
+        let input = $('.form-control[type=search]')
+        input.on('keyup', function() {
+
+            trs.rows({"search":"applied"}).every(()=>data.push(this.data()))
+            
+            let som = 0
+            console.log();
+            
+            
+            // Array.from(rows).forEach(function(item, index) {
+            //     som += parseInt(item.getAttribute('data-som'))
+            // })
+            // som = som.toLocaleString()
+            // $('#som1').text(som)
+        })
+    </script>
+
+    <script>
+        // let input = $('.form-control[type=search]')
+        // input.on('keyup', function() {
+        //     let som = 0
+
+
+        //     var trs = $('#mainTable').dataTable();
+
+        //     //Get all rows from the trs table object.
+        //     var rows = trs.$("tr");
+
+
+        //     // console.log($('.som').length);
+        //     console.log($('tr[class="qwerty"]').length);
+        //     $('tr[class="qwerty"]').each(function(index, item) {
+        //         // console.log(index, item.textContent);
+        //         // let id = item.getAttribute('data-id')
+        //         som += parseInt(item.getAttribute('data-som'))
+        //     })
+        //     som = som.toLocaleString()
+        //     $('#som1').text(som)
+
+        //     let quantity = 0
+        //     Array.from(document.querySelectorAll('.quantity')).forEach(function(item) {
+        //         quantity += parseInt(item.getAttribute('data-quantity'))
+        //     })
+
+        //     quantity = quantity.toLocaleString()
+            
+        //     $('#quantity1').text(quantity)
+
+
+
+        //     let allprice = 0
+        //     Array.from(document.querySelectorAll('.allprice')).forEach(function(item) {
+        //         allprice += parseInt(item.getAttribute('data-all'))
+        //     })
+
+        //     allprice = allprice.toLocaleString()
+
+        //     $('#allprice1').text(allprice)
+
+            
+
+        //     let dollar = 0
+        //     Array.from(document.querySelectorAll('.dollar')).forEach(function(item) {
+        //         dollar += parseInt(item.getAttribute('data-dollar'))
+        //     })
+        //     dollar = dollar.toLocaleString()
+        //     $('#dollar1').text(dollar)
+        // })
+    </script>
+{% endblock js %}
+
+{% comment %} {% if i.is_activate %}
+												<td><a href="{% url 'task_status' i.id %}"><button class="btn btn-success"><i class="fas fa-check"></i></button></a></td>
+												{% else %}
+												<td><a href="{% url 'task_status' i.id %}"><button class="btn btn-danger"><i class="fas fa-times"></i></button></a></td>
+												{% endif %} {% endcomment %}

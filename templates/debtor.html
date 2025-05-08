@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Yaratish</button>
+                                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-body">
+                                                        <form action="{% url 'debtor_add' %}" method="post" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <div class="form-group">
+                                                                <label for="recipient-debtor_type" class="col-form-label">Turi</label>
+                                                                <select name="debtor_type" id="recipient-debtor_type" class="form-control" >
+                                                                    <option value="">---------</option>
+                                                                    {% for debtor_type in debtor_type%}
+                                                                        <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
+                                                                <select name="teritory" id="recipient-teritory" class="form-control" >
+                                                                    <option value="">---------</option>
+                                                                    {% for teritory in teritory %}
+                                                                        <option value="{{ teritory.id }}">{{ teritory.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-image" class="col-form-label">Rasm</label>
+                                                                <input type="file" class="form-control" id="recipient-image" name="image" >
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-fio" class="col-form-label">F.I.O</label>
+                                                                <input type="text" class="form-control" id="recipient-fio" name="fio" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-phone1" class="col-form-label">Telefon</label>
+                                                                <input type="text" class="form-control" id="recipient-phone1" name="phone1" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="recipient-phone2" class="col-form-label">Telefon 2</label>
+                                                                <input type="text" class="form-control" id="recipient-phone2"  name="phone2" >
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table table-hover non-hover" id="html5-extension" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>F.I.O</th>
+                                            <th>Pul olish</th>
+                                            <th>Pul berish</th>
+                                            <th>Turi</th>
+                                            <th>Agent</th>
+                                            <th>Telefon</th>
+                                            <th>Telefon 2</th>
+                                            {% for i in valyuta %}
+                                                <th>{{ i.name }} Qaz</th>
+                                            {% endfor %}
+                                            {% for i in valyuta %}
+                                                <th>{{ i.name }} Haq</th>
+                                            {% endfor %}
+                                            <th>Tahrirlash</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for debtors in debtors %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <a href="{% url 'debtorhistory' %}?d={{ debtors.id }}">
+                                                        <p class="user-name">{{ debtors.fio }}</p>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalGive{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></button>
+                                                </td>
+                                                <td>{{ debtors.type|default_if_none:'' }}</td>
+                                                <td>{{ debtors.agent|default_if_none:'' }}</td>
+                                                <td>{{ debtors.phone1|default_if_none:'' }}</td>
+                                                <td>{{ debtors.phone2|default_if_none:'' }}</td>
+                                                {% for i in debtors.debt_qarzimiz %}
+                                                    <td>{{ i.summa }}</td>
+                                                {% endfor %}
+                                                {% for i in debtors.debt_haqimiz %}
+                                                    <td>{{ i.summa }}</td>
+                                                {% endfor %}
+                                                <td><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ debtors.id }}"><i class="fa-solid fa-pen-to-square"></i></button></td>
+                                            </tr>
+                                            <div class="modal fade" id="exampleModalEdit{{ debtors.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body">
+                                                            <form action="{% url 'debtor_edit' debtors.id %}" method="post" enctype="multipart/form-data">
+                                                                {% csrf_token %}
+                                                                <div class="form-group">
+                                                                    <label for="recipient-debtor_type" class="col-form-label">Turi</label>
+                                                                    <select name="debtor_type" id="recipient-debtor_type" class="form-control" >
+                                                                        <option value="">---------</option>
+                                                                        {% for debtor_type in debtor_type%}
+                                                                            <option value="{{ debtor_type.id }}" {% if debtor_type ==  debtors.debtor_type %} selected {% endif %}>{{ debtor_type.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
+                                                                    <select name="teritory" id="recipient-teritory" class="form-control" >
+                                                                        <option value="">---------</option>
+                                                                        {% for teritory in teritory %}
+                                                                            <option value="{{ teritory.id }}" {% if teritory ==  debtors.teritory %} selected {% endif %}>{{ teritory.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-image" class="col-form-label">Rasm</label>
+                                                                    <input type="file" class="form-control" id="recipient-image" name="image" >
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-fio" class="col-form-label">F.I.O</label>
+                                                                    <input type="text" class="form-control" id="recipient-fio" value="{{ debtors.fio }}"  name="fio" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-phone1" class="col-form-label">Telefon</label>
+                                                                    <input type="text" class="form-control" id="recipient-phone1" value="{{ debtors.phone1|default_if_none:'0' }}" name="phone1" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-phone2" class="col-form-label">Telefon 2</label>
+                                                                    <input type="text" class="form-control" id="recipient-phone2" value="{{ debtors.phone2|default_if_none:'0' }}" name="phone2" >
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="modal fade" id="exampleModalPay{{debtors.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Pul olish</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                          </div>
+                                                        <div class="modal-body">
+                                                            <form action="{% url 'debtor_pay' debtors.id %}" method="post" enctype="multipart/form-data">
+                                                                {% csrf_token %}
+                                                                <div class="form-group">
+                                                                    <label for="recipient-summa" class="col-form-label">Summa</label>
+                                                                    <input type="text" class="form-control" id="recipient-summa" name="summa"required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="col-form-label">Valyuta</label>
+                                                                    <select name="valyuta" class="form-control" required>
+                                                                        {% for val in valyuta %}
+                                                                        <option value="{{ val.id }}">{{val.name}}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-comment" class="col-form-label">Izoh</label>
+                                                                    <textarea name="comment" id="recipient-comment" class="form-control"></textarea>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal fade" id="exampleModalGive{{debtors.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Pul Berish</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                          </div>
+                                                        <div class="modal-body">
+                                                            <form action="{% url 'debtor_give' debtors.id %}" method="post" enctype="multipart/form-data">
+                                                                {% csrf_token %}
+                                                                <div class="form-group">
+                                                                    <label for="recipient-summa" class="col-form-label">Summa</label>
+                                                                    <input type="text" class="form-control" id="recipient-summa" name="summa"required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="col-form-label">Valyuta</label>
+                                                                    <select name="valyuta" class="form-control" required>
+                                                                        {% for val in valyuta %}
+                                                                        <option value="{{ val.id }}">{{val.name}}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-comment" class="col-form-label">Izoh</label>
+                                                                    <textarea name="comment" id="recipient-comment" class="form-control"></textarea>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </tbody>
+                                   
+                                </table>
+                            </div>
+                            <div style="margin-top: 10px; text-align: center; overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 5px;">
+                                <nav aria-label="Page navigation example">
+                                    <ul class="pagination" style="display: inline-flex;">
+                                        {% if debtors.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ debtors.previous_page_number }}">Previous</a></li>
+                                        {% endif %}
+                                        {% for i in debtors.paginator.page_range %}
+                                        {% if debtors.number == i %}
+                                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                        {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% if debtors.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ debtors.next_page_number }}">Next</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            paging: false  
+        } );
+    </script>
+{% endblock js %}

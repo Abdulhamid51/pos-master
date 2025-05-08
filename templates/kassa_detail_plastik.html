@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+{% load humanize  %}
+{% load custom_filters %}
+  
+
+    <link href="{% static 'assets/css/scrollspyNav.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css' %}">
+    <link href="{% static 'assets/css/tables/table-basic.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'plugins/flatpickr/flatpickr.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css' %}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css' %}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+    </style>
+
+{% endblock css %}
+
+
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing">
+
+                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                    <div class="widget-content widget-content-area br-6">
+                        <div class="row">    
+                            
+                            <div class="col-xl-3 col-md-3 mb-4 text-center">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Plastik</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{kassa.plastik | intcomma}} so'm</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <img src="{% static 'assets/img/credit-card.svg' %}" width="30px" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                       
+                    </div>
+                </div>
+                    <form style="margin-left: -1rem;" class='col-xl-12 col-lg-8 col-sm-12 mb-2'>
+                            <div class="col-md-2" style="display: inline-block;">
+                                Boshlangich sana
+                                <input name="start_date" class="form-control" type="date" value="{{filters.start_date}}">
+                            </div>
+                            <div class="col-md-2 mb-3" style="display: inline-block;">
+                                Yakuniy sana
+                                <input name="end_date" class="form-control" type="date" value="{{filters.end_date}}">
+                            </div>
+                            <div class="col-md-2 mb-3" style="display: inline-block;">
+                                <select name="deliver" id="" class="form-control">
+                                    <option label="Deliver"></option>
+                                    {% for d in delivers %}
+                                        <option 
+                                        {% if d.id == filters.deliver %}
+                                            selected
+                                        {% endif %}
+                                             value="{{d.id}}">{{d.name}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3" style="display: inline-block;">
+                                <select name="chiqim_turi" id="" class="form-control">
+                                    <option label="Turi"></option>
+                                    {% for d in chiqim_turi %}
+                                        <option
+                                        {% if d.id == filters.chiqim_turi %}
+                                            selected
+                                        {% endif %}
+                                         value="{{d.id}}">{{d.nomi}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 mb-3" style="display: inline-block;">
+                                <select name="expanse_category" id="" class="form-control">
+                                    <option label="Filial chiqim turi"></option>
+                                    {% for d in expanse_category %}
+                                        <option
+                                        {% if d.id == filters.expanse_category %}
+                                            selected
+                                        {% endif %}
+                                         value="{{d.id}}">{{d.title}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+
+                            <div class="col-md-1 mb-3" style="display: inline-block;">
+                                <button type="submit" class="btn btn-primary form-control">Filtlash</button>
+                            </div>
+                    </form>
+                    
+                    <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h4>Malumotlar</h4>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="multi-table table table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align: center;">#</th>
+                                            <th style="text-align: center;">Sana</th>
+                                            <th style="text-align: center;">Kirim</th>
+                                            <th style="text-align: center;">Summa</th>
+                                            <th style="text-align: center;">Qoldiq</th>
+                                            <th style="text-align: center;">Sana</th>
+                                            <th style="text-align: center;">Chqim</th>
+                                            <th style="text-align: center;">Summa</th>
+                                            <th style="text-align: center;">Qoldiq</th>
+                                            <th style="text-align: center;">Izoh</th>
+                                            <th style="text-align: center;">Taxrirlash</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item  in birlashtirilgan_malumotlar %}
+                                        <tr>
+                                            <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
+
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"kirim" %}
+
+                                                    {{ item.qachon|date:'Y-m-d H:i' }}
+                                                {% else %}
+                                                    
+                                                {% endif %}
+                                            </td>
+
+                                            <td style="text-align: center;">Kirim</td>
+
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"kirim" %}
+                                                    {{ item.plastik|intcomma }}
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"kirim" %}
+                                                    {{ item.kassa_plastik_yangi|intcomma }}
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"chiqim" %}
+                                                    {{ item.qachon|date:'Y-m-d h:i' }}
+                                                {% else %}
+                                                    
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"chiqim" %}
+                                                {% if item.qayerga != None %}
+                                                    {{ item.qayerga }}
+                                                {% else %}
+                                                    {{ item.deliver }}
+                                                {% endif %}
+                                            {% else %}
+                                                
+                                            {% endif %}
+                                            </td>
+
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"chiqim" %}
+                                                    {{ item.plastik|intcomma }}
+                                                   
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"chiqim" %}
+                                                    {{ item.kassa_plastik_yangi|intcomma }} 
+                                                    
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"chiqim" %}
+                                                <div style="display: flex; flex-direction: column;">
+                                                    <p>{{ item.izox }}</p>
+                                                </div>
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% if item|is_instance_of:"kirim" %}
+                                                    <button data-toggle="modal" data-target="#KirimModal{{item.id}}" class="btn btn-primary">
+                                                        Tahrirlash
+                                                    </button>
+                                                {% elif item|is_instance_of:"chiqim" %}
+                                                    <button data-toggle="modal" data-target="#ChiqimModal{{item.id}}" class="btn btn-warning">
+                                                        Tahrirlash
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                            {% if item|is_instance_of:"chiqim" %}
+                                                <div class="modal fade" id="ChiqimModal{{item.id}}" tabindex="-1" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                    <form action="{% url 'chiqim_qilish_edit' %}" method="POST">
+                                                        {% csrf_token %}
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                            <h5 class="modal-title" id="ChiqimModalLabel">Chiqim tahrirlash</h5>
+                                                        
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <label>Qayerga</label>
+                                                                <select class="form-control" name="chiqim_turi" id="" required>
+                                                                    {% for chiqim_turi in chiqim_turlari %}
+                                                                        
+                                                                        {% if chiqim_turi.id == item.qayerga.id %}
+                                                                            <option value="{{chiqim_turi.id}}" selected>{{chiqim_turi.nomi}}</option>
+                                                                        {% else %}
+                                                                            <option value="{{chiqim_turi.id}}">{{chiqim_turi.nomi}}</option>
+                                                                        {% endif %}
+                                                                            
+                                                                    {% endfor %}
+                                                                </select><br>
+                                                                <input type="hidden" value="{{item.id}}" name="chiqim_id">
+                                                                <label>Qancha plastik</label>
+                                                                <input
+                                                                
+                                                                {% if item.plastik|add:0 != 0 %}
+                                                                value="{{ item.plastik }}"
+                                                                
+                                                                {% endif %}
+                                                                    class="form-control" type="number" name="qancha_plastik" placeholder="Qancha plastik"><br>
+                                                               
+                                                                <label>Izox</label>
+                                                                <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{ item.izox }}"></textarea>
+                                                                
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                            <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            {% if item|is_instance_of:"kirim" %}
+                                                <div class="modal fade" id="KirimModal{{item.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                    <form action="{% url 'kirim_qilish_edit' %}" method="POST"  enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                            <h5 class="modal-title" id="KirimModalLabel">Tahrirlash</h5>
+                                                        
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <input type="hidden" value="{{item.id}}" name="kirim_id">
+                                                                <label>Plastik</label>
+                                                                <input value="{{item.plastik}}" class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
+                                                                <label>Izoh</label>
+                                                                <textarea value='{{item.izox}}' name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{item.izox}}"></textarea>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                            <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th style="text-align: center;">Jami</th>
+                                            <th style="text-align: center;"></th>
+                                            <th style="text-align: center;"></th>
+                                            <th style="text-align: center;">{{ kirim_plastik|intcomma }}</th>
+                                            <th style="text-align: center;">{{ kirim_total_kassa_plastik_yangi|intcomma }}</th>
+                                            <th style="text-align: center;"></th>
+                                            <th style="text-align: center;"></th>
+                                            <th style="text-align: center;">{{ chiqim_plastik|intcomma }}</th>
+                                            <th style="text-align: center;">{{ chiqim_total_kassa_plastik_yangi|intcomma }}</th>
+                                            <th style="text-align: center;"></th>
+                                            <th style="text-align: center;"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            
+        </div>
+
+
+        
+
+        {% for hodim in hodimlar %}
+        <!-- Modal -->
+        <div class="modal fade" id="oylik_tolov_tasdiqlashModal_{{hodim.id}}" tabindex="-1" aria-labelledby="oylik_tolov_tasdiqlashModalLabel_{{hodim.id}}" aria-hidden="true">
+            <div class="modal-dialog">
+            <form action="{% url 'oylik-tolash' %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="oylik_tolov_tasdiqlashModalLabel_{{hodim.id}}">To'lovni tasdiqlash</h5>
+                
+                    </div>
+                    <div class="modal-body">
+                        <h4>{{hodim.toliq_ism_ol}}ga rostan oylik to'ladingizmi</h4>
+                    </div>
+                    <div class="modal-footer">
+                        <input type="hidden" name="hodim_id" value="{{hodim.id}}" id="">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yo'q</button>
+                    <button type="submit" class="btn btn-primary">Ha</button>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+        {% endfor %}
+
+
+            <!-- Succses Modal -->
+            <div class="modal fade" id="MessageModal" data-backdrop="static" tabindex="-1" aria-labelledby="MessageModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="KirimModalLabel" style="color: green;"></h5>
+                    
+                        </div>
+                        <div class="modal-body">
+                            {% for message in messages %}
+                                <h4>{{message}}</h4>
+                            {% endfor %}
+                            
+                        </div>
+                        <div class="modal-footer">
+                            
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+        <!--  END CONTENT AREA  -->
+    <!-- </div> -->
+    <!-- END MAIN CONTAINER -->
+{% endblock content %}
+
+{% block js %}
+    <script src="{% static 'plugins/highlight/highlight.pack.js' %}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js' %}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js' %}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+
+    <script src="{% static 'assets/js/scrollspyNav.js' %}"></script>
+    <script>
+        checkall('todoAll', 'todochkbox');
+        $('[data-toggle="tooltip"]').tooltip()
+    </script>
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{% static 'plugins/flatpickr/flatpickr.js' %}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js' %}"></script>
+
+  
+   <script>
+        $(document).ready(function() {
+            $('.multi-table').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+        } );
+    </script>
+
+
+    {% if messages %}
+    <script>
+        $(document).ready(function() {
+            $('#MessageModal').modal({
+                show: true
+            });
+        });
+    </script>
+    {% endif %}
+    
+     
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/custom_miscellaneous.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+
+{% endblock js %}

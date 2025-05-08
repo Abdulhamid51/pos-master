@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+{% endblock css %}
+{% block content %}
+<style>
+    /* Tablarni butun ekranga tarqatish */
+    .nav-tabs {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Tablarni chiroyli qilish */
+    .nav-tabs .nav-item {
+        flex: 1; /* Har bir tab teng kenglikda bo'ladi */
+        text-align: center;
+    }
+
+    .nav-tabs .nav-link {
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        border-bottom: none;
+        border-radius: 5px 5px 0 0;
+        padding: 10px 20px;
+        color: #555;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: #fff;
+        color: #fff;
+        background-color: #007bff;
+        border-color: #ddd #ddd #fff;
+    }
+
+    .nav-tabs .nav-link:hover {
+        background-color: #e9ecef;
+        color: #007bff;
+    }
+
+    /* Tab kontentini chiroyli qilish */
+    .tab-content {
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+    }
+</style>
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+
+
+                        <div class="widget-content widget-content-area br-6">
+                            <form method="get">
+                                <div class="col-md-6 d-flex">
+                                    <input style="margin-left: 1rem;" value="{{date}}" type="date" class="form-control" name="date">
+                                    <!-- <input style="margin-left: 1rem;" value="{{end_date}}" type="date" class="form-control" name="end_date"> -->
+                                    <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
+                                </div>
+                        </form>
+                        
+                        <br>
+
+                        <ul class="nav nav-tabs" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="tab1-tab" data-toggle="tab" href="#tab1" role="tab" aria-controls="tab1" aria-selected="true">Maxsulotlar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab2-tab" data-toggle="tab" href="#tab2" role="tab" aria-controls="tab2" aria-selected="false">Mijozlar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab3-tab" data-toggle="tab" href="#tab3" role="tab" aria-controls="tab3" aria-selected="false">Yetkazib beruvchilar</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab4-tab" data-toggle="tab" href="#tab4" role="tab" aria-controls="tab4" aria-selected="false">Kassalar</a>
+                            </li>
+                            <!-- <li class="nav-item">
+                                <a class="nav-link" id="tab5-tab" data-toggle="tab" href="#tab5" role="tab" aria-controls="tab5" aria-selected="false">Tab 5</a>
+                            </li> -->
+                        </ul>
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table class="table table-hover non-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Maxsulot</th>
+                                                <th>Qoldiq</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            {% for i in product_daily %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ i.obyekt }}</td>
+                                                    <td class="intcomma">{{ i.rest|floatformat:'0' }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Jami</th>
+                                                <th></th>
+                                                <th class="intcomma">{{ totals.product_daily }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table class="table table-hover non-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Mijoz</th>
+                                                <th>Qoldiq</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            {% for i in debtor_daily %}
+                                                
+                                            
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ i.obyekt }}</td>
+                                                <td class="intcomma">{{ i.rest|floatformat:'0' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Jami</th>
+                                                <th></th>
+                                                <th class="intcomma">{{ totals.debtor_daily }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table class="table table-hover non-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Yetkazib beruvchi</th>
+                                                <th>Qoldiq</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            {% for i in deliver_daily %}
+                                                
+                                            
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ i.obyekt }}</td>
+                                                <td class="intcomma">{{ i.rest|floatformat:'0' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Jami</th>
+                                                <th></th>
+                                                <th class="intcomma">{{ totals.deliver_daily }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab4" role="tabpanel" aria-labelledby="tab4-tab">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table class="table table-hover non-hover datatable" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Kassa</th>
+                                                <th>Som</th>
+                                                <th>Dollar</th>
+                                                <th>Plastik</th>
+                                                <th>Hisob raqam</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            
+                                            {% for i in kassa_daily %}
+                                                
+                                            
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ i.obyekt }}</td>
+                                                <td class="intcomma">{{ i.som|floatformat:'0' }}</td>
+                                                <td class="intcomma">{{ i.dollar|floatformat:'0' }}</td>
+                                                <td class="intcomma">{{ i.plastik|floatformat:'0' }}</td>
+                                                <td class="intcomma">{{ i.hisob_raqam|floatformat:'0' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                        </div>
+                          
+                            <!-- <div class="table-responsive mb-4 mt-4">
+                                <table id="" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Jami savdo</th>
+                                            <th>Mahsulot Filial Daily</th>
+                                            <th>Qarzdor kundalik</th>
+                                            <th>Har kuni yetkazib berish</th>
+                                            <th>Kassa Som</th>
+                                            <th>Kassa Dolar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                            <tr>
+                                                <td><a href="/shops/?start_date={{start_date|date:'Y-m-d'}}&end_date={{end_date|date:'Y-m-d'}}" target="_blank">{{shop|floatformat:'0'}}</a></td>
+                                                <td>{{pr_dayli|floatformat:'0' }}</td>
+                                                <td>{{deb_dayli|floatformat:'0' }}</td>
+                                                <td>{{del_dayli|floatformat:'0'}}</td>
+                                                <td>{{kass_som|floatformat:'0'}}</td>
+                                                <td>{{kass_dollar|floatformat:'0'}}</td>
+                                            </tr>
+                                    </tbody>
+                                </table>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('.datatable').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+        let data = []
+
+        var rows = trs.cell( {selected:true} ).data();
+
+        console.log(rows.length);
+
+        
+        let input = $('.form-control[type=search]')
+        input.on('keyup', function() {
+
+            trs.rows({"search":"applied"}).every(()=>data.push(this.data()))
+            
+            let som = 0
+            console.log();
+            
+            
+            // Array.from(rows).forEach(function(item, index) {
+            //     som += parseInt(item.getAttribute('data-som'))
+            // })
+            // som = som.toLocaleString()
+            // $('#som1').text(som)
+        })
+    </script>
+
+    <script>
+        // let input = $('.form-control[type=search]')
+        // input.on('keyup', function() {
+        //     let som = 0
+
+
+        //     var trs = $('#mainTable').dataTable();
+
+        //     //Get all rows from the trs table object.
+        //     var rows = trs.$("tr");
+
+
+        //     // console.log($('.som').length);
+        //     console.log($('tr[class="qwerty"]').length);
+        //     $('tr[class="qwerty"]').each(function(index, item) {
+        //         // console.log(index, item.textContent);
+        //         // let id = item.getAttribute('data-id')
+        //         som += parseInt(item.getAttribute('data-som'))
+        //     })
+        //     som = som.toLocaleString()
+        //     $('#som1').text(som)
+
+        //     let quantity = 0
+        //     Array.from(document.querySelectorAll('.quantity')).forEach(function(item) {
+        //         quantity += parseInt(item.getAttribute('data-quantity'))
+        //     })
+
+        //     quantity = quantity.toLocaleString()
+            
+        //     $('#quantity1').text(quantity)
+
+
+
+        //     let allprice = 0
+        //     Array.from(document.querySelectorAll('.allprice')).forEach(function(item) {
+        //         allprice += parseInt(item.getAttribute('data-all'))
+        //     })
+
+        //     allprice = allprice.toLocaleString()
+
+        //     $('#allprice1').text(allprice)
+
+            
+
+        //     let dollar = 0
+        //     Array.from(document.querySelectorAll('.dollar')).forEach(function(item) {
+        //         dollar += parseInt(item.getAttribute('data-dollar'))
+        //     })
+        //     dollar = dollar.toLocaleString()
+        //     $('#dollar1').text(dollar)
+        // })
+    </script>
+
+    <script>
+        $('.intcomma').each(function() {
+                var num = $(this).text().replace(/\D/g, ''); // Faqat raqamlarni olish
+                if (num) {
+                    var formattedNum = num.replace(/\B(?=(\d{3})+(?!\d))/g, ","); // 3 xonadan keyin vergul qo'shish
+                    $(this).text(formattedNum); // Natijani yangilash
+                }
+            });
+    </script>
+{% endblock js %}

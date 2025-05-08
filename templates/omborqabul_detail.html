@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load mathfilters %}
+{% load static %}
+{% block title %}
+{% load humanize %}
+    <title>Ombor qabul | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM STYLES -->
+    <link href="{% static 'plugins/apex/apexcharts.css'%}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/widgets/modules-widgets.css'%}">
+    <!-- END PAGE LEVEL PLUGINS/CUSTOM STYLES -->
+
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <!-- END THEME GLOBAL STYLES -->
+
+    <!--  BEGIN CUSTOM STYLE FILE  -->
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/custom-nouiSlider.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/bootstrap-range-Slider/bootstrap-slider.css'%}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+        -moz-appearance: textfield;
+        }
+    </style>
+    
+    <!--  END CUSTOM STYLE FILE  -->
+
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row sales layout-top-spacing">
+                    <!-- <div class="col-12 layout-spacing">
+                        <div class="widget widget-table-two">
+                            <div class="widget-content pb-2">
+                                <div class="row">
+                                    <div class="form-group mb-0 col-12">
+                                        <input id="rangeCalendarFlatpickr" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Sanani tanlang">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="widget-content">
+                                <div class="table-responsive">
+                                    <table class="table" id="html5-extension">
+                                        <thead>
+                                            <tr>
+                                                <th><div class="text-center">№</div></th>
+                                                <th><div class="text-center">Nomi</div></th>
+                                                <th><div class="text-center">Yetkazib beruvchi</div></th>
+                                                <th><div class="text-center">So`m</div></th>
+                                                <th><div class="text-center">Dollar</div></th>
+                                                <th><div class="text-center">Sana</div></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="war">
+                                            {% for w in wares %}
+                                                <tr onclick="Item({{ w.id }})">
+                                                    <td><div class="td-content">{{ forloop.counter }}</div></td>
+                                                    <td><div class="td-content">{{ w.name }}</div></td>
+                                                    <td><div class="td-content">{{ w.deliver }}</div></td>
+                                                    <td><div class="td-content">{{ w.som|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.dollar|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.date }}</div></td>
+                                                </tr>
+                                            {% endfor %}
+                                            <tr>
+                                                <td><div class="td-content">` + i + `</div></td>
+                                                <td><div class="td-content">` + dt.product + `</div></td>
+                                                <td><div class="td-content">` + String(dt.som) + `</div></td>
+                                                <td><div class="td-content">` + String(dt.dollar) + `</div></td>
+                                                <td><div class="td-content">` + String(dt.kurs) + `</div></td>
+                                                <td><div class="td-content">` + String(dt.quantity) + `</div></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-12 layout-spacing" style = "position: sticky;top: 65px;width: 100%;height: 100%;">
+                        <div class="widget widget-table-two">
+                            <div class="widget-content">
+                                <div class="table-responsive scrollmenu" style="overflow-x:auto;">
+                                    <table class="table table-bordered" style="color: black;">
+                                        <thead>
+                                            <tr>
+                                                <th><div>№</div></th>
+                                                <th><div class="text-center">Maxsulot..............</div></th>
+                                                <th><div class="text-center">So`m</div></th>
+                                                <th><div class="text-center">Dollar</div></th>
+                                                <th><div class="text-center">Sotish so'm</div></th>
+                                                <th><div class="text-center">Sotish dollar</div></th>
+                                                <th><div class="text-center">Kurs</div></th>
+                                                <th><div class="text-center">Soni</div></th>
+                                                <th><div class="text-center">Jami summa kelish</div></th>
+                                                <th><div class="text-center">Jami summa sotish</div></th>
+                                                <th>Foyda</th>
+                                                <th>Zarar</th>
+                                                
+                                                {% for i in price_types %}
+                                                    <th>Foyda({{i.name}})</th>
+                                                {% endfor %}
+                                                    
+                                                {% for i in price_types %}
+                                                    <th>Zarar({{i.name}})</th>
+                                                {% endfor %}
+                                                <th style="white-space: nowrap; width: 10rem !important;"><div class="text-center">Maxsulot kelish narxi</div></th>
+                                                <th><div class="text-center">Soni</div></th>
+                                                <th><div class="text-center">Tasdiqlash</div></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="waritem">
+                                            
+                                            {% for object in object.receiveitem.all %}
+                                                
+                                            
+                                            <form action="{% url 'edit_receive_count' %}" method="post">
+                                                {% csrf_token %}
+                                                <tr>
+                                                    <input type="hidden" name="id" value="{{object.id}}">
+                                                    <td><div class="td-content" style="color: black;">{{ object.id }} </div></td>
+                                                    <td><div class="td-content text-center"><strong style="color: black;">{{ object.product }}</strong></div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.som|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.dollar|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.sotish_som|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.sotish_dollar|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.kurs|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.quantity|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.quantity|mul:object.som|intcomma }}</div></td>
+                                                    <td><div class="text-center" style="color: black;">{{ object.quantity|mul:object.sotish_som|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.pereotsenka_foyda|intcomma }}</div></td>
+                                                    <td><div class="td-content text-center" style="color: black;">{{ object.pereotsenka_zarar|intcomma }}</div></td>
+                                                    
+
+                                                    
+                                                    {% for i in object.pereotsenka_foyda_types %}
+                                                        <td style="color: black;"><div class="td-content text-center" style="color: black;">{{ i.total|intcomma }}</div></td>
+                                                    {% endfor %}
+
+                                                    {% for i in object.pereotsenka_zarar_types %}
+                                                        <td style="color: black;"><div class="td-content text-center" style="color: black;">{{ i.total|intcomma }}</div></td>
+                                                    {% endfor %}
+
+
+                                                    <td>
+                                                        <div class="td-content text-center" style="width: 10rem">
+                                                            <input name="som" type="number" value="{{ object.som }}" class="form-control" required>
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        <div class="td-content text-center" style="width: 5rem">
+                                                            <input name="count" type="number" value="{{ object.quantity }}" class="form-control" required>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="td-content text-center" style="width: 5rem;">
+                                                            <button class="btn btn-success" type="submit">
+                                                                <i class="fa fa-check"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </form>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <th>Jami</th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th>{{ object.total_quantity|default_if_none:'0'|intcomma }}</th>
+                                            <th>{{ object.kelish_total|default_if_none:'0'|intcomma }}</th>
+                                            <th>{{ object.sotish_total|default_if_none:'0'|intcomma }}</th>
+                                            <th></th>
+                                            <th></th>
+                                            {% for i in price_types %}
+                                                    <th></th>
+                                                {% endfor %}
+                                                    
+                                                {% for i in price_types %}
+                                                    <th></th>
+                                                {% endfor %}
+
+                                            <th></th>
+                                            <th></th>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+{% endblock content %}
+{% block js %}
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/apex/apexcharts.min.js'%}"></script>
+    <script src="{% static 'assets/js/widgets/modules-widgets.js'%}"></script>
+    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
+
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
+    <script src="{% static 'plugins/flatpickr/flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/nouislider.min.js'%}"></script>
+
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+    <script>
+
+    function getCSRFToken() {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, 10) == ('csrftoken' + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+            }
+        }
+      return cookieValue;
+    }
+    function Item(id){
+        var csrfToken = getCSRFToken();
+        var dt = JSON.stringify({
+                id:id,
+            })
+        $.ajax({
+            headers: { "X-CSRFToken": csrfToken },
+            type: "POST",
+            url: "{% url 'getitem' %}",
+            data: dt,
+            success: function(data) {
+                var wares = data['items'];
+
+                $("#waritem").empty();
+                var i = 1;
+                for(dt of wares){
+                        var tr = `
+                            <tr>
+                                <td><div class="td-content">` + i + `</div></td>
+                                <td><div class="td-content">` + dt.product + `</div></td>
+                                <td><div class="td-content">` + String(dt.som) + `</div></td>
+                                <td><div class="td-content">` + String(dt.dollar) + `</div></td>
+                                <td><div class="td-content">` + String(dt.kurs) + `</div></td>
+                                <td><div class="td-content">` + String(dt.quantity) + `</div></td>
+                            </tr>
+                        `
+                        $('#waritem').append(tr);
+                        i++;
+                    }
+            }
+        });
+    }
+    $(document).ready(function(){
+        $('#rangeCalendarFlatpickr').on("change", function (){
+            var csrfToken = getCSRFToken();
+            var date1 = $('#rangeCalendarFlatpickr').val().slice(0, 10);
+            var date2 = $('#rangeCalendarFlatpickr').val().slice(14, 24);
+            var dt = JSON.stringify({
+                date1:date1,
+                date2:date2,
+            })
+            $.ajax({
+                headers: { "X-CSRFToken": csrfToken },
+                type: "POST",
+                url: "{% url 'dataware' %}",
+                data: dt,
+                success: function(data) {
+                    var wares = data['wares'];
+                    var i = 1;
+                    $("#war").empty();
+                    for(dt of wares){
+                        var tr = `<tr onclick="Item(` + dt.id +`)">
+                            <td><div class="td-content customer-name">` + i + `</div></td>
+                            <td><div class="td-content customer-name">` + String(dt.name) + `</div></td>
+                            <td><div class="td-content customer-name">` + String(dt.deliver) + `</div></td>
+                            <td><div class="td-content customer-name">` + String(dt.som) + `</div></td>
+                            <td><div class="td-content customer-name">` + String(dt.dollar) + `</div></td>
+                            <td><div class="td-content pricing">` + String(dt.date) + `</div></td>
+                        </tr>`
+                        $('#war').append(tr);
+                        i++;
+                    }
+                }
+            });
+        });
+    });
+    </script>
+
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' }
+                   
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15,
+            'scrollY': 900,
+            'scrollX': true,
+        } );
+    </script>
+    
+
+
+{% endblock js %}

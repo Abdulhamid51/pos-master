@@ -1,0 +1,199 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="container">
+{#                <div class="loyout-px-spacing">#}
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-md-6">
+                            <div class="col-md-8">
+                                <form class="row">
+                                    <input type="hidden" name="d" value="{{ d_id }}">
+                                    <div class="col-5">
+                                        <input type="date" name="start_date" value="{{start_date}}" class="form-control">
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="date" name="end_date" value="{{end_date}}" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary" style="height: 40px;">Filterlash</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            Boshlang'ich so'm: {{debtor.start_som|intcomma}}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-success"><a href="{% url 'refresh_debtor_debt' d_id %}">Qarzni yangilash</a></button>
+                        </div>
+                        <div class="col-lg-12" style="margin-top:1rem;">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-4" id="html5-extension">
+                                                <thead>
+                                                    <tr>
+                                                        <th>№</th>
+                                                        <th>Amaliyot</th>
+                                                        <th>Sana</th>
+                                                        <th>Naqd som</th>
+                                                        <th>Naqd dollar</th>
+                                                        <th>Nasiya som</th>
+                                                        <th>Skidka som</th>
+                                                        <th>Jami som</th>
+                                                        <th>Skidka dollar</th>
+                                                        <th>Qaytariladigan sana</th>
+                                                        <th>Som</th>
+                                                        <th>Dollar</th>
+                                                        <th>Click</th>
+                                                        <th>Plastik</th>
+                                                        <th>Kurs</th>
+                                                        <th>Som qoldiq</th>
+                                                        <!-- <th>Dollar qoldiq</th> -->
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                    {% for d in infos %}
+                                                        <tr>
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td>
+                                                                {% if d.model_name == 'shop' %}
+                                                                Savdo
+                                                                {% elif d.model_name == 'payhistory' %}
+                                                                To'lov
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ d.date|date:'Y-m-d H:i:s' }}</td>
+                                                            
+                                                            {% if d.model_name == 'shop' %}
+                                                                <td>{{ d.som|intcomma }}</td>
+                                                                <td>{{ d.dollar|intcomma }}</td>
+                                                                <td>{{ d.nasiya_som|intcomma }}</td>
+                                                                <td>{{ d.skidka_som|intcomma }}</td>
+                                                                <td>{{ d.som_nasiya_bilan|intcomma }}</td>
+                                                                <td>{{ d.skidka_dollar|intcomma }}</td>
+                                                                <td>{{ d.debt_return|date:'Y-m-d' }}</td>
+                                                                {% else %}
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                            {% endif %}
+
+                                                                
+                                                            <!-- <td><a href="" style="color: rgba(255, 0, 0, 0.651) !important;">{{ d.total_price|intcomma }}</a></td> -->
+                                                             
+                                                             {% if d.model_name == 'payhistory' %}
+                                                                <td>{{ d.som|floatformat:'2'|intcomma }}</td>
+                                                                <td>{{ d.dollar|floatformat:'2'|intcomma }}</td>
+                                                                <td>{{ d.click|floatformat:'2'|intcomma }}</td>
+                                                                <td>{{ d.plastik|floatformat:'2'|intcomma }}</td>
+                                                            {% else %}        
+                                                                <td></td>
+                                                                <td></td>
+                                                                <td></td>
+                                                                <td></td>
+                                                            {% endif %}
+
+                                                             
+                                                            {% if d.model_name == 'shop' %}
+                                                                <td>{{d.kurs|floatformat:'2'|intcomma}}</td>
+                                                            {% else %}
+                                                                <td>{{d.currency|floatformat:'2'|intcomma}}</td>
+                                                            {% endif %}
+                                                                
+                                                            <td>{{ d.som_after|floatformat:'2'|intcomma }}</td>
+                                                            <!-- <td>{{ d.dollar_after|floatformat:'2'|intcomma }}</td> -->
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                                <!-- <tfoot>
+                                                    <tr>
+                                                        <th>Jami</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </tfoot> -->
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+{#                </div>#}
+            </div>
+        </div>
+
+{% endblock content %}
+{% block js %}
+<script>
+    let trs = $('#html5-extension').DataTable( {
+        dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+        buttons: {
+            buttons: [
+                { extend: 'copy', className: 'btn' },
+                { extend: 'csv', className: 'btn' },
+                { extend: 'excel', className: 'btn' },
+                { extend: 'print', className: 'btn' }
+            ]
+        },
+        "oLanguage": {
+            "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+            "sInfo": " _PAGE_ / _PAGES_",
+            "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            "sSearchPlaceholder": "Izlash",
+           "sLengthMenu": "Results :  _MENU_",
+        },
+        "stripeClasses": [],
+        "lengthMenu": [10, 20, 50, 100, 100000],
+        "pageLength": 10000000000,
+        "LengthChange" : false, 
+        "Info":false,  
+        "bPaginate": false,
+    } );
+
+    let data = []
+
+    var rows = trs.cell( {selected:true} ).data();
+
+    console.log(rows.length);
+
+    
+    let input = $('.form-control[type=search]')
+    input.on('keyup', function() {
+
+        trs.rows({"search":"applied"}).every(()=>data.push(this.data()))
+        
+        let som = 0
+        console.log();
+        
+    })
+</script>
+    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
+    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
+
+    <script src="{% static 'plugins/flatpickr/flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
+{% endblock js %}

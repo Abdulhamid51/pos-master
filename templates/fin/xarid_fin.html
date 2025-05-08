@@ -1,0 +1,293 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <style>
+       table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid black !important;
+            padding: 8px;
+            
+        }
+        th {
+            background-color: darkgreen; 
+            color: white !important;
+        }
+        .table-container {
+            overflow: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        .pagination-container {
+            margin-top: 10px;
+            text-align: center;
+            overflow-x: auto;
+            white-space: nowrap;
+            width: 100%;
+            padding-bottom: 5px;
+            position: relative;
+        }
+
+        .pagination {
+            display: inline-flex;
+        }
+    </style>
+      <style>
+         .tab {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+            gap: 20px; 
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab button {
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+        .tab button.active {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+        .tab button:hover {
+            color: #0056b3;
+        }
+        .document {
+            display: none;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script src="{% static 'multiselect.js' %}"></script>
+    <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="tab">
+                                            <button onclick="switchTab(event)" data-url="/money_circulation/">
+                                                <a href="{% url 'money_circulation' %}" style="font-weight: bold; color: black;">Manba</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/kassa_fin/">
+                                                <a href="{% url 'kassa_fin' %}" style="font-weight: bold; color: black;">Kassa</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/data_fin/">
+                                                <a href="{% url 'data_fin' %}" style="font-weight: bold; color: black;">Data</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/debet_kredit_fin/">
+                                                <a href="{% url 'debet_kredit_fin' %}" style="color: black !important;">Debet-Kredit</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/cf_fin/">
+                                                <a href="{% url 'cf_fin' %}" style="color: black !important;">CF</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/daily_cf_fin/">
+                                                <a href="{% url 'daily_cf_fin' %}" style="color: black !important;">Daily CF</a></button>
+                                            <button onclick="switchTab(event)" data-url="/xarid_fin/">
+                                                <a href="{% url 'xarid_fin' %}" style="color: black !important;">Xarid</a></button>
+                                            <button onclick="switchTab(event)" data-url="/sotuv_fin/">
+                                                <a href="{% url 'sotuv_fin' %}" style="color: black !important;">Sotuv</a></button>
+                                            <button onclick="switchTab(event)" data-url="/pl_fin/">
+                                                <a href="{% url 'pl_fin' %}" style="color: black !important;">P/L</a></button>
+                                            <button onclick="switchTab(event)" data-url="/balans_fin/">
+                                                <a href="{% url 'balans_fin' %}" style="color: black !important;">Balans</a></button>
+                                            <button onclick="switchTab(event)" data-url="/majburiyat_fin/">
+                                                <a href="{% url 'majburiyat_fin' %}" style="color: black !important;">Majburiyat</a></button>
+                                            <button onclick="switchTab(event)" data-url="/tolov_kalendar_fin/">
+                                                <a href="{% url 'tolov_kalendar_fin' %}" style="color: black !important;">Tolov Kalendari</a></button>
+                                            <button onclick="switchTab(event)" data-url="/reja_tushum_fin/">
+                                                <a href="{% url 'reja_tushum_fin' %}" style="color: black !important;">Reja Tushum</a></button>
+                                            <button onclick="switchTab(event)" data-url="/reja_chiqim_fin/">
+                                                <a href="{% url 'reja_chiqim_fin' %}" style="color: black !important;">Reja Chiqim</a></button>
+                                            <button onclick="switchTab(event)" data-url="/asosiy_vosita_fin/">
+                                                <a href="{% url 'asosiy_vosita_fin' %}" style="color: black !important;">Asosiy Vosita</a></button>
+                                            <button onclick="switchTab(event)" data-url="/ombor_fin/">
+                                                <a href="{% url 'ombor_fin' %}" style="color: black !important;">Sklad</a></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 layout-spacing">
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-1"></div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="start_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="end_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select name="deliver" class="form-control"  multiple multiselect-select-all="true" 
+                                        multiselect-max-items="0" multiselect-search="true">
+                                            <option value="" disabled hidden>Taminotchi</option>
+                                            {% for deliver in deliver %}
+                                                <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select name="product" class="form-control"  multiple multiselect-select-all="true" 
+                                        multiselect-max-items="0" multiselect-search="true">
+                                            <option value="" disabled hidden>Maxsulot</option>
+                                            {% for product in product %}
+                                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-primary" >Filter</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-success" onclick="exportTableToExcel()" type="button">📥Excel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div style="overflow-x: auto; max-height: 500px; position: relative;">
+                                            <table class="table table-bordered mb-4" id="html5-extension" style="width: 100%; border-collapse: collapse;">
+                                                <thead style="position: sticky; top: 0; background-color: #fff; z-index: 10;">
+                                                    <tr>
+                                                        <th ></th>
+                                                        <th >Sana</th>
+                                                        <th >Yetkaziberuvchi</th>
+                                                        <th >ID</th>
+                                                        <th >Maxsulot</th>
+                                                        <th >Kategoriyasi</th>
+                                                        <th >Soni</th>
+                                                        <th >Narx</th>
+                                                        <th >Itogi</th>
+                                                        <th >Yil</th>
+                                                        <th >Oy</th>
+                                                        <th ></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                    {% for i in recieve %}
+                                                    <tr>
+                                                        <td style="background-color: darkgreen;"></th>
+                                                        <td >{{i.recieve.date|date:'Y-m-d H:i'}}</th>
+                                                        <td >{{ i.recieve.deliver.name }}</th>
+                                                        <td style="background-color: darkgreen; color: white !important;">{{i.id}}</th>
+                                                        <td >{{ i.product.name }}</th>
+                                                        <td >{{ i.product.group.name }}</th>
+                                                        <td >{{ i.quantity }}</th>
+                                                        <td >
+                                                            {% if i.som > 0 %}
+                                                                {{ i.som|intcomma }}
+                                                            {% else %}
+                                                                {{ i.dollar|intcomma }}
+                                                            {% endif %}
+                                                        </th>
+                                                        <td style="background-color: darkgreen; color: white !important;">{{i.itog|intcomma}}</th>
+                                                        <td >{{ i.recieve.date|date:'Y' }}</th>
+                                                        <td >{{ i.recieve.date|date:'m' }}</th>
+                                                        <td style="background-color: darkgreen;"></th>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th ></th>
+                                                        <th >Jami</th>
+                                                        <th ></th>
+                                                        <th ></th>
+                                                        <th ></th>
+                                                        <th ></th>
+                                                        <th >{{ totals.quantity|intcomma }}</th>
+                                                        <th ></th>
+                                                        <th >{{ totals.itog|intcomma }}</th>
+                                                        <th ></th>
+                                                        <th ></th>
+                                                        <th ></th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                        <div class="pagination-container">
+                                            <nav aria-label="Page navigation example">
+                                                <ul class="pagination">
+                                                    {% if recieve.has_previous %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ recieve.previous_page_number }}">Previous</a></li>
+                                                    {% endif %}
+                                                    {% for i in recieve.paginator.page_range %}
+                                                    {% if recieve.number == i %}
+                                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                                    {% else %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                    {% if recieve.has_next %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ recieve.next_page_number }}">Next</a></li>
+                                                    {% endif %}
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+    </div>
+        
+{% endblock content %}
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+function exportTableToExcel() {
+    let table = document.getElementById("html5-extension");
+    let workbook = XLSX.utils.book_new();
+    let worksheet = XLSX.utils.table_to_sheet(table);
+
+    // Ish kitobiga qo‘shamiz
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jadval");
+
+    // Faylni yuklab olish
+    XLSX.writeFile(workbook, "jadval.xlsx");
+}
+
+</script>
+<script>
+    document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+
+    const pathname = window.location.pathname;
+    document.querySelectorAll('.tab button').forEach(btn => {
+        const url = btn.getAttribute('data-url');
+        if (url === pathname) {
+            btn.classList.add('active');
+        }
+    });
+</script>
+{% endblock js %}

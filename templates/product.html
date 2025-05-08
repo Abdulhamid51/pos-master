@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+
+
+                        <div class="widget-content widget-content-area br-6">
+                            <form action="{% url 'deliver_filter' %}" method="post">
+                                {% csrf_token %}
+                                <div class="d-flex justify-content-between">
+                                    <div class="col-md-4 d-flex">
+                                        <select style="margin-right: 50px;" name="d_id" class="form-control">
+                                            {% for del in delivers %}                                            
+                                                {% if del.id == deliver.id %}
+                                                    <option value="{{ del.id }}" selected>{{ del.name }}</option>
+                                                {% endif %}
+                                                    <option value="{{ del.id }}">{{ del.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">Filterlash</button>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalLong">
+                                            Nolga tushirish
+                                        </button>
+                                    </div>
+                                </div>
+                        </form>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="html5-extension" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>Mahsulot</th>
+                                            <th>Ishlab chiqaruvchi</th>
+                                            <th>So`m</th>
+                                            <th>Soni</th>
+                                            <th>So`m * Soni</th>
+                                            <th>Dollar</th>
+                                            <th>Min. Soni</th>
+                                            <th>Filial</th>
+                                            <th>Guruh</th>
+                                            <th>Barcode</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for productfilial in productfilials %}
+                                            <tr class="qwerty" data-id="qwer{{productfilial.id}}" data-som="{{ productfilial.som }}">
+                                                <td class="">{{ forloop.counter }}</td>
+                                                <td>{{ productfilial.name }}</td>
+                                                <td>{% if productfilial.preparer %}{{ productfilial.preparer }}{% else %}-{% endif %}</td>
+                                                <td class="som" data-som="{{ productfilial.som }}">{{ productfilial.som|intcomma }}</td>
+                                                <td class="quantity" data-quantity="{{ productfilial.quantity|floatformat:0 }}">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
+                                                <td class="allprice" data-all="{{ productfilial.som|mul:productfilial.quantity|floatformat:0 }}">{{ productfilial.som|mul:productfilial.quantity|floatformat:0|intcomma }}</td>
+                                                <td class="dollar" data-dollar="{{ productfilial.dollar }}">{{ productfilial.dollar|intcomma }}</td>
+                                                <td>{{ productfilial.product.min_count|floatformat:0|intcomma }}</td>
+                                                <td>{{ productfilial.filial }}</td>
+                                                <td>{{ productfilial.barcode }}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{ productfilial.id }}" onclick="SaveBarcode({{ productfilial.id }})">
+                                                        Barcode
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                      
+                                            
+                                            <div class="modal fade" id="exampleModal{{ productfilial.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body">
+                                                            <img id="barcodeImage{{ productfilial.id }}" src="" alt="Barcode" style="margin-left: 50px; display: none;">
+                                                         <select id="sizeSelect{{ productfilial.id }}">
+                                                                <option data-width="320" data-height="240" >(40 × 30 mm)</option>
+                                                                <option data-width="400" data-height="240" >(50 × 30 mm)</option>
+                                                                <option data-width="400" data-height="320" >(50 × 40 mm)</option>
+                                                                <option data-width="480" data-height="320" >(60 × 40 mm)</option>
+                                                                <option data-width="560" data-height="400" >(70 × 50 mm)</option>
+                                                                <option data-width="640" data-height="480" >(80 × 60 mm)</option>
+                                                                <option data-width="800" data-height="480" >(100 × 60 mm)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                            <button type="button" class="btn btn-primary" onclick="printImage({{ productfilial.id }})">Print</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th class="">Jami:</th>
+                                            <th></th>
+                                            <th></th>
+                                            <th id="som1">{{ productfilials_total_som|intcomma }}|</th>
+                                            <th id="quantity1">{{ productfilials_total_quantity|intcomma }}| </th>
+                                            <th id="allprice1">{{ total_product_sum|intcomma }}| </th>
+                                            <th id="dollar1">{{ productfilials_total_dollar|intcomma }}  </th>
+                                            <!-- <th>{{ productfilials_total_min_count|intcomma }}</th> -->
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            function printImage(id) {
+                var imageUrl = $("#barcodeImage" + id).attr("src");
+                var sizeSelect = document.getElementById("sizeSelect" + id);
+                var selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+
+                var width = selectedOption.getAttribute("data-width");
+                var height = selectedOption.getAttribute("data-height");
+
+                if (imageUrl) {
+                    var printWindow = window.open('', '_blank');
+                    printWindow.document.write('<html><head><title>Chop etish</title></head><body>');
+                    printWindow.document.write('<img id="printImg" src="' + imageUrl + '" style="width:' + width + 'px; height:' + height + 'px;"/>');
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+
+                    var img = printWindow.document.getElementById("printImg");
+                    img.onload = function () {
+                        printWindow.focus();
+                        printWindow.print();
+                        printWindow.close();
+                    };
+                } else {
+                    alert("Rasm mavjud emas.");
+                }
+            }
+
+    function SaveBarcode(id) {
+    console.log("📌 SaveBarcode chaqirildi! ID:", id);
+
+    $.ajax({
+        url: "/create_barcode/" + id,
+        type: "GET",
+        headers: {
+            "X-CSRFToken": csrfToken
+        },
+        success: function(response) {
+            console.log("✅ AJAX muvaffaqiyatli! Image URL:", response.image);
+
+            setTimeout(function() {
+                var imgElement = document.getElementById('barcodeImage' + id);
+                console.log("🔍 Element topildi:", imgElement);
+
+                if (imgElement) {
+                    imgElement.setAttribute('src', response.image);
+                    imgElement.style.display = "block"; // Rasmni ko‘rsatish
+                } else {
+                    console.error("❌ Xato! Element topilmadi: barcodeImage" + id);
+                }
+            }, 500); // 0.5 soniya kutish (Modal to‘liq yuklanishi uchun)
+        },
+
+        error: function(xhr, status, error) {
+            console.error("❌ AJAX xato!", status, error);
+        }
+    });
+}
+        </script>
+
+
+        <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  Maxsulotlarni nolga tushirmoqchimisiz?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                  <a href="{% url 'null_products' %}" type="button" class="btn btn-primary">Ha</a>
+                </div>
+              </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            // "lengthMenu": [10, 20, 50, 100, 100000],
+            // "pageLength": 10000000000
+            // "LengthChange" : false, //thought this line could hide the LengthMenu
+            // "Info":false,  
+            "bPaginate": false,
+        } );
+
+        let data = []
+
+        var rows = trs.cell( {selected:true} ).data();
+
+        console.log(rows.length);
+
+        
+        let input = $('.form-control[type=search]')
+        input.on('keyup', function() {
+
+            trs.rows({"search":"applied"}).every(()=>data.push(this.data()))
+            
+            let som = 0
+            console.log();
+            
+            
+            // Array.from(rows).forEach(function(item, index) {
+            //     som += parseInt(item.getAttribute('data-som'))
+            // })
+            // som = som.toLocaleString()
+            // $('#som1').text(som)
+        })
+    </script>
+
+    <script>
+        // let input = $('.form-control[type=search]')
+        // input.on('keyup', function() {
+        //     let som = 0
+
+
+        //     var trs = $('#mainTable').dataTable();
+
+        //     //Get all rows from the trs table object.
+        //     var rows = trs.$("tr");
+
+
+        //     // console.log($('.som').length);
+        //     console.log($('tr[class="qwerty"]').length);
+        //     $('tr[class="qwerty"]').each(function(index, item) {
+        //         // console.log(index, item.textContent);
+        //         // let id = item.getAttribute('data-id')
+        //         som += parseInt(item.getAttribute('data-som'))
+        //     })
+        //     som = som.toLocaleString()
+        //     $('#som1').text(som)
+
+        //     let quantity = 0
+        //     Array.from(document.querySelectorAll('.quantity')).forEach(function(item) {
+        //         quantity += parseInt(item.getAttribute('data-quantity'))
+        //     })
+
+        //     quantity = quantity.toLocaleString()
+            
+        //     $('#quantity1').text(quantity)
+
+
+
+        //     let allprice = 0
+        //     Array.from(document.querySelectorAll('.allprice')).forEach(function(item) {
+        //         allprice += parseInt(item.getAttribute('data-all'))
+        //     })
+
+        //     allprice = allprice.toLocaleString()
+
+        //     $('#allprice1').text(allprice)
+
+            
+
+        //     let dollar = 0
+        //     Array.from(document.querySelectorAll('.dollar')).forEach(function(item) {
+        //         dollar += parseInt(item.getAttribute('data-dollar'))
+        //     })
+        //     dollar = dollar.toLocaleString()
+        //     $('#dollar1').text(dollar)
+        // })
+    </script>
+{% endblock js %}

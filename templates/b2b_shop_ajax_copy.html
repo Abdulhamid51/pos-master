@@ -1,0 +1,1031 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+        
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .line {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #071af2;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 30rem;
+        }
+    </style>
+    <style>
+        .tab {
+            display: flex;
+            gap: 10px;
+            /* border-bottom: 2px solid #ddd; */
+            margin-bottom: 10px;
+        }
+        .tab button {
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+        .tab button.active {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+        .tab button:hover {
+            color: #0056b3;
+        }
+        .document {
+            display: none;
+        }
+    </style>
+      <style>
+        .delete-btn {
+              color: red;
+              cursor: pointer;
+              font-weight: bold;
+              transition: transform 0.2s ease;
+          }
+          .delete-btn:hover {
+              transform: scale(1.2);
+              color: darkred;
+          }
+  </style>
+{% endblock css %}
+{% block content %}
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-lg-12">
+                        <div id="alert-container"></div>
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-content widget-content-area">
+                                <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <!-- <div class="col-md-2" style="display: flex; gap: 10px;">
+                                                    <button class="btn btn-success" id="shop_save" type="button">Сохранить</button>
+                                                </div> -->
+                                                <div class="col-md-8">
+                                                    <!-- <button class="btn btn" style="border: 1px solid silver !important;">Создать документ ▼</button> -->
+                                                    <button class="btn btn" style="border: 1px solid silver !important;">
+                                                        <a href="{% url 'shop_nakladnoy' product_id %}" target="_blank" rel="noopener noreferrer" >Печать ▼</a> 
+                                                    </button>
+                                                    <!-- <button class="btn btn" style="border: 1px solid silver !important;">Отправить</button> -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12"><br></div>
+                                        <div class="col-md-12">
+                                            
+                                            <form action="">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <h5>Отгрузка №</h5>
+                                                            <input type="text" style="width: 6%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; text-align: center;" value="{{ shop.id }}">
+                                                            <h5>от</h5>
+                                                            <input type="datetime-local" value="{{today|date:'Y-m-d H:i'}}" style="border: 1px solid #ddd; border-radius: 5px; padding: 5px;" id="shop_input_date">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <br>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <label>* Колл-центр</label>
+                                                                <select style="width: 55%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_call_center">
+                                                                    <option value="" disabled selected>Колл-центр</option>
+                                                                    {% for i in call_center %}
+                                                                    <option value="{{i.id}}"   {% if i == shop.saler %} selected {% endif %}>{{ i.first_name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-8">
+                                                                <label>* Склад</label>
+                                                                <select style="width: 35%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" id="shop_select_filial">
+                                                                    <option value="">Выберите склад</option>
+                                                                    {% for i in filial %}
+                                                                    <option value="{{i.id}}" {% if  i == shop.filial %} selected {% endif %}>{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-12"><br></div>
+                                                            <div class="col-md-4">
+                                                                <div style="display: flex; gap: 10px;">
+                                                                    <label>* Контрагент</label>
+                                                                    <select style="width: 55%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_customer">
+                                                                        <option value="">Выберите контрагента</option>
+                                                                        {% for i in customer %}
+                                                                        <option value="{{i.id}}" {% if shop.debtor == i %} selected {% endif %}>{{ i.fio }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                              
+                                                            </div>
+                                                            <div class="col-md-8">
+                                                                <div style="display: flex; gap: 10px;">
+                                                                    <label>* Договор</label>
+                                                                    <select style="width: 33%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_contract">
+                                                                        <option value="">Выберите договор</option>
+                                                                        {% for i in contract %}
+                                                                        <option value="{{i.id}}" {% if shop.contract == i %} selected {% endif %}>{{ i.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12"><br></div>
+                                                            <div class="col-md-4">
+                                                                <label>* Тип</label>
+                                                                <select style="width: 65%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_is_savdo">
+                                                                    <option value="True"> {% if shop.is_savdo %} Sotuv {% else%} Mijozdan Qaytuv {% endif %} </option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-8">
+                                                                <label>* Валюта</label>
+                                                                <select style="width: 34%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_valyuta">
+                                                                    {% for i in valyuta %}
+                                                                    <option value="{{i.id}}" {% if shop.valyuta == i %} selected {% endif %}>{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-12"><br></div>
+                                                            <div class="col-md-4">
+                                                                <label>* Тип цены</label>
+                                                                <select style="width: 56%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_type_price">
+                                                                    <option value="" selected disabled>Выберите Тип цены</option>
+                                                                    {% for i in price_type %}
+                                                                        <option value="{{i.id}}" {% if shop.type_price == i %} selected {% endif %}>{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-12"><br><br><br></div>
+                                      
+                                        
+                                        <div class="col-md-12">
+                                            <div class="tab">
+                                                <button class="active" onclick="switchTab(event)">Главная</button>
+                                                <button onclick="switchTab(event)">Связанные документы</button>
+                                            </div>
+                                            <div class="row home">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-1">
+                                                            <input type="checkbox">
+                                                           
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%;">
+                                                                <option>Наименование</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-1"></div>
+                                                        <div class="col-md-2">
+                                                            <h6>Kол-ва</h6>
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <h6>Остаток </h6>
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%;">
+                                                                <option>Цена</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-2" style="display: flex; gap: 7px;">
+                                                            <label for=""></label>
+                                                            <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%; height: 24px;">
+                                                                <option>Скидка </option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-1">
+                                                            <select style="border: 1px solid #ffffff;border-radius: 4px; width: 100%;">
+                                                                <option>Сумма</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12"><div class="line" ></div></div>
+                                              
+                                                <div id="product_list" class="col-md-12">
+                                                    {% for i in carts %}
+                                                    <div class="row">
+                                                        <div class="col-md-1"><input type="checkbox"></div>
+                                                        <div class="col-md-2"><p class="product_name">{{ i.product.name }}</p></div>
+                                                        <div class="col-md-1"><p style='display:none;' class="id_product" data-un="ok">{{i.product.id}}</p></div>
+                                                        <div class="col-md-2">{{ i.quantity }}</div>
+                                                        <div class="col-md-1"><h6>{{i.product.quantity}}</h6></div>
+                                                        <div class="col-md-1"><p class="price_product_list">{{i.price}}</p></div>
+                                                        <div class="col-md-2" style="display: flex; gap: 7px;">
+                                                            <label for=""></label>
+                                                            0
+                                                        </div>
+                                                        <div class="col-md-1" style="display:flex; gap:15px;" >
+                                                            <h6 >{{ i.total }}</h6>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <form action="">
+                                                        <div class="row">
+                                                            <div class="col-md-5">
+                                                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_product">
+                                                                    <option value="">Добавить позицию — введите наименование, код, штрихкод или артикул</option>
+                                                                    {% for i in product %}
+                                                                        <option value="{{ i.id }}|{{ i.som }}|{{ i.quantity }}">{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                                <br>
+                                                                <h6 id="query_select_product_name"></h6>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <button type="button" class="btn btn-success exampleModal_modal" data-toggle="modal" data-target="#exampleModal"  data-whatever="@mdo" style="display: none;">+</button>
+                                                            </div>
+                                                            <div class="col-md-1">
+                                                                <button class="btn-light" type="button">Остатки</button>
+                                                            </div>
+                                                            <div class="col-md-2"></div>
+                                                            <div class="col-md-2">
+                                                                <button class="btn btn-success" id="shop_save" type="button">Savdoni yakunlash</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                              
+                                                
+                                                <div class="col-md-12">
+                                                    <div class="line"></div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <br>
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <textarea name="" style="width: 100%;" placeholder="Комментарий" rows="5" id="shop_textarea">{{ shop.comment }}</textarea>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <div class="row">
+                                                                <div class="col-md-8">
+                                                                    <h3 style="font-weight: bold;">Итого:</h3>
+                                                                    <p>Прибыль </p>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <h4 style="font-weight: bold;" id="summa_itog"></h4>
+                                                                    <p>0</p>
+                                                                </div>
+    
+                                                                <div class="col-md-8">
+                                                                    <label><input type="checkbox" id="nds_checkbox" onchange="addNDS()"> НДС:</label><br>
+                                                                    <label><input type="checkbox" onchange="addItogNDS(this)"> Цена включает НДС</label>
+                                                                </div>
+                                                               
+                                                                <div class="col-md-4">
+                                                                    <p id="nds_p">0</p>
+                                                                    <p id="nds_itog">0</p>
+                                                                </div>
+                                                                <div class="col-md-12">
+                                                                    <br><br>
+                                                                    <h6 id="summa_col">Koл-вo: </h6>
+                                                                    <div class="line"></div>
+                                                                </div>
+    
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                          <div class="modal-content">
+                                                            <div class="modal-header">
+                                                              <h5 class="modal-title" id="exampleModalLabel">Maxsulot qoshish</h5>
+                                                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                              </button>
+                                                            </div>
+                                                            <form>
+                                                                <div class="modal-body">
+                                                                    <div class="form-group">
+                                                                    <label for="recipient-name" class="col-form-label">Maxsulot nomi:</label>
+                                                                    <input type="text" class="form-control" id="recipient-name" name="name" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-price" class="col-form-label">Maxsulot narxi:</label>
+                                                                        <input type="number" class="form-control" id="recipient-price" name="som" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-quantity" class="col-form-label">Maxsulot soni:</label>
+                                                                        <input type="number" class="form-control" id="recipient-quantity" name="quantity" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-barcode" class="col-form-label">Maxsulot barcodi:</label>
+                                                                        <input type="text" class="form-control" id="recipient-barcode" name="barcode" required>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-groups" class="col-form-label">Maxsulot gruppasi:</label>
+                                                                        <select name="groups" id="recipient-groups" class="form-control" required>
+                                                                            <option value="" selected disabled>-------</option>
+                                                                            {% for i in groups %}
+                                                                                <option value="{{ i.id }}">{{ i.name }}</option>
+                                                                            {% endfor %}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-measurement" class="col-form-label">Maxsulot turi:</label>
+                                                                        <select name="measurement" id="recipient-measurement" class="form-control" required>
+                                                                            <option value="dona">Dona</option>
+                                                                            <option value="kg">Kilo</option>
+                                                                            <option value="litr">Litr</option>
+                                                                            <option value="metr">Metr</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-danger" data-dismiss="modal">Bekor qilish</button>
+                                                                        <button type="button" class="btn btn-success" onclick="pushProductBack()">Saqlash</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                            <script>
+                                                                const productList = document.getElementById('product_list');
+
+                                                                function pushProductBack() {
+                                                                        let formData = {
+                                                                                name: $("#recipient-name").val(),
+                                                                                som: $("#recipient-price").val(),
+                                                                                quantity: $("#recipient-quantity").val(),
+                                                                                barcode: $("#recipient-barcode").val(),
+                                                                                groups: $("#recipient-groups").val(),
+                                                                                measurement: $("#recipient-measurement").val(),
+                                                                        };
+                                                                        console.log(formData)
+
+                                                                        $.ajax({
+                                                                            url: "{% url 'add_product_list' product_id %}",
+                                                                            type: "POST",
+                                                                            data: formData,
+                                                                            headers: {
+                                                                                "X-CSRFToken": csrfToken
+                                                                            },
+                                                                            success: function(response) {
+                                                                                if (response) {
+                                                                                    const newRow = `
+                                                                                    <div class="row">
+                                                                                        <div class="col-md-1"><input type="checkbox"></div>
+                                                                                        <div class="col-md-2"><p class="product_name">${response.product.name}</p></div>
+                                                                                        <div class="col-md-1"><p style='display:none;' class="id_product">${response.product.id}</p></div>
+                                                                                        <div class="col-md-2"><input type="number"  oninput="pushData(this)"></div>
+                                                                                        <div class="col-md-1"><h6 class="ostatok">${response.product.quantity}</h6></div>
+                                                                                        <div class="col-md-1"><p class="price_product_list">${response.product.som}</p></div>
+                                                                                        <div class="col-md-2" style="display: flex; gap: 7px;">
+                                                                                            <label for=""></label>
+                                                                                            <input type="text"  class="skidka_input" placeholder="Скидка" oninput="pushData(this)" style="height:22px">
+                                                                                        </div>
+                                                                                        <div class="col-md-1" style="display:flex; gap:15px;" >
+                                                                                            <h6 class="summa_product_list"></h6>
+                                                                                            <h6 class="delete-btn" style="color:red;cursor:pointer;">x</h6>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <br>
+                                                                                `;
+
+                                                                                productList.insertAdjacentHTML('beforeend', newRow);
+
+                                                                                showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                                                                                }
+                                                                                
+                                                                            },
+                                                                            error: function() {
+                                                                                showAlert("Server bilan bog'lanishda xatolik5", "danger");
+                                                                            }
+                                                                        });
+
+                                                                }
+                                                            </script>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock content %}
+{% block js %}
+    <script>
+        function addNDS() {
+            const checkbox = document.getElementById('nds_checkbox');
+            const ndsSpan = document.getElementById('nds_p');
+            $.ajax({
+                url: "{% url 'nds_ajax' %}",
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                success: function(response) {
+                    if (checkbox.checked) {
+                        ndsSpan.textContent = response.count; 
+                    } else {
+                        ndsSpan.textContent = 0;
+                    }
+                },
+                error: function() {
+                    showAlert("Server bilan bog'lanishda xatolik6", "danger");
+                }
+            });
+        }
+        function addItogNDS(element) {
+            let nds_itog = document.getElementById('nds_itog');
+            let summa_itog = document.getElementById('summa_itog');
+            $.ajax({
+                url: "{% url 'nds_ajax' %}",
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                success: function(response) {
+                    let summa = parseInt(summa_itog.textContent.replace(/\s/g, '')) || 0; 
+                    let nds_summa = parseInt(response.count) || 0; 
+
+                    if (element.checked) {
+                        nds_itog.textContent = (summa + nds_summa).toLocaleString('fr-FR');
+                    } else {
+                        nds_itog.textContent = 0;
+                    }
+                },
+                error: function() {
+                    showAlert("Server bilan bog'lanishda xatolik7", "danger");
+                }
+            });
+        }
+    </script>
+    <script>
+        let data = []
+        
+        document.getElementById('product_list').addEventListener('click', function (e) {
+            if (e.target.classList.contains('delete-btn')) {
+                const row = e.target.closest('.row');
+                if (row) {
+                    const row_quantity = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                    const total_row = parseFloat(row.querySelector('.summa_product_list').textContent.trim()) || 0;
+                    const product_id = row.querySelector('.id_product').textContent.trim();
+                    
+                    const summaItog = document.getElementById('summa_itog');
+                    const summaCol = document.getElementById('summa_col');
+
+                    if (total_row) {
+                        summaItog.textContent = (parseFloat(summaItog.textContent) - total_row);
+                    }
+
+                    if (row_quantity) {
+                        summaCol.textContent = (parseFloat(summaCol.textContent) - row_quantity).toFixed(0);
+                    }
+
+                    if (product_id) {
+                        const index = data.findIndex(item => item.product_id == product_id);
+                        data = data.filter(item => item.product_id !== product_id);
+                    }
+                    row.remove();
+                    const select = document.getElementById('shop_select_product');
+                    select.selectedIndex = 0;
+
+                    $.ajax({
+                        url: "{% url 'b2b_shop_ajax_cart_delete' product_id %}",
+                        type: "POST",
+                        data:JSON.stringify({'product_id':product_id}),
+                        headers: {
+                            "X-CSRFToken": csrfToken
+                        },
+                        success: function(response) {
+                            showAlert("Cart ochirildi!", "success");
+                        },
+                        error: function() {
+                            showAlert("Server bilan bog'lanishda xatolik1", "danger");
+                        }
+                    });
+                }
+            }
+        });
+
+
+        function changeItog() {
+            let summa_itog = 0; 
+            let summa_col = 0;  
+            const productList = document.getElementById('product_list');
+            const pr_summa_product_list = productList.querySelectorAll('.summa_product_list');
+            const pr_summa_product_input = productList.querySelectorAll('input[type="number"]');
+            
+            pr_summa_product_list.forEach(sim => {
+                let rawText = sim.textContent.replace(/\s/g, '').replace(',', '.');
+                summa_itog += parseInt(rawText) || 0;
+            });
+            pr_summa_product_input.forEach(simi => {
+                summa_col += parseInt(simi.value) || 0;
+            });
+            
+            document.getElementById('summa_itog').textContent = summa_itog.toLocaleString('fr-FR');
+            document.getElementById('summa_col').textContent = summa_col;
+        }
+
+
+
+        function pushData(item) {
+            const row = item.closest('.row');
+            const quantity = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+            const priceElement = row.querySelector('.price_product_list');
+            const totalElement = row.querySelector('.summa_product_list');
+            const id_product = row.querySelector('.id_product').textContent;
+            const ostatok_quantity = row.querySelector('.ostatok').textContent;
+            const skidka_input = parseFloat(row.querySelector('.skidka_input').value) || 0;
+            if (parseInt(ostatok_quantity) >= parseInt(quantity)) {
+                if (priceElement && totalElement) {
+                    const price = parseFloat(priceElement.textContent) || 0;
+                    let total = price * quantity;
+
+                    if (skidka_input) {
+                        total -= skidka_input
+                    }
+
+                    totalElement.textContent = total.toLocaleString('fr-FR');
+
+                    const existingItem = data.find(item => item.product_id === id_product);
+                    if (existingItem) {
+                        existingItem.quantity = quantity;
+                        existingItem.total = total;
+                        existingItem.skidka = skidka_input;
+                        existingItem.price = price;
+                    } else {
+                        data.push({
+                            quantity: quantity,
+                            total: total,
+                            product_id: id_product,
+                            skidka: skidka_input,
+                            price:price,
+                        });
+                    }
+                    console.log(data)
+                    const one_data = {
+                        quantity: quantity,
+                        total: total,
+                        product_id: id_product,
+                        skidka: skidka_input,
+                        price:price,
+                    }
+                    
+                    $.ajax({
+                            url: "{% url 'b2b_shop_ajax_add_one' product_id  %}",
+                            type: "POST",
+                            data: JSON.stringify(one_data),
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+                            success: function(response) {
+                                
+                                // showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                            },
+                            error: function () {
+                                // showAlert("Server bilan bog'lanishda xatolik", "danger");
+                            }
+                    });
+                    changeItog();
+                    // console.log(data)
+                    row.querySelector('.ostatok').textContent = parseInt(ostatok_quantity) - parseInt(quantity)
+
+                } else {
+                    console.error("Narx yoki umumiy qiymat elementi topilmadi.");
+                }
+            } else {
+                showAlert("Maxsulot yetarli emas!", "danger");
+                
+            }
+            
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectElement = $('#shop_select_product').selectize();
+            const selectizeInstance = selectElement[0].selectize;
+            const modalButton = document.querySelector('.exampleModal_modal'); 
+            const queryText = document.getElementById('query_select_product_name');
+            const recipient_name = document.getElementById('recipient-name');
+            
+
+            let lastQuery = ""; 
+
+            selectizeInstance.on('type', function (query) {
+                lastQuery = query;
+
+                if (query && selectizeInstance.currentResults.items.length === 0) {
+                    console.log("🆕 Hech nima topilmadi, tugma ochildi!");
+                    modalButton.style.display = 'block';
+                    queryText.style.display = 'block';
+
+
+                    queryText.textContent = `🛒 "${query}" maxsulotni qo'shmoqchimisiz? + tugmasini bosing`;
+
+                    recipient_name.value = query
+
+                } else {
+                    console.log("✅ Natija topildi, tugma yashirildi!");
+                    modalButton.style.display = 'none';
+                    queryText.style.display = 'none';
+
+                }
+            });
+            $('.exampleModal_modal').on('click', function () {
+                setTimeout(() => {
+                    selectizeInstance.setTextboxValue(lastQuery); 
+                }, 10);
+            });
+
+            $('#exampleModal').on('hidden.bs.modal', function () {
+                selectizeInstance.focus(); 
+                selectizeInstance.setTextboxValue(lastQuery); 
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var selectElement = document.getElementById("product_price_type");
+            var productList = document.getElementById('product_list');
+            
+            selectElement.addEventListener("change", function () {
+                if (!productList) {
+                    console.error("Xatolik: `product_list` elementi topilmadi!");
+                    return;
+                }
+
+                const price_type_data = {
+                    "type_id": selectElement.value,
+                    "products": []
+                };
+
+                var id_products = productList.querySelectorAll('.id_product');
+                id_products.forEach(element => {
+                    if (element.getAttribute('data-un') !== 'ok') {
+                        price_type_data['products'].push({ 'id': element.textContent.trim() });
+                    }
+                });
+
+                $.ajax({
+                        url: "{% url 'b2b_shop_ajax' product_id  %}" + "?type_id=" + selectElement.value,
+                        type: "GET",
+                        headers: {
+                            "X-CSRFToken": csrfToken
+                        },
+                        success: function (response) {
+
+                                let selectElement = $("#shop_select_product");  
+                                let selectize = selectElement[0].selectize;  
+
+                                if (selectize) {
+                                    selectize.clear();     
+                                    selectize.clearOptions(); 
+
+                                    $(response.product_html).each(function () {
+                                        let value = $(this).attr("value");
+                                        let text = $(this).text();
+                                        selectize.addOption({ value: value, text: text });
+                                    });
+
+                                    selectize.refreshOptions();  
+                                }
+                                selectElement.css("display", "none");
+
+                            },
+                        error: function (xhr, status, error) {
+                            console.error("AJAX xatosi:", error);
+                        }
+                    });
+                $.ajax({
+                    url: "{% url 'price_type_filter_ajax' %}",
+                    type: "POST",
+                    data: JSON.stringify(price_type_data),
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    success: function (response) {
+                if (response) {
+                    response.data.forEach(dataItem => {
+                        let soni = 0;
+                        let existingRow = null;
+
+                        id_products.forEach(idElement => {
+                            if (idElement.textContent.trim() === dataItem.id.toString()) {
+                                existingRow = idElement.closest('.row');
+                            }
+                        });
+
+                        if (existingRow) {
+                            console.log("Mahsulot mavjud, yangilanmoqda:", dataItem.name);
+
+                            const inputElement = existingRow.querySelector('input[type="number"]');
+                            if (inputElement && inputElement.value) {
+                                soni = parseFloat(inputElement.value) || 0;
+                            }
+
+                            const priceElement = existingRow.querySelector('.price_product_list');
+                            if (priceElement) {
+                                priceElement.textContent = dataItem.price;
+                            }
+
+                            const sumElement = existingRow.querySelector('.summa_product_list');
+                            if (sumElement) {
+                                sumElement.textContent = (soni * dataItem.price).toLocaleString('fr-FR');
+                            }
+
+                            pushData(inputElement);
+                        } else {
+                            console.log("Yangi mahsulot qo'shilyapti:", dataItem.name);
+                            
+                            let sum = 0;
+                            if (soni > 0) {
+                                sum = soni * dataItem.price;
+                            }
+
+                            const newRow = `
+                                <div class="row">
+                                    <div class="col-md-1"><input type="checkbox"></div>
+                                    <div class="col-md-2"><p class="product_name">${dataItem.name}</p></div>
+                                    <div class="col-md-1"><p style="display:none;" class="id_product">${dataItem.id}</p></div>
+                                    <div class="col-md-2">
+                                        <input type="number" oninput="pushData(this)" value="${soni}">
+                                    </div>
+                                    <div class="col-md-1"><h6 class="ostatok">${dataItem.quantity}</h6></div>
+                                    <div class="col-md-1"><p class="price_product_list">${dataItem.price.toLocaleString('fr-FR')}</p></div>
+                                    <div class="col-md-2" style="display: flex; gap: 7px;">
+                                        <label></label>
+                                        <input type="text" class="skidka_input" placeholder="Скидка" oninput="pushData(this)" style="height:22px">
+                                    </div>
+                                    <div class="col-md-1" style="display:flex; gap:15px;">
+                                        <h6 class="summa_product_list">${sum.toLocaleString('fr-FR')}</h6>
+                                        <h6 class="delete-btn" style="color:red;cursor:pointer;">x</h6>
+                                    </div>
+                                </div>
+                                <br>
+                            `;
+
+                            productList.insertAdjacentHTML('beforeend', newRow);
+
+                            if (soni > 0) {
+                                const rows = productList.querySelectorAll('.row');
+                                const lastRow = rows[rows.length - 1];
+                                const inputElem = lastRow.querySelector('input[type="number"]');
+                                if (inputElem) {
+                                    pushData(inputElem);
+                                }
+                            }
+                        }
+                    });
+                }
+
+                showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+            },
+                    error: function (xhr, status, error) {
+                        console.error("AJAX xatosi:", error);
+
+                        showAlert("Server bilan bog'lanishda xatolik2", "danger");
+                    }
+                });
+            });
+        });
+
+
+       
+        $(document).ready(function () {
+            const $select = $('#shop_select_product').selectize();
+            const selectizeControl = $select[0].selectize;
+            const productList = document.getElementById('product_list');
+
+            selectizeControl.on('change', function (value) {
+                if (!value) {
+                    return;
+                }
+
+                const [id, price, select_quantity] = value.split('|');
+                const selectedProduct = selectizeControl.getItem(value).text().trim();
+                console.log(selectedProduct)
+                const existingProducts = productList.querySelectorAll('.product_name');
+
+                let productExists = Array.from(existingProducts).some(product => product.textContent === selectedProduct);
+
+                if (productExists) {
+                    showAlert("Maxsulot allaqachon qo‘shilgan!", "warning");
+                    return;
+                }
+
+                const newRow = `
+                    <div class="row">
+                        <div class="col-md-1"><input type="checkbox"></div>
+                        <div class="col-md-2"><p class="product_name">${selectedProduct}</p></div>
+                        <div class="col-md-1"><p style='display:none;' class="id_product">${id}</p></div>
+                        <div class="col-md-2"><input type="number"  oninput="pushData(this)"></div>
+                        <div class="col-md-1"><h6 class="ostatok">${select_quantity}</h6></div>
+                        <div class="col-md-1"><p class="price_product_list">${price}</p></div>
+                        <div class="col-md-2" style="display: flex; gap: 7px;">
+                            <label for=""></label>
+                            <input type="text"  class="skidka_input" placeholder="Скидка" oninput="pushData(this)" style="height:22px">
+                        </div>
+                        <div class="col-md-1" style="display:flex; gap:15px;" >
+                            <h6 class="summa_product_list"></h6>
+                            <h6 class="delete-btn" style="color:red;cursor:pointer;">x</h6>
+                        </div>
+                    </div>
+                    <br>
+                `;
+
+                productList.insertAdjacentHTML('beforeend', newRow);
+
+                selectizeControl.clear(); 
+            });
+
+            productList.addEventListener('click', function (e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    e.target.closest('.row').remove();
+                }
+            });
+        });
+
+      
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        $(document).ready(function () {
+            function addCart() {
+                if (data.length !== 0) {
+                    console.log(data)
+                    $.ajax({
+                        url: "{% url 'product_remove_quantity' product_id %}",
+                        type: "POST",
+                        data: JSON.stringify(data),
+                        headers: {
+                            "X-CSRFToken": csrfToken
+                        },
+                        success: function(response) {
+                            showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                        },
+                        error: function () {
+                            showAlert("Server bilan bog'lanishda xatolik3", "danger");
+                        }
+                    });
+                }
+               
+                
+            }
+
+            function addShop() {
+                // const shop_input_date = $('#shop_input_date').val();
+                // const shop_select_customer = $('#shop_select_customer').val();
+                // const shop_select_filial = $('#shop_select_filial').val();
+                // const shop_select_contract = $('#shop_select_contract').val();
+                // const shop_select_call_center = $('#shop_select_call_center').val();
+                const shop_textarea = $('#shop_textarea').val();
+                
+
+
+                const fields_shop = {
+                    'text':shop_textarea
+                };
+                console.log(fields_shop)
+                $.ajax({
+                            url: "{% url 'b2b_shop_ajax_edit' product_id  %}",
+                            type: "POST",
+                            data: fields_shop,
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+                            success: function(response) {
+                                showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                            },
+                            error: function () {
+                                showAlert("Server bilan bog'lanishda xatolik4", "danger");
+                            }
+                });
+          
+                
+            }
+
+            $("#shop_save").click(addCart);
+            $("#shop_save").click(addShop);
+        });
+    </script>
+    <script>
+        const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                </div>
+            `);
+
+            $("#alert-container").append(alertElement);
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000);
+        };
+
+       
+    </script>
+
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+    <script>
+        function switchTab(event) {
+           document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+           event.target.classList.add('active');
+           const isRelatedDocs = event.target.innerText === "Связанные документы";
+           document.querySelector('.home').style.display = isRelatedDocs ? 'none' : 'block';
+           document.querySelector('.document').style.display = isRelatedDocs ? 'block' : 'none';
+       }
+    </script>
+    <script>
+          // document.getElementById('save_btn').addEventListener('click', function() {
+            
+        //     const select = document.getElementById('shop_select_product');
+        //     const selectedOption = select.options[select.selectedIndex];
+        //     const selectedProduct = select.options[select.selectedIndex].text;
+        //     const productList = document.getElementById('product_list');
+        //     const existingProducts = productList.querySelectorAll('.product_name');
+        //     let [id, price] = selectedOption.value.split('|');
+        //     let productExists = false;
+        //     existingProducts.forEach(product => {
+        //         if (product.textContent === selectedProduct) {
+        //             productExists = true;
+        //         }
+        //     });
+        //     if (productExists) {
+        //         showAlert("Maxsulotni qoshilgan!", "warning");
+        //         return;
+        //     }
+        //     if (selectedProduct && select.value !== "") {
+        //         const newRow = `
+        //             <div class="row">
+        //                 <div class="col-md-1">
+        //                     <input type="checkbox">
+                        
+        //                 </div>
+        //                 <div class="col-md-2">
+        //                 <p class="product_name">${selectedProduct}</p>
+        //                 </div>
+        //                 <div class="col-md-1"> <p style='display:none;' class="id_product">${id}</p> </div>
+        //                 <div class="col-md-2">
+        //                     <input type="number"  oninput="pushData(this)">
+        //                 </div>
+        //                 <div class="col-md-1">
+        //                     <h6>0</h6>
+        //                 </div>
+        //                 <div class="col-md-1">
+        //                 <p class="price_product_list">${price}</p>
+        //                 </div>
+        //                 <div class="col-md-2" style="display: flex; gap: 7px;">
+        //                     <label for=""></label>
+        //                 <input type="text"  class="skidka_input" oninput="pushData(this)" style="height:22px">
+        //                 </div>
+        //                 <div class="col-md-1" style="display:flex; gap:15px;" >
+        //                     <h6 class="summa_product_list"></h6>
+        //                     <h6 class="delete-btn">x</h6>
+        //                 </div>
+        //             </div>
+        //         `;
+        //         productList.insertAdjacentHTML('beforeend', newRow);
+        //         select.value = ''; 
+        //     } else {
+        //         showAlert("Maxsulotni tanglang!", "warning");
+        //     }
+        // });
+
+    </script>
+{% endblock js %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important;">Partiya</label>
+                                        <input type="text" value="{{recieve.name}}" class="form-control">
+                                        </div>
+                                    <div class="col-md-2" >
+                                        <label for="" style="color: black !important;">Taminotchi</label>
+                                        <select name="" id="" class="form-control">
+                                            <option value="">{{recieve.deliver}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important;">Sana</label>
+                                        <input type="datetime-local" value="{{recieve.date|date:'Y-m-d H:i'}}" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important;">Jami</label>
+                                        <input type="text" value="{{recieve.kelish_total|intcomma}}" class="form-control">
+                                    </div>
+                                </div>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table" id="filter_data_table" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>Maxsulot</th>
+                                            <th>Miqdori</th>
+                                            <th>Som</th>
+                                            <th>Dollar</th>
+                                            <th>Jami</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for price in item %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ price.product }}</td>
+                                                <td>{{ price.quantity|intcomma }}</td>
+                                                <td>{{ price.som|intcomma }}</td>
+                                                <td>{{ price.dollar|intcomma }}</td>
+                                                <td>{{ price.total_som|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        $('#filter_data_table').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' }
+                   
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
+{% endblock js %}

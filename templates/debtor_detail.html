@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <style>
+        td {
+            color: black !important;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="html5-extension" class="table table-striped table-bordered display" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Sana</th>
+                                            <th>Turi</th>
+                                            <th>Bizga kirim</th>
+                                            <th>Bizdan chiqim</th>
+                                            <th>Bonus</th>
+                                            <th>Qarzimiz</th>
+                                            <th>Haqqimiz</th>
+                                            <th>Izoh</th>
+                                        </tr>
+                                    </thead>
+                                    {% for v in valyuta %}
+                                    <tbody>
+                                        <tr style="background-color: beige !important;">
+                                            <th></th>
+                                            <th></th>
+                                            <th style="text-align: center;">{{v.name}}</th>
+                                            {% for sm in summa_total_for_valyuta %}
+                                                {% if sm.valyuta == v.id %}
+                                                    <th>{{sm.pay_pay_summa|intcomma}}</th>
+                                                    <th>{{sm.pay_give_summa|intcomma}}</th>
+                                                    <th>Bonus</th>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                        {% for b in debt_shot %}
+                                            {% if b.valyuta == v %}
+                                                    <tr style="background-color: cornflowerblue;">
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th>Boshlang'ich qoldiq</th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        {% if b.start_summa > 0 %}
+                                                            <th></th>
+                                                            <th>{{b.start_summa|intcomma}}</th>
+                                                            {% else %}
+                                                            <th>{{b.start_summa|intcomma}}</th>
+                                                            <th></th>
+                                                        {% endif %}
+                                                        <th></th>
+                                                    </tr>
+                                                <!-- {% if b.start_summa > 0 %}  -->
+                                                <!-- {% endif %} -->
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for py in pay %}
+                                            {% if v == py.valyuta %}
+                                            <tr>
+                                                <td></td>
+                                                <td>{{py.date|date:'Y-m-d H:i'}}</td>
+                                                <td>
+                                                    {% if py.type_pay == 1%}
+                                                        Pul olindi
+                                                    {% else %}
+                                                        Chiqim
+                                                    {% endif %}
+                                                </th>
+                                                <td>
+                                                    {% if py.type_pay == 1 %}
+                                                        {{ py.summa }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if py.type_pay == 2 %}
+                                                        {{ py.summa }}
+                                                    {% endif %}
+                                                </td>
+                                                <td></td>
+                                                <th></th>
+                                                <th></th>
+                                                <th>{{ py.comment }}</th>
+                                            </tr>
+                                            {%endif%}
+                                        {% endfor %}
+                                        <!-- {% for dt in data %}
+                                            {% if v == dt.valuta %}
+                                                <tr>
+                                                    <td></td>
+                                                    <td><a target="_blank"
+                                                        {% if dt.model == 'customerdebt' %}
+                                                            href="{% url 'nakladnoy' dt.obj.order.id %}"
+                                                        {% endif %}
+                                                        >{{dt.date|date:'d.m.Y'}}</a></td>
+                                                    <td>
+                                                    {% if dt.model == 'paymenthistory' %}
+                                                        {% if dt.type == '1' %}
+                                                            Pul olindi
+                                                        {% else  %}
+                                                            Pul berildi
+                                                        {% endif %}
+                                                    {% elif dt.model == 'customerdebt' %}
+                                                        <a href="{% url 'operator-active-orders-detail' dt.obj.order.id %}">
+                                                            Tovar sotildi
+                                                        </a>
+                                                    {% else %}
+                                                        Bonus berildi
+                                                    {% endif %}
+                                                    </td>
+                                                    <td>{{dt.taken|floatformat:'2'|intcomma}}</td>
+                                                    <td>{{dt.given|floatformat:'2'|intcomma}}</td>
+                                                    <td>{{dt.bonus_total|intcomma}}</td>
+                                                    
+                                                    {% if dt.left > 0 %}
+                                                    <td></td>
+                                                    <td>{{dt.left|floatformat:2|intcomma}}</td>
+                                                    {% else %}
+                                                    <td>{{dt.left|floatformat:2|intcomma}}</td>
+                                                    <td></td>
+                                                    {% endif %}
+                                                    <td>{{ dt.comment }}</td>
+                                                    
+                                                </tr>
+                                                
+                                            {% endif %}
+
+                                        {% endfor %} -->
+                                    </tbody>
+                                    {% endfor %}
+                                        
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            paging: false  
+        } );
+    </script>
+{% endblock js %}

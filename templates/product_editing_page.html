@@ -1,0 +1,132 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+{% endblock css %}
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+        <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-12 layout-spacing">
+                            <div class="col-md-12">
+                                <form class="row">
+                                    <div class="col-12">
+                                        <input type="text" name="search" class="form-control" placeholder="Qidiruv" oninput="searchResults(this)">
+                                    </div>
+                                </form>
+                                
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-4" id="example122">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Maxsulot nomi</th>
+                                                        <th>Sotish narx</th>
+                                                        <th>Soni</th>
+                                                        <th>Ozgartirish</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                        <tr>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        
+{% endblock content %}
+{% block js %}
+
+<script>
+    function searchResults(element) {
+        var searchInput = element.value;
+        console.log(searchInput);
+        
+        $.ajax({
+            url: '/product_editing_search/',
+            type: 'GET',
+            data: { search: searchInput },
+            success: function(response) {
+                const tbody = document.querySelector('#example122 tbody');
+                tbody.innerHTML = '';  
+
+                response.forEach(function(item) {
+                    console.log(item);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.price}</td> 
+                        <td>${item.quantity}</td>
+                        <td>
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal${item.product_id}">
+                                O'zgartirish
+                            </button>
+                        </td> 
+                    `;
+                    tbody.appendChild(row);
+
+                    if (!document.getElementById(`exampleModal${item.product_id}`)) {
+                        const modal = document.createElement('div');
+                        modal.innerHTML = `
+                            <div class="modal fade" id="exampleModal${item.product_id}" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <form method="post" action="{% url 'product_editing_page' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" value="${item.product_id}" name="product_id">
+                                                <div class="form-group">
+                                                    <label for="recipient-name" class="col-form-label">Sotuv Narx:</label>
+                                                    <input type="text" class="form-control" id="recipient-name" value="${item.price}" name="sotish">
+                                                </div>
+                                                <button type="submit" class="btn btn-success">Saqlash</button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                    }
+                });
+
+                console.log("Search results updated successfully");
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching search results:", error);
+            }
+        });
+    }
+</script>
+
+
+
+{% endblock js %}

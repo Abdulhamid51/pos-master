@@ -1,0 +1,675 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+     <style>
+        .selectize-input {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            line-height: 2.7rem !important;
+        }
+
+    .btn-check:checked + .btn {
+        background-color: #007bff;
+        color: white;
+    }
+
+     </style>
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-8 col-lg-8 col-sm-12  layout-spacing">
+
+                        <div class="row">
+                            <div class="col-md-2">
+                                <!-- <label for="">Valuta</label> -->
+                                <select name="valuta" id="main_valuta" class="form-control">
+                                    <option value="som">Som</option>
+                                    <option value="dollar">Dollar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <select onchange="add_modal(this)" class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
+                                    <option value=""></option>
+                                    
+                                    {% for i in products %}
+                                        <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}">{{ i.name }} - {{i.barcode}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <!-- <div class="col-md-2">
+                                <input value="{{dollar_kurs}}" type="number" name="dollar_kurs" class="form-control">
+                            </div> -->
+                            <!-- <div class="col-md-5 d-flex" style="padding-bottom: 0.5rem;" >
+                                <div class="form-check" style="padding: 1rem 1rem;">
+                                    <input class="form-check-input" id="oddiy" type="radio" name="price_type" value="{{i.id}}" checked>
+                                    <label class="form-check-label" for="oddiy">
+                                        Oddiy
+                                    </label>
+                                </div>
+                                {% for i in price_types %}
+                                    <div class="form-check" style="padding: 1rem 1rem;">
+                                        <input class="form-check-input" id="{{i.name}}{{i.id}}" type="radio" name="price_type" value="{{i.id}}" >
+                                        <label class="form-check-label" for="{{i.name}}{{i.id}}">
+                                            {{i.name}}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div> -->
+                            <div class="btn-group" role="group" aria-label="Price Types">
+                                <input type="radio" class="btn-check" name="price_type" id="oddiy" value="oddiy" autocomplete="off" checked>
+                                <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
+                                {% for i in price_types %}
+                                    <input type="radio" class="btn-check" name="price_type" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="widget-content widget-content-area br-6">
+                            
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Maxsulot nomi</th>
+                                            <th>Shtrix kod</th>
+                                            <th>Qo'shish</th>
+                                            <th>Miqdori</th>
+                                            <th>Ayrish</th>
+                                            <th>Narx</th>
+                                            <th>Kelishilgan narx</th>
+                                            <th>Skidka</th>
+                                            <th>Jami</th>
+                                            <th>Ochirish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td>Jami</td>
+                                            <th></th>
+                                            <td></td>
+                                            <td></td>
+                                            <th class="text-center" id="quantity_total"></th>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td id="skidka_total"></td>
+                                            <td id="all_total"></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-sm-12  layout-spacing">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="widget-content widget-content-area br-6">
+                                    <label for="">Mijoz</label>
+                                    <select class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
+                                        <option value=""></option>
+                                        
+                                        {% for i in customers %}
+                                            <option value="{{i.id}}">{{ i.fio }}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+
+                                    <label for="">To'lov sanasi</label>
+                                    <input type="datetime-local" class="form-control">
+
+                                    <br><hr style="color: black;">
+                                    <label for="">Naqd so'm</label>
+                                    <input type="number" class="form-control" id="naqd_som" name="naqd_som">
+
+                                    <label for="">Naqd dollar</label>
+                                    <input type="number" class="form-control" id="naqd_dollar" name="naqd_dollar">
+
+                                    <label for="">Karta</label>
+                                    <input type="number" class="form-control" id="click" name="click">
+
+                                    <label for="">Bank</label>
+                                    <input type="number" class="form-control" id="transfer" name="transfer">
+
+                                    <label for="">Jami</label>
+                                    <input type="number" class="form-control" id="tolov_total" name="transfer" disabled>
+
+                                    <br><hr>
+
+                                    <label for="">Nasiya so'm</label>
+                                    <input type="number" class="form-control" id="nasiya_som" name="nasiya_som">
+
+                                    <label for="">Nasiya dollar</label>
+                                    <input type="number" class="form-control" id="nasiya_dollar" name="nasiya_dollar">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+            Yangi 
+        </button>
+
+
+          <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <form id="add_form" class="modal-content" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-header">
+                  <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body" >
+                        <div class="form-group" id="recieve_item_add_product_div">
+                          <input type="hidden" name="product" id="recieve_item_add_product_id">
+                          
+                          <label for="">Shtrix kod</label>
+                          <input id="product_barcode" type="number" name="barcode" class="form-control" disabled>
+                          
+                          <label for="">Omborda qoldiq</label>
+                          <input id="ombor_qoldiq" type="number" name="qoldiq" class="form-control" disabled>
+
+                          <label for="">Narx</label>
+                          <input id="sotuv_sotish_som" type="number" name="sotish_som" class="form-control" disabled>
+
+                          <label for="">Kelishilgan narxi</label>
+                          <input id="sotuv_kelishilgan_som" type="number" name="sotish_som" class="form-control">
+
+                          <!-- <label for="">Kurs</label>
+                          <input value="{{dollar_kurs}}" type="number" name="dollar_kurs" class="form-control"> -->
+
+                          <label for="">Miqdori</label>
+                          <input type="number" id="modal_quantity_input" name="quantity" class="form-control">
+
+                          
+                          <!-- <label for="">Kurs</label>
+                          <input value="12800" type="number" name="kurs" class="form-control"> -->
+
+
+                          
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                          <button id="modal_delete" type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button type="submit" class="btn btn-primary">Saqlash</button>
+                        </div>
+
+                </div>
+              </form>
+            </div>
+          </div>
+
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+    
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+    </script>
+
+
+<script>
+    function add_modal(item) {
+        const itemValue = $(item).val(); // Get the value of the passed item
+        const [pr_id, pr_name, quantity, barcode] = itemValue.split('&');
+        const price_type = document.querySelector('input[name="price_type"]:checked').value
+        console.log(price_type, 'ppp')
+        if (pr_id) {
+            $('#recieve_item_add_button').click();
+            $('#recieve_item_add_product_id').val(pr_id);
+
+            $('#product_barcode').val(barcode);
+            $('#ombor_qoldiq').val(quantity);
+            $('#recieve_item_add_product_name').text(pr_name);
+
+            $('#sotuv_sotish_som').val(); 
+            $('#recieve_item_add_product_div .pr_type').remove();
+            let price_types = $.get("{% url 'check_price' %}", { product:  pr_id, type: price_type}, function(data) {
+                let price = parseInt(data['price'])
+                $('#sotuv_sotish_som').val(price); 
+                $('#sotuv_kelishilgan_som').val(price); 
+            });
+
+        }
+    }
+</script>
+
+<!-- 
+<script>
+    $(document).ready(function () {
+    function formatNumber(num) {
+        return new Intl.NumberFormat("en-US").format(num);
+    }
+
+    function getValutaRate() {
+        let kurs = parseFloat($("input[name='dollar_kurs']").val()) || 1;
+        let valuta = $("select[name='valuta']").val();
+        return valuta === "dollar" ? kurs : 1;
+    }
+
+    function updateTotals() {
+        let totalQuantity = 0;
+        let totalDiscount = 0;
+        let totalSum = 0;
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let quantity = parseInt($(this).find(".quantity").text()) || 0;
+            let discount = parseFloat($(this).find(".discount").attr("data-value")) || 0;
+            let total = parseFloat($(this).find(".total").attr("data-value")) || 0;
+
+            totalQuantity += quantity;
+            totalDiscount += discount;
+            totalSum += total;
+        });
+
+        $("#quantity_total").text(formatNumber(totalQuantity));
+        $("#skidka_total").text(formatNumber((totalDiscount / kurs).toFixed(2)));
+        $("#all_total").text(formatNumber((totalSum / kurs).toFixed(2)));
+    }
+
+    $("#add_form").submit(function (event) {
+        event.preventDefault();
+
+        let productName = $("#recieve_item_add_product_name").text();
+        let barcode = $("#product_barcode").val();
+        let quantity = parseInt($("input[name='quantity']").val()) || 0;
+        let price = parseFloat($("#sotuv_sotish_som").val()) || 0;
+        let agreedPrice = parseFloat($("#sotuv_kelishilgan_som").val()) || 0;
+        let discount = price - agreedPrice;
+        let total = agreedPrice * quantity;
+        let kurs = getValutaRate();
+
+        let rowCount = $("tbody tr").length + 1;
+
+        let newRow = `
+            <tr>
+                <td>${rowCount}</td>
+                <td>${productName}</td>
+                <td>${barcode}</td>
+                <td class="text-right">
+                    <button type="button" class="btn btn-primary quantity-minus">-</button>
+                </td>
+                <td class="quantity text-center">${quantity}</td>
+                <td>
+                    <button type="button" class="btn btn-primary quantity-plus">+</button>
+                </td>
+                <td>${formatNumber(price.toFixed(2))}</td>
+                <td>${formatNumber(agreedPrice.toFixed(2))}</td>
+                <td class="discount" data-value="${discount.toFixed(2)}">${formatNumber((discount / kurs).toFixed(2))}</td>
+                <td class="total" data-value="${total.toFixed(2)}">${formatNumber((total / kurs).toFixed(2))}</td>
+                <td>
+                    <button type="button" class="btn btn-danger product-delete">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+
+        $("tbody").append(newRow);
+        // document.querySelector('#main_valuta').disabled = true
+        updateTotals();
+        $("#recieve_item_add_modal").modal("hide");
+        $("#add_form")[0].reset();
+    });
+
+    $(document).on("click", ".quantity-plus", function () {
+        let row = $(this).closest("tr");
+        let quantityElem = row.find(".quantity");
+        let quantity = parseInt(quantityElem.text()) + 1;
+        quantityElem.text(quantity);
+
+        let agreedPrice = parseFloat(row.find("td:eq(7)").text().replace(/,/g, "")) || 0;
+        let kurs = getValutaRate();
+        let total = agreedPrice * quantity;
+
+        row.find(".total").attr("data-value", total.toFixed(2));
+        row.find(".total").text(formatNumber((total / kurs).toFixed(2)));
+
+        updateTotals();
+    });
+
+    $(document).on("click", ".quantity-minus", function () {
+        let row = $(this).closest("tr");
+        let quantityElem = row.find(".quantity");
+        let quantity = parseInt(quantityElem.text());
+
+        if (quantity > 1) {
+            quantity -= 1;
+            quantityElem.text(quantity);
+
+            let agreedPrice = parseFloat(row.find("td:eq(7)").text().replace(/,/g, "")) || 0;
+            let kurs = getValutaRate();
+            let total = agreedPrice * quantity;
+
+            row.find(".total").attr("data-value", total.toFixed(2));
+            row.find(".total").text(formatNumber((total / kurs).toFixed(2)));
+
+            updateTotals();
+        }
+    });
+
+    $(document).on("click", ".product-delete", function () {
+        $(this).closest("tr").remove();
+        updateTotals();
+    });
+
+    $("select[name='valuta']").change(function () {
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let row = $(this);
+            let discount = parseFloat(row.find(".discount").attr("data-value")) || 0;
+            let total = parseFloat(row.find(".total").attr("data-value")) || 0;
+
+            row.find(".discount").text(formatNumber((discount / kurs).toFixed(2)));
+            row.find(".total").text(formatNumber((total / kurs).toFixed(2)));
+        });
+
+        updateTotals();
+    });
+});
+
+</script>
+
+<script>
+    $(document).ready(function () {
+    function calculateRemaining() {
+        let total = parseFloat($("#all_total").text().replace(/,/g, "")) || 0; // Jami summa
+        let valuta = $('select[name="valuta"]').val(); // Valuta turi (so‘m yoki dollar)
+        let kurs = parseFloat($("input[name='dollar_kurs']").val()) || 1; // Dollar kursi
+
+        // Kiritilgan to‘lovlar
+        let naqd_som = parseFloat($("#naqd_som").val()) || 0;
+        let naqd_dollar = parseFloat($("#naqd_dollar").val()) || 0;
+        let click = parseFloat($("#click").val()) || 0;
+        let transfer = parseFloat($("#transfer").val()) || 0;
+
+        let totalPaid = 0;
+        if (valuta === "som") {
+            totalPaid = naqd_som + click + transfer + naqd_dollar*kurs; // So‘mda to‘langan jami summa
+        } else {
+            totalPaid = naqd_dollar*kurs; // Dollarda faqat naqd dollar hisobga olinadi
+        }
+
+        let remaining = total - totalPaid; // Qolgan summa
+
+        if (remaining < 0) {
+            remaining = 0; // Agar ortiqcha bo‘lsa, nasiya 0 bo‘lishi kerak
+        }
+
+        if (valuta === "som") {
+            $("#nasiya_som").val(remaining.toFixed(2)); // So‘mda bo‘lsa nasiya so‘mga yoziladi
+            $("#nasiya_dollar").val(""); // Dollar bo‘lsa, bo‘sh qoldiriladi
+        } else {
+            let remainingDollar = remaining / kurs; // So‘mdan dollarga o‘tkazish
+            $("#nasiya_dollar").val(remainingDollar.toFixed(2));
+            $("#nasiya_som").val("");
+        }
+    }
+
+    function convertNasiyatoNewCurrency() {
+        let oldValuta = $('select[name="valuta"]').data("prev"); // Oldingi qiymat
+        let newValuta = $('select[name="valuta"]').val(); // Yangi qiymat
+        let kurs = parseFloat($("input[name='dollar_kurs']").val()) || 1; // Kurs
+
+        if (oldValuta === "som" && newValuta === "dollar") {
+            let nasiyaSom = parseFloat($("#nasiya_som").val()) || 0;
+            let convertedDollar = nasiyaSom / kurs;
+            $("#nasiya_dollar").val(convertedDollar.toFixed(2));
+            $("#nasiya_som").val("");
+        } else if (oldValuta === "dollar" && newValuta === "som") {
+            let nasiyaDollar = parseFloat($("#nasiya_dollar").val()) || 0;
+            let convertedSom = nasiyaDollar * kurs;
+            $("#nasiya_som").val(convertedSom.toFixed(2));
+            $("#nasiya_dollar").val("");
+        }
+
+        $('select[name="valuta"]').data("prev", newValuta); // Yangi qiymatni saqlash
+    }
+
+    // Har bir input maydonidagi o‘zgarishlarni kuzatish
+    $("#naqd_som, #naqd_dollar, #click, #transfer, select[name='valuta']").on("input change", function () {
+        calculateRemaining();
+    });
+
+    // Valuta o‘zgarganda nasiyalarni o‘zgartirish
+    $('select[name="valuta"]').on("change", function () {
+        convertNasiyatoNewCurrency();
+    });
+
+    // Dastlabki qiymatni saqlash
+    $('select[name="valuta"]').data("prev", $('select[name="valuta"]').val());
+
+    // Dastlab hisoblash
+    calculateRemaining();
+});
+
+</script> -->
+
+
+<script>
+    $(document).ready(function () {
+    function formatNumber(num) {
+        return new Intl.NumberFormat("en-US").format(num);
+    }
+
+    function getValutaRate() {
+        let kurs = parseFloat($("input[id='dollar_kurs']").val()) || 1;
+        let valuta = $("select[name='valuta']").val();
+        return valuta === "dollar" ? kurs : 1;
+    }
+
+    function updateTotals() {
+        let totalQuantity = 0;
+        let totalDiscount = 0;
+        let totalSum = 0;
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let quantity = parseInt($(this).find(".quantity").text()) || 0;
+            let discount = parseFloat($(this).find(".discount").attr("data-value")) || 0;
+            let total = parseFloat($(this).find(".total").attr("data-value")) || 0;
+
+            totalQuantity += quantity;
+            totalDiscount += discount;
+            totalSum += total;
+        });
+
+        $("#quantity_total").text(formatNumber(totalQuantity));
+        $("#skidka_total").text(formatNumber((totalDiscount / kurs).toFixed(2)));
+        $("#all_total").text(formatNumber((totalSum / kurs).toFixed(2)));
+
+        calculateRemaining();
+    }
+
+    function calculateRemaining() {
+        let total = parseFloat($("#all_total").text().replace(/,/g, "")) || 0;
+        let valuta = $('select[name="valuta"]').val();
+        let kurs = parseFloat($("input[name='dollar_kurs']").val()) || 1;
+        
+        let naqd_som = parseFloat($("#naqd_som").val()) || 0;
+        let naqd_dollar = parseFloat($("#naqd_dollar").val()) || 0;
+        let click = parseFloat($("#click").val()) || 0;
+        let transfer = parseFloat($("#transfer").val()) || 0;
+
+        // let totalPaid = valuta === "som" ? naqd_som + click + transfer + naqd_dollar * kurs : naqd_dollar * kurs + naqd_som + click + transfer;
+        let totalPaid;
+        if (valuta === "som") {
+            totalPaid = naqd_som + click + transfer + naqd_dollar * kurs;
+        } else {
+            totalPaid = naqd_dollar + (naqd_som + click + transfer) / kurs;
+        }
+
+        let remaining = Math.max(total - totalPaid, 0);
+        // console.log(total)
+        // console.log(remaining, 'a', totalPaid)
+        $('#tolov_total').val((totalPaid.toFixed(2)));
+        if (valuta === "som") {
+            $("#nasiya_som").val(remaining.toFixed(2));
+            $("#nasiya_dollar").val("");
+        } else {
+            $("#nasiya_dollar").val((remaining).toFixed(2));
+            $("#nasiya_som").val("");
+        }
+    }
+
+    $("#add_form").submit(function (event) {
+        event.preventDefault();
+        $('#modal_delete').click()
+
+        
+        let productName = $("#recieve_item_add_product_name").text();
+        let barcode = $("#product_barcode").val();
+        let quantity = parseInt($("input[name='quantity']").val()) || 0;
+        let price = parseFloat($("#sotuv_sotish_som").val()) || 0;
+        let agreedPrice = parseFloat($("#sotuv_kelishilgan_som").val()) || 0;
+        let discount = price - agreedPrice;
+        let total = agreedPrice * quantity;
+        let kurs = getValutaRate();
+        
+        let newRow = `
+            <tr>
+                <td>${$("tbody tr").length + 1}</td>
+                <td>${productName}</td>
+                <td>${barcode}</td>
+                <td class="text-right"><button type="button" class="btn btn-primary quantity-minus">-</button></td>
+                <td class="quantity text-center">${quantity}</td>
+                <td><button type="button" class="btn btn-primary quantity-plus">+</button></td>
+                <td>${formatNumber(price.toFixed(2))}</td>
+                <td>${formatNumber(agreedPrice.toFixed(2))}</td>
+                <td class="discount" data-value="${discount.toFixed(2)}">${formatNumber((discount / kurs).toFixed(2))}</td>
+                <td class="total" data-value="${total.toFixed(2)}">${formatNumber((total / kurs).toFixed(2))}</td>
+                <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`;
+        
+        $("tbody").append(newRow);
+        $('#modal_quantity_input').val("")
+        updateTotals();
+    });
+
+    $(document).on("click", ".quantity-plus, .quantity-minus", function () {
+        let row = $(this).closest("tr");
+        let quantityElem = row.find(".quantity");
+        let quantity = parseInt(quantityElem.text()) + ($(this).hasClass("quantity-plus") ? 1 : -1);
+        
+        if (quantity > 0) {
+            quantityElem.text(quantity);
+            let agreedPrice = parseFloat(row.find("td:eq(7)").text().replace(/,/g, "")) || 0;
+            let total = agreedPrice * quantity;
+            
+            row.find(".total").attr("data-value", total.toFixed(2)).text(formatNumber((total / getValutaRate()).toFixed(2)));
+            updateTotals();
+        }
+    });
+
+    $(document).on("click", ".product-delete", function () {
+        $(this).closest("tr").remove();
+        updateTotals();
+    });
+
+    $("#naqd_som, #naqd_dollar, #click, #transfer, select[name='valuta']").on("input change", function () {
+        calculateRemaining();
+    });
+
+    $("select[name='valuta']").change(function () {
+        let kurs = getValutaRate();
+
+        $("tbody tr").each(function () {
+            let row = $(this);
+            let discount = parseFloat(row.find(".discount").attr("data-value")) || 0;
+            let total = parseFloat(row.find(".total").attr("data-value")) || 0;
+
+            row.find(".discount").text(formatNumber((discount / kurs).toFixed(2)));
+            row.find(".total").text(formatNumber((total / kurs).toFixed(2)));
+        });
+
+        updateTotals();
+    });
+
+    updateTotals();
+});
+
+</script>
+
+
+
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function toggleAddButton() {
+            let customerSelected = document.querySelector("select[name='product']").value !== "";
+            let paymentDateFilled = document.querySelector("input[type='datetime-local']").value !== "";
+            document.getElementById("recieve_item_add_button").style.display = customerSelected && paymentDateFilled ? "block" : "none";
+        }
+
+        document.querySelector("select[name='product']").addEventListener("change", toggleAddButton);
+        document.querySelector("input[type='datetime-local']").addEventListener("input", toggleAddButton);
+    });
+</script> -->
+
+
+{% endblock js %}

@@ -1,0 +1,367 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+{% endblock css %}
+
+
+{% block content %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <div id="content" class="main-content">
+        <div class="container">
+            <div class="row layout-top-spacing" style="width: 100%;">
+                <div class="col-12 layout-spacing">
+                </div>
+                <div class="col-lg-12">
+                    <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-content widget-content-area">
+                                <form action="" method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <style>
+                                        label {
+                                            color: black !important;
+                                            font-weight: bold;
+                                        }
+                                    </style>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Bussines Tahlili</label>
+                                                 <input type="checkbox"  name="is_bussines" {% if use.is_bussines %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Maxsulotlar Boshqaruvi</label>
+                                                 <input type="checkbox"  name="is_maxsulot_boshkaruvi" {% if use.is_maxsulot_boshkaruvi %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Maxsulot Tahriri</label>
+                                                 <input type="checkbox"  name="is_maxsulot_tahriri" {% if use.is_maxsulot_tahriri %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Taminotchi Qaytuv</label>
+                                                 <input type="checkbox"  name="is_taminotchi_qaytuv" {% if use.is_taminotchi_qaytuv %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Bugungi Sotuvlar</label>
+                                                 <input type="checkbox"  name="is_bugungi_sotuvlar" {% if use.is_bugungi_sotuvlar %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Maxsulot Tahlili</label>
+                                                 <input type="checkbox"  name="is_maxsutlo_tahlili" {% if use.is_maxsutlo_tahlili %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         
+                                         <div class="col-md-6">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Analiz Harajatlar</label>
+                                                 <input type="checkbox"  name="is_analiz_xarajatlar" {% if use.is_analiz_xarajatlar %} checked {% endif %}>
+                                             </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="col-form-label">Ot prixodovaniya</label>
+                                                        <input type="checkbox" oninput="allCheck(this)">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_ot_prixod" {% if use.is_ot_prixod %} checked {% endif %}> 
+                                                        <label class="col-form-label">Prixod</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_ot_tarix" {% if use.is_ot_tarix %} checked {% endif %}>
+                                                        <label class="col-form-label">Tarix</label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div> 
+                                   
+                                        
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="col-form-label">Hisobdan Chiqish</label>
+                                                        <input type="checkbox" oninput="allCheck(this)">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_hisobdan_chiqish" {% if use.is_hisobdan_chiqish %} checked {% endif %}>
+                                                        <label class="col-form-label">Chiqish</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_hisobdan_tarix" {% if use.is_hisobdan_tarix %} checked {% endif %}>
+                                                        <label class="col-form-label">Tarix</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="col-form-label">Xodim</label>
+                                                        <input type="checkbox" oninput="allCheck(this)" >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_xodim_kunlik" {% if use.is_xodim_kunlik %} checked {% endif %}>
+                                                        <label class="col-form-label">Kunlik</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_xodim_oylik" {% if use.is_xodim_oylik %} checked {% endif %}>
+                                                        <label class="col-form-label">Oylik</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10" >
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_xodim_mobile" {% if use.is_xodim_mobile %} checked {% endif %}>
+                                                        <label class="col-form-label">Mobile</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10" >
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_xodim_call_center" {% if use.is_xodim_call_center %} checked {% endif %}>
+                                                        <label class="col-form-label">Call center</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                      
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Balans Hisobi</label>
+                                                 <input type="checkbox"  name="is_balans_hisobi " {% if use.is_balans_hisobi %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Fin Hisoboti</label>
+                                                 <input type="checkbox"  name="is_fin_hisoboti" {% if use.is_fin_hisoboti %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Buyurtmalar</label>
+                                                 <input type="checkbox"  name="is_buyurtmalar" {% if use.is_buyurtmalar %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Filiallar Boshqaruvi</label>
+                                                 <input type="checkbox"  name="is_filial_boshkaruvi" {% if use.is_filial_boshkaruvi %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Kadrlar</label>
+                                                 <input type="checkbox"  name="is_kadrlar"  {% if use.is_kadrlar %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Mijozlar Qarzdorligi</label>
+                                                 <input type="checkbox"  name="is_mijozlar_qarzdorligi" {% if use.is_mijozlar_qarzdorligi %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Mijozlar Tahlili</label>
+                                                 <input type="checkbox"  name="is_mijozlar_tahlili" {% if use.is_mijozlar_tahlili %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Yetkazib Beruvchilar</label>
+                                                 <input type="checkbox"  name="is_yetkazib_beruvchilar" {% if use.is_yetkazib_beruvchilar %} checked {% endif %}>
+                                             </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="col-form-label">Ombor Boshqaruvi</label>
+                                                        <input type="checkbox" oninput="allCheck(this)">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_ombor_boshkaruvi_ombor" {% if use.is_ombor_boshkaruvi_ombor %} checked {% endif %}>
+                                                        <label class="col-form-label">Ombor</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10" >
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_ombor_boshkaruvi_qabul " {% if use.is_ombor_boshkaruvi_qabul %} checked {% endif %}>
+                                                        <label class="col-form-label">Ombor Qabul</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_ombor_boshkaruvi_ombordan_analiz" {% if use.is_ombor_boshkaruvi_ombordan_analiz %} checked {% endif %}>
+                                                        <label class="col-form-label">Omborda mahsulotlar</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="col-form-label">Reyting</label>
+                                                        <input type="checkbox" oninput="allCheck(this)">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_reyting_maxsulotlar" {% if use.is_reyting_maxsulotlar %} checked {% endif %}>
+                                                        <label class="col-form-label">Maxsulotlar</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10" >
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_reyting_mijozlar" {% if use.is_reyting_mijozlar %} checked {% endif %}>
+                                                        <label class="col-form-label">Mijozlar</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2"></div>
+                                                <div class="col-md-10">
+                                                    <div class="form-group">
+                                                        <input type="checkbox"  name="is_reyting_yetkazib_beruvchilar" {% if use.is_reyting_yetkazib_beruvchilar %} checked {% endif %}>
+                                                        <label class="col-form-label">Yetkazib Beruvchilar</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Kassa</label>
+                                                 <input type="checkbox"  name="is_kassa"  {% if use.is_kassa %} checked {% endif %}>
+                                             </div>
+                                         </div>
+
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Savdo</label>
+                                                 <input type="checkbox"  name="is_savdo"  {% if use.is_savdo %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="col-form-label">NDS</label>
+                                                <input type="checkbox"  name="is_nds"  {% if use.is_nds %} checked {% endif %}> 
+                                            </div>
+                                       </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">B2B Savdo</label>
+                                                 <input type="checkbox"  name="is_b2b_savdo" {% if use.is_b2b_savdo %} checked {% endif %}>
+                                             </div>
+                                         </div>
+                                         <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Kassa Tasdiklanmagan</label>
+                                                 <input type="checkbox"  name="is_kassa_tasdiklanmagan" {% if use.is_kassa_tasdiklanmagan %} checked {% endif %}>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="col-form-label">Kassa Tarixi</label>
+                                                <input type="checkbox"  name="is_kassa_tarixi" {% if use.is_kassa_tarixi %} checked {% endif %}>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                             <div class="form-group">
+                                                 <label class="col-form-label">Qabul</label>
+                                                 <input type="checkbox"  name="is_qabul" {% if use.is_qabul %} checked {% endif %}>
+                                             </div>
+                                         </div>
+                                        
+                                         <div class="col-md-1">
+                                            <button class="btn btn-success" type="submit" >Saqlash</button>
+                                         </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+{% endblock content %}
+{% block js %}
+<script>
+    function allCheck(element) {
+        const row = element.closest('.row');
+        const checkboxes = row.querySelectorAll("input[type='checkbox']"); 
+        checkboxes.forEach(cb => {
+            if (cb !== element) {
+                cb.checked = element.checked;
+            }
+        });
+    }
+</script>
+{% endblock js %}

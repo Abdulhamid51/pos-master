@@ -1,0 +1,360 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa | Bordo</title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <style>
+      th {
+            background-color: #4f82d9;
+            color: white !important;
+        }
+    .tr-classes {
+            background-color: red !important;
+        }
+        .table-container {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+}
+
+.pagination-container {
+    margin-top: 10px;
+    text-align: center;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    padding-bottom: 5px;
+    position: relative;
+}
+
+.pagination {
+    display: inline-flex;
+}
+
+    </style>
+<style>
+      .tab {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+            gap: 20px; 
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    .tab button {
+        background: none;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s ease;
+    }
+    .tab button.active {
+        border-bottom: 2px solid #007bff;
+        color: #007bff;
+    }
+    .tab button:hover {
+        color: #0056b3;
+    }
+    .document {
+        display: none;
+    }
+</style>
+<style>
+      #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 30rem;
+        }
+</style>
+{% endblock css %}
+{% block content %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div id="alert-container"></div>
+
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="tab">
+                                            <button onclick="switchTab(event)" data-url="/money_circulation/">
+                                                <a href="{% url 'money_circulation' %}" style="font-weight: bold; color: black;">Manba</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/kassa_fin/">
+                                                <a href="{% url 'kassa_fin' %}" style="font-weight: bold; color: black;">Kassa</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/data_fin/">
+                                                <a href="{% url 'data_fin' %}" style="font-weight: bold; color: black;">Data</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/debet_kredit_fin/">
+                                                <a href="{% url 'debet_kredit_fin' %}" style="color: black !important;">Debet-Kredit</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/cf_fin/">
+                                                <a href="{% url 'cf_fin' %}" style="color: black !important;">CF</a>
+                                            </button>
+                                            <button onclick="switchTab(event)" data-url="/daily_cf_fin/">
+                                                <a href="{% url 'daily_cf_fin' %}" style="color: black !important;">Daily CF</a></button>
+                                            <button onclick="switchTab(event)" data-url="/xarid_fin/">
+                                                <a href="{% url 'xarid_fin' %}" style="color: black !important;">Xarid</a></button>
+                                            <button onclick="switchTab(event)" data-url="/sotuv_fin/">
+                                                <a href="{% url 'sotuv_fin' %}" style="color: black !important;">Sotuv</a></button>
+                                            <button onclick="switchTab(event)" data-url="/pl_fin/">
+                                                <a href="{% url 'pl_fin' %}" style="color: black !important;">P/L</a></button>
+                                            <button onclick="switchTab(event)" data-url="/balans_fin/">
+                                                <a href="{% url 'balans_fin' %}" style="color: black !important;">Balans</a></button>
+                                            <button onclick="switchTab(event)" data-url="/majburiyat_fin/">
+                                                <a href="{% url 'majburiyat_fin' %}" style="color: black !important;">Majburiyat</a></button>
+                                            <button onclick="switchTab(event)" data-url="/tolov_kalendar_fin/">
+                                                <a href="{% url 'tolov_kalendar_fin' %}" style="color: black !important;">Tolov Kalendari</a></button>
+                                            <button onclick="switchTab(event)" data-url="/reja_tushum_fin/">
+                                                <a href="{% url 'reja_tushum_fin' %}" style="color: black !important;">Reja Tushum</a></button>
+                                            <button onclick="switchTab(event)" data-url="/reja_chiqim_fin/">
+                                                <a href="{% url 'reja_chiqim_fin' %}" style="color: black !important;">Reja Chiqim</a></button>
+                                            <button onclick="switchTab(event)" data-url="/asosiy_vosita_fin/">
+                                                <a href="{% url 'asosiy_vosita_fin' %}" style="color: black !important;">Asosiy Vosita</a></button>
+                                            <button onclick="switchTab(event)" data-url="/ombor_fin/">
+                                                <a href="{% url 'ombor_fin' %}" style="color: black !important;">Sklad</a></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 layout-spacing">
+                            <form >
+                                <div class="row">
+                                    <div class="col-md-4"></div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="start_date" value="{{ filters.start_date }}"  class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="end_date"  value="{{ filters.end_date }}"  class="form-control">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn btn-primary" >Filter</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-success" onclick="exportTableToExcel()" type="button">📥Excel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-container">
+                                            <table class="table table-bordered mb-4" id="html5-extension">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sana</th>
+                                                        <th>Kirim</th>
+                                                        <th>Chiqim</th>
+                                                        <th>Kurs</th>
+                                                        <th>Xisob raqam</th>
+                                                        <th>Yetkazib beruvchi</th>
+                                                        <th>Manba</th>
+                                                        <th>Mijoz</th>
+                                                        <th>Izoh</th>
+                                                        <th>Xodimlar</th>
+                                                        <th>Xisobot oyi</th>
+                                                        <th>Yil</th>
+                                                        <th>Oy</th>
+                                                        <th>Kun</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                        <tr class="tr-classes">
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        {% for pay in pay %}
+                                                            <tr>
+                                                                <td>{{ pay.date|date:'Y-m-d H:i' }}</td>
+                                                                <td>Kirim</td>
+                                                                <td>Chiqim</td>
+                                                                <td>{{ pay.currency }}</td>
+                                                                <td>Xisob raqam</td>
+                                                                <td>Yetkazib beruvchi</td>
+                                                                <td>{{ pay.money_circulation|default_if_none:'' }}</td>
+                                                                <td>{{ pay.debtor }}</td>
+                                                                <td>{{ pay.comment }}</td>
+                                                                <td>Xodimlar</td>
+                                                                <td></td>
+                                                                <td>{{ pay.date|date:'Y' }}</td>
+                                                                <td>{{ pay.date|date:'m' }}</td>
+                                                                <td>{{ pay.date|date:'d' }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="pagination-container">
+                                            <nav aria-label="Page navigation example">
+                                                <ul class="pagination">
+                                                    {% if pay.has_previous %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ pay.previous_page_number }}">Previous</a></li>
+                                                    {% endif %}
+                                                    {% for i in pay.paginator.page_range %}
+                                                    {% if pay.number == i %}
+                                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                                    {% else %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                    {% if pay.has_next %}
+                                                    <li class="page-item"><a class="page-link" href="?page={{ pay.next_page_number }}">Next</a></li>
+                                                    {% endif %}
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+    </div>
+        
+{% endblock content %}
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+         const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                </div>
+            `);
+
+            $("#alert-container").append(alertElement);
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000);
+        };
+
+       
+    </script>
+</script>
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+
+
+
+function exportTableToExcel() {
+    showAlert("Biroz quting!", "success");
+
+    $.ajax({
+        url: "{% url 'exel_convert_kassa_fin' %}",
+        type: "POST",
+        headers: {
+            "X-CSRFToken": csrfToken
+        },
+        success: function(response) {
+
+            let rows = '';
+            response.pay.forEach(function(item) {
+                rows += `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>Kirim</td>
+                        <td>Chiqim</td>
+                        <td>${item.currency}</td>
+                        <td>Xisob raqam</td>
+                        <td>Yetkazib beruvchi</td>
+                        <td>${item.money_circulation}</td>
+                        <td>${item.debtor}</td>
+                        <td>${item.comment}</td>
+                        <td>Xodimlar</td>
+                        <td></td>
+                        <td>${item.year}</td>
+                        <td>${item.month}</td>
+                        <td>${item.day}</td>
+                    </tr>
+                `;
+            });
+
+            let tableHTML = `
+                <table id="export-temp-table" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>Sana</th>
+                            <th>Kirim</th>
+                            <th>Chiqim</th>
+                            <th>Kurs</th>
+                            <th>Xisob raqam</th>
+                            <th>Yetkazib beruvchi</th>
+                            <th>Manba</th>
+                            <th>Mijoz</th>
+                            <th>Izoh</th>
+                            <th>Xodimlar</th>
+                            <th>Xisobot oyi</th>
+                            <th>Yil</th>
+                            <th>Oy</th>
+                            <th>Kun</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            `;
+
+            $('#export-temp-table').remove();
+            $('body').append(tableHTML);
+            let table = document.getElementById('export-temp-table');
+            let workbook = XLSX.utils.book_new();
+            let worksheet = XLSX.utils.table_to_sheet(table);
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Jadval");
+            XLSX.writeFile(workbook, "jadval.xlsx");
+            $('#export-temp-table').remove();
+        },
+        error: function () {
+            showAlert("Maʼlumotlarni olishda xatolik yuz berdi!", "danger");
+        }
+    });
+}
+
+
+</script>
+<script>
+    document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
+
+    const pathname = window.location.pathname;
+    document.querySelectorAll('.tab button').forEach(btn => {
+        const url = btn.getAttribute('data-url');
+        if (url === pathname) {
+            btn.classList.add('active');
+        }
+    });
+</script>
+
+{% endblock js %}

@@ -1,0 +1,73 @@
+{% load static %}
+{% load humanize %}
+
+<table id="filter_data_table" class="table">
+    <thead>
+        <tr>
+            <th><div>№</div></th>
+            <th><div>Nomi</div></th>
+            <th><div>Yetkazib beruvchi</div></th>
+            <th><div>So`m</div></th>
+            <th><div>Dollar</div></th>
+            <th><div>Sotish som</div></th>
+            <th><div>Sotish Dollar</div></th>
+            <th><div style="text-align: center;">Sana</div></th>
+        </tr>
+    </thead>
+    <tbody id="war">
+        {% for w in wares %}
+            <tr>
+                <td><div class="td-content">{{ forloop.counter }}</div></td>
+                <td><a href="{% url 'omborqabuldetail' w.id %}" target="_blank" rel="noopener noreferrer"><div class="td-content">{{ w.name }}</a></div></td>
+                <td><div class="td-content">{{ w.deliver }}</div></td>
+                <td><div class="td-content">{{ w.som|intcomma }}</div></td>
+                <td><div class="td-content">{{ w.dollar|intcomma }}</div></td>
+                <td><div class="td-content">{{ w.sum_sotish_som|intcomma }}</div></td>
+                <td><div class="td-content">{{ w.sum_sotish_dollar|intcomma }}</div></td>
+                <td><div class="td-content">{{ w.date }}</div></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+                                
+
+    <script src="{% static 'plugins/apex/apexcharts.min.js'%}"></script>
+    <script src="{% static 'assets/js/widgets/modules-widgets.js'%}"></script>
+    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
+
+    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
+    <script src="{% static 'plugins/flatpickr/flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/nouislider.min.js'%}"></script>
+
+    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
+    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
+    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
+
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+
+
+    <script>
+        $('#filter_data_table').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' }
+                   
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
