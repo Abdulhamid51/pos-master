@@ -1014,7 +1014,7 @@ class Debtor(models.Model):
         customer_debt = CustomerDebt.objects.filter(customer=customer)
 
         for valyuta in Valyuta.objects.all():
-            customer_debt = customer_debt.filter(valyuta=valyuta).last()
+            customer_debt = CustomerDebt.objects.filter(valyuta=valyuta).last() or CustomerDebt.objects.create(customer=customer, valyuta=valyuta)
             if customer_debt:
                 customer_debt.summa = customer_debt.start_summa
                 customer_debt.save()
@@ -1028,7 +1028,7 @@ class Debtor(models.Model):
                             else:
                                 customer_debt.summa -= i.summa
                             i.debt_new = customer_debt.summa
-                        else:
+                        elif i._meta.model_name == 'shop':
                             i.debt_old = customer_debt.summa
                             customer_debt.summa += i.baskets_total_price
                             i.debt_new = customer_debt.summa
@@ -1110,7 +1110,7 @@ class PayHistory(models.Model):
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
     date = models.DateTimeField(default=timezone.now)
 
-    kassa_after = models.FloatField(default=0)
+    summa = models.IntegerField(default=0, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
 
@@ -1200,22 +1200,22 @@ class PayHistory(models.Model):
         - Tahrirda: Eski qiymatlarni olib tashlab, yangi qiymatlarni qo'shadi.
         """
         # Kassa aniqlash (masalan, filial orqali yoki boshqa usul bilan)
-        kassa = Kassa.objects.first()  # ⚠️ O'zingizga mos kassa tanlash mexanizmini qo'shing
-        old_values = None
+        # kassa = Kassa.objects.first()  # ⚠️ O'zingizga mos kassa tanlash mexanizmini qo'shing
+        # old_values = None
 
-        if self.pk:
-            # Tahrir holati uchun eski qiymatlarni olish
-            old_instance = PayHistory.objects.get(pk=self.pk)
-            old_values = {
-                'som': old_instance.som,
-                'dollar': old_instance.dollar,
-                'plastik': old_instance.plastik,
-                'click': old_instance.click,
-            }
+        # if self.pk:
+        #     # Tahrir holati uchun eski qiymatlarni olish
+        #     old_instance = PayHistory.objects.get(pk=self.pk)
+        #     old_values = {
+        #         'som': old_instance.som,
+        #         'dollar': old_instance.dollar,
+        #         'plastik': old_instance.plastik,
+        #         'click': old_instance.click,
+        #     }
 
         super().save(*args, **kwargs)  # Avval model saqlanadi
-        if kassa and self.shop:
-            self.save_kassa(kassa, old_values=old_values)
+        # if kassa and self.shop:
+        #     self.save_kassa(kassa, old_values=old_values)
 
         
         
@@ -1527,8 +1527,13 @@ class Kirim(models.Model):
     plastik = models.IntegerField(default=0)
     plastik_eski = models.IntegerField(default=0)
     kassa_plastik_yangi = models.IntegerField(default=0)
+
+    summa = models.IntegerField(default=0, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+    kassa_new = models.FloatField(default=0)
     
-    
+    currency = models.IntegerField(default=0, null=True)
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=True)

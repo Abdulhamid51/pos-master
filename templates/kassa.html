@@ -33,7 +33,7 @@
                                                 <div class="col mr-2">
                                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">{{ i.name }}</div>
                                                     {% for x in i.valyuta %}
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa | intcomma}} $</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa|intcomma}}</div>
                                                     {% endfor %}
                                                 </div>
                                                 <div class="col-auto">
@@ -251,10 +251,10 @@
                                         <thead>
                                             <tr>
                                                 <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Qancha(so'm)</th>
-                                                <th style="text-align: left;">Qancha($)</th>
-                                                <th style="text-align: left;">Qancha (hisob raqam)</th>
-                                                <th style="text-align: left;">Plastik</th>
+                                                <th style="text-align: left;">Kassa</th>
+                                                <th style="text-align: left;">Valuta</th>
+                                                <th style="text-align: left;">Summa</th>
+                                                <th style="text-align: left;">Qoldiq</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
                                                 <th style="text-align: left;"></th>
@@ -266,25 +266,18 @@
                                             <tr>
                                                 <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_som_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.qancha_som|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_som_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.kassa.kassa.name }}
                                                 </td>
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_dol_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.qancha_dol|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_dol_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.valyuta }}
                                                 </td>
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_hisob_raqam_eski|default_if_none:'0' | intcomma}} | <br>
-                                                    {{ kirim.qancha_hisob_raqamdan|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_hisob_raqam_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.summa|default_if_none:'0' | intcomma }}
                                                 </td>
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_plastik_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.plastik|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_plastik_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
+                                                
                                                 <td style="text-align: left;">{{ kirim.izox }}</td>
                                                 <td style="text-align: left;">{{ kirim.qachon }}</td>
                                                 <td style="text-align: left;">
@@ -308,8 +301,9 @@
                                                     
                                                         </div>
                                                         <div class="modal-body">
-                                                            <label for="">Mijoz (majburiy emas)</label>
-                                                            <select name="debtor" id="" class="form-control">
+                                                            <input type="hidden" name="kirim_id" value="{{kirim.id}}">
+                                                            <!-- <label for="">Mijoz (majburiy emas)</label> -->
+                                                            <!-- <select name="debtor" id="" class="form-control">
                                                                 <option value="">- - - - - - - </option>
                                                                 {% for mijoz in debtors %}
                                                                     <option value="{{ mijoz.id }}">{{ mijoz.fio }}</option>
@@ -331,10 +325,13 @@
                                                                     <option value="{{ k.id }}">{{ k.name }}</option>
                                                                 {% endfor %}
                                                             </select>
-                                                            <br>
+                                                            <br> -->
+
+                                                            <label for="">Summa</label>
+                                                            <input class="form-control" type="number" value="{{kirim.summa}}" name="summa" placeholder="Summa"><br>
                                                             <label for="">Kurs</label>
-                                                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
-                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                                                            <input class="form-control" type="number" value="{{kirim.currency}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox">{{kirim.izox}}</textarea>
                                                             
                                                         </div>
                                                         <div class="modal-footer">
@@ -694,13 +691,16 @@
                             </select>
                             <br>
                             <label for="">Kassa</label>
-                            <select name="cash" id="" class="form-control">
+                            <select name="kassa" id="" class="form-control">
                                 <option value="">- - - - - - - </option>
                                 {% for k in cashes %}
                                     <option value="{{ k.id }}">{{ k.name }}</option>
                                 {% endfor %}
                             </select>
                             <br>
+                            <label for="">Summa</label>
+                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+
                             <label for="">Kurs</label>
                             <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
                             <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>

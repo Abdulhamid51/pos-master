@@ -397,3 +397,8 @@ class DeliverDailyAdmin(admin.ModelAdmin):
 @admin.register(KassaDaily)
 class KassaDailyAdmin(admin.ModelAdmin):
     list_display = ('id', 'obyekt', 'date')
+
+
+@admin.register(KassaNew)
+class KassaNewAdmin(admin.ModelAdmin):
+    list_display = ('id', 'filial', 'is_active', 'is_main', 'name', 'kassa_user')
