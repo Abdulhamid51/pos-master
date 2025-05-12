@@ -13,6 +13,7 @@ admin.site.unregister(Group)
 admin.site.register(Kamomad)
 admin.site.unregister(User)
 admin.site.register(MoneyCirculation)
+admin.site.register(ExternalIncomeUserDebt)
 
 @admin.register(User) 
 class EmployeeAdmin(UserAdmin): 
@@ -62,6 +63,10 @@ admin.site.register(ExternalIncomeUser)
 admin.site.register(ExternalIncomeUserPayment)
 admin.site.register(KassaMerge)
 admin.site.register(CustomerDebt)
+
+@admin.register(RejaTushum)
+class RejaTushumAdmin(ExportActionMixin, admin.ModelAdmin):
+    list_display = ('id', 'date')
 
 @admin.register(AllDaySumEmployee)
 class DeliverPaymentsAdmin(ExportActionMixin, admin.ModelAdmin):
@@ -257,7 +262,7 @@ class TeritoryAdmin(admin.ModelAdmin):
 
 @admin.register(PayHistory)
 class PayHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'debtor', 'desktop_id', 'som', 'dollar', 'date')
+    list_display = ('id', 'debtor', 'desktop_id', 'som', 'dollar', 'date', 'summa')
     search_fields = ('id', 'debtor','som', 'dollar', 'date')
     list_filter = ('debtor',)
     date_hierarchy = 'date'

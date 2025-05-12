@@ -18,7 +18,7 @@
             border-collapse: collapse;
             font-family: Arial, sans-serif;
         }
-        td, th{
+        th{
             border: 1px solid black  !important;
             padding: 8px;
             
@@ -32,7 +32,16 @@
         }
     </style>
     <style>
-         .tab {
+        .header-row {
+            background-color: #0056b3 !important;
+            color: white !important;
+        }
+        .header-row td {
+            color: white !important;
+        }
+    </style>
+      <style>
+          .tab {
             display: flex;
             flex-wrap: wrap;
             justify-content: flex-start;
@@ -114,7 +123,45 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 layout-spacing">
+                         <div class="col-12 layout-spacing">
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3"></div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important; font-weight: bold;">Oy</label>
+                                        <select name="month" class="form-control"> 
+                                            <option value="1" {% if filter.month == '1' %} selected  {% endif %}>Yanvar</option>
+                                            <option value="2" {% if filter.month == '2' %} selected  {% endif %}>Fevral</option>
+                                            <option value="3" {% if filter.month == '3' %} selected  {% endif %}>Mart</option>
+                                            <option value="4" {% if filter.month == '4' %} selected  {% endif %}>Aprel</option>
+                                            <option value="5" {% if filter.month == '5' %} selected  {% endif %}>May</option>
+                                            <option value="6" {% if filter.month == '6' %} selected  {% endif %}>Iyun</option>
+                                            <option value="7" {% if filter.month == '7' %} selected  {% endif %}>Iyul</option>
+                                            <option value="8" {% if filter.month == '8' %} selected  {% endif %}>Avgust</option>
+                                            <option value="9" {% if filter.month == '9' %} selected  {% endif %}>Sentyabr</option>
+                                            <option value="10" {% if filter.month == '10' %} selected  {% endif %}>Oktyabr</option>
+                                            <option value="11" {% if filter.month == '11' %} selected  {% endif %}>Noyabr</option>
+                                            <option value="12" {% if filter.month == '12' %} selected  {% endif %}>Dekabr</option>
+                                     </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important; font-weight: bold;">Yil</label>
+                                        <input type="number" class="form-control" value="{{filter.year}}" name="year">
+                                    </div>
+                                    <div class="col-md-2" style="margin: 0px;">
+                                        <br>
+                                        <p></p>
+                                        <button class="btn btn-primary" type="submit" style="height: 40px;">Filter</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <br>
+                                        <p></p>
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap" style="height: 40px;">Qoshish</button>
+
+                                        
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                         <div class="col-lg-12">
                             <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
@@ -123,78 +170,106 @@
                                         <div class="table-responsive">
                                             <table class="table table-bordered mb-4" id="example122">
                                                 <thead>
-                                                    <tr>
-                                                        <th rowspan="8" style="background-color: rgb(101, 101, 101); color: white !important;">
+                                                    <tr style="width: 200px;">
+                                                        <th rowspan="10" style="background-color: rgb(101, 101, 101); color: white !important; " >
                                                             <p></p>
                                                             Yil
-                                                            <br><br>
+                                                            <br><br><p></p>
                                                             Начало недели
-                                                            <br><br>
+                                                            <br><br><br>
                                                             Конец недели 
                                                             <br><br>
                                                             Недели
-                                                            <br><br><br>
-                                                            <p style="color: white !important;">План - Факт</p>
+                                                            <br><br><p></p>
+                                                            <p style="color: white !important;" style="width: 200px;">План - Факт</p>
                                                         </th>
-                                                        
-                                                    </tr>
-                                                    <tr>
-                                                        <th colspan="2">2025</th>
-                                                        <th></th>
-
-                                                        <th colspan="2">2025</th>
-                                                        <th></th>
-                                                    </tr>
-                                                    <tr>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th></th>
-
-                                                        <th class="silver-class"> 30.12.2024</th>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th></th>
-                                                    </tr>
-                                                    <tr>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th></th>
-
-                                                        <th class="silver-class"> 30.12.2024</th>
-                                                        <th class="silver-class">30.12.2024</th>
-                                                        <th></th>
-                                                    </tr>
-                                                    <tr>
-                                                        <th class="silver-class">1</th>
-                                                        <th class="silver-class">1</th>
-                                                        <th></th>
-
-                                                        <th class="silver-class">2</th>
-                                                        <th class="silver-class">2</th>
-                                                        <th></th>
-                                                    </tr>
-                                                    <tr style="background-color: blue; ">
-                                                        <th style="color: white !important;">План</th>
-                                                        <th style="color: white !important;">Факт</th>
-                                                        <th style="color: white !important;">Bajarilishi</th>
-
-                                                        <th style="color: white !important;">План</th>
-                                                        <th style="color: white !important;">Факт</th>
-                                                        <th style="color: white !important;">Bajarilishi</th>
                                                     </tr>
                                                     
-                                                </thead>
-                                                <tbody >
                                                     <tr>
-                                                        <td></td>
-
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
+                                                        {% for wek in weeks %}
+                                                            <th colspan="2">{{ wek.shanba|date:'Y' }}</th>
+                                                            <th></th>
+                                                        {% endfor %}
                                                     </tr>
+                                                    <tr>
+                                                        {% for wek in weeks %}
+                                                            <th class="silver-class">{{ wek.dushanba|date:'m-d' }}</th>
+                                                            <th class="silver-class">{{ wek.dushanba|date:'m-d' }}</th>
+                                                            <th></th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr>
+                                                        {% for wek in weeks %}
+                                                        <th class="silver-class">{{ wek.shanba|date:'m-d' }}</th>
+                                                        <th class="silver-class">{{ wek.shanba|date:'m-d' }}</th>
+                                                        <th></th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr>
+                                                        {% for wek in weeks %}
+                                                            <th class="silver-class">{{wek.count}}</th>
+                                                            <th class="silver-class">{{wek.count}}</th>
+                                                            <th></th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr style="background-color: blue; ">
+                                                        {% for wek in weeks %}
+                                                            <th style="color: white !important;">План</th>
+                                                            <th style="color: white !important;">Факт</th>
+                                                            <th style="color: white !important;">Bajarilishi</th>
+                                                        {% endfor %}
+                                                    </tr>
+                                                   
+                                                </thead>
+                                                <tbody style="background-color: bisque !important;">
+                                                    {% for i in data_reja %}
+                                                    <tr class="{% if forloop.first %}header-row{% endif %}">
+                                                        <td >
+                                                            {% if forloop.first %}
+                                                                Prixo
+                                                            {% endif %}
+                                                        </td>
+                                                        <td >{{ i.plan }}</td>
+                                                        <td ></td>
+                                                        <td >{{ i.total }}</td>
+
+                                                        <td>{{ i.plan }}</td>
+                                                        <td></td>
+                                                        <td>{{ i.total }}</td>
+                                                        
+                                                        <td>{{ i.plan }}</td>
+                                                        <td></td>
+                                                        <td>{{ i.total }}</td>
+
+                                                        <td>{{ i.plan }}</td>
+                                                        <td></td>
+                                                        <td>{{ i.total }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    {% for i in data_chiqim %}
+                                                        <tr class="{% if forloop.first %}header-row{% endif %}">
+                                                            <td>
+                                                                {% if forloop.first %}
+                                                                    Rasxod
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ i.plan }}</td>
+                                                            <td></td>
+                                                            <td>{{ i.total }}</td>
+
+                                                            <td>{{ i.plan }}</td>
+                                                            <td></td>
+                                                            <td>{{ i.total }}</td>
+                                                            
+                                                            <td>{{ i.plan }}</td>
+                                                            <td></td>
+                                                            <td>{{ i.total }}</td>
+
+                                                            <td>{{ i.plan }}</td>
+                                                            <td></td>
+                                                            <td>{{ i.total }}</td>
+                                                        </tr>
+                                                    {% endfor %}
                                                 </tbody>
                                             </table>
                                         </div>

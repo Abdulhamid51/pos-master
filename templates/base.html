@@ -131,7 +131,7 @@
             <div class="shadow-bottom"></div>
                 <ul class="list-unstyled menu-categories" id="accordionExample">
                     <li class="menu {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial' %}active{% endif %}">
-                        <a href="#components1" data-toggle="collapse" aria-expanded="{% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial' %}true{% endif %}" class="dropdown-toggle">
+                        <a href="#components12" data-toggle="collapse" aria-expanded="{% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial' %}true{% endif %}" class="dropdown-toggle">
                             <div class="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -151,7 +151,7 @@
                         </a>
                         
                         <ul class="collapse submenu list-unstyled {% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'filial'  %}show{% endif %}"
-                            id="components1" data-parent="#accordionExample">
+                            id="components12" data-parent="#accordionExample">
                             {% if custom_user_profile.is_bussines %} 
                             <li class="menu {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                                 <a href="{% url 'home' %}">Bussines Tahlili</a>

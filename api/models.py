@@ -1011,14 +1011,17 @@ class Debtor(models.Model):
         pay_history = PayHistory.objects.filter(debtor=customer).order_by('-id')
         shop = Shop.objects.filter(debtor=customer).order_by('-id')
         infos = sorted(chain(pay_history, shop), key=lambda instance: instance.date)
-        customer_debt = CustomerDebt.objects.filter(customer=customer)
+        customer_debts = CustomerDebt.objects.filter(customer=customer)
 
         for valyuta in Valyuta.objects.all():
-            customer_debt = customer_debt.filter(valyuta=valyuta).last()
+            # Har valyuta uchun alohida CustomerDebt obyekti olish
+            customer_debt = customer_debts.filter(valyuta=valyuta).last()
             if customer_debt:
+                # Asl summa bilan yangilash
                 customer_debt.summa = customer_debt.start_summa
                 customer_debt.save()
 
+                # To'lov va xaridlarni yangilash
                 for i in infos:
                     if i.valyuta == valyuta:
                         if i._meta.model_name == 'payhistory':
@@ -1035,6 +1038,7 @@ class Debtor(models.Model):
 
                         i.save()
                         customer_debt.save()
+
 
 
     @property
@@ -1056,10 +1060,10 @@ class Debtor(models.Model):
 
 
 class CustomerDebt(models.Model):
-      customer = models.ForeignKey(Debtor, on_delete=models.CASCADE)
-      valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
-      summa = models.IntegerField(default=0)
-      start_summa = models.IntegerField(default=0)
+    customer = models.ForeignKey(Debtor, on_delete=models.CASCADE)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    summa = models.IntegerField(default=0)
+    start_summa = models.IntegerField(default=0)
 
 
 #
@@ -1940,6 +1944,7 @@ class RejaTushum(models.Model):
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, null=True , blank=True)
     from_shop = models.BooleanField(default=False)
@@ -1951,6 +1956,7 @@ class RejaChiqim(models.Model):
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, null=True , blank=True)
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True , blank=True)
@@ -1981,43 +1987,71 @@ class ExternalIncomeUserTypes(models.Model):
     tartib_raqam = models.PositiveIntegerField(unique=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
+
+
 class ExternalIncomeUser(models.Model):
     full_name = models.CharField(max_length=200)
     phone = models.CharField(max_length=200)
     type = models.ForeignKey(ExternalIncomeUserTypes, on_delete=models.PROTECT)
     tartib_raqam = models.PositiveIntegerField(unique=True)
     date = models.DateTimeField(default=timezone.now)
-    valyuta = models.ManyToManyField(Valyuta, blank=True)
     is_active = models.BooleanField(default=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        super().save()
+        for val in Valyuta.objects.all():
+            ExternalIncomeUserDebt.objects.get_or_create(income=self, valyuta=val)
 
     @property
     def summa_pay(self):
         pay = ExternalIncomeUserPayment.objects.filter(external_income_user=self,type_pay=1)
         data = {
-            'som':pay.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-            'dollar':pay.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-            'plastik':pay.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
+            'summa':pay.aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
         }
         return data
-        
     @property
     def summa_give(self):
         pay = ExternalIncomeUserPayment.objects.filter(external_income_user=self,type_pay=2)
         data = {
-            'som':pay.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-            'dollar':pay.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-            'plastik':pay.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
+            'summa':pay.aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
         }
         return data
+
+    def income_refresh_debt(self):
+        pay_history = PayHistory.objects.filter(external_income_user=self).order_by('-id')
+        customer_debts = ExternalIncomeUserDebt.objects.filter(income=self)
+
+        for valyuta in Valyuta.objects.all():
+            customer_debt = customer_debts.filter(valyuta=valyuta).last()
+            if customer_debt:
+                customer_debt.summa = customer_debt.start_summa
+                customer_debt.save()
+
+                for i in pay_history:
+                    if i.valyuta == valyuta:
+                        i.debt_old = customer_debt.summa
+                        if i.type_pay == 1:
+                            customer_debt.summa += i.summa
+                        else:
+                            customer_debt.summa -= i.summa
+                        i.debt_new = customer_debt.summa
+                    i.save()
+                    customer_debt.save()
+
+
+class ExternalIncomeUserDebt(models.Model):
+    income = models.ForeignKey(ExternalIncomeUser, on_delete=models.CASCADE)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    summa = models.IntegerField(default=0)
+    start_summa = models.IntegerField(default=0)
 
 class ExternalIncomeUserPayment(models.Model):
     external_income_user = models.ForeignKey(ExternalIncomeUser, on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
-    som = models.IntegerField(default=0)
-    dollar = models.IntegerField(default=0)
-    plastik = models.IntegerField(default=0)
-    hisob_raqam = models.IntegerField(default=0)
+    summa = models.IntegerField(default=0)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+
 

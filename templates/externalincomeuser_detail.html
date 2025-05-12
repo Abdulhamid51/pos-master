@@ -49,25 +49,17 @@
                                             </div>
                                         </div>
                                         <div class="user-meta-info">
-                                            <p class="user-name" data-name="Alan Green">F.I.O: {{ debtor.fio }}</p>
-                                            <!-- <p class="user-work" data-occupation="Web Developer">Web Developer</p> -->
+                                            <p class="user-name" data-name="Alan Green">Mijoz: {{ income.full_name }}</p>
                                         </div>
                                     </div>
                                     <div class="user-email">
-                                        
-                                        <p class="usr-email-addr" data-email="alan@mail.com">Telefon: {{ debtor.phone1|default_if_none:"-" }}</p>
+                                        <p class="usr-email-addr" data-email="alan@mail.com"> Telefon :{{ income.phone|default_if_none:"-" }}</p>
                                     </div>
                                     <div class="user-location">
-                                        <p class="info-title">Location: </p>
-                                        <p class="usr-location" data-location="Boston, USA">Tefon 2: {{ debtor.phone2|default_if_none:"-" }}</p>
+                                        <p class="usr-location" data-location="Boston, USA">Turi :{{ income.type.name|default_if_none:"-" }}</p>
                                     </div>
-                                    <div class="user-phone">
-                                        <p class="info-title">Phone: </p>
-                                        <p class="usr-ph-no" data-phone="+1 (070) 123-4567">Hudud :{{ debtor.teritory|default_if_none:"-" }}</p>
-                                    </div>
+                                 
                                     <div class="action-btn">
-                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2 edit"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> -->
-                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-minus delete"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg> -->
                                     </div>
                                 </div>
                             </div>
@@ -105,7 +97,7 @@
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">
                                             <div class="modal-body">
-                                                <form action="{% url 'customer_debt_create' debtor.id %}" method="post" enctype="multipart/form-data">
+                                                <form action="{% url 'external_income_user_debt_create' income.id %}" method="post" enctype="multipart/form-data">
                                                     {% csrf_token %}
                                                     <div class="form-group">
                                                         <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
@@ -166,7 +158,6 @@
                                             {% endfor %}
                                             <th></th>
                                             <th></th>
-                                            <th></th>
                                         </tr>
                                         <tr style="background-color: beige !important;">
                                             <th></th>
@@ -185,7 +176,7 @@
                                         </tr>
                                         {% for b in debt_shot %}
                                             {% if b.valyuta == v %}
-                                                <tr style="background-color: cornflowerblue;">
+                                                <tr style="background-color: cornflowerblue !important;">
                                                     <th></th>
                                                     <th></th>
                                                     <th class="white_class">Boshlang'ich qoldiq</th>
@@ -220,9 +211,9 @@
                                                     <td></td> 
                                                     {% if py.debt_new > 0 %}
                                                         <td></td>
-                                                        <td>{{ py.debt_new }}</td>
+                                                        <td>{{ py.debt_new|intcomma }}</td>
                                                     {% else %}
-                                                        <td>{{ py.debt_new }}</td>
+                                                        <td>{{ py.debt_new|intcomma }}</td>
                                                         <td></td>
                                                     {% endif %}
                                                     <td>{{ py.comment }}</td>

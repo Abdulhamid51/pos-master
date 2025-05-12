@@ -16,11 +16,7 @@
         i {
             color:black !important
         }
-        button {
-            background-color: white !important;
-            border-color: white !important;
-        }
-
+      
     </style>
 {% endblock css %}
 {% block content %}
@@ -117,10 +113,10 @@
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <button style="background-color: white;" type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
+                                                    <a style="background-color: white;" type="button" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></a>
                                                 </td>
                                                 <td>
-                                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalGive{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></button>
+                                                    <a type="button" data-toggle="modal" data-target="#exampleModalGive{{debtors.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></a>
                                                 </td>
                                                 <td>{{ debtors.type|default_if_none:'' }}</td>
                                                 <td>{{ debtors.agent|default_if_none:'' }}</td>
@@ -132,7 +128,7 @@
                                                 {% for i in debtors.debt_haqimiz %}
                                                     <td>{{ i.summa }}</td>
                                                 {% endfor %}
-                                                <td><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ debtors.id }}"><i class="fa-solid fa-pen-to-square"></i></button></td>
+                                                <td><a type="button" data-toggle="modal" data-target="#exampleModalEdit{{ debtors.id }}"><i class="fa-solid fa-pen-to-square"></i></a></td>
                                             </tr>
                                             <div class="modal fade" id="exampleModalEdit{{ debtors.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">

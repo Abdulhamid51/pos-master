@@ -351,8 +351,8 @@
                                                                 {% for mer in kassa %}
                                                                     <div class="col-md-3">
                                                                         <div class="form-group">
-                                                                            <label for="kassa-{{mer.id}}" class="col-form-label">{{ mer.kassa.name }}</label>
-                                                                            <input type="number" class="form-control" id="kassa-{{mer.id}}" data-kassa_id={{mer.id}}  oninput="updateTotals(this)">
+                                                                            <label for="kassa-{{mer.id}}" class="col-form-label">{{ mer.kassa.name }} ({{mer.valyuta}})</label>
+                                                                            <input type="number" class="form-control" id="kassa-{{mer.id}}" data-kassa_id="{{mer.id}}" data-valyuta="{{ mer.valyuta.is_dollar|yesno:"true,false" }}" oninput="updateTotals(this)">
                                                                         </div>
                                                                     </div>
                                                                 {% endfor %}
@@ -370,50 +370,52 @@
                                                                 <input type="number" class="form-control" id="recipient-nasiya" name="nasiya" value="0">
                                                             </div>
                                                         </div>  
-                                                        <div class="col-md-11"></div>
-                                                        <div class="col-md-1">
-                                                            <br>
-                                                            <button class="btn btn-success" onclick="pushAmountBack()">Saqlash</button>
-                                                        </div>
                                                     </div>
                                                 </div>
-                                                <script>
+                                                <script> 
+                                                        const kurs = parseFloat(document.getElementById('shop_last_kurs').textContent.trim()) || 1;
+
+
                                                         const kassa_data = [];
+                                                        const shop_is_valyuta = "{{ shop.valyuta.is_dollar|yesno:'true,false' }}";
 
                                                         function updateTotals() {
-                                                            kassa_data.length = 0;  // Clear old data
-
+                                                            kassa_data.length = 0; 
                                                             const inputs = document.querySelectorAll('[data-kassa_id]');
-
-                                                            // Summalarni hisoblash
                                                             let jami = 0;
+
                                                             inputs.forEach(input => {
                                                                 let kassa_id = input.getAttribute('data-kassa_id');
-                                                                let amount = parseInt(input.value) || 0;
-                                                                
-                                                                if (amount > 0) {
-                                                                    kassa_data.push({ kassa_id, amount });
+                                                                let valyuta_is_dollar = input.getAttribute('data-valyuta') === 'true';
+                                                                let amount = parseFloat(input.value) || 0;
+                                                                if (shop_is_valyuta === 'false' && valyuta_is_dollar) {
+                                                                    console.log(111)
+                                                                    amount *= kurs;
+                                                                } else if (shop_is_valyuta === 'true' && !valyuta_is_dollar) {
+                                                                    amount /= kurs;
+                                                                    console.log(222)
                                                                 }
-
-                                                                jami += amount;
+                                                                if (amount > 0) {
+                                                                    console.log(333)
+                                                                    kassa_data.push({ kassa_id, amount: amount.toFixed(0) });
+                                                                    jami += amount;
+                                                                }
                                                             });
 
+                                                            // Update total
                                                             document.getElementById('recipient-jami').value = jami.toFixed(0);
 
-                                                            let summa_itogo_raw = document.getElementById('summa_itog').textContent.trim();
-                                                            let summa_itogo = parseInt(summa_itogo_raw.replace(/\s+/g, ''), 10) || 0;
-                                                            console.log(summa_itogo);
-
+                                                            // Calculate and update nasiya
+                                                            let summa_itogo = parseInt(document.getElementById('summa_itog').textContent.trim().replace(/\s+/g, ''), 10) || 0;
                                                             let nasiya = summa_itogo - jami;
-                                                            console.log(nasiya)
+                                                            document.getElementById('recipient-nasiya').value = nasiya > 0 ? nasiya.toFixed(0) : 0;
                                                             if (nasiya > 0) {
-                                                                document.getElementById('recipient-nasiya').value = nasiya.toFixed(0);
-                                                                kassa_data.push({ nasiya: nasiya });
-                                                            } else {
-                                                                document.getElementById('recipient-nasiya').value = 0;
+                                                                kassa_data.push({ nasiya: nasiya.toFixed(0) });
                                                             }
-                                                            console.log(kassa_data)
+
+                                                            console.log(kassa_data);
                                                         }
+
 
                                                         function pushAmountBack() {
                                                             $.ajax({
@@ -426,7 +428,7 @@
                                                                 },
                                                                 success: function(response) {
                                                                     showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                                                                    kassa_data.length = 0;  // Clear data after successful save
+                                                                    kassa_data.length = 0; 
                                                                 },
                                                                 error: function () {
                                                                     showAlert("Server bilan bog'lanishda xatolik", "danger");
@@ -435,16 +437,10 @@
                                                         }
 
                                                         document.addEventListener('DOMContentLoaded', function () {
-                                                            updateTotals();  // Initialize totals on page load
+                                                            updateTotals();
                                                         });
-
- 
- 
                                                  </script>
-                                                
-                                                
                                             </div>
-                                            
                                         </div>
                                 </div>
                             </div>
@@ -788,40 +784,40 @@
 
         $(document).ready(function () {
 
-            function addRejaTushum() {
-                    $.ajax({
-                        url: "{% url 'ajax_reja_tushum_list' product_id %}",
-                        type: "POST",
-                        headers: {
-                            "X-CSRFToken": csrfToken
-                        },
-                        success: function(response) {
-                            if (response.ajax_reja_tushum_list > 0) {
-                                if (data.length !== 0) {
-                                    $.ajax({
-                                        url: "{% url 'product_remove_quantity' product_id %}",
-                                        type: "POST",
-                                        data: JSON.stringify(data),
-                                        headers: {
-                                            "X-CSRFToken": csrfToken
-                                        },
-                                        success: function(response) {
-                                            showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                                        },
-                                        error: function () {
-                                            showAlert("Server bilan bog'lanishda xatolik3", "danger");
-                                        }
-                                    });
-                                }
-                            }else {
-                                showAlert("Tolov yarating !", "warning");
-                            }
-                        },
-                        error: function () {
-                            showAlert("Server bilan bog'lanishda xatolik3", "danger");
-                        }
-                    });
-            }
+            // function addRejaTushum() {
+            //         $.ajax({
+            //             url: "{% url 'ajax_reja_tushum_list' product_id %}",
+            //             type: "POST",
+            //             headers: {
+            //                 "X-CSRFToken": csrfToken
+            //             },
+            //             success: function(response) {
+            //                 if (response.ajax_reja_tushum_list > 0) {
+            //                     if (data.length !== 0) {
+            //                         $.ajax({
+            //                             url: "{% url 'product_remove_quantity' product_id %}",
+            //                             type: "POST",
+            //                             data: JSON.stringify(data),
+            //                             headers: {
+            //                                 "X-CSRFToken": csrfToken
+            //                             },
+            //                             success: function(response) {
+            //                                 showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+            //                             },
+            //                             error: function () {
+            //                                 showAlert("Server bilan bog'lanishda xatolik3", "danger");
+            //                             }
+            //                         });
+            //                     }
+            //                 }else {
+            //                     showAlert("Tolov yarating !", "warning");
+            //                 }
+            //             },
+            //             error: function () {
+            //                 showAlert("Server bilan bog'lanishda xatolik3", "danger");
+            //             }
+            //         });
+            // }
 
             function addCart() {
                 if (data.length !== 0) {
@@ -834,6 +830,7 @@
                         },
                         success: function(response) {
                             showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                            window.location.replace('/b2b_shop');
                         },
                         error: function () {
                             showAlert("Server bilan bog'lanishda xatolik3", "danger");
@@ -858,14 +855,17 @@
                             },
                             success: function(response) {
                                 // showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                                window.location.replace('/b2b_shop');
+
                             },
                             error: function () {
                                 showAlert("Server bilan bog'lanishda xatolik4", "danger");
                             }
                 });
             }
-            $("#shop_save").click(addRejaTushum);
+            $("#shop_save").click(pushAmountBack);
             $("#shop_save").click(addShop);
+            $("#shop_save").click(addCart);
         });
 
         

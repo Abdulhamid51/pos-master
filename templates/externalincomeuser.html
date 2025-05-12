@@ -94,12 +94,6 @@
                                             <th>Pul olish</th>
                                             <th>Pul berish</th>
                                             <th>Telefon raqam</th>
-                                            <th style="border-left: 1px solid black !important;">Som qarzimiz</th>
-                                            <th>Dollar qarzimiz</th>
-                                            <th style="border-right: 1px solid black !important;">Plastik qarzimiz</th>
-                                            <th>Som haqimiz</th>
-                                            <th>Dollar haqimiz</th>
-                                            <th style="border-right: 1px solid black !important;">Plastik haqimiz</th>
                                             <th>Turi</th>
                                             <th>Tartib raqam</th>
                                             <th>Tahrirlash</th>
@@ -109,7 +103,7 @@
                                         {% for i in income %}
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
-                                            <td>{{ i.full_name }}</td>
+                                            <td> <a href="{% url 'externalincomeuser_detail' i.id %}">{{ i.full_name }}</a> </td>
                                             <td>
                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
                                             </td>
@@ -117,13 +111,6 @@
                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalGive{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></button>
                                             </td>
                                             <td>{{ i.phone }}</td>
-                                            <td>{{ i.summa_pay.som }}</td>
-                                            <td>{{ i.summa_pay.dollar }}</td>
-                                            <td>{{ i.summa_pay.plastik }}</td>
-
-                                            <td>{{ i.summa_give.som }}</td>
-                                            <td>{{ i.summa_give.dollar }}</td>
-                                            <td>{{ i.summa_give.plastik }}</td>
 
                                             <td>{{ i.type.name }}</td>
                                             <td>{{ i.tartib_raqam }}</td>
@@ -175,21 +162,17 @@
                                                         <form action="{% url 'income_payment' i.id %}" method="post" enctype="multipart/form-data">
                                                             {% csrf_token %}
                                                             <div class="form-group">
-                                                                <label for="recipient-som" class="col-form-label">Som</label>
-                                                                <input type="text" class="form-control" id="recipient-som" name="som" value='0'>
+                                                                <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
+                                                                <select name="valyuta" id="recipient-valyuta" class="form-control" required>
+                                                                    {% for valyuta in valyuta %}
+                                                                        <option value="{{ valyuta.id }}" >{{ valyuta.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
                                                             </div>
                                                             <div class="form-group">
-                                                                <label for="recipient-dollar" class="col-form-label">Dollar</label>
-                                                                <input type="text" class="form-control" id="recipient-dollar" name="dollar" value='0'>
+                                                                <label for="recipient-summa" class="col-form-label">Summa</label>
+                                                                <input type="number" class="form-control" id="recipient-summa" name="summa" required>
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-plastik" class="col-form-label">Plastik</label>
-                                                                <input type="text" class="form-control" id="recipient-plastik" name="plastik" value='0'>
-                                                            </div>
-                                                            <!-- <div class="form-group">
-                                                                <label for="recipient-hisob_raqam" class="col-form-label">Hisob Raqam</label>
-                                                                <input type="text" class="form-control" id="recipient-hisob_raqam" name="hisob_raqam" value='0'>
-                                                            </div> -->
                                                             <div class="form-group">
                                                                 <label for="recipient-comment" class="col-form-label">Izoh</label>
                                                                 <textarea name="comment" id="recipient-comment" class="form-control"></textarea>
@@ -210,22 +193,18 @@
                                                     <div class="modal-body">
                                                         <form action="{% url 'income_give' i.id %}" method="post" enctype="multipart/form-data">
                                                             {% csrf_token %}
-                                                            <div class="form-group">
-                                                                <label for="recipient-som" class="col-form-label">Som</label>
-                                                                <input type="text" class="form-control" id="recipient-som" name="som" value='0'>
+                                                             <div class="form-group">
+                                                                <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
+                                                                <select name="valyuta" id="recipient-valyuta" class="form-control" required>
+                                                                    {% for valyuta in valyuta %}
+                                                                        <option value="{{ valyuta.id }}" >{{ valyuta.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-dollar" class="col-form-label">Dollar</label>
-                                                                <input type="text" class="form-control" id="recipient-dollar" name="dollar" value='0'>
+                                                              <div class="form-group">
+                                                                <label for="recipient-summa" class="col-form-label">Summa</label>
+                                                                <input type="number" class="form-control" id="recipient-summa" name="summa" required>
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-plastik" class="col-form-label">Plastik</label>
-                                                                <input type="text" class="form-control" id="recipient-plastik" name="plastik" value='0'>
-                                                            </div>
-                                                            <!-- <div class="form-group">
-                                                                <label for="recipient-hisob_raqam" class="col-form-label">Hisob Raqam</label>
-                                                                <input type="text" class="form-control" id="recipient-hisob_raqam" name="hisob_raqam" value='0'>
-                                                            </div> -->
                                                             <div class="form-group">
                                                                 <label for="recipient-comment" class="col-form-label">Izoh</label>
                                                                 <textarea name="comment" id="recipient-comment" class="form-control"></textarea>

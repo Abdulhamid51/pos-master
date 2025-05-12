@@ -2427,23 +2427,21 @@ def debtor_edit(request, id):
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_pay(request, id):
+    debt = Debtor.objects.get(id=id)
     summa = request.POST.get('summa')
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment)
-    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
-    obj.summa += summa 
-    obj.save()
+    debt.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_give(request, id):
+    debt = Debtor.objects.get(id=id)
     summa = request.POST.get('summa')
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment, type_pay=2)
-    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
-    obj.summa -= summa 
-    obj.save()
+    debt.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_detail(request, id):
@@ -2462,7 +2460,6 @@ def debtor_detail(request, id):
    
     pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     shop = Shop.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
-
     infos = sorted(chain(pay, shop), key=lambda instance: instance.date)
     data = []
     for i in infos:
@@ -2483,19 +2480,28 @@ def debtor_detail(request, id):
             
         elif i._meta.model_name == 'shop':
             dt['type_payment'] = 'Pul olindi'
-            dt['pay_summa'] = i.baskets_total_price
+            dt['give_summa'] = i.baskets_total_price
 
         data.append(dt)
     summa_total_for_valyuta = []
     for val in valyuta:
         pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
         pay_shop_summa = shop.filter(valyuta=val).annotate(summa=Sum(F('cart__price') * F('cart__quantity'), output_field=IntegerField())).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+        pay_ow_suma = pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
         dt_sum_valyuta = {
             'valyuta':val.id,
-            'pay_pay_summa':pay_summa + pay_shop_summa,
-            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+            'pay_pay_summa':pay_summa ,
+            'pay_give_summa':pay_ow_suma+pay_shop_summa,
         }
         summa_total_for_valyuta.append(dt_sum_valyuta)
+
+    data_start_sum = []
+    for valu in valyuta:
+        star_dt = {
+            'valyuta':valu,
+            'start':debt_shot.filter(valyuta=valu).aggregate(all=Coalesce(Sum('start_summa'), 0 , output_field=IntegerField()))['all']
+        }
+        data_start_sum.append(star_dt)
     context = {
         'valyuta':valyuta,
         'summa_total_for_valyuta':summa_total_for_valyuta,
@@ -2504,6 +2510,7 @@ def debtor_detail(request, id):
         'data':data,
         'filters':filters,
         'debtor':debtor,
+        'data_start_sum':data_start_sum,
     }
     return render(request, 'debtor_detail.html', context)
 
@@ -6702,10 +6709,77 @@ def majburiyat_fin(request):
     }
     return render(request, 'fin/majburiyat_fin.html', context)
 
+def get_week_blocks(year, month):
+    result = []
+    first_day = date(year, month, 1)
+    start_day = first_day
+    while start_day.weekday() != 0: 
+        start_day += timedelta(days=1)
+    while start_day.month == month:
+        end_day = start_day + timedelta(days=6)
+        if end_day.month == month:
+            result.append((start_day, end_day))
+        start_day += timedelta(days=7)
+    return result
+
+
+def get_monday_saturday_pairs(year, month):
+    result = []
+    current = date(year, month, 1)
+    while current.weekday() != 0:  
+        current += timedelta(days=1)
+    count = 1
+    while current.month == month:
+        dushanba = current
+        shanba = current + timedelta(days=5)
+        if shanba.month != month:
+            break  
+        result.append({'dushanba': dushanba, 'shanba': shanba, 'count': count})
+        # result.append((f'dushanba{count}', dushanba, f'shanba{count}', shanba))
+        count += 1
+        current += timedelta(days=7)
+    return result
+
+
+
+
 def tolov_kalendar_fin(request):
+    today = datetime.today()
+    year = request.GET.get('year', int(today.year))
+    month = request.GET.get('month', int(today.month))
+    weeks = get_monday_saturday_pairs(int(year), int(month))
+    reja_tushum = RejaTushum.objects.all()
+    reja_chiqim = RejaChiqim.objects.all()
+    data_reja = []
+    data_chiqim = []
+    for i in weeks:
+        reja_tushum = reja_tushum.filter(date__range=(i['dushanba'], i['shanba']))
+        dt_reja = {
+            'plan':reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all'],
+            'total':reja_tushum.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
+        }
+        data_reja.append(dt_reja)
+
+        reja_chiqim = reja_chiqim.filter(date__range=(i['dushanba'], i['shanba']))
+
+        dt_chiqim = {
+            'plan':reja_chiqim.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all'],
+            'total':reja_chiqim.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
+        }
+        data_chiqim.append(dt_chiqim)
+    filter = {
+        "year":year,
+        "month":str(month),
+    }
     context = {
+        'weeks':weeks,
+        'data_reja':data_reja,
+        'data_chiqim':data_chiqim,
+        'filter':filter,
     }
     return render(request, 'fin/tolov_kalendar_fin.html', context)
+
+
 
 def reja_tushum_fin(request):
     reja = RejaTushum.objects.all()
@@ -6723,7 +6797,7 @@ def reja_tushum_fin(request):
         'reja':reja,
         'filter':filter,
         'debtor':Debtor.objects.all(),
-        'shop':Shop.objects.only('id')[:100],
+        'valyuta':Valyuta.objects.all(),
     }
     return render(request, 'fin/reja_tushum_fin.html', context)
 
@@ -6734,6 +6808,7 @@ def reja_tushum_fin_add(request):
     debtor = request.POST.get('debtor')
     comment = request.POST.get('comment')
     shop = request.POST.get('shop')
+    valyuta = request.POST.get('valyuta')
     
     RejaTushum.objects.create(
         payment_date=payment_date,
@@ -6742,6 +6817,7 @@ def reja_tushum_fin_add(request):
         debtor_id=debtor,
         comment=comment,
         kurs=Course.objects.last().som or 0,
+        valyuta_id=valyuta,
         shop_id=shop,
     )
     return redirect(request.META['HTTP_REFERER'])
@@ -6754,11 +6830,13 @@ def reja_tushum_fin_edit(request, id):
     debtor = request.POST.get('debtor')
     comment = request.POST.get('comment')
     shop = request.POST.get('shop')
+    valyuta = request.POST.get('valyuta')
     reja.payment_date=payment_date
     reja.total=total
     reja.plan_total=plan_total
     reja.debtor_id=debtor
     reja.comment=comment
+    reja.valyuta_id=valyuta
     reja.shop_id=shop
     reja.save()
     return redirect(request.META['HTTP_REFERER'])
@@ -6783,7 +6861,7 @@ def reja_chiqim_fin(request):
         'reja':reja,
         'filter':filter,
         'debtor':Debtor.objects.all(),
-        'shop':Shop.objects.only('id')[:100],
+        'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
     }
     return render(request, 'fin/reja_chiqim_fin.html', context)
@@ -6796,6 +6874,7 @@ def reja_chiqim_fin_add(request):
     comment = request.POST.get('comment')
     shop = request.POST.get('shop')
     user_profile = request.POST.get('user_profile')
+    valyuta = request.POST.get('valyuta')
     
     RejaChiqim.objects.create(
         payment_date=payment_date,
@@ -6805,7 +6884,8 @@ def reja_chiqim_fin_add(request):
         comment=comment,
         kurs=Course.objects.last().som or 0,
         shop_id=shop,
-        user_profile_id=user_profile
+        user_profile_id=user_profile,
+        valyuta_id=valyuta
     )
     return redirect(request.META['HTTP_REFERER'])
 
@@ -6818,12 +6898,14 @@ def reja_chiqim_fin_edit(request, id):
     comment = request.POST.get('comment')
     shop = request.POST.get('shop')
     user_profile = request.POST.get('user_profile')
+    valyuta = request.POST.get('valyuta')
     reja.payment_date=payment_date
     reja.total=total
     reja.plan_total=plan_total
     reja.debtor_id=debtor
     reja.comment=comment
     reja.shop_id=shop
+    reja.valyuta_id=valyuta
     reja.user_profile_id=user_profile
     reja.save()
     return redirect(request.META['HTTP_REFERER'])
@@ -6949,27 +7031,28 @@ def payment_shop_ajax(request, id):
     for i in data:
         if 'kassa_id' in i and 'amount' in i:
             kassa = KassaMerge.objects.get(id=i['kassa_id'])
-            amount += i['amount']
-            kassa.summa += i['amount']
+            amount += int(i['amount'])
+            kassa.summa += int(i['amount'])
             kassa.save()
         if 'nasiya' in i:
-            nasiya += i['nasiya']
+            nasiya += int(i['nasiya'])
     if is_dollar:
         shop.naqd_dollar = round(amount / kurs.som, 2)
         shop.nasiya_dollar = round(nasiya / kurs.som, 2)
     else:
         shop.naqd_som = amount
         shop.nasiya_som = nasiya
-
+    print(amount)
+    objec, create = PayHistory.objects.get_or_create(shop=shop, debtor=shop.debtor)
+    objec.comment = 'B2B savdo'
+    objec.valyuta = shop.valyuta
+    objec.summa += amount
+    objec.type_pay = 2
+    objec.save()
     shop.save()
-
-    # if data.get('nasiya_som', 0) > 0 or data.get('nasiya_dollar', 0) > 0:
-    #     shop.naqd_dollar = data.get('naqd_dollar', 0)
-    #     shop.nasiya_som = data.get('nasiya_som', 0)
-    #     shop.nasiya_dollar = data.get('nasiya_dollar', 0)
-    #     shop.plastik = data.get('karta', 0)
-    #     shop.click = data.get('bank', 0)
-    #     shop.save()
+    shop.debtor.refresh_debt()
+    print(111111)
+    print(objec)
     return JsonResponse({'success': True})
 
 def product_remove_quantity(request, shop_id):
@@ -6977,64 +7060,34 @@ def product_remove_quantity(request, shop_id):
     shop = Shop.objects.get(id=shop_id)
     debtor = Debtor.objects.get(id=shop.debtor.id)
     total = 0
+
     with transaction.atomic():
-        if shop.is_savdo:
-            for i in data:
-                    pr = ProductFilial.objects.get(id=i['product_id'])
-                    pr.quantity -= i['quantity']
-                    total += i['total']
-                    pr.save()
-            
-            obj, create = PayHistory.objects.get_or_create(shop=shop)
-            obj.debtor = debtor
-            obj.comment = 'B2B savdo'
-            obj.valyuta = shop.valyuta
-            if shop.valyuta.is_dollar == False:
-                debtor.som += total
-                obj.som += total
-            else :
-                debtor.dollar += total
-                obj.dollar += total
-            obj.save()
-            debtor.save()
-            
-        else:
-            for i in data:
-                    pr = ProductFilial.objects.get(id=i['product_id'])
-                    pr.quantity += i['quantity']
-                    total += i['total']
-                    pr.save()
-            
-            obj, create = PayHistory.objects.get_or_create(shop=shop)
-            obj.comment = 'B2B savdo'
-            obj.debtor = debtor
-            obj.valyuta = shop.valyuta
-            if shop.valyuta.is_dollar == False:
-                obj.som += total
-                debtor.som -= total
-            else :
-                obj.dollar += total
-                debtor.dollar -= total
+        for i in data:
+            pr = ProductFilial.objects.get(id=i['product_id'])
+            if shop.is_savdo:
+                pr.quantity -= i['quantity']
+            else:
+                pr.quantity += i['quantity']
+            total += i['total']
+            pr.save()
 
-            obj.save()
-            debtor.save()
-    obj, created =RejaTushum.objects.get_or_create(shop=shop)
-    obj.plan_total = shop.baskets_total_price
-    total_nasiya = 0
-    if shop.nasiya_dollar > 0:
-        if shop.kurs > 0:
+        total_nasiya = 0
+        if shop.nasiya_dollar and shop.kurs:
             total_nasiya += shop.nasiya_dollar * shop.kurs
-    else :
-        total_nasiya+=shop.naqd_som
+        if shop.naqd_som:
+            total_nasiya += shop.naqd_som
 
-    obj.total = total_nasiya
-    obj.debtor = shop.debtor
-    obj.comment = shop.comment
-    obj.kurs = obj.kurs
-    obj.payment_date = shop.debt_return
-    obj.from_shop = True
-    obj.save()
-    debtor.refresh_debt
+        obj, created = RejaTushum.objects.get_or_create(shop=shop)
+        obj.plan_total = shop.baskets_total_price or 0
+        obj.total = total_nasiya
+        obj.debtor = shop.debtor
+        obj.valyuta = shop.valyuta
+        obj.comment = shop.comment or ""
+        obj.kurs = shop.kurs or 0
+        obj.payment_date = shop.debt_return
+        obj.from_shop = True
+        obj.save()
+        print(obj)
     return JsonResponse({'success': True})
     
 
@@ -7067,9 +7120,6 @@ def b2b_shop_ajax(request, product_id):
         'kurs':kurs.som if kurs else 0,
         'carts':carts,
     }
-    print(shop.filial)
-    print(shop.valyuta)
-    print(KassaMerge.objects.filter(valyuta=shop.valyuta, kassa__filial=shop.filial))
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
         product_html = render_to_string('product_list.html',
          {'product': ProductFilial.objects.filter(price_types__type_id=type_id).annotate(price_ty=Coalesce(Sum('price_types__price', output_field=FloatField()), Value(0.0)))}, request)
@@ -7267,19 +7317,90 @@ def externalincomeuser(request):
     pay = ExternalIncomeUserPayment.objects.filter(type_pay=1)
     give = ExternalIncomeUserPayment.objects.filter(type_pay=2)
     totals = {
-        'som_p':pay.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-        'dollar_p':pay.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-        'plastik_p':pay.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
-        'som_g':give.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-        'dollar_g':give.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-        'plastik_g':give.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
+        # 'som_p':pay.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
+        # 'dollar_p':pay.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
+        # 'plastik_p':pay.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
+        # 'som_g':give.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
+        # 'dollar_g':give.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
+        # 'plastik_g':give.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
     }
     context = {
         'income':ExternalIncomeUser.objects.all(),
         'type_income':ExternalIncomeUserTypes.objects.all(),
+        'valyuta':Valyuta.objects.all(),
         'totals':totals,
     }
     return render(request, 'externalincomeuser.html', context)
+
+def externalincomeuser_detail(request, id):
+    income = ExternalIncomeUser.objects.get(id=id)
+    valyuta = Valyuta.objects.all()
+    debt_shot = ExternalIncomeUserDebt.objects.filter(income_id=id)
+    today = datetime.now().date()
+
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+    pay = PayHistory.objects.filter(external_income_user_id=id, date__date__range=(start_date, end_date))
+    data = []
+    for i in pay:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i.type_pay == 1:
+            dt['type_payment'] = 'Pul olindi'
+            dt['pay_summa'] = i.summa
+        else:
+            dt['type_payment'] = 'Pul Berildi'
+            dt['give_summa'] = i.summa
+
+        data.append(dt)
+    summa_total_for_valyuta = []
+    for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        pay_ow_suma = pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        dt_sum_valyuta = {
+            'valyuta':val.id,
+            'pay_pay_summa':pay_summa ,
+            'pay_give_summa':pay_ow_suma,
+        }
+        summa_total_for_valyuta.append(dt_sum_valyuta)
+
+    data_start_sum = []
+    for valu in valyuta:
+        star_dt = {
+            'valyuta':valu,
+            'start':debt_shot.filter(valyuta=valu).aggregate(all=Coalesce(Sum('start_summa'), 0 , output_field=IntegerField()))['all']
+        }
+        data_start_sum.append(star_dt)
+    context = {
+        'income':income,
+        'valyuta':valyuta,
+        'debt_shot':debt_shot,
+        'filters':filters,
+        'data':data,
+        'summa_total_for_valyuta':summa_total_for_valyuta,
+        'data_start_sum':data_start_sum,
+    }
+    return render(request, 'externalincomeuser_detail.html', context)
+
+def external_income_user_debt_create(request, id):
+    income = ExternalIncomeUser.objects.get(id=id)
+    valyuta = request.POST.get('valyuta')
+    start_summa = request.POST.get('start_summa')
+    obj, create = ExternalIncomeUserDebt.objects.get_or_create(income=income, valyuta_id = valyuta)
+    obj.start_summa = start_summa
+    obj.save()
+    income.income_refresh_debt()
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def externalincomeuser_add(request):
@@ -7318,74 +7439,48 @@ def externalincomeuser_edit(request, id):
     return redirect(request.META['HTTP_REFERER'])
 
 def income_payment(request, id):
-    kassa = Kassa.objects.first()
-    som = int(request.POST.get('som', 0))
-    dollar = int(request.POST.get('dollar', 0))
-    plastik = int(request.POST.get('plastik', 0))
-    hisob_raqam = int(request.POST.get('hisob_raqam', 0))
+    income = ExternalIncomeUser.objects.get(id=id)
+    summa = int(request.POST.get('summa', 0))
     comment = request.POST.get('comment')
-
-    if som > 0:
-        kassa.som += som
-    if dollar > 0:
-        kassa.dollar += dollar
-    if plastik > 0:
-        kassa.plastik += plastik
-    if hisob_raqam > 0:
-        kassa.plastik += plastik
-    
+    valyuta = request.POST.get('valyuta')
     PayHistory.objects.create(
-        external_income_user_id=id,
-        som=som,
-        dollar=dollar,
-        plastik=plastik,
+        external_income_user=income,
+        summa=summa,
         comment=comment,
+        valyuta_id=valyuta,
+        type_pay=1,
     )
     ExternalIncomeUserPayment.objects.create(
-        external_income_user_id=id,
-        som=som,
-        dollar=dollar,
-        plastik=plastik,
+        external_income_user=income,
+        valyuta_id=valyuta,
+        summa=summa,
+        type_pay=1,
         comment=comment,
-
     )
-    kassa.save()
+    income.income_refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 
 def income_give(request, id):
-    kassa = Kassa.objects.first()   
-    som = int(request.POST.get('som', 0))
-    dollar = int(request.POST.get('dollar', 0))
-    plastik = int(request.POST.get('plastik', 0))
-    hisob_raqam = int(request.POST.get('hisob_raqam', 0))
+    income = ExternalIncomeUser.objects.get(id=id)
+    summa = int(request.POST.get('summa', 0))
     comment = request.POST.get('comment')
-    if som > 0:
-        kassa.som -= som
-    if dollar > 0:
-        kassa.dollar -= dollar
-    if plastik > 0:
-        kassa.plastik -= plastik
-    if hisob_raqam > 0:
-        kassa.plastik -= plastik
-    
+    valyuta = request.POST.get('valyuta')
     PayHistory.objects.create(
-        external_income_user_id=id,
-        som=-som,
-        dollar=-dollar,
-        plastik=-plastik,
+        external_income_user=income,
+        valyuta_id=valyuta,
+        summa=summa,
         comment=comment,
+        type_pay=2,
     )
     ExternalIncomeUserPayment.objects.create(
-        external_income_user_id=id,
-        som=som,
-        dollar=dollar,
-        plastik=plastik,
+        external_income_user=income,
+        valyuta_id=valyuta,
+        summa=summa,
         type_pay=2,
         comment=comment,
-
     )
-    kassa.save()
+    income.income_refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -7504,3 +7599,14 @@ def filial_kassalar(request):
         'data':data
     }
     return render(request, 'filial_kassalar.html', context)
+
+
+def customer_debt_create(request, id):
+    customer = Debtor.objects.get(id=id)
+    valyuta = request.POST.get('valyuta')
+    start_summa = request.POST.get('start_summa')
+    obj, create = CustomerDebt.objects.get_or_create(customer=customer, valyuta_id = valyuta)
+    obj.start_summa = start_summa
+    obj.save()
+    customer.refresh_debt()
+    return redirect(request.META['HTTP_REFERER'])

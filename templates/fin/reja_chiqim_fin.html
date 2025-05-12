@@ -117,7 +117,7 @@
                                 <div class="row">
                                     <div class="col-md-4"></div>
                                     <div class="col-md-2">
-                                        <label for="" style="color: black !important; font-weight: bold;">Turi</label>
+                                        <label for="" style="color: black !important; font-weight: bold;">Oy</label>
                                         <select name="month" class="form-control"> 
                                             <option value="1" {% if filter.month == '1' %} selected  {% endif %}>Yanvar</option>
                                             <option value="2" {% if filter.month == '2' %} selected  {% endif %}>Fevral</option>
@@ -126,15 +126,15 @@
                                             <option value="5" {% if filter.month == '5' %} selected  {% endif %}>May</option>
                                             <option value="6" {% if filter.month == '6' %} selected  {% endif %}>Iyun</option>
                                             <option value="7" {% if filter.month == '7' %} selected  {% endif %}>Iyul</option>
-                                            <option value="8" {% if filter.month == '7' %} selected  {% endif %}>Avgust</option>
-                                            <option value="9" {% if filter.month == '7' %} selected  {% endif %}>Sentyabr</option>
-                                            <option value="10" {% if filter.month == '7' %} selected  {% endif %}>Oktyabr</option>
-                                            <option value="11" {% if filter.month == '7' %} selected  {% endif %}>Noyabr</option>
-                                            <option value="12" {% if filter.month == '7' %} selected  {% endif %}>Dekabr</option>
+                                            <option value="8" {% if filter.month == '8' %} selected  {% endif %}>Avgust</option>
+                                            <option value="9" {% if filter.month == '9' %} selected  {% endif %}>Sentyabr</option>
+                                            <option value="10" {% if filter.month == '10' %} selected  {% endif %}>Oktyabr</option>
+                                            <option value="11" {% if filter.month == '11' %} selected  {% endif %}>Noyabr</option>
+                                            <option value="12" {% if filter.month == '12' %} selected  {% endif %}>Dekabr</option>
                                      </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label for="" style="color: black !important; font-weight: bold;">Sana</label>
+                                        <label for="" style="color: black !important; font-weight: bold;">Yil</label>
                                         <select name="year" class="form-control"> 
                                                <option value="2022" {% if filter.year == '2022' %} selected  {% endif %}>2022</option>
                                                <option value="2023" {% if filter.year == '2023' %} selected  {% endif %}>2023</option>
@@ -172,6 +172,7 @@
                                                         <th>Rejadagi <br> summa</th>
                                                         <th>Kurs</th>
                                                         <th>Xisob raqam</th>
+                                                        <th>Valyuta</th>
                                                         <th>To`lov manbasi</th>
                                                         <th>Jami summa</th>
                                                         <th>Masul Shaxslar</th>
@@ -189,7 +190,8 @@
                                                             <td>{{ i.payment_date|date:'Y-m-d' }}</td>
                                                             <td>{{ i.plan_total|intcomma }}</td>
                                                             <td>{{ i.kurs }}</td>
-                                                            <td>{{ i.shop }}</td>
+                                                            <td>{{ i.shop|default_if_none:'' }}</td>
+                                                            <td>{{ i.valyuta.name }}</td>
                                                             <td></td>
                                                             <td>{{ i.total }}</td>
                                                             <td>{{ i.user_profile }}</td>
@@ -221,7 +223,7 @@
                                                             <div class="modal-dialog" role="document">
                                                                 <div class="modal-content" style="width: 700px;">
                                                                     <div class="modal-header">
-                                                                    <h5 class="modal-title" id="exampleModalLabel">Shop Qoshish</h5>
+                                                                    <h5 class="modal-title" id="exampleModalLabel">Reja Chiqim qoshish</h5>
                                                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                                         <span aria-hidden="true">&times;</span>
                                                                     </button>
@@ -262,11 +264,11 @@
                                                                                     </div>
                                                                                     <div class="col-md-6">
                                                                                         <div class="form-group">
-                                                                                            <label for="recipient-shop" class="col-form-label">Shop:</label>
-                                                                                            <select name="shop" id="recipient-shop" class="form-control searchable" required>
+                                                                                            <label for="recipient-valyuta" class="col-form-label">Valyuta:</label>
+                                                                                            <select name="valyuta" id="recipient-valyuta" class="form-control searchable" required>
                                                                                                 <option value="">-------------</option>
-                                                                                                {% for shop in shop %}
-                                                                                                    <option value="{{ shop.id }}"  {% if shop == i.shop %} selected {% endif %}>{{ shop }}</option>
+                                                                                                {% for valyuta in valyuta %}
+                                                                                                    <option value="{{ valyuta.id }}"  {% if valyuta == i.valyuta %} selected {% endif %}>{{ valyuta.name }}</option>
                                                                                                  {% endfor %}
                                                                                             </select>
                                                                                         </div>
@@ -309,7 +311,7 @@
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content" style="width: 700px;">
                                     <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Shop Qoshish</h5>
+                                    <h5 class="modal-title" id="exampleModalLabel">Raja chiqim Qoshish</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -350,11 +352,11 @@
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="recipient-shop" class="col-form-label">Shop:</label>
-                                                            <select name="shop" id="recipient-shop" class="form-control searchable" required>
+                                                            <label for="recipient-valyuta" class="col-form-label">Valyuta:</label>
+                                                            <select name="valyuta" id="recipient-valyuta" class="form-control searchable" required>
                                                                 <option value="">-------------</option>
-                                                                    {% for i in shop %}
-                                                                    <option value="{{ i.id }}">{{ i }}</option>
+                                                                    {% for valyuta in valyuta %}
+                                                                    <option value="{{ valyuta.id }}">{{ valyuta.name }}</option>
                                                                     {% endfor %}
                                                             </select>
                                                         </div>
