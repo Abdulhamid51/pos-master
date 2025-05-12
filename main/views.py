@@ -2781,9 +2781,11 @@ def kassa(request):
     # if request.method == 'POST':
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-    deliver = request.GET.get('deliver')
+    deliver = [int(i) for i in request.GET.getlist('deliver')  if i != '']
+    debtor = [int(i) for i in request.GET.getlist('debtor')  if i != '']
     chiqim_turi = request.GET.get('chiqim_turi')
-    expanse_category = request.GET.get('expanse_category')
+    category = [int(i) for i in request.GET.getlist('category')  if i != '']
+    subcategory = [int(i) for i in request.GET.getlist('subcategory')  if i != '']
     if start_date and end_date:
         shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(qachon__gte=start_date, qachon__lte=end_date).order_by('-qachon')
         shu_oylik_kirimlar = shu_oylik_kirimlar.filter(qachon__gte=start_date, qachon__lte=end_date).order_by('-qachon')
@@ -2794,13 +2796,23 @@ def kassa(request):
         expenses = expenses.filter(created_at__year=bugun.year, created_at__month=bugun.month).order_by('-created_at')
 
     if deliver:
-        shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(deliver_id=deliver)
+        shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(deliver_id__in=deliver)
+    
+    if debtor:
+        shu_oylik_kirimlar = shu_oylik_kirimlar.filter(payhistory__debtor_id__in=debtor)
+
     if chiqim_turi:
         shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(qayerga_id=chiqim_turi)
         shu_oylik_kirimlar = shu_oylik_kirimlar.filter(qayerga_id=chiqim_turi)
     
-    if expanse_category:
-        expenses = expenses.filter(category_id=expanse_category)
+    if category:
+        shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(subcategory__category_id__in=category)
+
+    if subcategory:
+        shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(subcategory_id__in=subcategory)
+
+    # if expanse_category:
+    #     expenses = expenses.filter(category_id=expanse_category)
 
     categories = ChiqimCategory.objects.all()
     subcategories = ChiqimSubCategory.objects.all()
@@ -2859,11 +2871,11 @@ def kassa(request):
         data.append(dt)
     
     kirim_totals = [{
-        "summa": Kirim.objects.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
+        "summa": shu_oylik_kirimlar.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
     } for v in valutas]
 
     chiqim_totals = [{
-        "summa": Chiqim.objects.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
+        "summa": shu_oylik_chiqimlar.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
     } for v in valutas]
 
     content = {
@@ -2905,9 +2917,11 @@ def kassa(request):
         'filters': {
             'start_date': start_date,
             'end_date': end_date,
-            'deliver': int(deliver) if deliver else 0,
-            'chiqim_turi': int(chiqim_turi) if chiqim_turi else 0,
-            'expanse_category': int(expanse_category) if expanse_category else 0
+            'deliver': deliver,
+            # 'chiqim_turi': int(chiqim_turi) if chiqim_turi else 0,
+            'category': category,
+            'subcategory': subcategory,
+            'debtor': debtor
         }
     }
     content['dollar_kurs'] = Course.objects.last().som

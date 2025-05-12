@@ -15,6 +15,7 @@
 
 
     {% block content %}
+    <script src="{% static 'multiselect.js' %}"></script>
 
     
             <div id="content" class="main-content">
@@ -44,194 +45,111 @@
                                     </div>
                                 </div>
                                 {% endfor %}
-                                <!-- <div class="col-xl-3 col-md-3 mb-4 text-center">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                        <a href="{% url 'kassa_detail_som' %}" style="color: blue !important;">Naqd(so'm)</a> </div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800"> <a href="{% url 'kassa_detail_som' %}">{{kassa.som | intcomma}} so'm</a> </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <img src="{% static 'assets/img/wallet.svg' %}" width="30px" alt="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
-                                <!-- <div class="col-xl-3 col-md-3 mb-4 text-center">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                        <a href="{% url 'kassa_detail_dollar' %}" style="color: blue !important;"> Naqd($) </a></div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800"> <a href="{% url 'kassa_detail_dollar' %}"> {{kassa.dollar | intcomma}} $</a> </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                <img src="{% static 'assets/img/dollar.svg' %}" width="30px" alt="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
-                                <!-- <div class="col-xl-3 col-md-3 mb-4 text-center">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                        <a href="{% url 'kassa_detail_plastik' %}" style="color: blue !important;"> Plastik </a></div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800"> <a href="{% url 'kassa_detail_plastik' %}">{{kassa.plastik | intcomma}} so'm </a> </div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <img src="{% static 'assets/img/credit-card.svg' %}" width="30px" alt="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
-                                <!-- <div class="col-xl-3 col-md-3 mb-4 text-center">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                        <a href="{% url 'kassa_detail_hisob_raqam' %}" style="color: blue !important;">  Hisob raqam </a> </div>
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800"> <a href="{% url 'kassa_detail_hisob_raqam' %}">{{kassa.hisob_raqam | intcomma}} so'm</a></div>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <img src="{% static 'assets/img/bank.svg' %}" width="30px" alt="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
+                                
                             </div>
 
 
                         
                         </div>
                     </div>
-                        <!-- kassadagai pullar hisoboti (tepada) -->
-                
-                
-                    
-                
-                        <!-- <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                            <div class="widget-content widget-content-area br-6">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <h4>Hodimlar</h4>
-                                    </div>
-                                </div>
-                                <div class="table-responsive mb-4 mt-4">
-                                    <table class="multi-table table table-hover" style="width:100%">
-                                        <thead>
-                                            <tr>
-                                                <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Ism-Fmilya</th>
-                                                <th style="text-align: left;">Qarz(so'm)</th>
-                                                <th style="text-align: left;">Qarz($)</th>
-                                                <th style="text-align: left;">Oldi-berdi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for hodim in hodimlar_qarz %}
-                                            <tr>
-                                                <td style="text-align: left;">{{ forloop.counter}}</td>
-                                                <td style="text-align: left;">{{ hodim.ism_familya }}</td>
-                                                <td style="text-align: left;">{{ hodim.qarz_som }} so'm</td>
-                                                <td style="text-align: left;">{{ hodim.qarz_dol }} $</td>
-                                                <td style="text-align: left;"><button class="btn btn-primary" data-toggle="modal" data-target="#Qarz_berish_Modal_{{hodim.id}}">Berish</button><span style="color: white;">||</span><a href="/hodim-qarzlari/?hodim_id={{hodim.id}}"><button class="btn btn-primary">Olish</button></a></td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Ism-Fmilya</th>
-                                                <th style="text-align: left;">Qarz(so'm)</th>
-                                                <th style="text-align: left;">Qarz($)</th>
-                                                <th style="text-align: left;">Oldi-berdi</th>
-                                            </tr>
-                                        </tfoot>
-                                        
-                                    </table>
-                                
-                                </div>
-                            </div>
-                        </div> -->
-                        <div class="col-12" style="display: flex;justify-content: end;" >
-                            <div class="row">
-                                    <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
-                                        <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
-                                    </button>
-                            </div>
+                    <div class="col-12" style="display: flex;justify-content: end;" >
+                        <div class="row">
+                                <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
+                                    <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
+                                </button>
                         </div>
-                        <br>
-                        <form style="margin-left: -1rem;" class='col-12'>
-                            <div class="row">
+                    </div>
+                    <br>
+                    <form style="margin: 1rem 2 rem 1rem 1rem;" class='col-12'>
+                        <div class="row">
 
-                                <div class="col-md-3" >
-                                    Boshlangich sana
-                                    <input name="start_date" class="form-control" type="date" value="{{filters.start_date}}">
-                                </div>
-                                <div class="col-md-3 mb-3" >
-                                    Yakuniy sana
-                                    <input name="end_date" class="form-control" type="date" value="{{filters.end_date}}">
-                                </div>
-                                <div class="col-md-3 mb-3" >
-                                    Taminotchi
-                                    <select name="deliver" id="" class="form-control">
-                                        <option label="Deliver"></option>
-                                        {% for d in delivers %}
-                                            <option 
-                                            {% if d.id == filters.deliver %}
-                                                selected
-                                            {% endif %}
-                                                value="{{d.id}}">{{d.name}}</option>
-                                        {% endfor %}
-                                            
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-3" >
-                                    Kategoriya
-                                    <select name="chiqim_turi" id="" class="form-control">
-                                        <option label="Turi"></option>
-                                        {% for d in chiqim_turi %}
-                                            <option
-                                            {% if d.id == filters.chiqim_turi %}
-                                                selected
-                                            {% endif %}
-                                            value="{{d.id}}">{{d.nomi}}</option>
-                                        {% endfor %}
-                                            
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 mb-3" >
-                                    <label for="">Turi</label>
-                                    <select name="expanse_category" id="" class="form-control">
-                                        <option label="Filial chiqim turi"></option>
-                                        {% for d in expanse_category %}
-                                            <option
-                                            {% if d.id == filters.expanse_category %}
-                                                selected
-                                            {% endif %}
-                                            value="{{d.id}}">{{d.title}}</option>
-                                        {% endfor %}
-                                            
-                                    </select>
-                                </div>
-
-                                <div class="col-md-2" >
-                                    <button style="margin-top: 2rem;" type="submit" class="btn btn-primary form-control">Filterlash</button>
-                                </div>
-                                
+                            <div class="col-md-3" >
+                                Boshlangich sana
+                                <input name="start_date" class="form-control" type="date" value="{{filters.start_date}}">
                             </div>
-                        </form>
+                            <div class="col-md-3 mb-3" >
+                                Yakuniy sana
+                                <input name="end_date" class="form-control" type="date" value="{{filters.end_date}}">
+                            </div>
+                            <div class="col-md-3 mb-3" >
+                                Taminotchi
+                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
+                                multiselect-search="true" name="deliver" id="" class="form-control">
+                                    {% for d in delivers %}
+                                        <option 
+                                        {% if d.id in filters.deliver %}
+                                            selected
+                                        {% endif %}
+                                            value="{{d.id}}">{{d.name}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3" >
+                                Mijoz
+                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
+                                multiselect-search="true" name="debtor" id="" class="form-control">
+                                    {% for d in debtors %}
+                                        <option 
+                                        {% if d.id in filters.debtor %}
+                                            selected
+                                        {% endif %}
+                                            value="{{d.id}}">{{d.fio}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3" >
+                                Kategoriya
+                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
+                                multiselect-search="true" name="category" id="" class="form-control">
+                                    {% for d in categories %}
+                                        <option
+                                        {% if d.id in filters.category %}
+                                            selected
+                                        {% endif %}
+                                        value="{{d.id}}">{{d.name}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+
+
+                            <div class="col-md-3 mb-3" >
+                                Podkategoriya
+                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
+                                multiselect-search="true" name="subcategory" id="" class="form-control">
+                                    {% for d in subcategories %}
+                                        <option value="{{d.id}}"
+                                        {% if d.id in filters.subcategory %}
+                                            selected
+                                        {% endif %}>{{d.name}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div>
+
+                            <!-- <div class="col-md-3 mb-3" >
+                                <label for="">Turi</label>
+                                <select name="expanse_category" id="" class="form-control">
+                                    <option label="Filial chiqim turi"></option>
+                                    {% for d in expanse_category %}
+                                        <option
+                                        {% if d.id == filters.expanse_category %}
+                                            selected
+                                        {% endif %}
+                                        value="{{d.id}}">{{d.title}}</option>
+                                    {% endfor %}
+                                        
+                                </select>
+                            </div> -->
+
+                            <div class="col-md-2" >
+                                <button style="margin-top: 1rem;" type="submit" class="btn btn-primary form-control">Filterlash</button>
+                            </div>
+                            
+                        </div>
+                    </form>
                         <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
                             <div class="widget-content widget-content-area br-6">
                                 <div class="row">
@@ -258,6 +176,7 @@
                                                 {% endfor %}
                                                     
                                                 <th style="text-align: left;">Qoldiq</th>
+                                                <th style="text-align: left;">Mijoz</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
                                                 <th style="text-align: left;"></th>
@@ -283,6 +202,7 @@
                                                     {{ kirim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
                                                 
+                                                <td style="text-align: left;">{{ kirim.payhistory.debtor|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ kirim.izox }}</td>
                                                 <td style="text-align: left;">{{ kirim.qachon }}</td>
                                                 <td style="text-align: left;">
@@ -337,6 +257,7 @@
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
+                                                <th style="text-align: left;"></th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -370,7 +291,7 @@
                                                     
                                                 <th style="text-align: left;">Qoldiq</th>
                                                 <th style="text-align: left;">Kategoriya</th>
-                                                <th style="text-align: left;">Podkotegoruya</th>
+                                                <th style="text-align: left;">Podkotegoriya</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
                                                 <th style="text-align: left;"></th>
@@ -396,8 +317,8 @@
                                                     {{ chiqim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
                                                 
-                                                <td style="text-align: left;">{{ chiqim.subcategory.category }}</td>
-                                                <td style="text-align: left;">{{ chiqim.subcategory }}</td>
+                                                <td style="text-align: left;">{{ chiqim.subcategory.category|default_if_none:'' }}</td>
+                                                <td style="text-align: left;">{{ chiqim.subcategory|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ chiqim.izox }}</td>
                                                 <td style="text-align: left;">{{ chiqim.qachon }}</td>
                                                 <td style="text-align: left;">
@@ -468,9 +389,9 @@
 
 
 
-                        <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
-                                <div class="statbox widget box box-shadow">
+                        <div class="col-xl-12 col-lg-8 col-sm-12">
+                            <div id="tableSimple" class="">
+                                <div class="">
                                     <div class="widget-content widget-content-area br-6">
                                         <div class="row">
                                             <div class="col-6">
@@ -612,7 +533,7 @@
                                 {% endfor %}
                             </select><br>
                             
-                            <select class="form-control" name="sub_chiqim_turi" id="subcategorySelect" required>
+                            <select class="form-control" name="subcategory" id="subcategorySelect" required>
                                 <option value="" disabled selected>--Subkategoriya--</option>
                                 {% for subcat in subcategories %}
                                     <option value="{{ subcat.id }}" data-category="{{ subcat.category.id }}">{{ subcat.name }}</option>
