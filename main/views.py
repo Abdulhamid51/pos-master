@@ -2809,17 +2809,19 @@ def kassa(request):
     if expanse_category:
         expenses = expenses.filter(category_id=expanse_category)
 
-    chiqim_turlari = ChiqimTuri.objects.all()
+    categories = ChiqimCategory.objects.all()
+    subcategories = ChiqimSubCategory.objects.all()
+    valutas = Valyuta.objects.all()
     
-    chiqim_total_som = shu_oylik_chiqimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
-    chiqim_total_dollar = shu_oylik_chiqimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
-    chiqim_hisob_raqam_total = shu_oylik_chiqimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
-    chiqim_plastik = shu_oylik_chiqimlar.aggregate(Sum('plastik'))['plastik__sum']
+    # chiqim_total_som = shu_oylik_chiqimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
+    # chiqim_total_dollar = shu_oylik_chiqimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
+    # chiqim_hisob_raqam_total = shu_oylik_chiqimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
+    # chiqim_plastik = shu_oylik_chiqimlar.aggregate(Sum('plastik'))['plastik__sum']
     
-    kirim_total_som = shu_oylik_kirimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
-    kirim_total_dollar = shu_oylik_kirimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
-    kirim_hisob_raqam_total = shu_oylik_kirimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
-    kirim_plastik = shu_oylik_kirimlar.aggregate(Sum('plastik'))['plastik__sum']
+    # kirim_total_som = shu_oylik_kirimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
+    # kirim_total_dollar = shu_oylik_kirimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
+    # kirim_hisob_raqam_total = shu_oylik_kirimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
+    # kirim_plastik = shu_oylik_kirimlar.aggregate(Sum('plastik'))['plastik__sum']
 
     for hodim in hodimlar:
         qarz_som = 0
@@ -2840,7 +2842,7 @@ def kassa(request):
     
     total_expenses = expenses.aggregate(foo=Coalesce(
         Sum('total_sum'),
-        0
+        0, output_field=FloatField()
     ))['foo']
 
     hodimlar_royxat = [
@@ -2853,33 +2855,47 @@ def kassa(request):
     kassa = KassaMerge.objects.filter(is_active=True, kassa__is_main=True)
     filial = Filial.objects.all()
     data = []
-    for i in filial:
+    for i in KassaNew.objects.all():
         dt = {
             'name':i.name,
             'valyuta':[
-                {'name':val.name , 'summa': kassa.filter(kassa__filial=i, valyuta=val).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'] }
+                {'name':val.name , 'summa': kassa.filter(valyuta=val, kassa=i).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'] }
                 for val in Valyuta.objects.all()
             ],
         }
         data.append(dt)
+    
+    kirim_totals = [{
+        "summa": Kirim.objects.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
+    } for v in valutas]
+
+    chiqim_totals = [{
+        "summa": Chiqim.objects.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
+    } for v in valutas]
+
     content = {
         'kassa_active':'active',
         'kassa_true':'true',
+        'kirim_totals':kirim_totals,
+        'chiqim_totals':chiqim_totals,
         'hodimlar':hodimlar_royxat,
         'barcha_hodimlar':hodimlar,
         'shu_oylik_chiqimlar':shu_oylik_chiqimlar,
         'shu_oylik_kirimlar':shu_oylik_kirimlar,
-        "chiqim_turlari":chiqim_turlari,
+        # "chiqim_turlari":chiqim_turlari,
+        'categories':categories,
+        'subcategories':subcategories,
         'hodimlar_qarz':hodimlar_qarz,
         'kassa':kassa_var,
-        'chiqim_total_som': chiqim_total_som,
-        'chiqim_total_dollar': chiqim_total_dollar,
-        'chiqim_hisob_raqam_total': chiqim_hisob_raqam_total,
-        'kirim_total_som': kirim_total_som,
-        'kirim_total_dollar': kirim_total_dollar,
-        'kirim_hisob_raqam_total': kirim_hisob_raqam_total,
-        'chiqim_plastik': chiqim_plastik,
-        'kirim_plastik': kirim_plastik,
+        'valutas': valutas,
+        # 'chiqim_total_som': chiqim_total_som,
+        # 'chiqim_total_dollar': chiqim_total_dollar,
+        # 'chiqim_hisob_raqam_total': chiqim_hisob_raqam_total,
+        # 'kirim_total_som': kirim_total_som,
+        # 'kirim_total_dollar': kirim_total_dollar,
+        # 'kirim_hisob_raqam_total': kirim_hisob_raqam_total,
+        # 'chiqim_plastik': chiqim_plastik,
+        # 'kirim_plastik': kirim_plastik,
         'filial': "active",
         'filial_t': "true",
         'filials': branches,
@@ -2890,6 +2906,8 @@ def kassa(request):
         'expanse_category': FilialExpenseCategory.objects.all(),
         'delivers': Deliver.objects.all(),
         'debtors': Debtor.objects.all(),
+        'valuta': Valyuta.objects.all(),
+        'cashes': KassaNew.objects.all(),
         'data':data,
         'filters': {
             'start_date': start_date,
@@ -2992,213 +3010,289 @@ def hodim_qarzlari(request):
     return render(request, 'hodim_qarzlari.html', {'hodim':hodim, 'qarzlari':qarzlari, 'dollar_kurs': Course.objects.last().som})
 
 
-def chiqim_qilish(request):
+# def chiqim_qilish(request):
     
-    """ Kassadan chiqim qiladi """
+#     """ Kassadan chiqim qiladi """
+
+#     if request.method == 'POST':
+        
+#         chiqim_turi = request.POST.get('chiqim_turi')
+#         qancha_som = request.POST.get('qancha_som')
+#         qancha_dol = request.POST.get('qancha_dol')
+#         plastik = request.POST.get('qancha_plastik')
+        
+#         qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
+#         izox = request.POST['izox']
+
+#         kassa_var = Kassa.objects.first()
+
+
+#         chiqim = Chiqim.objects.create(qayerga_id=chiqim_turi, izox=izox)
+#         if qancha_som and kassa_var.som >= int(qancha_som):
+#             chiqim.kassa_som_eski = kassa_var.som
+#             chiqim.qancha_som = qancha_som
+#             kassa_var.som -= int(qancha_som)
+#             chiqim.kassa_som_yangi = kassa_var.som
+        
+#         if plastik:
+#             chiqim.kassa_plastik_eski = kassa_var.plastik
+#             chiqim.plastik = plastik
+#             kassa_var.plastik -= int(plastik)
+#             chiqim.kassa_plastik_yangi = kassa_var.plastik
+
+#         if qancha_dol and kassa_var.dollar >= int(qancha_dol):
+#             chiqim.kassa_dol_eski = kassa_var.dollar
+#             chiqim.qancha_dol = qancha_dol
+#             kassa_var.dollar -= int(qancha_dol)
+#             chiqim.kassa_dol_yangi = kassa_var.dollar
+            
+#         if qancha_hisob_raqamdan and kassa_var.hisob_raqam >= int(qancha_hisob_raqamdan):
+#             chiqim.kassa_hisob_raqam_eski = kassa_var.hisob_raqam
+#             chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
+#             kassa_var.hisob_raqam -= int(qancha_hisob_raqamdan)
+#             chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
+            
+#         chiqim.save()
+#         kassa_var.save()
+
+#         return redirect('/kassa/')
+
+
+
+def chiqim_qilish(request):
+
+    """ Kassadan kirim qiladi """
 
     if request.method == 'POST':
-        
-        chiqim_turi = request.POST.get('chiqim_turi')
-        qancha_som = request.POST.get('qancha_som')
-        qancha_dol = request.POST.get('qancha_dol')
-        plastik = request.POST.get('qancha_plastik')
-        
-        qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
+        subcategory = request.POST.get('subcategory')
+        kurs = request.POST.get('kurs')
+        valuta_id = request.POST.get('valuta')
+        kassa_id = request.POST.get('kassa')
+        summa = request.POST.get('summa')
         izox = request.POST['izox']
 
-        kassa_var = Kassa.objects.first()
+        valuta = Valyuta.objects.get(id=valuta_id)
+        cash = KassaNew.objects.get(id=kassa_id)
 
+        kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
 
-        chiqim = Chiqim.objects.create(qayerga_id=chiqim_turi, izox=izox)
-        if qancha_som and kassa_var.som >= int(qancha_som):
-            chiqim.kassa_som_eski = kassa_var.som
-            chiqim.qancha_som = qancha_som
-            kassa_var.som -= int(qancha_som)
-            chiqim.kassa_som_yangi = kassa_var.som
+        chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
         
-        if plastik:
-            chiqim.kassa_plastik_eski = kassa_var.plastik
-            chiqim.plastik = plastik
-            kassa_var.plastik -= int(plastik)
-            chiqim.kassa_plastik_yangi = kassa_var.plastik
+        kassa.summa -= float(summa)
 
-        if qancha_dol and kassa_var.dollar >= int(qancha_dol):
-            chiqim.kassa_dol_eski = kassa_var.dollar
-            chiqim.qancha_dol = qancha_dol
-            kassa_var.dollar -= int(qancha_dol)
-            chiqim.kassa_dol_yangi = kassa_var.dollar
-            
-        if qancha_hisob_raqamdan and kassa_var.hisob_raqam >= int(qancha_hisob_raqamdan):
-            chiqim.kassa_hisob_raqam_eski = kassa_var.hisob_raqam
-            chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
-            kassa_var.hisob_raqam -= int(qancha_hisob_raqamdan)
-            chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
-            
+        chiqim.kassa_new = kassa.summa
+
+        kassa.save()
         chiqim.save()
-        kassa_var.save()
 
-        return redirect('/kassa/')
+        return redirect(request.META['HTTP_REFERER'])
+
 
 def chiqim_qilish_edit(request):
-    
-    """ Kassadan chiqni tahrirlaydi """
+    """ Chiqimni tahrirlash va kassa qoldiqlarini yangilash """
+    chiqim_id = request.POST.get('chiqim_id')
+    chiqim = Chiqim.objects.get(id=chiqim_id)
+
+    eski_summa = float(chiqim.summa)
+    eski_kurs = float(chiqim.currency)
 
     if request.method == 'POST':
-        chiqim_id = request.POST.get('chiqim_id')
-        chiqim_turi = request.POST.get('chiqim_turi')
-        qancha_som = request.POST.get('qancha_som', 0)
-        qancha_dol = request.POST.get('qancha_dol', 0)
-        qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan', 0)
-        izox = request.POST['izox']
-        plastik = request.POST.get('qancha_plastik', 0)
-        kassa_var = Kassa.objects.first()
-        chiqim = Chiqim.objects.get(id=chiqim_id)
-    
-        deliver = chiqim.deliver
-        
+        yangi_summa = float(request.POST.get('summa'))
+        yangi_kurs = float(request.POST.get('kurs'))
+        yangi_izoh = request.POST.get('izox')
+        yangi_subcat = request.POST.get('subcategory')
 
-        deliver_payments = DeliverPayments.objects.filter(deliver=deliver).last()
-        if deliver_payments:
-            payments = deliver_payments.payments
-        else:
-            payments = None
+        # Chiqimni yangilash
+        chiqim.summa = yangi_summa
+        chiqim.currency = yangi_kurs
+        chiqim.izox = yangi_izoh
+        chiqim.subcategory_id = yangi_subcat
 
-        deliverpayment = chiqim.deliverpayment
-        # if chiqim_turi:
-        #     chiqim.qayerga.id = chiqim_turi
-        if izox is not None and izox != '':
-            chiqim.izox = izox
+        farq = eski_summa - yangi_summa  # chiqim kamaytirilgan bo‘lsa, qoldiq oshadi
 
-        # qayerga_id=chiqim_turi, izox=izox
-        if qancha_som and kassa_var.som + chiqim.qancha_som - float(qancha_som) >= 0:
-            left_som = chiqim.qancha_som - int(qancha_som)
-            if payments:
-                deliverpayment.left -= float(left_som)
-                for i in payments.filter(id__gt=deliverpayment.id):
-                    i.left -= float(left_som)
-                    deliver.som = i.left
-                    i.save()
-                    deliver.save()
-            
-            chiqim.kassa_som_eski = kassa_var.som + float(chiqim.qancha_som)
-            chiqim.qancha_som_eski = chiqim.qancha_som
+        kassa = chiqim.kassa
+        kassa.summa += farq
+        kassa.save()
 
-            deliverpayment = chiqim.deliverpayment
-            if deliverpayment:
-                deliverpayment.gave_total = int(qancha_som)
-                deliverpayment.save()
-            # if deliver:
-            #     deliver.som += chiqim.qancha_som
-            #     deliver.som -= int(qancha_som)
+        chiqimlar = Chiqim.objects.filter(kassa=kassa, id__gte=chiqim.id).order_by('id')
+        qoldiq = kassa.summa
 
-            kassa_var.som += chiqim.qancha_som
-
-            chiqim.qancha_som = qancha_som
-
-            kassa_var.som -= int(qancha_som)
-
-            chiqim.kassa_som_yangi = kassa_var.som
-
-        if qancha_dol and kassa_var.dollar + chiqim.qancha_dol - float(qancha_dol) >= 0:
-            left_dollar = chiqim.qancha_dol - int(qancha_dol) * int(Course.objects.last().som)
-            if payments:
-                deliverpayment.left -= float(left_dollar) * Course.objects.last().som
-                for i in payments.filter(id__gt=deliverpayment.id):
-                    i.left -= float(left_dollar) * Course.objects.last().som
-                    deliver.som = i.left
-                    i.save()
-                    deliver.save()
-
-            if deliverpayment:
-                deliverpayment.gave_total = int(qancha_dol) * Course.objects.last().som
-                deliverpayment.save()
-            # if deliver:
-            #     deliver.som += chiqim.qancha_dol * Course.objects.last().som
-            #     deliver.som -= int(qancha_dol) * Course.objects.last().som
-            chiqim.kassa_dol_eski = kassa_var.dollar + float(chiqim.qancha_dol)
-            chiqim.qancha_dol_eski = chiqim.qancha_dol
-            kassa_var.dollar += chiqim.qancha_dol
-            chiqim.qancha_dol = qancha_dol
-            kassa_var.dollar -= int(qancha_dol)
-            chiqim.kassa_dol_yangi = kassa_var.dollar
-
-            
-        # if plastik:
-        if plastik and kassa_var.plastik + chiqim.plastik - float(plastik) >= 0:
-            # if deliverpayment:
-            #     deliverpayment.gave_total = int(plastik)
-            #     deliverpayment.save()
-            # if deliver:
-            #     deliver.som += chiqim.plastik
-            #     deliver.som -= int(plastik)
-
-            left_plastik = chiqim.plastik - float(plastik)
-            if payments:
-                deliverpayment.left -= float(left_plastik)
-                for i in payments.filter(id__gt=deliverpayment.id):
-                    i.left -= float(left_plastik)
-                    deliver.som = i.left
-                    i.save()
-                    deliver.save()
-
-            deliverpayment = chiqim.deliverpayment
-            if deliverpayment:
-                deliverpayment.gave_total = float(plastik)
-                deliverpayment.save()
-            # if deliver:
-            #     deliver.som += chiqim.plastik
-            #     deliver.som -= float(plastik)
-                    
-            chiqim.kassa_plastik_eski = kassa_var.plastik + float(chiqim.plastik)
-            chiqim.plastik_eski = chiqim.plastik
-            kassa_var.plastik += chiqim.plastik
-            chiqim.plastik = plastik
-            kassa_var.plastik -= int(plastik)
-            chiqim.kassa_plastik_yangi = kassa_var.plastik
-
-            
-        # if qancha_hisob_raqamdan and kassa_var.hisob_raqam >= int(qancha_hisob_raqamdan):
-        if qancha_hisob_raqamdan and kassa_var.hisob_raqam + chiqim.qancha_hisob_raqamdan - float(qancha_hisob_raqamdan) >= 0:
-            # if deliverpayment:
-            #     deliverpayment.gave_total = int(qancha_hisob_raqamdan)
-            #     deliverpayment.save()
-
-            # if deliver:
-            #     deliver.som += chiqim.qancha_hisob_raqamdan
-            #     deliver.som -= int(qancha_hisob_raqamdan)
-
-            left_qancha_hisob_raqamdan = chiqim.qancha_hisob_raqamdan - float(qancha_hisob_raqamdan)
-            if payments:
-                deliverpayment.left -= float(left_qancha_hisob_raqamdan)
-                for i in payments.filter(id__gt=deliverpayment.id):
-                    i.left -= float(left_qancha_hisob_raqamdan)
-                    deliver.som = i.left
-                    i.save()
-                    deliver.save()
-
-            deliverpayment = chiqim.deliverpayment
-            if deliverpayment:
-                deliverpayment.gave_total = float(qancha_hisob_raqamdan)
-                deliverpayment.save()
-            # if deliver:
-            #     deliver.som += chiqim.qancha_hisob_raqamdan
-            #     deliver.som -= float(qancha_hisob_raqamdan)
-            
-            
-            chiqim.kassa_hisob_raqam_eski = kassa_var.hisob_raqam + float(chiqim.qancha_hisob_raqamdan)
-            chiqim.qancha_hisob_raqamdan_eski = chiqim.qancha_hisob_raqamdan
-            kassa_var.hisob_raqam += chiqim.qancha_hisob_raqamdan
-            chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
-            kassa_var.hisob_raqam -= int(qancha_hisob_raqamdan)
-            chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
-        
-        # print(deliverpayment.left, 'jjjjj')
         chiqim.save()
-        kassa_var.save()
-        if deliver:
-            deliver.save()
 
-        return redirect('/kassa/')
+        for ch in chiqimlar:
+            if ch.id == chiqim.id:
+                qoldiq = qoldiq
+            else:
+                qoldiq -= float(ch.summa)
+
+            ch.kassa_new = qoldiq
+            ch.save()
+
+        return redirect(request.META['HTTP_REFERER'])
+
+
+
+
+# def chiqim_qilish_edit(request):
+    
+#     """ Kassadan chiqni tahrirlaydi """
+
+#     if request.method == 'POST':
+#         chiqim_id = request.POST.get('chiqim_id')
+#         chiqim_turi = request.POST.get('chiqim_turi')
+#         qancha_som = request.POST.get('qancha_som', 0)
+#         qancha_dol = request.POST.get('qancha_dol', 0)
+#         qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan', 0)
+#         izox = request.POST['izox']
+#         plastik = request.POST.get('qancha_plastik', 0)
+#         kassa_var = Kassa.objects.first()
+#         chiqim = Chiqim.objects.get(id=chiqim_id)
+    
+#         deliver = chiqim.deliver
+        
+
+#         deliver_payments = DeliverPayments.objects.filter(deliver=deliver).last()
+#         if deliver_payments:
+#             payments = deliver_payments.payments
+#         else:
+#             payments = None
+
+#         deliverpayment = chiqim.deliverpayment
+#         # if chiqim_turi:
+#         #     chiqim.qayerga.id = chiqim_turi
+#         if izox is not None and izox != '':
+#             chiqim.izox = izox
+
+#         # qayerga_id=chiqim_turi, izox=izox
+#         if qancha_som and kassa_var.som + chiqim.qancha_som - float(qancha_som) >= 0:
+#             left_som = chiqim.qancha_som - int(qancha_som)
+#             if payments:
+#                 deliverpayment.left -= float(left_som)
+#                 for i in payments.filter(id__gt=deliverpayment.id):
+#                     i.left -= float(left_som)
+#                     deliver.som = i.left
+#                     i.save()
+#                     deliver.save()
+            
+#             chiqim.kassa_som_eski = kassa_var.som + float(chiqim.qancha_som)
+#             chiqim.qancha_som_eski = chiqim.qancha_som
+
+#             deliverpayment = chiqim.deliverpayment
+#             if deliverpayment:
+#                 deliverpayment.gave_total = int(qancha_som)
+#                 deliverpayment.save()
+#             # if deliver:
+#             #     deliver.som += chiqim.qancha_som
+#             #     deliver.som -= int(qancha_som)
+
+#             kassa_var.som += chiqim.qancha_som
+
+#             chiqim.qancha_som = qancha_som
+
+#             kassa_var.som -= int(qancha_som)
+
+#             chiqim.kassa_som_yangi = kassa_var.som
+
+#         if qancha_dol and kassa_var.dollar + chiqim.qancha_dol - float(qancha_dol) >= 0:
+#             left_dollar = chiqim.qancha_dol - int(qancha_dol) * int(Course.objects.last().som)
+#             if payments:
+#                 deliverpayment.left -= float(left_dollar) * Course.objects.last().som
+#                 for i in payments.filter(id__gt=deliverpayment.id):
+#                     i.left -= float(left_dollar) * Course.objects.last().som
+#                     deliver.som = i.left
+#                     i.save()
+#                     deliver.save()
+
+#             if deliverpayment:
+#                 deliverpayment.gave_total = int(qancha_dol) * Course.objects.last().som
+#                 deliverpayment.save()
+#             # if deliver:
+#             #     deliver.som += chiqim.qancha_dol * Course.objects.last().som
+#             #     deliver.som -= int(qancha_dol) * Course.objects.last().som
+#             chiqim.kassa_dol_eski = kassa_var.dollar + float(chiqim.qancha_dol)
+#             chiqim.qancha_dol_eski = chiqim.qancha_dol
+#             kassa_var.dollar += chiqim.qancha_dol
+#             chiqim.qancha_dol = qancha_dol
+#             kassa_var.dollar -= int(qancha_dol)
+#             chiqim.kassa_dol_yangi = kassa_var.dollar
+
+            
+#         # if plastik:
+#         if plastik and kassa_var.plastik + chiqim.plastik - float(plastik) >= 0:
+#             # if deliverpayment:
+#             #     deliverpayment.gave_total = int(plastik)
+#             #     deliverpayment.save()
+#             # if deliver:
+#             #     deliver.som += chiqim.plastik
+#             #     deliver.som -= int(plastik)
+
+#             left_plastik = chiqim.plastik - float(plastik)
+#             if payments:
+#                 deliverpayment.left -= float(left_plastik)
+#                 for i in payments.filter(id__gt=deliverpayment.id):
+#                     i.left -= float(left_plastik)
+#                     deliver.som = i.left
+#                     i.save()
+#                     deliver.save()
+
+#             deliverpayment = chiqim.deliverpayment
+#             if deliverpayment:
+#                 deliverpayment.gave_total = float(plastik)
+#                 deliverpayment.save()
+#             # if deliver:
+#             #     deliver.som += chiqim.plastik
+#             #     deliver.som -= float(plastik)
+                    
+#             chiqim.kassa_plastik_eski = kassa_var.plastik + float(chiqim.plastik)
+#             chiqim.plastik_eski = chiqim.plastik
+#             kassa_var.plastik += chiqim.plastik
+#             chiqim.plastik = plastik
+#             kassa_var.plastik -= int(plastik)
+#             chiqim.kassa_plastik_yangi = kassa_var.plastik
+
+            
+#         # if qancha_hisob_raqamdan and kassa_var.hisob_raqam >= int(qancha_hisob_raqamdan):
+#         if qancha_hisob_raqamdan and kassa_var.hisob_raqam + chiqim.qancha_hisob_raqamdan - float(qancha_hisob_raqamdan) >= 0:
+#             # if deliverpayment:
+#             #     deliverpayment.gave_total = int(qancha_hisob_raqamdan)
+#             #     deliverpayment.save()
+
+#             # if deliver:
+#             #     deliver.som += chiqim.qancha_hisob_raqamdan
+#             #     deliver.som -= int(qancha_hisob_raqamdan)
+
+#             left_qancha_hisob_raqamdan = chiqim.qancha_hisob_raqamdan - float(qancha_hisob_raqamdan)
+#             if payments:
+#                 deliverpayment.left -= float(left_qancha_hisob_raqamdan)
+#                 for i in payments.filter(id__gt=deliverpayment.id):
+#                     i.left -= float(left_qancha_hisob_raqamdan)
+#                     deliver.som = i.left
+#                     i.save()
+#                     deliver.save()
+
+#             deliverpayment = chiqim.deliverpayment
+#             if deliverpayment:
+#                 deliverpayment.gave_total = float(qancha_hisob_raqamdan)
+#                 deliverpayment.save()
+#             # if deliver:
+#             #     deliver.som += chiqim.qancha_hisob_raqamdan
+#             #     deliver.som -= float(qancha_hisob_raqamdan)
+            
+            
+#             chiqim.kassa_hisob_raqam_eski = kassa_var.hisob_raqam + float(chiqim.qancha_hisob_raqamdan)
+#             chiqim.qancha_hisob_raqamdan_eski = chiqim.qancha_hisob_raqamdan
+#             kassa_var.hisob_raqam += chiqim.qancha_hisob_raqamdan
+#             chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
+#             kassa_var.hisob_raqam -= int(qancha_hisob_raqamdan)
+#             chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
+        
+#         # print(deliverpayment.left, 'jjjjj')
+#         chiqim.save()
+#         kassa_var.save()
+#         if deliver:
+#             deliver.save()
+
+#         return redirect('/kassa/')
     
 #kirim
 def kirim_qilish(request):
@@ -3207,103 +3301,143 @@ def kirim_qilish(request):
 
     if request.method == 'POST':
         debtor = request.POST.get('debtor')
-        plastik = request.POST.get('plastik')
+        # plastik = request.POST.get('plastik')
         kurs = request.POST.get('kurs')
         debtor = request.POST.get('debtor')
-        qancha_som = request.POST.get('qancha_som')
-        qancha_dol = request.POST.get('qancha_dol')
-        qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
+        valuta_id = request.POST.get('valuta')
+        kassa_id = request.POST.get('kassa')
+        summa = request.POST.get('summa')
+        # qancha_som = request.POST.get('qancha_som')
+        # qancha_dol = request.POST.get('qancha_dol')
+        # qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
         izox = request.POST['izox']
 
-        kassa_var = Kassa.objects.first()
+        valuta = Valyuta.objects.get(id=valuta_id)
+        cash = KassaNew.objects.get(id=kassa_id)
+
+        kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
+
         if debtor:
-            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox)
-            kirim = Kirim.objects.create(izox=izox, payhistory=pay)
+            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
+            kirim = Kirim.objects.create(izox=izox, payhistory=pay, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
         else:
-            kirim = Kirim.objects.create(izox=izox)
-        if qancha_som:
-            kirim.kassa_som_eski = kassa_var.som
-            kirim.qancha_som = qancha_som
-            kassa_var.som += int(qancha_som)
-            kirim.kassa_som_yangi = kassa_var.som
-            
-        if plastik:
-            kirim.kassa_plastik_eski = kassa_var.plastik
-            kirim.plastik = plastik
-            kassa_var.plastik += int(plastik)
-            kirim.kassa_plastik_yangi = kassa_var.plastik
-
-
-        if qancha_dol:
-            kirim.kassa_dol_eski = kassa_var.dollar
-            kirim.qancha_dol = qancha_dol
-            kassa_var.dollar += int(qancha_dol)
-            kirim.kassa_dol_yangi = kassa_var.dollar
+            kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
         
-        if qancha_hisob_raqamdan:
-            kirim.kassa_hisob_raqam_eski = kassa_var.hisob_raqam
-            kirim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
-            kassa_var.hisob_raqam += int(qancha_hisob_raqamdan)
-            kirim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
+        kassa.summa += float(summa)
 
+        kirim.kassa_new = kassa.summa
+        if debtor:
+            Debtor.objects.get(id=debtor).refresh_debt()
+
+        kassa.save()
         kirim.save()
-        kassa_var.save()
+        return redirect(request.META['HTTP_REFERER'])
 
-        return redirect('/kassa/')
-    
 
 def kirim_qilish_edit(request):
-
-    """ Kassadan kirimni tahrirlaydi """
+    """ Kirimni tahrirlash va kassa qoldiqlarini yangilash """
+    kirim_id = request.POST.get('kirim_id')
+    kirim = Kirim.objects.get(id=kirim_id)
+    eski_summa = float(kirim.summa)
+    eski_kurs = float(kirim.currency)
 
     if request.method == 'POST':
-        kirim_id = request.POST.get('kirim_id')
-        plastik = request.POST.get('plastik')
-        qancha_som = request.POST.get('qancha_som')
-        qancha_dol = request.POST.get('qancha_dol')
-        qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
-        izox = request.POST['izox']
-        kassa_var = Kassa.objects.first()
+        yangi_summa = float(request.POST.get('summa'))
+        yangi_kurs = float(request.POST.get('kurs'))
+        yangi_izoh = request.POST.get('izox')
+
+        # Obyektni yangilash
+        kirim.summa = yangi_summa
+        kirim.currency = yangi_kurs
+        kirim.izox = yangi_izoh
+
+        if kirim.payhistory:
+            kirim.payhistory.summa = yangi_summa
+            kirim.payhistory.currency = yangi_kurs
+            kirim.payhistory.comment = yangi_izoh
+            kirim.payhistory.save()
+
+        # Kassa farqini hisoblaymiz
+        farq = yangi_summa - eski_summa
+
+        # KassaMerge dagi qiymatni yangilaymiz
+        kassa = kirim.kassa
+        kassa.summa += farq
+
+        # Hozirgi kirim va keyingi kirimlar uchun kassa_new qiymatlarini yangilaymiz
+        kirimlar = Kirim.objects.filter(kassa=kassa, id__gte=kirim.id).order_by('id')
+        qoldiq = kassa.summa
+        kassa.save()
+        kirim.save()
+
+        for k in kirimlar:
+            if k.id == kirim.id:
+                qoldiq = qoldiq  # aynan bu obyekt uchun qoldiq shundoq bo'ladi
+            else:
+                qoldiq += float(k.summa)
+
+            k.kassa_new = qoldiq
+            k.save()
+
+        # Agar qarzdor bo‘lsa, uning qarzini yangilaymiz
+        if kirim.payhistory and kirim.payhistory.debtor:
+            kirim.payhistory.debtor.refresh_debt()
+        return redirect(request.META['HTTP_REFERER'])
+
+    
+
+# def kirim_qilish_edit(request):
+
+#     """ Kassadan kirimni tahrirlaydi """
+
+#     if request.method == 'POST':
+#         kirim_id = request.POST.get('kirim_id')
+#         plastik = request.POST.get('plastik')
+#         qancha_som = request.POST.get('qancha_som')
+#         qancha_dol = request.POST.get('qancha_dol')
+#         qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
+#         izox = request.POST['izox']
+#         kassa_var = Kassa.objects.first()
 
 
-        chiqim = Kirim.objects.get(id=kirim_id)
-        if izox:
-            chiqim.izox = izox
-        if qancha_som:
-            chiqim.qancha_som_eski = chiqim.qancha_som
-            kassa_var.som -= chiqim.qancha_som
-            chiqim.qancha_som = qancha_som
-            kassa_var.som += int(qancha_som)
-            chiqim.kassa_som_yangi = kassa_var.som
-            chiqim.kassa_som_eski = chiqim.kassa_som_yangi - int(qancha_som)
+#         chiqim = Kirim.objects.get(id=kirim_id)
+#         if izox:
+#             chiqim.izox = izox
+#         if qancha_som:
+#             chiqim.qancha_som_eski = chiqim.qancha_som
+#             kassa_var.som -= chiqim.qancha_som
+#             chiqim.qancha_som = qancha_som
+#             kassa_var.som += int(qancha_som)
+#             chiqim.kassa_som_yangi = kassa_var.som
+#             chiqim.kassa_som_eski = chiqim.kassa_som_yangi - int(qancha_som)
             
-        if plastik:
-            chiqim.plastik_eski = chiqim.plastik
-            kassa_var.plastik -= chiqim.plastik
-            chiqim.plastik = plastik
-            kassa_var.plastik += int(plastik)
-            chiqim.kassa_plastik_yangi = kassa_var.plastik
-            chiqim.kassa_plastik_eski = chiqim.kassa_plastik_yangi - int(plastik)
+#         if plastik:
+#             chiqim.plastik_eski = chiqim.plastik
+#             kassa_var.plastik -= chiqim.plastik
+#             chiqim.plastik = plastik
+#             kassa_var.plastik += int(plastik)
+#             chiqim.kassa_plastik_yangi = kassa_var.plastik
+#             chiqim.kassa_plastik_eski = chiqim.kassa_plastik_yangi - int(plastik)
 
-        if qancha_dol:
-            chiqim.qancha_dol_eski = chiqim.qancha_dol
-            kassa_var.dollar -= chiqim.qancha_dol
-            chiqim.qancha_dol = qancha_dol
-            kassa_var.dollar += int(qancha_dol)
-            chiqim.kassa_dol_yangi = kassa_var.dollar
-            chiqim.kassa_dol_eski = chiqim.kassa_dol_yangi - int(qancha_dol)
+#         if qancha_dol:
+#             chiqim.qancha_dol_eski = chiqim.qancha_dol
+#             kassa_var.dollar -= chiqim.qancha_dol
+#             chiqim.qancha_dol = qancha_dol
+#             kassa_var.dollar += int(qancha_dol)
+#             chiqim.kassa_dol_yangi = kassa_var.dollar
+#             chiqim.kassa_dol_eski = chiqim.kassa_dol_yangi - int(qancha_dol)
             
-        if qancha_hisob_raqamdan:
-            chiqim.qancha_hisob_raqamdan_eski = chiqim.qancha_hisob_raqamdan
-            kassa_var.hisob_raqam -= chiqim.qancha_hisob_raqamdan
-            chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
-            kassa_var.hisob_raqam += int(qancha_hisob_raqamdan)
-            chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
-            chiqim.kassa_hisob_raqam_eski = chiqim.kassa_hisob_raqam_yangi - int(qancha_hisob_raqamdan)
-        chiqim.save()
-        kassa_var.save()
+#         if qancha_hisob_raqamdan:
+#             chiqim.qancha_hisob_raqamdan_eski = chiqim.qancha_hisob_raqamdan
+#             kassa_var.hisob_raqam -= chiqim.qancha_hisob_raqamdan
+#             chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
+#             kassa_var.hisob_raqam += int(qancha_hisob_raqamdan)
+#             chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
+#             chiqim.kassa_hisob_raqam_eski = chiqim.kassa_hisob_raqam_yangi - int(qancha_hisob_raqamdan)
+#         chiqim.save()
+#         kassa_var.save()
 
-        return redirect('/kassa/')
+#         return redirect('/kassa/')
 
 
 def oylik_tolash(request):

@@ -60,6 +60,9 @@ class Valyuta(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['id']
+
 class Contract(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     # status_type = [
@@ -1014,8 +1017,7 @@ class Debtor(models.Model):
         customer_debts = CustomerDebt.objects.filter(customer=customer)
 
         for valyuta in Valyuta.objects.all():
-            # Har valyuta uchun alohida CustomerDebt obyekti olish
-            customer_debt = customer_debts.filter(valyuta=valyuta).last()
+            customer_debt = CustomerDebt.objects.filter(valyuta=valyuta).last() or CustomerDebt.objects.create(customer=customer, valyuta=valyuta)
             if customer_debt:
                 # Asl summa bilan yangilash
                 customer_debt.summa = customer_debt.start_summa
@@ -1031,7 +1033,7 @@ class Debtor(models.Model):
                             else:
                                 customer_debt.summa -= i.summa
                             i.debt_new = customer_debt.summa
-                        else:
+                        elif i._meta.model_name == 'shop':
                             i.debt_old = customer_debt.summa
                             customer_debt.summa += i.baskets_total_price
                             i.debt_new = customer_debt.summa
@@ -1113,12 +1115,16 @@ class PayHistory(models.Model):
     currency = models.FloatField(default=0)
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
     date = models.DateTimeField(default=timezone.now)
+
+    summa = models.IntegerField(default=0, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+
     som_after = models.FloatField(default=0)
     dollar_after = models.FloatField(default=0)
     money_circulation = models.ForeignKey('MoneyCirculation', on_delete=models.CASCADE, null=True, blank=True)
     deliver_all_payment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, null=True, blank=True)
     deliver_pay_History = models.ForeignKey(DeliverPayHistory, on_delete=models.CASCADE, null=True, blank=True)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     summa = models.IntegerField(default=0)
@@ -1200,22 +1206,22 @@ class PayHistory(models.Model):
         - Tahrirda: Eski qiymatlarni olib tashlab, yangi qiymatlarni qo'shadi.
         """
         # Kassa aniqlash (masalan, filial orqali yoki boshqa usul bilan)
-        kassa = Kassa.objects.first()  # ⚠️ O'zingizga mos kassa tanlash mexanizmini qo'shing
-        old_values = None
+        # kassa = Kassa.objects.first()  # ⚠️ O'zingizga mos kassa tanlash mexanizmini qo'shing
+        # old_values = None
 
-        if self.pk:
-            # Tahrir holati uchun eski qiymatlarni olish
-            old_instance = PayHistory.objects.get(pk=self.pk)
-            old_values = {
-                'som': old_instance.som,
-                'dollar': old_instance.dollar,
-                'plastik': old_instance.plastik,
-                'click': old_instance.click,
-            }
+        # if self.pk:
+        #     # Tahrir holati uchun eski qiymatlarni olish
+        #     old_instance = PayHistory.objects.get(pk=self.pk)
+        #     old_values = {
+        #         'som': old_instance.som,
+        #         'dollar': old_instance.dollar,
+        #         'plastik': old_instance.plastik,
+        #         'click': old_instance.click,
+        #     }
 
         super().save(*args, **kwargs)  # Avval model saqlanadi
-        if kassa and self.shop:
-            self.save_kassa(kassa, old_values=old_values)
+        # if kassa and self.shop:
+        #     self.save_kassa(kassa, old_values=old_values)
 
         
         
@@ -1442,8 +1448,21 @@ class ChiqimTuri(models.Model):
         return self.nomi
 
 
+
+class ChiqimCategory(models.Model):
+    name = models.CharField(max_length=200)
+
+class ChiqimSubCategory(models.Model):
+    name = models.CharField(max_length=200)
+    category = models.ForeignKey(ChiqimCategory, on_delete=models.CASCADE)
+
+
+
 class Chiqim(models.Model):
     qayerga = models.ForeignKey(ChiqimTuri, on_delete=models.PROTECT, null=True, blank=True)
+
+    subcategory = models.ForeignKey(ChiqimSubCategory, on_delete=models.PROTECT, null=True, blank=True)
+
     
     kassa_som_eski = models.IntegerField(default=0)
     qancha_som  = models.IntegerField(default=0)
@@ -1468,9 +1487,15 @@ class Chiqim(models.Model):
     
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
+
+    summa = models.IntegerField(default=0, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+    kassa_new = models.FloatField(default=0)
+    currency = models.IntegerField(default=0)
     
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
-    mobil_user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, blank=True, null=True)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, blank=True, null=True)
+    mobil_user = models.ForeignKey(MobilUser, on_delete=models.SET_NULL, blank=True, null=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     deliverpayment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, blank=True, null=True)
     is_approved = models.BooleanField(default=True) 
@@ -1482,6 +1507,13 @@ class Chiqim(models.Model):
     def som(self):
         currency = Course.objects.last().som
         return self.qancha_som + self.plastik + self.qancha_hisob_raqamdan + self.qancha_dol * currency
+
+    @property
+    def summa_for_valutas(self):
+        valutas = Valyuta.objects.all()
+        return [{
+            "summa": self.summa if self.valyuta == v else 0 
+        } for v in valutas]
 
 
 
@@ -1527,11 +1559,23 @@ class Kirim(models.Model):
     plastik = models.IntegerField(default=0)
     plastik_eski = models.IntegerField(default=0)
     kassa_plastik_yangi = models.IntegerField(default=0)
+
+    summa = models.IntegerField(default=0, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+    kassa_new = models.FloatField(default=0)
     
-    
+    currency = models.IntegerField(default=0, null=True)
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=True)
+
+    @property
+    def summa_for_valutas(self):
+        valutas = Valyuta.objects.all()
+        return [{
+            "summa": self.summa if self.valyuta == v else 0 
+        } for v in valutas]
 
     def __str__(self) -> str:
         return f'{str(self.qachon)}'

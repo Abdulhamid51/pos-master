@@ -33,7 +33,7 @@
                                                 <div class="col mr-2">
                                                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">{{ i.name }}</div>
                                                     {% for x in i.valyuta %}
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa | intcomma}} $</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa|intcomma}}</div>
                                                     {% endfor %}
                                                 </div>
                                                 <div class="col-auto">
@@ -251,10 +251,13 @@
                                         <thead>
                                             <tr>
                                                 <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Qancha(so'm)</th>
-                                                <th style="text-align: left;">Qancha($)</th>
-                                                <th style="text-align: left;">Qancha (hisob raqam)</th>
-                                                <th style="text-align: left;">Plastik</th>
+                                                <th style="text-align: left;">Kassa</th>
+                                                
+                                                {% for v in valutas %}
+                                                    <th style="text-align: left;">{{ v.name }}</th>
+                                                {% endfor %}
+                                                    
+                                                <th style="text-align: left;">Qoldiq</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
                                                 <th style="text-align: left;"></th>
@@ -266,25 +269,20 @@
                                             <tr>
                                                 <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_som_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.qancha_som|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_som_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.kassa.kassa.name }}
                                                 </td>
+                                                
+                                                
+                                                {% for q in kirim.summa_for_valutas %}
+                                                    <td style="text-align: left;">
+                                                        {{ q.summa|intcomma }}
+                                                    </td>
+                                                {% endfor %}
+                                                    
                                                 <td style="text-align: left;">
-                                                    {{ kirim.kassa_dol_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.qancha_dol|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_dol_yangi|default_if_none:'0' | intcomma }}
+                                                    {{ kirim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
-                                                <td style="text-align: left;">
-                                                    {{ kirim.kassa_hisob_raqam_eski|default_if_none:'0' | intcomma}} | <br>
-                                                    {{ kirim.qancha_hisob_raqamdan|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_hisob_raqam_yangi|default_if_none:'0' | intcomma }}
-                                                </td>
-                                                <td style="text-align: left;">
-                                                    {{ kirim.kassa_plastik_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.plastik|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ kirim.kassa_plastik_yangi|default_if_none:'0' | intcomma }}
-                                                </td>
+                                                
                                                 <td style="text-align: left;">{{ kirim.izox }}</td>
                                                 <td style="text-align: left;">{{ kirim.qachon }}</td>
                                                 <td style="text-align: left;">
@@ -293,9 +291,7 @@
                                                     </button>
                                                 </td>
 
-                                                <!-- <td style="text-align: left;">
-                                                    <button data-toggle="modal" data-target="#oylik_tolov_tasdiqlashModal_{{hodim.id}}" class="btn btn-primary">To'lash</button>
-                                                </td> -->
+                                              
                                             </tr>
 
                                             <div class="modal fade" id="KirimModal{{kirim.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
@@ -308,18 +304,13 @@
                                                     
                                                         </div>
                                                         <div class="modal-body">
-                                                            <input type="hidden" value="{{kirim.id}}" name="kirim_id">
-                                                            <label>Qancha (so'm)</label>
-                                                            <input value="{{kirim.qancha_som}}" class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                                                            <label>Plastik</label>
-                                                            <input value="{{kirim.plastik}}" class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
-                                                            <label>Qancha (dollar)</label>
-                                                            <input value="{{kirim.qancha_dol}}" class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                                                            <label>Qancha (hisob raqam)</label>
-                                                            <input value="{{kirim.qancha_hisob_raqamdan}}" class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
-                                                            <!-- <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br> -->
-                                                            <label>Izoh</label>
-                                                            <textarea value='{{kirim.izox}}' name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{kirim.izox}}"></textarea>
+                                                            <input type="hidden" name="kirim_id" value="{{kirim.id}}">
+                                                            
+                                                            <label for="">Summa</label>
+                                                            <input class="form-control" type="number" value="{{kirim.summa}}" name="summa" placeholder="Summa"><br>
+                                                            <label for="">Kurs</label>
+                                                            <input class="form-control" type="number" value="{{kirim.currency}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox">{{kirim.izox}}</textarea>
                                                             
                                                         </div>
                                                         <div class="modal-footer">
@@ -336,10 +327,13 @@
                                         <tfoot>
                                             <tr>
                                                 <th style="text-align: left;">Jami: </th>
-                                                <th style="text-align: left;">{{ kirim_total_som|intcomma }}</th>
-                                                <th style="text-align: left;">{{ kirim_total_dollar|intcomma }}</th>
-                                                <th style="text-align: left;">{{ kirim_hisob_raqam_total|intcomma }}</th>
-                                                <th style="text-align: left;">{{ kirim_plastik|intcomma }}</th>
+                                                <th style="text-align: left;"></th>
+                                                
+                                                {% for q in kirim_totals %}
+                                                    <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+                                                {% endfor %}
+                                                    
+                                                <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
@@ -368,56 +362,54 @@
                                         <thead>
                                             <tr>
                                                 <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Qayerga</th>
-                                                <th style="text-align: left;">Qancha(so'm)</th>
-                                                <th style="text-align: left;">Qancha($)</th>
-                                                <th style="text-align: left;">Plastik</th>
-                                                <th style="text-align: left;">Qancha (hisob raqam)</th>
+                                                <th style="text-align: left;">Kassa</th>
+                                                
+                                                {% for v in valutas %}
+                                                    <th style="text-align: left;">{{ v.name }}</th>
+                                                {% endfor %}
+                                                    
+                                                <th style="text-align: left;">Qoldiq</th>
+                                                <th style="text-align: left;">Kategoriya</th>
+                                                <th style="text-align: left;">Podkotegoruya</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
-                                                <th></th>
+                                                <th style="text-align: left;"></th>
+
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for chiqim in shu_oylik_chiqimlar %}
                                             <tr>
-                                                <td style="text-align: left;">{{ forloop.counter}}</td>
+                                                <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
+                                                <td style="text-align: left;">
+                                                    {{ chiqim.kassa.kassa.name }}
+                                                </td>
                                                 
-                                                {% if chiqim.qayerga != None %}
-                                                    <td style="text-align: left;">{{ chiqim.qayerga }}</td>
-                                                {% else %}
-                                                    <td style="text-align: left;">{{ chiqim.deliver }}</td>
-
-                                                {% endif %}
+                                                
+                                                {% for q in chiqim.summa_for_valutas %}
+                                                    <td style="text-align: left;">
+                                                        {{ q.summa|intcomma }}
+                                                    </td>
+                                                {% endfor %}
                                                     
                                                 <td style="text-align: left;">
-                                                    {{ chiqim.kassa_som_eski | intcomma}} so'm | <br>
-                                                    {{ chiqim.qancha_som | intcomma}} so'm-{{chiqim.user_profile.first_name|default_if_none:''}}  |<br>
-                                                    {{ chiqim.kassa_som_yangi | intcomma}} so'm
+                                                    {{ chiqim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.kassa_dol_eski | intcomma}} $ | <br>
-                                                    {{ chiqim.qancha_dol | intcomma}} $ | <br>
-                                                    {{ chiqim.kassa_dol_yangi | intcomma}} $
-                                                </td>
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.kassa_plastik_eski|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ chiqim.plastik|default_if_none:'0' | intcomma }} | <br>
-                                                    {{ chiqim.kassa_plastik_yangi|default_if_none:'0' | intcomma }}
-                                                </td>
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.kassa_hisob_raqam_eski | intcomma}} | <br>
-                                                    {{ chiqim.qancha_hisob_raqamdan | intcomma}} | <br>
-                                                    {{ chiqim.kassa_hisob_raqam_yangi | intcomma}}
-                                                </td>
-                                                <td style="text-align: left;">{{chiqim.izox}}</td>
+                                                
+                                                <td style="text-align: left;">{{ chiqim.subcategory.category }}</td>
+                                                <td style="text-align: left;">{{ chiqim.subcategory }}</td>
+                                                <td style="text-align: left;">{{ chiqim.izox }}</td>
                                                 <td style="text-align: left;">{{ chiqim.qachon }}</td>
                                                 <td style="text-align: left;">
                                                     <button data-toggle="modal" data-target="#ChiqimModal{{chiqim.id}}" class="btn btn-primary">
                                                         Tahrirlash
                                                     </button>
                                                 </td>
+
+                                              
                                             </tr>
+
+
                                             <div class="modal fade" id="ChiqimModal{{chiqim.id}}" tabindex="-1" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog">
                                                 <form action="{% url 'chiqim_qilish_edit' %}" method="POST">
@@ -428,47 +420,18 @@
                                                     
                                                         </div>
                                                         <div class="modal-body">
-                                                            <label>Qayerga</label>
-                                                            <select class="form-control" name="chiqim_turi" id="" required>
-                                                                <!-- <option value="" disabled selected>--Qayerga--</option> -->
-                                                                {% for chiqim_turi in chiqim_turlari %}
-                                                                    
-                                                                    {% if chiqim_turi.id == chiqim.qayerga.id %}
-                                                                        <option value="{{chiqim_turi.id}}" selected>{{chiqim_turi.nomi}}</option>
-                                                                    {% else %}
-                                                                        <option value="{{chiqim_turi.id}}">{{chiqim_turi.nomi}}</option>
-                                                                    {% endif %}
-                                                                        
-                                                                {% endfor %}
-                                                            </select><br>
                                                             <input type="hidden" value="{{chiqim.id}}" name="chiqim_id">
-                                                            <label>Qancha (so'm)</label>
-                                                            <input
+
                                                             
-                                                            {% if chiqim.qancha_som|add:0 != 0 %}
-                                                            value="{{ chiqim.qancha_som }}"
+                                                            <label for="">Summa</label>
+                                                            <input class="form-control" type="number" value="{{chiqim.summa}}" name="summa" placeholder="Summa"><br>
+                                
+                                                            <label for="">Kurs</label>
+                                                            <input class="form-control" type="number" value="{{chiqim.currency}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+
+
                                                             
-                                                            {% endif %}
-                                                                class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                                                            <label>Qancha (dollar)</label>
-                                                            <input
-                                                            {% if chiqim.qancha_dol|add:0 != 0 %}
-                                                            value="{{ chiqim.qancha_dol }}"
-                                                            {% endif %}  class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                                                            <label>Qancha plastik</label>
-                                                            <input
-                                                            {% if chiqim.plastik|add:0 != 0 %}
-                                                            value="{{ chiqim.plastik }}"
-                                                            {% endif %}
-                                                            class="form-control" type="number" name="qancha_plastik" placeholder="Qancha Plastik"><br>
-                                                            <label>Qancha (hisob raqam)</label>
-                                                            <input
-                                                            {% if chiqim.qancha_hisob_raqamdan|add:0 != 0 %}
-                                                            value="{{ chiqim.qancha_hisob_raqamdan }}"
-                                                            {% endif %}
-                                                            class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
-                                                            <label>Izox</label>
-                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{ chiqim.izox }}"></textarea>
                                                             
                                                         </div>
                                                         <div class="modal-footer">
@@ -486,13 +449,15 @@
                                             <tr>
                                                 <th style="text-align: left;">Jami: </th>
                                                 <th style="text-align: left;"></th>
-                                                <th style="text-align: left;">{{ chiqim_total_som|intcomma }}</th>
-                                                <th style="text-align: left;">{{ chiqim_total_dollar|intcomma }}</th>
-                                                <th style="text-align: left;">{{ chiqim_plastik|intcomma }}</th>
-                                                <th style="text-align: left;">{{ chiqim_hisob_raqam_total|intcomma }}</th>
+                                                
+                                                {% for q in chiqim_totals %}
+                                                    <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+                                                {% endfor %}
+                                                    
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
-
+                                                <th style="text-align: left;"></th>
+                                                <th style="text-align: left;"></th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -628,7 +593,7 @@
                     
                         </div>
                         <div class="modal-body">
-                            <select class="form-control" name="chiqim_turi" id="" required>
+                            <!-- <select class="form-control" name="chiqim_turi" id="" required>
                                 <option value="" disabled selected>--Qayerga--</option>
                                 {% for chiqim_turi in chiqim_turlari %}
                                     <option value="{{chiqim_turi.id}}">{{chiqim_turi.nomi}}</option>
@@ -637,7 +602,45 @@
                             <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
                             <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
                             <input class="form-control" type="number" name="qancha_plastik" placeholder="Qancha Plastik"><br>
-                            <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
+                            <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br> -->
+
+
+                            <select class="form-control" name="chiqim_turi" id="categorySelect" required>
+                                <option value="" disabled selected>--Kategoriya--</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select><br>
+                            
+                            <select class="form-control" name="sub_chiqim_turi" id="subcategorySelect" required>
+                                <option value="" disabled selected>--Subkategoriya--</option>
+                                {% for subcat in subcategories %}
+                                    <option value="{{ subcat.id }}" data-category="{{ subcat.category.id }}">{{ subcat.name }}</option>
+                                {% endfor %}
+                            </select><br>
+
+
+                            <label for="">Valyuta</label>
+                            <select name="valuta" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for v in valuta %}
+                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Kassa</label>
+                            <select name="kassa" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for k in cashes %}
+                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Summa</label>
+                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+
+                            <label for="">Kurs</label>
+                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
                             <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
                             
                         </div>
@@ -670,10 +673,26 @@
                                 {% endfor %}
                             </select>
                             <br>
-                            <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                            <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br>
-                            <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                            <input class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
+                            <label for="">Valyuta</label>
+                            <select name="valuta" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for v in valuta %}
+                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Kassa</label>
+                            <select name="kassa" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for k in cashes %}
+                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label for="">Summa</label>
+                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+
+                            <label for="">Kurs</label>
                             <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
                             <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
                             
@@ -802,6 +821,32 @@
         <script src="{% static 'plugins/countdown/jquery.countdown.min.js' %}"></script>
         <script src="{% static 'assets/js/components/custom-countdown.js' %}"></script>
         <script src="https://unpkg.com/feather-icons"></script>
+
+    
+        <script>
+            const categorySelect = document.getElementById("categorySelect");
+            const subcategorySelect = document.getElementById("subcategorySelect");
+        
+            function filterSubcategories(categoryId) {
+                const options = subcategorySelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    const option = options[i];
+                    const catId = option.getAttribute("data-category");
+                    if (!catId) continue; // Skip the placeholder
+                    option.style.display = (catId === categoryId) ? "block" : "none";
+                }
+                subcategorySelect.selectedIndex = 0; // reset selection
+            }
+        
+            categorySelect.addEventListener("change", function () {
+                filterSubcategories(this.value);
+            });
+        
+            // Dastlab hammasini yashirish
+            window.addEventListener("DOMContentLoaded", () => {
+                filterSubcategories(categorySelect.value);
+            });
+        </script>
         
 
     {% endblock js %}
