@@ -3,6 +3,8 @@ from django.contrib.auth.models import User, Group
 from .models import *
 from import_export.admin import ExportActionMixin, ImportExportModelAdmin
 from django.contrib.auth.admin import UserAdmin
+from django.apps import apps
+from django.contrib.admin.sites import AlreadyRegistered
 
 
 admin.site.site_header = "Bordo Admin Panel"
@@ -37,7 +39,7 @@ class OneDayPiceAdmin(ExportActionMixin, admin.ModelAdmin):
     
 
 @admin.register(FlexPrice)
-class DeliverPaymentsAdmin(ExportActionMixin, admin.ModelAdmin):
+class FlexPriceAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'sana','total', 'summa_fex')
     date_hierarchy = 'sana'
 
@@ -64,18 +66,18 @@ admin.site.register(KassaMerge)
 admin.site.register(CustomerDebt)
 
 @admin.register(AllDaySumEmployee)
-class DeliverPaymentsAdmin(ExportActionMixin, admin.ModelAdmin):
+class AllDaySumEmployeeAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'user', 'date', 'fix','flex', 'pay', 'rest', 'summa', 'izox', 'is_status')
     list_filter = ['user', 'date']
     date_hierarchy = 'date'
 
 @admin.register(DesktopKassa)
-class DeliverPaymentsAdmin(ExportActionMixin, admin.ModelAdmin):
+class DesktopKassaAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'kassa_name', 'desktop_id','operation_name', 'qoldik', 'summa', 'yangi_qoldik', 'date_time')
     search_fields = ['desktop_id']
 
 @admin.register(DeliverPaymentsAll)
-class DeliverPaymentsAdmin(ExportActionMixin, admin.ModelAdmin):
+class DeliverPaymentsAllAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'user', 'received_total', 'gave_total', 'return_total', 'left', 'comment', 'date', 'check_comment',)
     list_filter = ['deliverpayments']
     date_hierarchy = 'date'
@@ -399,6 +401,21 @@ class KassaDailyAdmin(admin.ModelAdmin):
     list_display = ('id', 'obyekt', 'date')
 
 
+
+@admin.register(ChiqimCategory)
+class ChiqimCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+
+
+
+@admin.register(ChiqimSubCategory)
+class ChiqimSubCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'category')
+
+
 @admin.register(KassaNew)
 class KassaNewAdmin(admin.ModelAdmin):
     list_display = ('id', 'filial', 'is_active', 'is_main', 'name', 'kassa_user')
+
+
+

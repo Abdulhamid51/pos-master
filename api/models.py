@@ -60,6 +60,9 @@ class Valyuta(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['id']
+
 class Contract(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     # status_type = [
@@ -1442,8 +1445,21 @@ class ChiqimTuri(models.Model):
         return self.nomi
 
 
+
+class ChiqimCategory(models.Model):
+    name = models.CharField(max_length=200)
+
+class ChiqimSubCategory(models.Model):
+    name = models.CharField(max_length=200)
+    category = models.ForeignKey(ChiqimCategory, on_delete=models.CASCADE)
+
+
+
 class Chiqim(models.Model):
     qayerga = models.ForeignKey(ChiqimTuri, on_delete=models.PROTECT, null=True, blank=True)
+
+    subcategory = models.ForeignKey(ChiqimSubCategory, on_delete=models.PROTECT, null=True, blank=True)
+
     
     kassa_som_eski = models.IntegerField(default=0)
     qancha_som  = models.IntegerField(default=0)
@@ -1468,9 +1484,15 @@ class Chiqim(models.Model):
     
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
+
+    summa = models.IntegerField(default=0, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
+    kassa_new = models.FloatField(default=0)
+    currency = models.IntegerField(default=0)
     
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
-    mobil_user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, blank=True, null=True)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, blank=True, null=True)
+    mobil_user = models.ForeignKey(MobilUser, on_delete=models.SET_NULL, blank=True, null=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     deliverpayment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, blank=True, null=True)
     is_approved = models.BooleanField(default=True) 
@@ -1482,6 +1504,13 @@ class Chiqim(models.Model):
     def som(self):
         currency = Course.objects.last().som
         return self.qancha_som + self.plastik + self.qancha_hisob_raqamdan + self.qancha_dol * currency
+
+    @property
+    def summa_for_valutas(self):
+        valutas = Valyuta.objects.all()
+        return [{
+            "summa": self.summa if self.valyuta == v else 0 
+        } for v in valutas]
 
 
 
@@ -1537,6 +1566,13 @@ class Kirim(models.Model):
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=True)
+
+    @property
+    def summa_for_valutas(self):
+        valutas = Valyuta.objects.all()
+        return [{
+            "summa": self.summa if self.valyuta == v else 0 
+        } for v in valutas]
 
     def __str__(self) -> str:
         return f'{str(self.qachon)}'
