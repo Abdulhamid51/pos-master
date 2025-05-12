@@ -1452,9 +1452,15 @@ class ChiqimTuri(models.Model):
 class ChiqimCategory(models.Model):
     name = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.name
+
 class ChiqimSubCategory(models.Model):
     name = models.CharField(max_length=200)
     category = models.ForeignKey(ChiqimCategory, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 
