@@ -209,8 +209,8 @@
                                                                                     </div>
                                                                                     <div class="col-md-6">
                                                                                         <div class="form-group">
-                                                                                            <label for="recipient-main_tool_type" class="col-form-label">O'lchov birligi:</label>
-                                                                                            <select name="tool_type" id="recipient-main_tool_type" class="form-control searchable" required>
+                                                                                            <label  class="col-form-label">O'lchov birligi:</label>
+                                                                                            <select name="tool_type" class="form-control searchable" required>
                                                                                                 <option value="">-------------</option>
                                                                                                     {% for i in main_tool_type %}
                                                                                                         <option value="{{ i.id }}" {% if i == main.tool_type %} selected {% endif %} >{{ i.name }}</option>
@@ -293,7 +293,7 @@
                                             <br>
                                             <p></p>
                                             <p></p>
-                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalUnits" data-whatever="@getbootstrap" style="height: 40px;">+</button>
+                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalUnits" onclick="SaveType()" data-whatever="@getbootstrap" style="height: 40px;">+</button>
                                         </div>
                                     </div>
                                 </div>
@@ -315,6 +315,15 @@
                             <button type="submit" class="btn btn-success" >Saqlash</button>
                         </div>
                     </form>
+                    <script>
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const exampleModal = document.getElementById('exampleModal')
+                        const exampleModalUnits = document.getElementById('exampleModalUnits')
+                        function SaveType() {
+                            exampleModal.style.display = 'none'; 
+                            exampleModalUnits.show.modal
+                        }
+                    </script>
                 </div>
             </div>
         </div>
@@ -329,8 +338,7 @@
                  </button>
                  </div>
                  <div class="modal-body">
-                     <form method="post" action="{% url 'add_main_tool_type' %}" >
-                         {% csrf_token %}
+                     <form method="post">
                          <div class="row">
                              <div class="col-md-12">
                                  <div class="form-group">
@@ -341,7 +349,7 @@
                          </div>
                          <div class="modal-footer">
                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                             <button type="submit" class="btn btn-success" >Saqlash</button>
+                             <button type="submit" class="btn btn-success"  >Saqlash</button>
                          </div>
                      </form>
                  </div>

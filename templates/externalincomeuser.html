@@ -94,6 +94,12 @@
                                             <th>Pul olish</th>
                                             <th>Pul berish</th>
                                             <th>Telefon raqam</th>
+                                            {% for v in valyuta %}
+                                                <th>{{v}} (Haqqimiz)</th>
+                                            {% endfor %}
+                                            {% for v in valyuta %}
+                                                <th>{{v}} (Qarzimiz)</th>
+                                            {% endfor %}
                                             <th>Turi</th>
                                             <th>Tartib raqam</th>
                                             <th>Tahrirlash</th>
@@ -103,7 +109,7 @@
                                         {% for i in income %}
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
-                                            <td> <a href="{% url 'externalincomeuser_detail' i.id %}">{{ i.full_name }}</a> </td>
+                                            <td><a href="{% url 'income_user_detail' %}?d={{i.id}}">{{ i.full_name }}</a></td>
                                             <td>
                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalPay{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-download"></i></button>
                                             </td>
@@ -111,6 +117,13 @@
                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalGive{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-upload"></i></button>
                                             </td>
                                             <td>{{ i.phone }}</td>
+                                            {% for d in i.debt_haqimiz %}             
+                                                <td>{{d.summa|default_if_none:'0'|intcomma}}</td>
+                                            {% endfor %}
+
+                                            {% for d in i.debt_qarzimiz %}
+                                                <td>{{d.summa|default_if_none:'0'|intcomma}}</td>
+                                            {% endfor %}
 
                                             <td>{{ i.type.name }}</td>
                                             <td>{{ i.tartib_raqam }}</td>
@@ -156,66 +169,94 @@
                                         </tr>
 
                                         <div class="modal fade" id="exampleModalPay{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-body">
-                                                        <form action="{% url 'income_payment' i.id %}" method="post" enctype="multipart/form-data">
-                                                            {% csrf_token %}
-                                                            <div class="form-group">
-                                                                <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
-                                                                <select name="valyuta" id="recipient-valyuta" class="form-control" required>
-                                                                    {% for valyuta in valyuta %}
-                                                                        <option value="{{ valyuta.id }}" >{{ valyuta.name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-summa" class="col-form-label">Summa</label>
-                                                                <input type="number" class="form-control" id="recipient-summa" name="summa" required>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-comment" class="col-form-label">Izoh</label>
-                                                                <textarea name="comment" id="recipient-comment" class="form-control"></textarea>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                            </div>
-                                                        </form>
+                                            <div class="modal-dialog">
+                                                <form action="{% url 'kirim_qilish' %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <div class="modal-content">
+                                                        <input type="hidden" name="partner" value="{{i.id}}">
+                                                        <div class="modal-header">
+                                                        <h5 class="modal-title" id="KirimModalLabel">Pul olish</h5>
+                                                    
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <label for="">Valyuta</label>
+                                                            <select name="valuta" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for v in valyuta %}
+                                                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Kassa</label>
+                                                            <select name="kassa" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for k in cashes %}
+                                                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Summa</label>
+                                                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+                                
+                                                            <label for="">Kurs</label>
+                                                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                                                            
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </form>
                                             </div>
                                         </div>
 
                                         <div class="modal fade" id="exampleModalGive{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-body">
-                                                        <form action="{% url 'income_give' i.id %}" method="post" enctype="multipart/form-data">
-                                                            {% csrf_token %}
-                                                             <div class="form-group">
-                                                                <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
-                                                                <select name="valyuta" id="recipient-valyuta" class="form-control" required>
-                                                                    {% for valyuta in valyuta %}
-                                                                        <option value="{{ valyuta.id }}" >{{ valyuta.name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                              <div class="form-group">
-                                                                <label for="recipient-summa" class="col-form-label">Summa</label>
-                                                                <input type="number" class="form-control" id="recipient-summa" name="summa" required>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-comment" class="col-form-label">Izoh</label>
-                                                                <textarea name="comment" id="recipient-comment" class="form-control"></textarea>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                            </div>
-                                                        </form>
+                                            <div class="modal-dialog">
+                                                <form action="{% url 'chiqim_qilsih' %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                        <h5 class="modal-title" id="ChiqimModalLabel">Pul berish</h5>
+                                                    
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="partner" value="{{i.id}}">
+                                
+                                
+                                                            <label for="">Valyuta</label>
+                                                            <select name="valuta" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for v in valyuta %}
+                                                                    <option value="{{ v.id }}">{{ v.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Kassa</label>
+                                                            <select name="kassa" id="" class="form-control">
+                                                                <option value="">- - - - - - - </option>
+                                                                {% for k in cashes %}
+                                                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br>
+                                                            <label for="">Summa</label>
+                                                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+                                
+                                                            <label for="">Kurs</label>
+                                                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
+                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                                                            
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </form>
                                             </div>
                                         </div>
                                         {% endfor %}
@@ -226,12 +267,14 @@
                                             <th></th>
                                             <th></th>
                                             <th></th>
-                                            <th>{{ totals.som_p|intcomma }}</th>
-                                            <th>{{ totals.dollar_p|intcomma }}</th>
-                                            <th>{{ totals.plastik_p|intcomma }}</th>
-                                            <th>{{ totals.som_g|intcomma }}</th>
-                                            <th>{{ totals.dollar_g|intcomma }}</th>
-                                            <th>{{ totals.plastik_g|intcomma }}</th>
+                                            <th></th>
+                                            {% for w in total_haq %}
+                                                <td class="text-left">{{w.summa|floatformat:'2'|intcomma}}</td>
+                                            {% endfor %}
+
+                                            {% for w in total_qarz %}
+                                                <td class="text-left">{{w.summa|floatformat:'2'|intcomma}}</td>
+                                            {% endfor %}
                                             <th></th>
                                         </tr>
                                     </tfoot>

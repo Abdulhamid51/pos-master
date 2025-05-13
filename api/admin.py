@@ -15,7 +15,7 @@ admin.site.unregister(Group)
 admin.site.register(Kamomad)
 admin.site.unregister(User)
 admin.site.register(MoneyCirculation)
-admin.site.register(ExternalIncomeUserDebt)
+# admin.site.register(ExternalIncomeUserDebt)
 
 @admin.register(User) 
 class EmployeeAdmin(UserAdmin): 
@@ -64,12 +64,13 @@ admin.site.register(WriteOffItem)
 admin.site.register(ExternalIncomeUser)
 admin.site.register(ExternalIncomeUserPayment)
 admin.site.register(KassaMerge)
-admin.site.register(CustomerDebt)
+# admin.site.register(CustomerDebt)
 admin.site.register(MainTool)
 
 @admin.register(RejaTushum)
 class RejaTushumAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'date')
+admin.site.register(Wallet)
 
 @admin.register(AllDaySumEmployee)
 class AllDaySumEmployeeAdmin(ExportActionMixin, admin.ModelAdmin):

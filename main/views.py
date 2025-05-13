@@ -7121,7 +7121,7 @@ def asosiy_vosita_fin(request):
 def add_main_tool_type(request):
     name = request.POST.get('name')
     MainToolType.objects.create(name=name)
-    return redirect(request.META['HTTP_REFERER'])
+    return JsonResponse({'messages':'success'})
 
 def add_main_tool(request):
     name = request.POST.get('name')
@@ -7159,6 +7159,11 @@ def edit_main_tool(request, id):
     created.wear_month_summa = int(summa)/int(use_month)
     created.save()
     return redirect(request.META['HTTP_REFERER'])
+
+def ajax_list_main_tool_type(request):
+    return JsonResponse({'data':MainToolType.objects.filter(is_active=True)})
+
+
 
 def ombor_fin(request):
     today = datetime.now()
@@ -7845,8 +7850,8 @@ def customer_debt_create(request, id):
     customer = Debtor.objects.get(id=id)
     valyuta = request.POST.get('valyuta')
     start_summa = request.POST.get('start_summa')
-    obj, create = CustomerDebt.objects.get_or_create(customer=customer, valyuta_id = valyuta)
-    obj.start_summa = start_summa
-    obj.save()
-    customer.refresh_debt()
+    # obj, create = CustomerDebt.objects.get_or_create(customer=customer, valyuta_id = valyuta)
+    # obj.start_summa = start_summa
+    # obj.save()
+    # customer.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])

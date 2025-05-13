@@ -15,6 +15,8 @@ from django.db.models import IntegerField
 from django.db.models import Manager as GeoManager
 from django.core.validators import RegexValidator
 from itertools import chain
+from collections import defaultdict
+
 
 
 # class UserCustom(AbstractUser):
@@ -290,8 +292,85 @@ class Deliver(models.Model):
     difference = models.IntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
+    @property
+    def debt_haqimiz(self):
+        data = [
+            {'summa': Wallet.objects.filter(deliver=self, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in Valyuta.objects.all()
+        ]
+        return data
+    @property
+    def debt_qarzimiz(self):
+        data = [
+            {'summa': Wallet.objects.filter(deliver=self, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in Valyuta.objects.all()
+        ]
+        return data
+
     def __str__(self):
         return self.name
+
+
+    def refresh_debt(self):
+        print('11111')
+        deliver = self
+        valyutalar = Valyuta.objects.all()
+
+        # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+        pay_history_qs = list(
+            PayHistory.objects.filter(deliver=deliver)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+        print('aaaaaa')
+        recieve_qs = list(
+            Recieve.objects.filter(deliver=deliver)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+
+        # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+        valyuta_events = defaultdict(list)
+        for event in chain(pay_history_qs, recieve_qs):
+            valyuta_events[event.valyuta_id].append(event)
+
+        wallets_to_update = []
+        payhistory_to_update = []
+        shop_to_update = []
+
+        for valyuta in valyutalar:
+            events = valyuta_events.get(valyuta.id, [])
+
+            # So'nggi Wallet yoki yangisini topamiz
+            wallet, _ = Wallet.objects.get_or_create(deliver=deliver, valyuta=valyuta)
+            summa = wallet.start_summa
+
+            for event in events:
+                if isinstance(event, PayHistory):
+                    event.debt_old = summa
+                    summa += event.summa if event.type_pay == 1 else -event.summa
+                    event.debt_new = summa
+                    payhistory_to_update.append(event)
+
+                elif isinstance(event, Recieve):
+                    event.debt_old = summa
+                    summa += event.summa_total
+                    event.debt_new = summa
+                    shop_to_update.append(event)
+
+            wallet.summa = summa
+            wallets_to_update.append(wallet)
+
+        # Hammasini bir marta yangilaymiz
+        if wallets_to_update:
+            Wallet.objects.bulk_update(wallets_to_update, ['summa'])
+
+        if payhistory_to_update:
+            PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+
+        if shop_to_update:
+            Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+        print('ccccc')
     
     @property
     def debts(self):
@@ -301,6 +380,7 @@ class Deliver(models.Model):
 
     class Meta:
         verbose_name_plural = '3.1) Deliver'
+
 
 class DeliverPaymentsAll(models.Model):
     deliver = models.ForeignKey(Deliver, on_delete=models.PROTECT, blank=True, null=True, related_name='deliverpaymentsall')
@@ -594,6 +674,9 @@ class Recieve(models.Model):
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, null=True, blank=True)
     
+    debt_old = models.IntegerField(default=0)
+    debt_new = models.IntegerField(default=0)
+    
 
     # difference = models.IntegerField(default=0)
     def save(self, *args, **kwargs):
@@ -617,6 +700,10 @@ class Recieve(models.Model):
     @property
     def total_quantity(self):
         return self.receiveitem.all().aggregate(foo=Sum(F('quantity')))['foo']
+
+    @property
+    def summa_total(self):
+        return 0
     
     
     class Meta:
@@ -1007,53 +1094,113 @@ class Debtor(models.Model):
         super().save()
         
         for val in Valyuta.objects.all():
-            CustomerDebt.objects.get_or_create(customer=self, valyuta=val)
+            Wallet.objects.get_or_create(customer=self, valyuta=val)
+
+    # def refresh_debt(self):
+    #     customer = self
+    #     pay_history = PayHistory.objects.filter(debtor=customer).order_by('-id')
+    #     shop = Shop.objects.filter(debtor=customer).order_by('-id')
+    #     infos = sorted(chain(pay_history, shop), key=lambda instance: instance.date)
+    #     customer_debt = Wallet.objects.filter(customer=customer)
+
+    #     for valyuta in Valyuta.objects.all():
+    #         customer_debt = Wallet.objects.filter(valyuta=valyuta).last() or Wallet.objects.create(customer=customer, valyuta=valyuta)
+    #         if customer_debt:
+    #             customer_debt.summa = customer_debt.start_summa
+    #             customer_debt.save()
+
+    #             for i in infos:
+    #                 if i.valyuta == valyuta:
+    #                     if i._meta.model_name == 'payhistory':
+    #                         i.debt_old = customer_debt.summa
+    #                         if i.type_pay == 1:
+    #                             customer_debt.summa += i.summa
+    #                         else:
+    #                             customer_debt.summa -= i.summa
+    #                         i.debt_new = customer_debt.summa
+    #                     elif i._meta.model_name == 'shop':
+    #                         i.debt_old = customer_debt.summa
+    #                         customer_debt.summa += i.baskets_total_price
+    #                         i.debt_new = customer_debt.summa
+
+    #                     i.save()
+    #                     customer_debt.save()
 
     def refresh_debt(self):
         customer = self
-        pay_history = PayHistory.objects.filter(debtor=customer).order_by('-id')
-        shop = Shop.objects.filter(debtor=customer).order_by('-id')
-        infos = sorted(chain(pay_history, shop), key=lambda instance: instance.date)
-        customer_debts = CustomerDebt.objects.filter(customer=customer)
+        valyutalar = Valyuta.objects.all()
 
-        for valyuta in Valyuta.objects.all():
-            customer_debt = CustomerDebt.objects.filter(valyuta=valyuta).last() or CustomerDebt.objects.create(customer=customer, valyuta=valyuta)
-            if customer_debt:
-                # Asl summa bilan yangilash
-                customer_debt.summa = customer_debt.start_summa
-                customer_debt.save()
+        # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+        pay_history_qs = list(
+            PayHistory.objects.filter(debtor=customer)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+        shop_qs = list(
+            Shop.objects.filter(debtor=customer)
+            .select_related('valyuta')
+            .order_by('date')
+        )
 
-                # To'lov va xaridlarni yangilash
-                for i in infos:
-                    if i.valyuta == valyuta:
-                        if i._meta.model_name == 'payhistory':
-                            i.debt_old = customer_debt.summa
-                            if i.type_pay == 1:
-                                customer_debt.summa += i.summa
-                            else:
-                                customer_debt.summa -= i.summa
-                            i.debt_new = customer_debt.summa
-                        elif i._meta.model_name == 'shop':
-                            i.debt_old = customer_debt.summa
-                            customer_debt.summa += i.baskets_total_price
-                            i.debt_new = customer_debt.summa
+        # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+        valyuta_events = defaultdict(list)
+        for event in chain(pay_history_qs, shop_qs):
+            valyuta_events[event.valyuta_id].append(event)
 
-                        i.save()
-                        customer_debt.save()
+        wallets_to_update = []
+        payhistory_to_update = []
+        shop_to_update = []
+
+        for valyuta in valyutalar:
+            events = valyuta_events.get(valyuta.id, [])
+
+            # So'nggi Wallet yoki yangisini topamiz
+            wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
+            summa = wallet.start_summa
+
+            for event in events:
+                if isinstance(event, PayHistory):
+                    event.debt_old = summa
+                    summa += event.summa if event.type_pay == 1 else -event.summa
+                    event.debt_new = summa
+                    payhistory_to_update.append(event)
+
+                elif isinstance(event, Shop):
+                    event.debt_old = summa
+                    summa += event.baskets_total_price
+                    event.debt_new = summa
+                    shop_to_update.append(event)
+
+            wallet.summa = summa
+            wallets_to_update.append(wallet)
+
+        # Hammasini bir marta yangilaymiz
+        if wallets_to_update:
+            Wallet.objects.bulk_update(wallets_to_update, ['summa'])
+
+        if payhistory_to_update:
+            PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+
+        if shop_to_update:
+            Shop.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+
+
+        
+
 
 
 
     @property
     def debt_haqimiz(self):
         data = [
-            {'summa': CustomerDebt.objects.filter(customer=self, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            {'summa': Wallet.objects.filter(customer=self, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
             for val in Valyuta.objects.all()
         ]
         return data
     @property
     def debt_qarzimiz(self):
         data = [
-            {'summa': CustomerDebt.objects.filter(customer=self, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            {'summa': Wallet.objects.filter(customer=self, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
             for val in Valyuta.objects.all()
         ]
         return data
@@ -1061,8 +1208,10 @@ class Debtor(models.Model):
         verbose_name_plural = '7) Nasiyachilar'
 
 
-class CustomerDebt(models.Model):
-    customer = models.ForeignKey(Debtor, on_delete=models.CASCADE)
+class Wallet(models.Model):
+    customer = models.ForeignKey(Debtor, on_delete=models.CASCADE, blank=True, null=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
+    partner = models.ForeignKey("ExternalIncomeUser", on_delete=models.CASCADE, blank=True, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     summa = models.IntegerField(default=0)
     start_summa = models.IntegerField(default=0)
@@ -1107,6 +1256,7 @@ class PayHistory(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, blank=True, null=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE , blank=True, null=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE , blank=True, null=True)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_pay', blank=True, null=True)
     som = models.IntegerField(default=0, null=True)
     dollar = models.IntegerField(default=0, null=True)
@@ -1126,12 +1276,22 @@ class PayHistory(models.Model):
     deliver_all_payment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, null=True, blank=True)
     deliver_pay_History = models.ForeignKey(DeliverPayHistory, on_delete=models.CASCADE, null=True, blank=True)
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
+
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     summa = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
 
-    
+    @property
+    def kontr_agent(self):
+        if self.debtor:
+            return "Mijoz: " + self.debtor.fio
+        
+        if self.deliver:
+            return "Yetkazib beruvchi: " + self.deliver.name
+
+        if self.external_income_user:
+            return "Hamkor: " + self.external_income_user.full_name
     @property
     def model_name(self):
         return 'payhistory'
@@ -1466,7 +1626,7 @@ class ChiqimSubCategory(models.Model):
 
 class Chiqim(models.Model):
     qayerga = models.ForeignKey(ChiqimTuri, on_delete=models.PROTECT, null=True, blank=True)
-
+    payhistory = models.ForeignKey(PayHistory, on_delete=models.CASCADE, null=True, blank=True)
     subcategory = models.ForeignKey(ChiqimSubCategory, on_delete=models.PROTECT, null=True, blank=True)
 
     
@@ -2051,7 +2211,7 @@ class ExternalIncomeUser(models.Model):
     def save(self, *args, **kwargs):
         super().save()
         for val in Valyuta.objects.all():
-            ExternalIncomeUserDebt.objects.get_or_create(income=self, valyuta=val)
+            Wallet.objects.get_or_create(partner=self, valyuta=val)
 
     @property
     def summa_pay(self):
@@ -2068,33 +2228,65 @@ class ExternalIncomeUser(models.Model):
         }
         return data
 
-    def income_refresh_debt(self):
-        pay_history = PayHistory.objects.filter(external_income_user=self).order_by('-id')
-        customer_debts = ExternalIncomeUserDebt.objects.filter(income=self)
+    @property
+    def debt_haqimiz(self):
+        data = [
+            {'summa': Wallet.objects.filter(partner=self, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in Valyuta.objects.all()
+        ]
+        return data
+    @property
+    def debt_qarzimiz(self):
+        data = [
+            {'summa': Wallet.objects.filter(partner=self, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in Valyuta.objects.all()
+        ]
+        return data
+    def refresh_debt(self):
+        partner = self
+        valyutalar = Valyuta.objects.all()
 
-        for valyuta in Valyuta.objects.all():
-            customer_debt = customer_debts.filter(valyuta=valyuta).last()
-            if customer_debt:
-                customer_debt.summa = customer_debt.start_summa
-                customer_debt.save()
-
-                for i in pay_history:
-                    if i.valyuta == valyuta:
-                        i.debt_old = customer_debt.summa
-                        if i.type_pay == 1:
-                            customer_debt.summa += i.summa
-                        else:
-                            customer_debt.summa -= i.summa
-                        i.debt_new = customer_debt.summa
-                    i.save()
-                    customer_debt.save()
+        # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+        pay_history_qs = list(
+            PayHistory.objects.filter(external_income_user=partner)
+            .select_related('valyuta')
+            .order_by('date')
+        )
 
 
-class ExternalIncomeUserDebt(models.Model):
-    income = models.ForeignKey(ExternalIncomeUser, on_delete=models.CASCADE)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
-    summa = models.IntegerField(default=0)
-    start_summa = models.IntegerField(default=0)
+        # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+        valyuta_events = defaultdict(list)
+        for event in chain(pay_history_qs):
+            valyuta_events[event.valyuta_id].append(event)
+
+        wallets_to_update = []
+        payhistory_to_update = []
+
+        for valyuta in valyutalar:
+            events = valyuta_events.get(valyuta.id, [])
+
+            # So'nggi Wallet yoki yangisini topamiz
+            wallet, _ = Wallet.objects.get_or_create(partner=partner, valyuta=valyuta)
+            summa = wallet.start_summa
+
+            for event in events:
+                if isinstance(event, PayHistory):
+                    event.debt_old = summa
+                    summa += event.summa if event.type_pay == 1 else - event.summa
+                    event.debt_new = summa
+                    payhistory_to_update.append(event)
+
+
+            wallet.summa = summa
+            wallets_to_update.append(wallet)
+
+        # Hammasini bir marta yangilaymiz
+        if wallets_to_update:
+            Wallet.objects.bulk_update(wallets_to_update, ['summa'])
+
+        if payhistory_to_update:
+            PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+
 
 class ExternalIncomeUserPayment(models.Model):
     external_income_user = models.ForeignKey(ExternalIncomeUser, on_delete=models.CASCADE)
