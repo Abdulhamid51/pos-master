@@ -2513,6 +2513,7 @@ def debtor_detail(request, id):
 
 
 def deliver_detail(request):
+    pass
     id = request.GET.get('d')
     valyuta = Valyuta.objects.all()
     debt_shot = Wallet.objects.filter(customer_id=id)
