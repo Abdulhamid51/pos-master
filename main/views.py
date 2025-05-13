@@ -2514,6 +2514,135 @@ def debtor_detail(request, id):
     }
     return render(request, 'debtor_detail.html', context)
 
+
+
+
+def deliver_detail(request):
+    id = request.GET.get('d')
+    valyuta = Valyuta.objects.all()
+    debt_shot = Wallet.objects.filter(customer_id=id)
+    deliver = Deliver.objects.get(id=id)
+    today = datetime.now().date()
+
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+   
+    pay = PayHistory.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+
+    infos = sorted(chain(pay, recieve), key=lambda instance: instance.date)
+    data = []
+    for i in infos:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+            
+        elif i._meta.model_name == 'recieve':
+            dt['type_payment'] = 'Maxsulot qabul'
+            dt['pay_summa'] = i.summa_total
+
+        data.append(dt)
+
+    summa_total_for_valyuta = []
+    for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        pay_recieve_summa = sum([i.summa_total for i in recieve.filter(valyuta=val)])
+        dt_sum_valyuta = {
+            'valyuta':val.id,
+            'pay_pay_summa':pay_summa + pay_recieve_summa,
+            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+        }
+        summa_total_for_valyuta.append(dt_sum_valyuta)
+    
+    context = {
+        'valyuta':valyuta,
+        'summa_total_for_valyuta':summa_total_for_valyuta,
+        'debt_shot':debt_shot,
+        'pay':pay,
+        'data':data,
+        'filters':filters,
+        'deliver':deliver,
+    }
+    return render(request, 'deliver_detail.html', context)
+
+
+
+def income_user_detail(request):
+    id = request.GET.get('d')
+    valyuta = Valyuta.objects.all()
+    debt_shot = Wallet.objects.filter(customer_id=id)
+    partner = ExternalIncomeUser.objects.get(id=id)
+    today = datetime.now().date()
+
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+   
+    pay = PayHistory.objects.filter(external_income_user_id=id, date__date__range=(start_date, end_date))
+
+    infos = sorted(chain(pay), key=lambda instance: instance.date)
+    data = []
+    for i in infos:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+
+        data.append(dt)
+
+    summa_total_for_valyuta = []
+    for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        dt_sum_valyuta = {
+            'valyuta':val.id,
+            'pay_pay_summa':pay_summa,
+            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+        }
+        summa_total_for_valyuta.append(dt_sum_valyuta)
+    
+    context = {
+        'valyuta':valyuta,
+        'summa_total_for_valyuta':summa_total_for_valyuta,
+        'debt_shot':debt_shot,
+        'pay':pay,
+        'data':data,
+        'filters':filters,
+        'partner':partner,
+    }
+    return render(request, 'partner_detail.html', context)
+
+
+
 class Delivers(LoginRequiredMixin, TemplateView):
     template_name = 'deliver.html'
 

@@ -191,8 +191,8 @@
                                                                             <div class="row">
                                                                                     <div class="col-md-6">
                                                                                         <div class="form-group">
-                                                                                            <label for="recipient-name" class="col-form-label">Nomi:</label>
-                                                                                            <input type="text" class="form-control" id="recipient-name" value="{{ main.name }}" name="name" required>
+                                                                                            <label  class="col-form-label">Nomi:</label>
+                                                                                            <input type="text" class="form-control"  value="{{ main.name }}" name="name" required>
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="col-md-6">
@@ -260,8 +260,8 @@
                         <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="recipient-name" class="col-form-label">Nomi:</label>
-                                        <input type="text" class="form-control" id="recipient-name" name="name" required>
+                                        <label  class="col-form-label">Nomi:</label>
+                                        <input type="text" class="form-control"  name="name" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -319,9 +319,13 @@
                         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                         const exampleModal = document.getElementById('exampleModal')
                         const exampleModalUnits = document.getElementById('exampleModalUnits')
+                        const name = document.getElementById('recipient-name')
                         function SaveType() {
                             exampleModal.style.display = 'none'; 
                             exampleModalUnits.show.modal
+                        }
+                        function pushBackend(){
+
                         }
                     </script>
                 </div>
@@ -349,7 +353,7 @@
                          </div>
                          <div class="modal-footer">
                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                             <button type="submit" class="btn btn-success"  >Saqlash</button>
+                             <button type="submit" class="btn btn-success"  onclick="pushBackend()" >Saqlash</button>
                          </div>
                      </form>
                  </div>
