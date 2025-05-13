@@ -7064,9 +7064,101 @@ def reja_chiqim_fin_del(request, id):
 
 
 def asosiy_vosita_fin(request):
+    today = datetime.now()
+    year = int(request.GET.get('year', today.year))
+    main_tool = MainTool.objects.filter(is_active=True)
+    data = []
+    for i in main_tool:
+        dt = {
+            'id':i.id,
+            'name':i.name,
+            'inventory_number':i.inventory_number,
+            'quantity':i.quantity,
+            'tool_type':i.tool_type,
+            'summa':i.summa,
+            'sum_wear_month_summa':i.sum_wear_month_summa,
+            'sum_today_stayed':i.sum_today_stayed,
+            'use_month':i.use_month,
+            'wear_month_summa':i.wear_month_summa,
+            'month':[]
+        }
+        data.append(dt)
+        for month in range(1, 13):
+            if year == i.date.year:
+                query_month = i.date.month
+                count_month = 0
+                month_dt = {
+                    'month':month,
+                    'sum':0,
+                }
+                if query_month < month:
+                    count_month+=1
+                    if i.use_month >=count_month:
+                        month_dt['sum'] = i.wear_month_summa * count_month
+
+                dt['month'].append(month_dt)
+            elif year > i.date.year:
+                query_month = i.use_month - (12 - i.date.month) 
+                count_month = 0
+                month_dt = {
+                    'month':month,
+                    'sum':0,
+                }
+                if query_month >= month:
+                    count_month+=1
+                    if i.use_month >=count_month:
+                        month_dt['sum'] = i.wear_month_summa * count_month
+
+                dt['month'].append(month_dt)
     context = {
+        'main_tool_type':MainToolType.objects.filter(is_active=True),
+        'main_tool':data,
+        'months': [i for i in range(1, 13)],
+        'year':year
     }
     return render(request, 'fin/asosiy_vosita_fin.html', context)
+
+def add_main_tool_type(request):
+    name = request.POST.get('name')
+    MainToolType.objects.create(name=name)
+    return redirect(request.META['HTTP_REFERER'])
+
+def add_main_tool(request):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    quantity = request.POST.get('quantity')
+    tool_type = request.POST.get('tool_type')
+    summa = request.POST.get('summa')
+    use_month = request.POST.get('use_month')
+    created = MainTool.objects.create(
+        name=name,
+        inventory_number=number,
+        quantity=quantity,
+        tool_type_id=tool_type,
+        summa=summa,
+        use_month=use_month,
+    )
+    created.wear_month_summa = int(summa)/int(use_month)
+    created.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+def edit_main_tool(request, id):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    quantity = request.POST.get('quantity')
+    tool_type = request.POST.get('tool_type')
+    summa = request.POST.get('summa')
+    use_month = request.POST.get('use_month')
+    created = MainTool.objects.get(id=id)
+    created.name=name
+    created.inventory_number=number
+    created.quantity=quantity
+    created.tool_type_id=tool_type
+    created.summa=summa
+    created.use_month=use_month
+    created.wear_month_summa = int(summa)/int(use_month)
+    created.save()
+    return redirect(request.META['HTTP_REFERER'])
 
 def ombor_fin(request):
     today = datetime.now()

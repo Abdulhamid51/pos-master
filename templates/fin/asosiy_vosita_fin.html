@@ -113,6 +113,26 @@
                             </div>
                         </div>
                         <div class="col-12 layout-spacing">
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-7"></div>
+                                    <div class="col-md-2">
+                                        <br>
+                                        <p></p>
+                                        <input type="number" class="form-control" name="year" value="{{ year }}">
+                                    </div>
+                                    <div class="col-md-1">
+                                         <br>
+                                        <p></p>
+                                        <button type="submit" class="btn btn-primary" style="height: 40px;">Filter</button>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <br>
+                                        <p></p>
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap" style="height: 40px;">Qoshish</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                         <div class="col-lg-12">
                             <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
@@ -132,27 +152,95 @@
                                                         <th>Bugungi <br> qoldiq </th>
                                                         <th>Foydalanish <br> oyi </th>
                                                         <th>Oylik <br> Eskirish summasi </th>
-                                                        <th>1</th>
-                                                        <th>2</th>
-                                                        <th>3</th>
+                                                        <th>Tahrirlash</th>
+                                                        {% for mon in months %}
+                                                        <th>{{mon}}</th>
+                                                        {% endfor %}
                                                     </tr>
                                                 </thead>
                                                 <tbody >
+                                                    {% for main in main_tool %}
                                                         <tr>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td style="background-color: blue ; color: white !important;"></td>
-                                                            <td style="background-color: blue ; color: white !important;"></td>
-                                                            <td style="background-color: blue ; color: white !important;"></td>
-                                                            <td></td>
-                                                            <td style="background-color: blue ; color: white !important;"></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
+                                                            <td>{{main.name}}</td>
+                                                            <td>{{main.inventory_number}}</td>
+                                                            <td>{{main.quantity}}</td>
+                                                            <td>{{main.tool_type.name}}</td>
+                                                            <td>{{main.summa|intcomma}}</td>
+                                                            <td style="background-color: blue ; color: white !important;">{{main.summa|intcomma}}</td>
+                                                            <td style="background-color: blue ; color: white !important;">{{ main.sum_wear_month_summa|intcomma  }}</td>
+                                                            <td style="background-color: blue ; color: white !important;">{{ main.sum_today_stayed|intcomma }}</td>
+                                                            <td>{{ main.use_month }}</td>
+                                                            <td style="background-color: blue ; color: white !important;">{{ main.wear_month_summa|intcomma }}</td>
+                                                            <td>
+                                                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalEdit{{main.id}} " data-whatever="@getbootstrap" style="height: 40px;"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                            </td>
+                                                            {% for mon in months %}
+                                                                {% for x in main.month %}
+                                                                    {% if x.month == mon %}
+                                                                        <td>{{x.sum|intcomma}}</td>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            {% endfor %}
                                                         </tr>
+                                                        <div class="modal fade" id="exampleModalEdit{{main.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                            <div class="modal-dialog" role="document">
+                                                                <div class="modal-content" style="width: 700px;">
+                                                                    <div class="modal-body">
+                                                                        <form method="post" action="{% url 'edit_main_tool' main.id %}" >
+                                                                            {% csrf_token %}
+                                                                            <div class="row">
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-name" class="col-form-label">Nomi:</label>
+                                                                                            <input type="text" class="form-control" id="recipient-name" value="{{ main.name }}" name="name" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-number" class="col-form-label">Inventar raqami:</label>
+                                                                                            <input type="number" class="form-control" id="recipient-number" value="{{ main.inventory_number }}" name="number" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-quantity" class="col-form-label">Miqdori:</label>
+                                                                                            <input type="number" class="form-control" id="recipient-quantity" value="{{ main.quantity }}" name="quantity" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-main_tool_type" class="col-form-label">O'lchov birligi:</label>
+                                                                                            <select name="tool_type" id="recipient-main_tool_type" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for i in main_tool_type %}
+                                                                                                        <option value="{{ i.id }}" {% if i == main.tool_type %} selected {% endif %} >{{ i.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-summa" class="col-form-label">Summa:</label>
+                                                                                            <input type="number" class="form-control" id="recipient-summa" value="{{ main.summa|floatformat:'0' }}" name="summa" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-use_month" class="col-form-label">Foydalanish oyi:</label>
+                                                                                            <input type="number" class="form-control" id="recipient-use_month" value="{{ main.use_month }}" name="use_month" required>
+                                                                                        </div>
+                                                                                    </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                                                <button type="submit" class="btn btn-success" >Saqlash</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor  %}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -163,7 +251,103 @@
                     </div>
             </div>
     </div>
-        
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="width: 700px;">
+                <div class="modal-body">
+                    <form method="post" action="{% url 'add_main_tool' %}" >
+                        {% csrf_token %}
+                        <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="recipient-name" class="col-form-label">Nomi:</label>
+                                        <input type="text" class="form-control" id="recipient-name" name="name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="recipient-number" class="col-form-label">Inventar raqami:</label>
+                                        <input type="number" class="form-control" id="recipient-number" name="number" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="recipient-quantity" class="col-form-label">Miqdori:</label>
+                                        <input type="number" class="form-control" id="recipient-quantity" name="quantity" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                             <div class="form-group">
+                                                <label for="recipient-main_tool_type" class="col-form-label">O'lchov birligi:</label>
+                                                <select name="tool_type" id="recipient-main_tool_type" class="form-control searchable" required>
+                                                    <option value="">-------------</option>
+                                                        {% for i in main_tool_type %}
+                                                        <option value="{{ i.id }}">{{ i.name }}</option>
+                                                        {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <br>
+                                            <p></p>
+                                            <p></p>
+                                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalUnits" data-whatever="@getbootstrap" style="height: 40px;">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="recipient-summa" class="col-form-label">Summa:</label>
+                                        <input type="number" class="form-control" id="recipient-summa" name="summa" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="recipient-use_month" class="col-form-label">Foydalanish oyi:</label>
+                                        <input type="number" class="form-control" id="recipient-use_month" name="use_month" required>
+                                    </div>
+                                </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                            <button type="submit" class="btn btn-success" >Saqlash</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="exampleModalUnits" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content" style="width: 700px;">
+                 <div class="modal-header">
+                 <h5 class="modal-title" id="exampleModalLabel">O'lchov birligi Qoshish</h5>
+                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                     <span aria-hidden="true">&times;</span>
+                 </button>
+                 </div>
+                 <div class="modal-body">
+                     <form method="post" action="{% url 'add_main_tool_type' %}" >
+                         {% csrf_token %}
+                         <div class="row">
+                             <div class="col-md-12">
+                                 <div class="form-group">
+                                     <label for="recipient-name" class="col-form-label">Nomi:</label>
+                                     <input type="text" class="form-control" id="recipient-name" name="name" required>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="modal-footer">
+                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                             <button type="submit" class="btn btn-success" >Saqlash</button>
+                         </div>
+                     </form>
+                 </div>
+             </div>
+         </div>
+     </div>
 {% endblock content %}
 {% block js %}
 <script>

@@ -2104,4 +2104,47 @@ class ExternalIncomeUserPayment(models.Model):
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
+class MainToolType(models.Model):
+    name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
 
+from dateutil.relativedelta import relativedelta
+
+
+class MainTool(models.Model):
+    name = models.CharField(max_length=255, db_index=True)
+    inventory_number = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=0)
+    tool_type = models.ForeignKey(MainToolType, on_delete=models.CASCADE)
+    summa = models.FloatField(default=0)
+    wear = models.FloatField(default=0, verbose_name='Toplangan eskirish')
+    today_stayed = models.FloatField(default=0, verbose_name='Bugungi qoldiq')
+    use_month = models.IntegerField(default=0, verbose_name='Foydalanish oyi')
+    wear_month_summa = models.IntegerField(default=0, verbose_name='Oylik eskirish summasi')
+    is_active = models.BooleanField(default=True)
+    date = models.DateField(default=timezone.now)
+
+    @property
+    def sum_wear_month_summa(self):
+        today = timezone.now().date()
+
+        if self.date > today:
+            return 0
+
+        date_diff = relativedelta(today, self.date)
+        
+        total_months = date_diff.years * 12 + date_diff.months
+        
+        if total_months >= self.use_month:
+            return self.summa
+        
+        return self.wear_month_summa * total_months
+
+    @property
+    def sum_today_stayed(self):
+        if self.sum_wear_month_summa > 0:
+            return self.summa - self.sum_wear_month_summa
+        return 0 
+
+    class Meta:
+        verbose_name_plural = 'Asossiy Vosita'

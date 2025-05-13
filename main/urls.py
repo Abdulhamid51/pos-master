@@ -188,6 +188,9 @@ urlpatterns = [
     path('reja_chiqim_fin_edit/<int:id>', reja_chiqim_fin_edit, name='reja_chiqim_fin_edit'),
     path('reja_chiqim_fin_del/<int:id>', reja_chiqim_fin_del, name='reja_chiqim_fin_del'),
     path('asosiy_vosita_fin/', asosiy_vosita_fin, name='asosiy_vosita_fin'),
+    path('add_main_tool_type/', add_main_tool_type, name='add_main_tool_type'),
+    path('add_main_tool/', add_main_tool, name='add_main_tool'),
+    path('edit_main_tool/<int:id>', edit_main_tool, name='edit_main_tool'),
     path('ombor_fin/', ombor_fin, name='ombor_fin'),
     path('b2b_shop/', b2b_shop_view, name='b2b_shop'),
     path('b2b_shop_add/', b2b_shop_add, name='b2b_shop_add'),
@@ -245,5 +248,7 @@ urlpatterns = [
     path('customer_debt_create/<int:id>', customer_debt_create, name='customer_debt_create'),
     path('external_income_user_debt_create/<int:id>', external_income_user_debt_create, name='external_income_user_debt_create'),
     path('externalincomeuser_detail/<int:id>', externalincomeuser_detail, name='externalincomeuser_detail'),
+
+
 
 ]

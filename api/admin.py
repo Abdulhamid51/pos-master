@@ -65,6 +65,7 @@ admin.site.register(ExternalIncomeUser)
 admin.site.register(ExternalIncomeUserPayment)
 admin.site.register(KassaMerge)
 admin.site.register(CustomerDebt)
+admin.site.register(MainTool)
 
 @admin.register(RejaTushum)
 class RejaTushumAdmin(ExportActionMixin, admin.ModelAdmin):
