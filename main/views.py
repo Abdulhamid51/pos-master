@@ -2385,6 +2385,7 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['teritory'] = Teritory.objects.all()
         context['agent'] = MobilUser.objects.all()
         context['valyuta'] = Valyuta.objects.all()
+        context['cashes'] = KassaNew.objects.filter(is_active=True)
         return context
 
 def debtor_add(request):
@@ -2431,7 +2432,7 @@ def debtor_pay(request, id):
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment)
-    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
+    obj, created = Wallet.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
     obj.summa += summa 
     obj.save()
     return redirect(request.META['HTTP_REFERER'])
@@ -2441,14 +2442,14 @@ def debtor_give(request, id):
     valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
     PayHistory.objects.create(debtor_id=id, valyuta_id=valyuta, summa=summa, comment=comment, type_pay=2)
-    obj, created = CustomerDebt.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
+    obj, created = Wallet.objects.get_or_create(customer_id=id, valyuta_id=valyuta)
     obj.summa -= summa 
     obj.save()
     return redirect(request.META['HTTP_REFERER'])
 
 def debtor_detail(request, id):
     valyuta = Valyuta.objects.all()
-    debt_shot = CustomerDebt.objects.filter(customer_id=id)
+    debt_shot = Wallet.objects.filter(customer_id=id)
     debtor = Debtor.objects.get(id=id)
     today = datetime.now().date()
 
@@ -2482,7 +2483,7 @@ def debtor_detail(request, id):
                 dt['give_summa'] = i.summa
             
         elif i._meta.model_name == 'shop':
-            dt['type_payment'] = 'Pul olindi'
+            dt['type_payment'] = 'Maxsulot sotildi'
             dt['pay_summa'] = i.baskets_total_price
 
         data.append(dt)
@@ -2496,6 +2497,7 @@ def debtor_detail(request, id):
             'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
         }
         summa_total_for_valyuta.append(dt_sum_valyuta)
+    
     context = {
         'valyuta':valyuta,
         'summa_total_for_valyuta':summa_total_for_valyuta,
@@ -2507,41 +2509,172 @@ def debtor_detail(request, id):
     }
     return render(request, 'debtor_detail.html', context)
 
+
+
+
+def deliver_detail(request):
+    id = request.GET.get('d')
+    valyuta = Valyuta.objects.all()
+    debt_shot = Wallet.objects.filter(customer_id=id)
+    deliver = Deliver.objects.get(id=id)
+    today = datetime.now().date()
+
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+   
+    pay = PayHistory.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+
+    infos = sorted(chain(pay, recieve), key=lambda instance: instance.date)
+    data = []
+    for i in infos:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+            
+        elif i._meta.model_name == 'recieve':
+            dt['type_payment'] = 'Maxsulot qabul'
+            dt['pay_summa'] = i.summa_total
+
+        data.append(dt)
+
+    summa_total_for_valyuta = []
+    for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        pay_recieve_summa = sum([i.summa_total for i in recieve.filter(valyuta=val)])
+        dt_sum_valyuta = {
+            'valyuta':val.id,
+            'pay_pay_summa':pay_summa + pay_recieve_summa,
+            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+        }
+        summa_total_for_valyuta.append(dt_sum_valyuta)
+    
+    context = {
+        'valyuta':valyuta,
+        'summa_total_for_valyuta':summa_total_for_valyuta,
+        'debt_shot':debt_shot,
+        'pay':pay,
+        'data':data,
+        'filters':filters,
+        'deliver':deliver,
+    }
+    return render(request, 'deliver_detail.html', context)
+
+
+
+def income_user_detail(request):
+    id = request.GET.get('d')
+    valyuta = Valyuta.objects.all()
+    debt_shot = Wallet.objects.filter(customer_id=id)
+    partner = ExternalIncomeUser.objects.get(id=id)
+    today = datetime.now().date()
+
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+
+    filters = {
+        'start_date': str(start_date),
+        'end_date': str(end_date),
+    }
+   
+    pay = PayHistory.objects.filter(external_income_user_id=id, date__date__range=(start_date, end_date))
+
+    infos = sorted(chain(pay), key=lambda instance: instance.date)
+    data = []
+    for i in infos:
+        dt = {
+            'id': i.id,
+            'date': i.date,
+            'comment': i.comment,
+            'valyuta': i.valyuta,
+            'debt_new': i.debt_new,
+        }
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+
+        data.append(dt)
+
+    summa_total_for_valyuta = []
+    for val in valyuta:
+        pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        dt_sum_valyuta = {
+            'valyuta':val.id,
+            'pay_pay_summa':pay_summa,
+            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+        }
+        summa_total_for_valyuta.append(dt_sum_valyuta)
+    
+    context = {
+        'valyuta':valyuta,
+        'summa_total_for_valyuta':summa_total_for_valyuta,
+        'debt_shot':debt_shot,
+        'pay':pay,
+        'data':data,
+        'filters':filters,
+        'partner':partner,
+    }
+    return render(request, 'partner_detail.html', context)
+
+
+
 class Delivers(LoginRequiredMixin, TemplateView):
     template_name = 'deliver.html'
 
 
 
     def get_context_data(self, **kwargs):
-        delivers = []
+        delivers = Deliver.objects.all()
+        dollar_kurs = Course.objects.last().som
 
-        for dl in Deliver.objects.all().order_by('-id'):
-            gte, lte = monthly()
-            d_id = dl.id
-            # pays = DeliverPayHistory.objects.filter(date__gte=gte, date__lte=lte, deliver_id=d_id)
-            # debts = DebtDeliver.objects.filter(date__gte=gte, date__lte=lte, deliver_id=d_id)
-            dollar_kurs = Course.objects.last().som
-            # psom = 0
-            # pdollar = 0
-            # dsom = 0
-            # ddollar = 0
-            # for p in pays:
-            #     psom += p.som
-            #     psom += p.dollar * dollar_kurs
-            #     # pdollar += p.dollar
-            # for d in debts:
-            #     dsom += d.som
-            #     # ddollar += d.dollar
-            debtor = {
-                'dsom1': dl.som,
-                'ddollor1': dl.dollar,
-                'name': f'{dl.name}',
-                'phone1': f'{dl.phone1}',
-                'phone2': f'{dl.phone2}' if dl.phone2 else "Yo'q",
-                'id': f'{dl.id}',
-            }
+        # for dl in Deliver.objects.all().order_by('-id'):
+        #     gte, lte = monthly()
+        #     d_id = dl.id
+        #     # pays = DeliverPayHistory.objects.filter(date__gte=gte, date__lte=lte, deliver_id=d_id)
+        #     # debts = DebtDeliver.objects.filter(date__gte=gte, date__lte=lte, deliver_id=d_id)
+        #     dollar_kurs = Course.objects.last().som
+        #     # psom = 0
+        #     # pdollar = 0
+        #     # dsom = 0
+        #     # ddollar = 0
+        #     # for p in pays:
+        #     #     psom += p.som
+        #     #     psom += p.dollar * dollar_kurs
+        #     #     # pdollar += p.dollar
+        #     # for d in debts:
+        #     #     dsom += d.som
+        #     #     # ddollar += d.dollar
+        #     debtor = {
+        #         'dsom1': dl.som,
+        #         'ddollor1': dl.dollar,
+        #         'name': f'{dl.name}',
+        #         'phone1': f'{dl.phone1}',
+        #         'phone2': f'{dl.phone2}' if dl.phone2 else "Yo'q",
+        #         'id': f'{dl.id}',
+        #     }
 
-            delivers.append(debtor)
+        #     delivers.append(debtor)
+        valutas = Valyuta.objects.all()
         context = super().get_context_data(**kwargs)
         context['deliver'] = 'active'
         context['deliver_t'] = 'true'
@@ -2549,6 +2682,20 @@ class Delivers(LoginRequiredMixin, TemplateView):
         context['total_som'] = Deliver.objects.aggregate(Sum('som'))['som__sum']
         context['total_dollar'] = Deliver.objects.aggregate(Sum('dollar'))['dollar__sum']
         context['dollar_kurs'] = dollar_kurs
+        context['valyuta'] = valutas
+
+        context['total_haq'] = [
+                {'summa': Wallet.objects.filter(deliver__in=delivers, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+                for val in valutas
+            ]
+        context['total_qarz'] = [
+                {'summa': Wallet.objects.filter(deliver__in=delivers, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+                for val in valutas
+            ]
+
+        context['cashes'] = KassaNew.objects.filter(is_active=True)
+        # 'valyuta':Valyuta.objects.all(),
+        # 'cashes':KassaNew.objects.filter(is_active=True),
         return context
 
 class FakturaYoqlama(LoginRequiredMixin, TemplateView):
@@ -2857,7 +3004,7 @@ def kassa(request):
             hodim_id=hodim.id, sana__year=bugun.year, sana__month=bugun.month
         ).exists()
     ]
-    kassa = KassaMerge.objects.filter(is_active=True, kassa__is_main=True)
+    kassa = KassaMerge.objects.filter(is_active=True)
     filial = Filial.objects.all()
     data = []
     for i in KassaNew.objects.all():
@@ -3068,7 +3215,7 @@ def hodim_qarzlari(request):
 
 def chiqim_qilish(request):
 
-    """ Kassadan kirim qiladi """
+    """ Kassadan chiqim qiladi """
 
     if request.method == 'POST':
         subcategory = request.POST.get('subcategory')
@@ -3077,7 +3224,10 @@ def chiqim_qilish(request):
         kassa_id = request.POST.get('kassa')
         summa = request.POST.get('summa')
         izox = request.POST['izox']
-
+        debtor = request.POST.get('debtor')
+        deliver = request.POST.get('deliver')
+        partner = request.POST.get('partner')
+        
         valuta = Valyuta.objects.get(id=valuta_id)
         cash = KassaNew.objects.get(id=kassa_id)
 
@@ -3088,6 +3238,21 @@ def chiqim_qilish(request):
         kassa.summa -= float(summa)
 
         chiqim.kassa_new = kassa.summa
+
+        if debtor:
+            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+            chiqim.payhistory=pay
+            Debtor.objects.get(id=debtor).refresh_debt()
+        
+        if deliver:
+            pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+            chiqim.payhistory=pay
+            Deliver.objects.get(id=deliver).refresh_debt()
+
+        if partner:
+            pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+            chiqim.payhistory=pay
+            ExternalIncomeUser.objects.get(id=partner).refresh_debt()
 
         kassa.save()
         chiqim.save()
@@ -3311,12 +3476,11 @@ def kirim_qilish(request):
         # plastik = request.POST.get('plastik')
         kurs = request.POST.get('kurs')
         debtor = request.POST.get('debtor')
+        deliver = request.POST.get('deliver')
+        partner = request.POST.get('partner')
         valuta_id = request.POST.get('valuta')
         kassa_id = request.POST.get('kassa')
         summa = request.POST.get('summa')
-        # qancha_som = request.POST.get('qancha_som')
-        # qancha_dol = request.POST.get('qancha_dol')
-        # qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
         izox = request.POST['izox']
 
         valuta = Valyuta.objects.get(id=valuta_id)
@@ -3324,17 +3488,26 @@ def kirim_qilish(request):
 
         kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
 
-        if debtor:
-            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
-            kirim = Kirim.objects.create(izox=izox, payhistory=pay, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
-        else:
-            kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
+        kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
         
         kassa.summa += float(summa)
 
         kirim.kassa_new = kassa.summa
         if debtor:
+            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+            kirim.payhistory=pay
             Debtor.objects.get(id=debtor).refresh_debt()
+        
+        if deliver:
+            pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+            kirim.payhistory=pay
+            Deliver.objects.get(id=deliver).refresh_debt()
+
+        if partner:
+            pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+            kirim.payhistory=pay
+            ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
 
         kassa.save()
         kirim.save()
@@ -7412,21 +7585,24 @@ def filial_del(request, id):
 
 
 def externalincomeuser(request):
-    pay = ExternalIncomeUserPayment.objects.filter(type_pay=1)
-    give = ExternalIncomeUserPayment.objects.filter(type_pay=2)
-    totals = {
-        'som_p':pay.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-        'dollar_p':pay.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-        'plastik_p':pay.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
-        'som_g':give.aggregate(all=Coalesce(Sum('som'), 0 , output_field=IntegerField()))['all'],
-        'dollar_g':give.aggregate(all=Coalesce(Sum('dollar'), 0 , output_field=IntegerField()))['all'],
-        'plastik_g':give.aggregate(all=Coalesce(Sum('plastik'), 0 , output_field=IntegerField()))['all'],
-    }
+    valutas = Valyuta.objects.all()
+    partners = ExternalIncomeUser.objects.all()
+    
     context = {
-        'income':ExternalIncomeUser.objects.all(),
+        'income': partners,
         'type_income':ExternalIncomeUserTypes.objects.all(),
-        'totals':totals,
+        'valyuta':valutas,
+        'cashes':KassaNew.objects.filter(is_active=True),
     }
+
+    context['total_haq'] = [
+            {'summa': Wallet.objects.filter(partner__in=partners, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in valutas
+        ]
+    context['total_qarz'] = [
+            {'summa': Wallet.objects.filter(partner__in=partners, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
+            for val in valutas
+        ]
     return render(request, 'externalincomeuser.html', context)
 
 

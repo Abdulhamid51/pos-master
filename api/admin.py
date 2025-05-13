@@ -63,7 +63,7 @@ admin.site.register(WriteOffItem)
 admin.site.register(ExternalIncomeUser)
 admin.site.register(ExternalIncomeUserPayment)
 admin.site.register(KassaMerge)
-admin.site.register(CustomerDebt)
+admin.site.register(Wallet)
 
 @admin.register(AllDaySumEmployee)
 class AllDaySumEmployeeAdmin(ExportActionMixin, admin.ModelAdmin):
