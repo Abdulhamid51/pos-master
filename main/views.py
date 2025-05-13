@@ -2580,6 +2580,7 @@ def deliver_detail(request):
 
 
 def income_user_detail(request):
+    pass
     id = request.GET.get('d')
     valyuta = Valyuta.objects.all()
     debt_shot = Wallet.objects.filter(customer_id=id)
@@ -2647,7 +2648,7 @@ class Delivers(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         delivers = Deliver.objects.all()
         dollar_kurs = Course.objects.last().som
-
+        pass
         # for dl in Deliver.objects.all().order_by('-id'):
         #     gte, lte = monthly()
         #     d_id = dl.id
@@ -3219,6 +3220,7 @@ def chiqim_qilish(request):
     """ Kassadan chiqim qiladi """
 
     if request.method == 'POST':
+        pass
         subcategory = request.POST.get('subcategory')
         kurs = request.POST.get('kurs')
         valuta_id = request.POST.get('valuta')
@@ -3473,6 +3475,7 @@ def kirim_qilish(request):
     """ Kassadan kirim qiladi """
 
     if request.method == 'POST':
+        pass
         debtor = request.POST.get('debtor')
         # plastik = request.POST.get('plastik')
         kurs = request.POST.get('kurs')
@@ -7586,6 +7589,7 @@ def filial_del(request, id):
 
 
 def externalincomeuser(request):
+    pass
     valutas = Valyuta.objects.all()
     partners = ExternalIncomeUser.objects.all()
     
