@@ -320,13 +320,43 @@
                         const exampleModal = document.getElementById('exampleModal')
                         const exampleModalUnits = document.getElementById('exampleModalUnits')
                         const name = document.getElementById('recipient-name')
+                        const type = document.getElementById('recipient-main_tool_type')
                         function SaveType() {
-                            exampleModal.style.display = 'none'; 
-                            exampleModalUnits.show.modal
+                            $('#exampleModal').modal('hide');
+                            $('#exampleModalUnits').modal('show');
                         }
-                        function pushBackend(){
-
-                        }
+                        function pushBackend() {
+                                const nameInput = document.getElementById('recipient-name');
+                                
+                                if (!nameInput || !nameInput.value.trim()) {
+                                    alert("O'lchov birligi nomini kiriting!");
+                                    return;
+                                }
+                                
+                                $.ajax({
+                                    url: "{% url 'add_main_tool_type' %}",
+                                    type: "POST",
+                                    data: JSON.stringify({'name': nameInput.value.trim()}),
+                                    contentType: "application/json",
+                                    headers: {
+                                        "X-CSRFToken": csrfToken
+                                    },
+                                    success: function(response) {
+                                        console.log(111)
+                                        const option = `<option value="${response.data.id}">${response.data.name}</option>`;
+                                        type.innerHTML += option;
+                                        console.log(option)
+                                        $('#exampleModalUnits').modal('hide');
+                                        console.log(22)
+                                        $('#exampleModal').modal('show');
+                                        console.log(333)
+                                        nameInput.value = "";  
+                                    },
+                                    error: function() {
+                                        alert("O'lchov birligini qo'shishda xatolik yuz berdi.");
+                                    }
+                                });
+                            }
                     </script>
                 </div>
             </div>
@@ -343,6 +373,7 @@
                  </div>
                  <div class="modal-body">
                      <form method="post">
+                        {% csrf_token %}
                          <div class="row">
                              <div class="col-md-12">
                                  <div class="form-group">
@@ -353,7 +384,7 @@
                          </div>
                          <div class="modal-footer">
                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                             <button type="submit" class="btn btn-success"  onclick="pushBackend()" >Saqlash</button>
+                             <button type="button" class="btn btn-success"  onclick="pushBackend()" >Saqlash</button>
                          </div>
                      </form>
                  </div>

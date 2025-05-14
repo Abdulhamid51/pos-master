@@ -222,7 +222,9 @@
                                                    
                                                 </thead>
                                                 <tbody style="background-color: bisque !important;">
+                                                    {% for wek in weeks %}
                                                     {% for i in data_reja %}
+                                                    {% if wek.count == i.count %}
                                                     <tr class="{% if forloop.first %}header-row{% endif %}">
                                                         <td >
                                                             {% if forloop.first %}
@@ -245,6 +247,8 @@
                                                         <td></td>
                                                         <td>{{ i.total }}</td>
                                                     </tr>
+                                                    {% endif %}
+                                                    {% endfor %}
                                                     {% endfor %}
                                                     {% for i in data_chiqim %}
                                                         <tr class="{% if forloop.first %}header-row{% endif %}">
