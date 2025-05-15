@@ -48,7 +48,7 @@ urlpatterns = [
     path('api1/', include('api.urls')),
 
     # API hujjatlari URL
-    path('docs/', include_docs_urls(title='API | Bordo')),
+    # path('docs/', include_docs_urls(title='API | Bordo')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0),
          name='schema-swagger-ui'),
 

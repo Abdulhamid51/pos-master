@@ -6711,6 +6711,72 @@ def daily_cf_fin(request):
     today = datetime.today()
     month = request.GET.get('month', today.month)
     year = request.GET.get('year', today.year)
+    kassa = int(request.GET.get('kassa', 0))
+    kirim = Kirim.objects.filter(qachon__year=year, qachon__month=month)
+    chiqim = Chiqim.objects.filter(qachon__year=year, qachon__month=month)
+    pay_history = PayHistory.objects.filter(date__year=year, date__month=month)
+
+    if kassa:
+        kirim = kirim.filter(kassa__kassa__id=kassa)
+        chiqim = chiqim.filter(kassa__kassa__id=kassa)
+        pay_history = pay_history.filter(kassa__kassa__id=kassa)
+
+    filters = {
+        'month':int(month),
+        'year':str(year),
+        'kassa':kassa,
+    }
+
+    days_of_month = calendar.monthrange(int(year), int(month))[1]
+    days = list(range(1, days_of_month + 1))
+
+    valyuta = Valyuta.objects.all()
+
+    data = []
+
+    for i in valyuta:
+        dt = {
+            'valyuta_id':i.id,
+            'valyuta_name':i.name,
+            'days':[
+                    {   
+                        'boshlangich_qoldik':getattr(pay_history.filter(date__day=day).first(), 'debt_old', 0),
+                        'kirim':kirim.filter(valyuta=i, qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+                        'chiqim':chiqim.filter(valyuta=i, qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+                        'yakuniy_qoldik':getattr(pay_history.filter(date__day=day).last(), 'debt_new', 0),
+
+                    }
+                for day in days
+            ]
+        }
+        data.append(dt)
+
+    data_kirim = []
+    data_chiqim = []
+    for day in days:
+        kirim_dt = {
+            'sum':kirim.filter(qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        }
+        data_kirim.append(kirim_dt)
+        chiqim_dt = {
+            'sum':chiqim.filter(qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
+        }
+        data_chiqim.append(chiqim_dt)
+    context = {
+        'days_of_month': days,
+        'filters':filters,
+        'kassa':KassaNew.objects.filter(is_active=True),
+        'data':data,
+        'data_kirim':data_kirim,
+        'data_chiqim':data_chiqim,
+    }
+    return render(request, 'fin/daily_cf_fin.html', context)
+
+
+def daily_cf_fin_copy(request):
+    today = datetime.today()
+    month = request.GET.get('month', today.month)
+    year = request.GET.get('year', today.year)
     type_val = request.GET.get('type_val')
     filters = {
         'month':int(month),
@@ -6774,7 +6840,6 @@ def daily_cf_fin(request):
         }
         for item in kassa_daily
     }
-
     kirim_qoldik_dict = {
         item['qachon__day']: {
             'som': item['som'],
@@ -6823,6 +6888,7 @@ def daily_cf_fin(request):
         }for day in days]
 
     qoldik_data = []
+
     for day in days:
         qoldik = Kirim.objects.filter(qachon__year=year, qachon__month=month, qachon__day=day).last()
         qoldik_data.append({
@@ -6832,6 +6898,7 @@ def daily_cf_fin(request):
             'hisob_raqam': getattr(qoldik, 'kassa_hisob_raqam_yangi', 0),
         })
 
+    
     context = {
         'days_of_month': days,
         'data_kirim': data_kirim,
@@ -6841,8 +6908,10 @@ def daily_cf_fin(request):
         'data_qoldik_kirim': data_qoldik_kirim,
         'data_qoldik_chiqim': data_qoldik_chiqim,
         'filters':filters,
+        'kassa':KassaNew.objects.filter(is_active=True),
     }
     return render(request, 'fin/daily_cf_fin.html', context)
+
 from django.db.models import Value, Case, When
 
 def xarid_fin(request):
@@ -7097,20 +7166,28 @@ def tolov_kalendar_fin(request):
         
         weekly_reja_tushum = RejaTushum.objects.filter(date__gte=dushanba, date__lte=shanba)
         weekly_reja_chiqim = RejaChiqim.objects.filter(date__gte=dushanba, date__lte=shanba)
-        dt_reja = {
-            'plan': weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all'],
-            'total': weekly_reja_tushum.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
-            'count':week['count']
-        }
 
-        dt_chiqim = {
-            'plan': weekly_reja_chiqim.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all'],
-            'total': weekly_reja_chiqim.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
-            'count':week['count']
-        }
+        plan_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
+        total_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
 
-        data_reja.append(dt_reja)
-        data_chiqim.append(dt_chiqim)
+        if plan_reja or total_reja > 0:
+            dt_reja = {
+                'plan': plan_reja,
+                'total': total_reja,
+                'count':week['count']
+            }
+            data_reja.append(dt_reja)
+        chiqim_plan = weekly_reja_chiqim.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
+        chiqim_total = weekly_reja_chiqim.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all']
+        if chiqim_plan or chiqim_total > 0:
+            dt_chiqim = {
+                'plan': chiqim_plan,
+                'total': chiqim_total,
+                'count':week['count']
+            }
+            data_chiqim.append(dt_chiqim)
+            
+    print(data_reja)
     filter = {
         "year":year,
         "month":str(month),

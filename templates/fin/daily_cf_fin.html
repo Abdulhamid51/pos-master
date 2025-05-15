@@ -130,12 +130,12 @@
                                 <div class="row">
                                     <div class="col-md-3"></div>
                                     <div class="col-md-2">
-                                        <label for="" style="color: black !important; font-weight: bold;">Turi</label>
-                                        <select name="type_val" class="form-control"> 
-                                               <option value="som"  {% if filters.type_val == 'som' %} selected  {% endif %}>Som</option>
-                                               <option value="dollar"  {% if filters.type_val == 'dollar' %} selected  {% endif %}>Dollar</option>
-                                               <option value="plastik"  {% if filters.type_val == 'plastik' %} selected  {% endif %}>Plastik</option>
-                                               <option value="hisob_raqam"  {% if filters.type_val == 'hisob_raqam' %} selected  {% endif %}>Hisob Raqam</option>
+                                        <label for="" style="color: black !important; font-weight: bold;">Kassa</label>
+                                        <select name="kassa" class="form-control"> 
+                                            <option value="" disabled selected>  ------   </option>
+                                            {% for kas in kassa %}
+                                               <option value="{{kas.id}}" {% if filters.kassa == kas.id %} selected  {% endif %}>{{kas.name}}</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                     <div class="col-md-2">
@@ -153,9 +153,18 @@
                                     <div class="col-md-2">
                                         <label for="" style="color: black !important; font-weight: bold;">Oy</label>
                                         <select name="month" class="form-control"> 
-                                              {% for i in days_of_month %}
-                                               <option value="{{ i }}" {% if filters.month == i %} selected  {% endif %}>{{i}}</option>
-                                              {% endfor %}
+                                                <option value="1" {% if filter.month == '1' %} selected  {% endif %}>Yanvar</option>
+                                                <option value="2" {% if filter.month == '2' %} selected  {% endif %}>Fevral</option>
+                                                <option value="3" {% if filter.month == '3' %} selected  {% endif %}>Mart</option>
+                                                <option value="4" {% if filter.month == '4' %} selected  {% endif %}>Aprel</option>
+                                                <option value="5" {% if filter.month == '5' %} selected  {% endif %}>May</option>
+                                                <option value="6" {% if filter.month == '6' %} selected  {% endif %}>Iyun</option>
+                                                <option value="7" {% if filter.month == '7' %} selected  {% endif %}>Iyul</option>
+                                                <option value="8" {% if filter.month == '8' %} selected  {% endif %}>Avgust</option>
+                                                <option value="9" {% if filter.month == '9' %} selected  {% endif %}>Sentyabr</option>
+                                                <option value="10" {% if filter.month == '10' %} selected  {% endif %}>Oktyabr</option>
+                                                <option value="11" {% if filter.month == '11' %} selected  {% endif %}>Noyabr</option>
+                                                <option value="12" {% if filter.month == '12' %} selected  {% endif %}>Dekabr</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2" style="margin: 0px;">
@@ -207,134 +216,39 @@
                                                                 <th></th>
                                                             {% endfor%}
                                                         </tr>
-                                                        <!-- Som -->
-                                                        <th rowspan="5" class="side-header">Som</th>
-                                                        <tr>
-                                                            <td style="font-size: 12px;">Boshlang'ich qoldiq</td>
-                                                            <td></td>
-                                                            {% for som in data_kassa_daily %}
-                                                                <td>{{ som.som|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Kirim</td>
-                                                            <td>+</td>
-                                                            {% for days in data_qoldik_kirim %}
-                                                                <td>{{ days.som|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Chiqim</td>
-                                                            <td>-</td>
-                                                            {% for days in data_qoldik_chiqim %}
-                                                                <td>{{ days.som|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Yakuniy qoldiq</td>
-                                                            <td></td>
-                                                            {% for qoldik_data in qoldik_data %}
-                                                                <td>{{ qoldik_data.som|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <!-- Som -->
+                                                        <!-- Valyuta -->
 
-                                                        <!-- Dollar -->
-                                                        <th rowspan="5" class="side-header">Dollar</th>
-                                                        <tr>
-                                                            <td style="font-size: 12px;">Boshlang'ich qoldiq</td>
-                                                            <td></td>
-                                                            {% for som in data_kassa_daily %}
-                                                                <td>{{ som.dollar|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Kirim</td>
-                                                            <td>+</td>
-                                                            {% for days in data_qoldik_kirim %}
-                                                                <td>{{ days.dollar|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Chiqim</td>
-                                                            <td>-</td>
-                                                            {% for days in data_qoldik_chiqim %}
-                                                                <td>{{ days.dollar|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Yakuniy qoldiq</td>
-                                                            <td></td>
-                                                            {% for qoldik_data in qoldik_data %}
-                                                                <td>{{ qoldik_data.dollar|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <!-- Dollar -->
-
-                                                        <!-- Plastik -->
-                                                        <th rowspan="5" class="side-header">Plastik</th>
-                                                        <tr>
-                                                            <td style="font-size: 12px;">Boshlang'ich qoldiq</td>
-                                                            <td></td>
-                                                            {% for som in data_kassa_daily %}
-                                                                <td>{{ som.plastik|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Kirim</td>
-                                                            <td>+</td>
-                                                            {% for days in data_qoldik_kirim %}
-                                                                <td>{{ days.plastik|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Chiqim</td>
-                                                            <td>-</td>
-                                                            {% for days in data_qoldik_chiqim %}
-                                                                <td>{{ days.plastik|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Yakuniy qoldiq</td>
-                                                            <td></td>
-                                                            {% for qoldik_data in qoldik_data %}
-                                                                <td>{{ qoldik_data.plastik|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <!-- Plastik -->
-
-                                                        <!-- Hisob raqam -->
-                                                        <th rowspan="5" class="side-header">Hisob raqam</th>
-                                                        <tr>
-                                                            <td style="font-size: 12px;">Boshlang'ich qoldiq</td>
-                                                            <td></td>
-                                                            {% for som in data_kassa_daily %}
-                                                                <td>{{ som.hisob_raqam|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Kirim</td>
-                                                            <td>+</td>
-                                                            {% for days in data_qoldik_kirim %}
-                                                                <td>{{ days.hisob_raqam|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Chiqim</td>
-                                                            <td>-</td>
-                                                            {% for days in data_qoldik_chiqim %}
-                                                                <td>{{ days.hisob_raqam|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <tr>
-                                                            <td>Yakuniy qoldiq</td>
-                                                            <td></td>
-                                                            {% for qoldik_data in qoldik_data %}
-                                                                <td>{{ qoldik_data.hisob_raqam|intcomma }}</td>
-                                                            {% endfor%}
-                                                        </tr>
-                                                        <!-- Hisob raqam -->
-
+                                                        {% for data in data %}
+                                                            <th rowspan="5" class="side-header">{{data.valyuta_name}}</th>
+                                                            <tr>
+                                                                <td style="border-top: 3px solid red !important;">Boshlang'ich qoldiq</td>
+                                                                <td style="border-top: 3px solid red !important;"></td>
+                                                                {% for qoldik in data.days %}
+                                                                    <td style="border-top: 3px solid red !important;">{{ qoldik.boshlangich_qoldik|intcomma  }}</td>
+                                                                {% endfor%}
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Kirim</td>
+                                                                <td>+</td>
+                                                                 {% for kirim in data.days %}
+                                                                    <td>{{ kirim.kirim|intcomma  }}</td>
+                                                                {% endfor%}
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Chiqim</td>
+                                                                <td>-</td>
+                                                                {% for chiqim in data.days %}
+                                                                    <td>{{ chiqim.chiqim|intcomma  }}</td>
+                                                                {% endfor%}
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="border-bottom: 3px solid red !important;">Yakuniy qoldiq</td>
+                                                                <td style="border-bottom: 3px solid red !important;"></td>
+                                                                {% for yakuniy_qoldik in data.days %}
+                                                                    <td style="border-bottom: 3px solid red !important;">{{ yakuniy_qoldik.yakuniy_qoldik|intcomma  }}</td>
+                                                                {% endfor%}
+                                                            </tr>
+                                                        {% endfor %}
                                                         <tr>
                                                             <th></th>
                                                             <th>---></th>

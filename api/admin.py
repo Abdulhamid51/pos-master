@@ -65,6 +65,7 @@ admin.site.register(ExternalIncomeUser)
 admin.site.register(ExternalIncomeUserPayment)
 admin.site.register(KassaMerge)
 # admin.site.register(CustomerDebt)
+admin.site.register(RejaChiqim)
 admin.site.register(MainTool)
 
 @admin.register(RejaTushum)
@@ -372,7 +373,7 @@ class OylikTolovAdmin(admin.ModelAdmin):
     
 @admin.register(Kirim)
 class KirimAdmin(admin.ModelAdmin):
-    list_display = ('id', 'qancha_som', 'qancha_dol', 'qancha_hisob_raqamdan', 'plastik')
+    list_display = ('id', 'qancha_som', 'qancha_dol', 'qancha_hisob_raqamdan', 'plastik', 'qachon', 'summa')
     
 
 
