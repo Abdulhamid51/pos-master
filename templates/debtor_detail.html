@@ -99,37 +99,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="col-md-2">
-                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Boshlangich summa</button>
-                                <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-body">
-                                                <form action="{% url 'customer_debt_create' debtor.id %}" method="post" enctype="multipart/form-data">
-                                                    {% csrf_token %}
-                                                    <div class="form-group">
-                                                        <label for="recipient-valyuta" class="col-form-label">Valyuta</label>
-                                                        <select name="valyuta" id="recipient-valyuta" class="form-control" required>
-                                                            <option value="">---------</option>
-                                                            {% for valyuta in valyuta %}
-                                                                <option value="{{ valyuta.id }}">{{ valyuta.name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="recipient-start_summa" class="col-form-label">Boshlangich Summa</label>
-                                                        <input type="number" class="form-control" id="recipient-start_summa"  name="start_summa" required>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                        </div>  
+                        
                         <div class="col-md-12">
                             <div class="table-responsive mb-4 mt-4">
                                 <table id="html5-extension" class="table table-striped table-bordered display" style="width:100%">
@@ -148,9 +118,9 @@
                                     </thead>
                                     {% for v in valyuta %}
                                     <tbody>
-                                        <tr style="background-color: rgb(255, 255, 255) !important;">
+                                        <!-- <tr style="background-color: rgb(255, 255, 255) !important;">
                                             <th></th>
-                                            <th>Boshlangich qoldiq</th>
+                                            <th>Boshlangich qoldiq {{data_start_sum}}</th>
                                             {% for x in data_start_sum %}
                                                 {% if x.valyuta == v %}
                                                     <th>{{ x.start|intcomma }}</th>
@@ -167,7 +137,7 @@
                                             <th></th>
                                             <th></th>
                                             <th></th>
-                                        </tr>
+                                        </tr> -->
                                         <tr style="background-color: beige !important;">
                                             <th></th>
                                             <th></th>

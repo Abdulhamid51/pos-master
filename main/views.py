@@ -2462,8 +2462,9 @@ def debtor_detail(request, id):
    
     pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     shop = Shop.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
+    bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
 
-    infos = sorted(chain(pay, shop), key=lambda instance: instance.date)
+    infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
         dt = {
@@ -2484,6 +2485,13 @@ def debtor_detail(request, id):
         elif i._meta.model_name == 'shop':
             dt['type_payment'] = 'Maxsulot sotildi'
             dt['pay_summa'] = i.baskets_total_price
+        
+        elif i._meta.model_name == 'bonus':
+            dt['type_payment'] = 'Bonus berildi'
+            if i.summa <= 0:
+                dt['pay_summa'] = i.summa
+            else:
+                dt['give_summa'] = i.summa
 
         data.append(dt)
     summa_total_for_valyuta = []
@@ -2513,7 +2521,7 @@ def debtor_detail(request, id):
 def deliver_detail(request):
     id = request.GET.get('d')
     valyuta = Valyuta.objects.all()
-    debt_shot = Wallet.objects.filter(customer_id=id)
+    debt_shot = Wallet.objects.filter(deliver_id=id)
     deliver = Deliver.objects.get(id=id)
     today = datetime.now().date()
 
@@ -2527,8 +2535,10 @@ def deliver_detail(request):
    
     pay = PayHistory.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    bonus = Bonus.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
 
-    infos = sorted(chain(pay, recieve), key=lambda instance: instance.date)
+
+    infos = sorted(chain(pay, recieve, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
         dt = {
@@ -2549,6 +2559,13 @@ def deliver_detail(request):
         elif i._meta.model_name == 'recieve':
             dt['type_payment'] = 'Maxsulot qabul'
             dt['pay_summa'] = i.summa_total
+        
+        elif i._meta.model_name == 'bonus':
+            dt['type_payment'] = 'Bonus berildi'
+            if i.summa <= 0:
+                dt['pay_summa'] = i.summa
+            else:
+                dt['give_summa'] = i.summa
 
         data.append(dt)
 
@@ -2580,7 +2597,7 @@ def income_user_detail(request):
     pass
     id = request.GET.get('d')
     valyuta = Valyuta.objects.all()
-    debt_shot = Wallet.objects.filter(customer_id=id)
+    debt_shot = Wallet.objects.filter(partner_id=id)
     partner = ExternalIncomeUser.objects.get(id=id)
     today = datetime.now().date()
 
@@ -2593,8 +2610,10 @@ def income_user_detail(request):
     }
    
     pay = PayHistory.objects.filter(external_income_user_id=id, date__date__range=(start_date, end_date))
+    bonus = Bonus.objects.filter(partner_id=id, date__date__range=(start_date, end_date))
 
-    infos = sorted(chain(pay), key=lambda instance: instance.date)
+
+    infos = sorted(chain(pay, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
         dt = {
@@ -2610,6 +2629,13 @@ def income_user_detail(request):
                 dt['pay_summa'] = i.summa
             else:
                 dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+        
+        elif i._meta.model_name == 'bonus':
+            dt['type_payment'] = 'Bonus berildi'
+            if i.summa <= 0:
+                dt['pay_summa'] = i.summa
+            else:
                 dt['give_summa'] = i.summa
 
         data.append(dt)
@@ -7760,7 +7786,7 @@ def externalincomeuser(request):
 def externalincomeuser_detail(request, id):
     income = ExternalIncomeUser.objects.get(id=id)
     valyuta = Valyuta.objects.all()
-    debt_shot = ExternalIncomeUserDebt.objects.filter(income_id=id)
+    debt_shot = Wallet.objects.filter(partner_id=id)
     today = datetime.now().date()
 
     start_date = request.GET.get('start_date', today.replace(day=1))
@@ -7771,6 +7797,8 @@ def externalincomeuser_detail(request, id):
         'end_date': str(end_date),
     }
     pay = PayHistory.objects.filter(external_income_user_id=id, date__date__range=(start_date, end_date))
+    bonus = Bonus.objects.filter(partner_id=id, date__date__range=(start_date, end_date))
+
     data = []
     for i in pay:
         dt = {
@@ -7780,12 +7808,20 @@ def externalincomeuser_detail(request, id):
             'valyuta': i.valyuta,
             'debt_new': i.debt_new,
         }
-        if i.type_pay == 1:
-            dt['type_payment'] = 'Pul olindi'
-            dt['pay_summa'] = i.summa
-        else:
-            dt['type_payment'] = 'Pul Berildi'
-            dt['give_summa'] = i.summa
+        if i._meta.model_name == 'payhistory':
+            if i.type_pay == 1:
+                dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            else:
+                dt['type_payment'] = 'Pul Berildi'
+                dt['give_summa'] = i.summa
+        
+        elif i._meta.model_name == 'bonus':
+            dt['type_payment'] = 'Bonus berildi'
+            if i.summa <= 0:
+                dt['pay_summa'] = i.summa
+            else:
+                dt['give_summa'] = i.summa
 
         data.append(dt)
     summa_total_for_valyuta = []
@@ -7803,7 +7839,7 @@ def externalincomeuser_detail(request, id):
     for valu in valyuta:
         star_dt = {
             'valyuta':valu,
-            'start':debt_shot.filter(valyuta=valu).aggregate(all=Coalesce(Sum('start_summa'), 0 , output_field=IntegerField()))['all']
+            'start': debt_shot.filter(valyuta=valu).last().start_summa if debt_shot.filter(valyuta=valu) else 0
         }
         data_start_sum.append(star_dt)
     context = {
@@ -8035,3 +8071,79 @@ def customer_debt_create(request, id):
     # obj.save()
     # customer.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
+
+
+def set_start_summa(request):
+    debtor = request.POST.get('debtor')
+    partner = request.POST.get('partner')
+    deliver = request.POST.get('deliver')
+
+    date = request.POST.get('date')
+    valuta = request.POST.get('valuta')
+    summa = request.POST.get('summa')
+
+    if debtor:
+        wallet = Wallet.objects.filter(customer_id=debtor, valyuta_id=valuta).last() or Wallet.objects.create(customer_id=debtor, valyuta_id=valuta) 
+    
+    elif partner:
+        wallet = Wallet.objects.filter(partner_id=partner, valyuta_id=valuta).last() or Wallet.objects.create(partner_id=partner, valyuta_id=valuta) 
+
+    elif deliver:
+        wallet = Wallet.objects.filter(deliver_id=deliver, valyuta_id=valuta).last() or Wallet.objects.create(deliver_id=deliver, valyuta_id=valuta) 
+    
+    else:
+        messages.error(request, 'Amaliyot topilmadi')
+        return redirect(request.META['HTTP_REFERER'])
+    
+
+    Wallet.objects.filter(id=wallet.id).update(start_summa=summa)
+    # wallet.update(start_summa=summa)
+
+
+    if debtor:
+        Debtor.objects.get(id=debtor).refresh_debt()
+
+    if partner:
+        ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
+    if deliver:
+        Deliver.objects.get(id=deliver).refresh_debt()
+    
+    messages.success(request, "Muvaffaqiyatli saqlandi")
+
+    return redirect(request.META['HTTP_REFERER'])
+    
+
+def add_bonus(request):
+    debtor = request.POST.get('debtor')
+    partner = request.POST.get('partner')
+    deliver = request.POST.get('deliver')
+
+    valuta = request.POST.get('valuta')
+    summa = request.POST.get('summa')
+    comment = request.POST.get('comment')
+    date = request.POST.get('date')
+
+
+    if debtor:
+        wallet = Bonus.objects.create(debtor_id=debtor, valyuta_id=valuta, summa=summa, date=date, comment=comment)
+        Debtor.objects.get(id=debtor).refresh_debt()
+    
+    elif partner:
+        wallet = Bonus.objects.create(partner_id=partner, valyuta_id=valuta, summa=summa, date=date, comment=comment)
+        ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
+    elif deliver:
+        wallet = Bonus.objects.create(deliver_id=deliver, valyuta_id=valuta, summa=summa, date=date, comment=comment)
+        Deliver.objects.get(id=deliver).refresh_debt()
+    
+    else:
+        messages.error(request, 'Amaliyot topilmadi')
+        return redirect(request.META['HTTP_REFERER'])
+    
+
+    messages.success(request, "Muvaffaqiyatli saqlandi")
+
+    return redirect(request.META['HTTP_REFERER'])
+    
+
