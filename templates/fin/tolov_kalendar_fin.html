@@ -175,13 +175,13 @@
                                                             <p></p>
                                                             Yil
                                                             <br><br><p></p>
-                                                            Начало недели
+                                                            Hafta boshlanishi
                                                             <br><br><br>
-                                                            Конец недели 
+                                                            Hafta tugashi 
                                                             <br><br>
-                                                            Недели
+                                                            Hafta
                                                             <br><br><p></p>
-                                                            <p style="color: white !important;" style="width: 200px;">План - Факт</p>
+                                                            <p style="color: white !important;" style="width: 200px;">Plan - Fakt</p>
                                                         </th>
                                                     </tr>
                                                     
@@ -214,64 +214,40 @@
                                                     </tr>
                                                     <tr style="background-color: blue; ">
                                                         {% for wek in weeks %}
-                                                            <th style="color: white !important;">План</th>
-                                                            <th style="color: white !important;">Факт</th>
+                                                            <th style="color: white !important;">Plan</th>
+                                                            <th style="color: white !important;">Fakt</th>
                                                             <th style="color: white !important;">Bajarilishi</th>
                                                         {% endfor %}
                                                     </tr>
                                                    
                                                 </thead>
                                                 <tbody style="background-color: bisque !important;">
-                                                    {% for wek in weeks %}
                                                     {% for i in data_reja %}
-                                                    {% if wek.count == i.count %}
                                                     <tr class="{% if forloop.first %}header-row{% endif %}">
-                                                        <td >
-                                                            {% if forloop.first %}
-                                                                Prixo
-                                                            {% endif %}
-                                                        </td>
-                                                        <td >{{ i.plan }}</td>
-                                                        <td ></td>
-                                                        <td >{{ i.total }}</td>
-
-                                                        <td>{{ i.plan }}</td>
-                                                        <td></td>
-                                                        <td>{{ i.total }}</td>
-                                                        
-                                                        <td>{{ i.plan }}</td>
-                                                        <td></td>
-                                                        <td>{{ i.total }}</td>
-
-                                                        <td>{{ i.plan }}</td>
-                                                        <td></td>
-                                                        <td>{{ i.total }}</td>
-                                                    </tr>
-                                                    {% endif %}
-                                                    {% endfor %}
+                                                            <td >
+                                                                {% if forloop.first %}
+                                                                    Kirim
+                                                                {% endif %}
+                                                            </td>
+                                                            {% for wek in weeks %}
+                                                                <td > {% if i.count == wek.count %} {{ i.plan }} {% else %} 0 {% endif  %} </td>
+                                                                <td ></td>
+                                                                <td >{% if i.count == wek.count  %} {{ i.total }} {% else %} 0 {% endif  %} </td>
+                                                            {% endfor %}
+                                                        </tr>
                                                     {% endfor %}
                                                     {% for i in data_chiqim %}
                                                         <tr class="{% if forloop.first %}header-row{% endif %}">
                                                             <td>
                                                                 {% if forloop.first %}
-                                                                    Rasxod
+                                                                    Chiqim
                                                                 {% endif %}
                                                             </td>
-                                                            <td>{{ i.plan }}</td>
-                                                            <td></td>
-                                                            <td>{{ i.total }}</td>
-
-                                                            <td>{{ i.plan }}</td>
-                                                            <td></td>
-                                                            <td>{{ i.total }}</td>
-                                                            
-                                                            <td>{{ i.plan }}</td>
-                                                            <td></td>
-                                                            <td>{{ i.total }}</td>
-
-                                                            <td>{{ i.plan }}</td>
-                                                            <td></td>
-                                                            <td>{{ i.total }}</td>
+                                                            {% for wek in weeks %}
+                                                                <td > {% if i.count == wek.count %} {{ i.plan }} {% else %} 0 {% endif  %} </td>
+                                                                <td ></td>
+                                                                <td >{% if i.count == wek.count  %} {{ i.total }} {% else %} 0 {% endif  %} </td>
+                                                            {% endfor %}
                                                         </tr>
                                                     {% endfor %}
                                                 </tbody>
