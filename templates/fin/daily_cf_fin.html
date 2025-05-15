@@ -151,20 +151,20 @@
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label for="" style="color: black !important; font-weight: bold;">Oy</label>
+                                        <label for="" style="color: black !important; font-weight: bold;">Oy {{filter.month}}</label>
                                         <select name="month" class="form-control"> 
-                                                <option value="1" {% if filter.month == '1' %} selected  {% endif %}>Yanvar</option>
-                                                <option value="2" {% if filter.month == '2' %} selected  {% endif %}>Fevral</option>
-                                                <option value="3" {% if filter.month == '3' %} selected  {% endif %}>Mart</option>
-                                                <option value="4" {% if filter.month == '4' %} selected  {% endif %}>Aprel</option>
-                                                <option value="5" {% if filter.month == '5' %} selected  {% endif %}>May</option>
-                                                <option value="6" {% if filter.month == '6' %} selected  {% endif %}>Iyun</option>
-                                                <option value="7" {% if filter.month == '7' %} selected  {% endif %}>Iyul</option>
-                                                <option value="8" {% if filter.month == '8' %} selected  {% endif %}>Avgust</option>
-                                                <option value="9" {% if filter.month == '9' %} selected  {% endif %}>Sentyabr</option>
-                                                <option value="10" {% if filter.month == '10' %} selected  {% endif %}>Oktyabr</option>
-                                                <option value="11" {% if filter.month == '11' %} selected  {% endif %}>Noyabr</option>
-                                                <option value="12" {% if filter.month == '12' %} selected  {% endif %}>Dekabr</option>
+                                                <option value="1" {% if filters.month == 1 %} selected  {% endif %}>Yanvar</option>
+                                                <option value="2" {% if filters.month == 2 %} selected  {% endif %}>Fevral</option>
+                                                <option value="3" {% if filters.month == 3 %} selected  {% endif %}>Mart</option>
+                                                <option value="4" {% if filters.month == 4 %} selected  {% endif %}>Aprel</option>
+                                                <option value="5" {% if filters.month == 5 %} selected  {% endif %}>May</option>
+                                                <option value="6" {% if filters.month == 6 %} selected  {% endif %}>Iyun</option>
+                                                <option value="7" {% if filters.month == 7 %} selected  {% endif %}>Iyul</option>
+                                                <option value="8" {% if filters.month == 8 %} selected  {% endif %}>Avgust</option>
+                                                <option value="9" {% if filters.month == 9 %} selected  {% endif %}>Sentyabr</option>
+                                                <option value="10" {% if filters.month == 10 %} selected  {% endif %}>Oktyabr</option>
+                                                <option value="11" {% if filters.month == 11 %} selected  {% endif %}>Noyabr</option>
+                                                <option value="12" {% if filters.month == 12 %} selected  {% endif %}>Dekabr</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2" style="margin: 0px;">

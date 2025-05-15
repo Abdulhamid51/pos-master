@@ -6686,6 +6686,7 @@ def daily_cf_fin(request):
     month = request.GET.get('month', today.month)
     year = request.GET.get('year', today.year)
     kassa = int(request.GET.get('kassa', 0))
+
     kirim = Kirim.objects.filter(qachon__year=year, qachon__month=month)
     chiqim = Chiqim.objects.filter(qachon__year=year, qachon__month=month)
     pay_history = PayHistory.objects.filter(date__year=year, date__month=month)
@@ -6704,38 +6705,56 @@ def daily_cf_fin(request):
     days_of_month = calendar.monthrange(int(year), int(month))[1]
     days = list(range(1, days_of_month + 1))
 
-    valyuta = Valyuta.objects.all()
-
+    valyuta_list = Valyuta.objects.all()
+    pay_history_list = list(pay_history.values('valyuta_id', 'date__day', 'debt_old', 'debt_new'))
+    
+    pay_history_dict = {}
+    for record in pay_history_list:
+        day = record['date__day']
+        valyuta_id = record['valyuta_id']
+        if (valyuta_id, day) not in pay_history_dict:
+            pay_history_dict[(valyuta_id, day)] = {
+                'debt_old': record['debt_old'],
+                'debt_new': record['debt_new']
+            }
     data = []
-
-    for i in valyuta:
-        dt = {
-            'valyuta_id':i.id,
-            'valyuta_name':i.name,
-            'days':[
-                    {   
-                        'boshlangich_qoldik':getattr(pay_history.filter(date__day=day).first(), 'debt_old', 0),
-                        'kirim':kirim.filter(valyuta=i, qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
-                        'chiqim':chiqim.filter(valyuta=i, qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
-                        'yakuniy_qoldik':getattr(pay_history.filter(date__day=day).last(), 'debt_new', 0),
-
-                    }
-                for day in days
-            ]
+    for valyuta in valyuta_list:
+        valyuta_id = valyuta.id
+        valyuta_data = {
+            'valyuta_id': valyuta_id,
+            'valyuta_name': valyuta.name,
+            'days': []
         }
-        data.append(dt)
+        for day in days:
+            day_kirim = kirim.filter(valyuta=valyuta, qachon__day=day).aggregate(
+                all=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+            )['all']
+            
+            day_chiqim = chiqim.filter(valyuta=valyuta, qachon__day=day).aggregate(
+                all=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+            )['all']
+            
+            ph_record = pay_history_dict.get((valyuta_id, day), {'debt_old': 0, 'debt_new': 0})
+            valyuta_data['days'].append({
+                'boshlangich_qoldik': ph_record['debt_old'],
+                'kirim': day_kirim,
+                'chiqim': day_chiqim,
+                'yakuniy_qoldik': ph_record['debt_new']
+            })
+        data.append(valyuta_data)
 
-    data_kirim = []
-    data_chiqim = []
-    for day in days:
-        kirim_dt = {
-            'sum':kirim.filter(qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
-        }
-        data_kirim.append(kirim_dt)
-        chiqim_dt = {
-            'sum':chiqim.filter(qachon__day=day).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
-        }
-        data_chiqim.append(chiqim_dt)
+    kirim_totals = kirim.values('qachon__day').annotate(
+    total=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+    )
+    chiqim_totals = chiqim.values('qachon__day').annotate(
+        total=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+    )
+    kirim_dict = {item['qachon__day']: item['total'] for item in kirim_totals}
+    chiqim_dict = {item['qachon__day']: item['total'] for item in chiqim_totals}
+
+    data_kirim = [{'sum': kirim_dict.get(day, 0)} for day in days]
+    data_chiqim = [{'sum': chiqim_dict.get(day, 0)} for day in days]
+
     context = {
         'days_of_month': days,
         'filters':filters,
