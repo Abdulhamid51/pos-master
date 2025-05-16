@@ -102,6 +102,14 @@
                                             {% endfor %}
                                             <th>Turi</th>
                                             <th>Tartib raqam</th>
+                                            <td>
+                                                Bonus berish
+                                            </td>
+
+                                            <td>
+                                                Boshlang'ich qoldiq
+                                            </td>
+
                                             <th>Tahrirlash</th>
                                         </tr>
                                     </thead>
@@ -127,6 +135,23 @@
 
                                             <td>{{ i.type.name }}</td>
                                             <td>{{ i.tartib_raqam }}</td>
+
+                                            <td>
+                                                <center>
+                                                    <button data-toggle="modal" class="form-control" data-target="#bonus{{i.id}}">
+                                                        Bonus
+                                                    </button>
+                                                </center>
+                                            </td>
+
+                                            <td>
+                                                <center>
+                                                    <button data-toggle="modal" class="form-control" data-target="#start_debt{{i.id}}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                </center>
+                                            </td>
+
                                             <td>
                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalEdit{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-pen-to-square"></i></button>
                                                 <div class="modal fade" id="exampleModalEdit{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -166,7 +191,107 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                        </tr>
+
+                                            <div class="modal fade" id="bonus{{ i.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                  <div class="modal-content">
+                                                    
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title">Bonus berish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Yopish">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                              
+                                                    <form method="post" action="{% url 'add_bonus' %}">
+                                                      {% csrf_token %}
+                                                      <div class="modal-body">
+                                                        <input type="hidden" name="partner" value="{{ i.id }}">
+                                              
+                                                        <div class="form-group">
+                                                          <label for="valuta">Valuta</label>
+                                                          <select class="form-control" name="valuta" id="valuta">
+                                                            <option value="">- - - - - - - - </option>
+                                                            {% for v in valyuta %}
+                                                              <option value="{{ v.id }}">{{ v.name }}</option>
+                                                            {% endfor %}
+                                                          </select>
+                                                        </div>
+                                              
+                                                        <div class="form-group">
+                                                          <label for="date">Vaqt</label>
+                                                          <input type="datetime-local" class="form-control" name="date" id="date">
+                                                        </div>
+                                              
+                                                        <div class="form-group">
+                                                          <label for="summa">Summa</label>
+                                                          <input type="text" class="form-control" name="summa" id="summa" onkeyup="format(this)">
+                                                        </div>
+                                              
+                                                        <div class="form-group">
+                                                          <label for="comment">Comment</label>
+                                                          <textarea class="form-control" name="comment" id="comment"></textarea>
+                                                        </div>
+                                                      </div>
+                                              
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-rounded btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-rounded btn-primary">Tasdiqlash</button>
+                                                      </div>
+                                                    </form>
+                                              
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            
+                                              <div class="modal fade" id="start_debt{{ i.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                  <div class="modal-content">
+                                                    
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title">Boshlang'ich qoldiq tayinlash</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Yopish">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                              
+                                                    <form method="post" action="{% url 'set_start_summa' %}">
+                                                      {% csrf_token %}
+                                                      <div class="modal-body">
+                                                        <input type="hidden" name="partner" value="{{ i.id }}">
+                                              
+                                                        <div class="form-group">
+                                                          <label for="valuta">Valuta</label>
+                                                          <select class="form-control" name="valuta" id="valuta">
+                                                            <option value="">- - - - - - - - </option>
+                                                            {% for v in valyuta %}
+                                                              <option value="{{ v.id }}">{{ v.name }}</option>
+                                                            {% endfor %}
+                                                          </select>
+                                                        </div>
+                                              
+                                                        <div class="form-group">
+                                                          <label for="date">Vaqt</label>
+                                                          <input type="datetime-local" class="form-control" name="date" id="date">
+                                                        </div>
+                                              
+                                                        <div class="form-group">
+                                                          <label for="summa">Summa</label>
+                                                          <input type="text" class="form-control" name="summa" id="summa" onkeyup="format(this)">
+                                                        </div>
+                                              
+                                                      </div>
+                                              
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-rounded btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-rounded btn-primary">Tasdiqlash</button>
+                                                      </div>
+                                                    </form>
+                                              
+                                                  </div>
+                                                </div>
+                                              </div>
+                                        <!-- </tr> -->
 
                                         <div class="modal fade" id="exampleModalPay{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                             <div class="modal-dialog">
@@ -275,6 +400,7 @@
                                             {% for w in total_qarz %}
                                                 <td class="text-left">{{w.summa|floatformat:'2'|intcomma}}</td>
                                             {% endfor %}
+                                            <th></th>
                                             <th></th>
                                         </tr>
                                     </tfoot>

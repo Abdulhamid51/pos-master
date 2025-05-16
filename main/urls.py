@@ -246,6 +246,8 @@ urlpatterns = [
     path('kassa_new_add', kassa_new_add, name='kassa_new_add'),
     path('kassa_new_edit/<int:id>', kassa_new_edit, name='kassa_new_edit'),
 
+    path('add_bonus', add_bonus, name='add_bonus'),
+    path('set_start_summa', set_start_summa, name='set_start_summa'),
     path('filial_kassalar', filial_kassalar, name='filial_kassalar'),
     path('customer_debt_create/<int:id>', customer_debt_create, name='customer_debt_create'),
     path('external_income_user_debt_create/<int:id>', external_income_user_debt_create, name='external_income_user_debt_create'),

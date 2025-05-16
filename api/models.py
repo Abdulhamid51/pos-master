@@ -312,7 +312,6 @@ class Deliver(models.Model):
 
 
     def refresh_debt(self):
-        print('11111')
         deliver = self
         valyutalar = Valyuta.objects.all()
 
@@ -322,7 +321,14 @@ class Deliver(models.Model):
             .select_related('valyuta')
             .order_by('date')
         )
-        print('aaaaaa')
+
+        bonus_qs = list(
+            Bonus.objects.filter(deliver=deliver)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+        
+
         recieve_qs = list(
             Recieve.objects.filter(deliver=deliver)
             .select_related('valyuta')
@@ -331,12 +337,13 @@ class Deliver(models.Model):
 
         # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
         valyuta_events = defaultdict(list)
-        for event in chain(pay_history_qs, recieve_qs):
+        for event in chain(pay_history_qs, recieve_qs, bonus_qs):
             valyuta_events[event.valyuta_id].append(event)
 
         wallets_to_update = []
         payhistory_to_update = []
         shop_to_update = []
+        bonus_to_update = []
 
         for valyuta in valyutalar:
             events = valyuta_events.get(valyuta.id, [])
@@ -357,6 +364,12 @@ class Deliver(models.Model):
                     summa += event.summa_total
                     event.debt_new = summa
                     shop_to_update.append(event)
+                
+                elif isinstance(event, Bonus):
+                    event.debt_old = summa
+                    summa += event.summa
+                    event.debt_new = summa
+                    bonus_to_update.append(event)
 
             wallet.summa = summa
             wallets_to_update.append(wallet)
@@ -370,7 +383,9 @@ class Deliver(models.Model):
 
         if shop_to_update:
             Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
-        print('ccccc')
+
+        if bonus_to_update:
+                    Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
     
     @property
     def debts(self):
@@ -1141,6 +1156,13 @@ class Debtor(models.Model):
             .select_related('valyuta')
             .order_by('date')
         )
+
+        bonus_qs = list(
+            Bonus.objects.filter(debtor=customer)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+
         shop_qs = list(
             Shop.objects.filter(debtor=customer)
             .select_related('valyuta')
@@ -1149,12 +1171,13 @@ class Debtor(models.Model):
 
         # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
         valyuta_events = defaultdict(list)
-        for event in chain(pay_history_qs, shop_qs):
+        for event in chain(pay_history_qs, shop_qs, bonus_qs):
             valyuta_events[event.valyuta_id].append(event)
 
         wallets_to_update = []
         payhistory_to_update = []
         shop_to_update = []
+        bonus_to_update = []
 
         for valyuta in valyutalar:
             events = valyuta_events.get(valyuta.id, [])
@@ -1175,6 +1198,12 @@ class Debtor(models.Model):
                     summa += event.baskets_total_price
                     event.debt_new = summa
                     shop_to_update.append(event)
+                
+                elif isinstance(event, Bonus):
+                    event.debt_old = summa
+                    summa += event.summa
+                    event.debt_new = summa
+                    bonus_to_update.append(event)
 
             wallet.summa = summa
             wallets_to_update.append(wallet)
@@ -1188,6 +1217,9 @@ class Debtor(models.Model):
 
         if shop_to_update:
             Shop.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+        
+        if bonus_to_update:
+            Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
 
 
         
@@ -1220,7 +1252,26 @@ class Wallet(models.Model):
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     summa = models.IntegerField(default=0)
     start_summa = models.IntegerField(default=0)
+    start_time = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return str(self.valyuta) + " " + str(self.start_summa)
+
+
+
+class Bonus(models.Model):
+    debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, blank=True, null=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
+    partner = models.ForeignKey("ExternalIncomeUser", on_delete=models.CASCADE, blank=True, null=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    summa = models.FloatField(default=0)
+
+    debt_old = models.FloatField(default=0)
+    debt_new = models.FloatField(default=0)
+
+    date = models.DateTimeField(default=timezone.now)
+
+    comment = models.TextField(blank=True, null=True)
 
 #
 # class DebtHistory(models.Model):
@@ -2270,14 +2321,21 @@ class ExternalIncomeUser(models.Model):
             .order_by('date')
         )
 
+        bonus_qs = list(
+            Bonus.objects.filter(partner=partner)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+
 
         # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
         valyuta_events = defaultdict(list)
-        for event in chain(pay_history_qs):
+        for event in chain(pay_history_qs, bonus_qs):
             valyuta_events[event.valyuta_id].append(event)
 
         wallets_to_update = []
         payhistory_to_update = []
+        bonus_to_update = []
 
         for valyuta in valyutalar:
             events = valyuta_events.get(valyuta.id, [])
@@ -2292,6 +2350,11 @@ class ExternalIncomeUser(models.Model):
                     summa += event.summa if event.type_pay == 1 else - event.summa
                     event.debt_new = summa
                     payhistory_to_update.append(event)
+                elif isinstance(event, Bonus):
+                    event.debt_old = summa
+                    summa += event.summa
+                    event.debt_new = summa
+                    bonus_to_update.append(event)
 
 
             wallet.summa = summa
@@ -2303,6 +2366,9 @@ class ExternalIncomeUser(models.Model):
 
         if payhistory_to_update:
             PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+        
+        if bonus_to_update:
+            Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
 
 
 class ExternalIncomeUserPayment(models.Model):
