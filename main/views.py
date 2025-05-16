@@ -6955,16 +6955,18 @@ def xarid_fin(request):
     return render(request, 'fin/xarid_fin.html', context)
 
 def sotuv_fin(request):
-    cart = Cart.objects.all()
     today = datetime.now()
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    start_date = request.GET.get('start_date', today.replace(day=1).strftime('%Y-%m-%d') )
+    end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
+    cart = Cart.objects.filter(date__date__range=(start_date, end_date))
+
+    filter = {
+        'start_date':str(start_date),
+        'end_date':str(end_date),
+    }
 
     product = request.GET.getlist('product')
     debtor = request.GET.getlist('debtor')
-    
-    if start_date and end_date:
-        cart = cart.filter(date__date__range=(start_date, end_date))
     
     if product:
         cart = cart.filter(product_id__in=product)
@@ -7011,6 +7013,7 @@ def sotuv_fin(request):
         'carts_data':carts_data,
         'product':ProductFilial.objects.all().values('id', 'name'),
         'debtor':Debtor.objects.all().values('id', 'fio'),
+        'filter':filter,
     }
     return render(request, 'fin/sotuv_fin.html', context)
 
@@ -7157,8 +7160,8 @@ def tolov_kalendar_fin(request):
         dushanba = week['dushanba']
         shanba = week['shanba']
         
-        weekly_reja_tushum = RejaTushum.objects.filter(date__gte=dushanba, date__lte=shanba)
-        weekly_reja_chiqim = RejaChiqim.objects.filter(date__gte=dushanba, date__lte=shanba)
+        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
+        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
 
         plan_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
         total_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
@@ -7180,7 +7183,6 @@ def tolov_kalendar_fin(request):
             }
             data_chiqim.append(dt_chiqim)
             
-    print(data_reja)
     filter = {
         "year":year,
         "month":str(month),
@@ -7211,56 +7213,78 @@ def reja_tushum_fin(request):
         'reja':reja,
         'filter':filter,
         'debtor':Debtor.objects.all(),
+        'deliver':Deliver.objects.all(),
+        'external_income_user':ExternalIncomeUser.objects.filter(is_active=True),
         'valyuta':Valyuta.objects.all(),
+        'money_circulation':MoneyCirculation.objects.all(),
+        'kassa':KassaNew.objects.all(),
+        'kurs':Course.objects.last().som or 0,
     }
     return render(request, 'fin/reja_tushum_fin.html', context)
 
 def reja_tushum_fin_add(request):
     payment_date = request.POST.get('payment_date')
-    total = request.POST.get('total')
     plan_total = request.POST.get('plan_total')
     debtor = request.POST.get('debtor')
     comment = request.POST.get('comment')
     shop = request.POST.get('shop')
     valyuta = request.POST.get('valyuta')
-    
+    kurs = request.POST.get('kurs')
+    where = request.POST.get('where')
+    kassa = request.POST.get('kassa')
+    money_circulation = request.POST.get('money_circulation')
+    deliver = request.POST.get('deliver')
+    external_income_user = request.POST.get('external_income_user')
     RejaTushum.objects.create(
         payment_date=payment_date,
-        total=total,
         plan_total=plan_total,
         debtor_id=debtor,
         comment=comment,
-        kurs=Course.objects.last().som or 0,
+        kurs=kurs,
         valyuta_id=valyuta,
         shop_id=shop,
+        where=where,
+        kassa_id=kassa,
+        money_circulation_id=money_circulation,
+        deliver_id=deliver,
+        external_income_user_id=external_income_user,
     )
     return redirect(request.META['HTTP_REFERER'])
 
 def reja_tushum_fin_edit(request, id):
     reja = RejaTushum.objects.get(id=id)
     payment_date = request.POST.get('payment_date')
-    total = request.POST.get('total')
     plan_total = request.POST.get('plan_total')
     debtor = request.POST.get('debtor')
     comment = request.POST.get('comment')
-    shop = request.POST.get('shop')
     valyuta = request.POST.get('valyuta')
+    kurs = request.POST.get('kurs')
+    where = request.POST.get('where')
+    kassa = request.POST.get('kassa')
+    money_circulation = request.POST.get('money_circulation')
+    deliver = request.POST.get('deliver')
+    external_income_user = request.POST.get('external_income_user')
+
     reja.payment_date=payment_date
-    reja.total=total
+    reja.kurs=kurs
+    reja.where=where
     reja.plan_total=plan_total
     reja.debtor_id=debtor
     reja.comment=comment
     reja.valyuta_id=valyuta
-    reja.shop_id=shop
+    reja.kassa_id=kassa
+    reja.money_circulation_id=money_circulation
+    reja.deliver_id=deliver
+    reja.external_income_user_id=external_income_user
     reja.save()
     return redirect(request.META['HTTP_REFERER'])
 
 def reja_tushum_fin_del(request, id):
-    RejaTushum.objects.get(id=id).delete()
+    RejaTushum.objects.filter(id=id).update(is_active=False)
     return redirect(request.META['HTTP_REFERER'])
 
 def reja_chiqim_fin(request):
-    reja = RejaChiqim.objects.all()
+    reja = RejaChiqim.objects.filter(is_active=True)
     today = datetime.today()
     year = request.GET.get('year', str(today.year))
     month = request.GET.get('month', str(today.month))
@@ -7274,58 +7298,63 @@ def reja_chiqim_fin(request):
         'today':today,
         'reja':reja,
         'filter':filter,
-        'debtor':Debtor.objects.all(),
+        'kassa':KassaNew.objects.all(),
+        'money_circulation':MoneyCirculation.objects.all(),
         'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
+        'kurs':Course.objects.last().som or 0,
     }
     return render(request, 'fin/reja_chiqim_fin.html', context)
 
 def reja_chiqim_fin_add(request):
     payment_date = request.POST.get('payment_date')
-    total = request.POST.get('total')
+    where = request.POST.get('where')
     plan_total = request.POST.get('plan_total')
-    debtor = request.POST.get('debtor')
+    money_circulation = request.POST.get('money_circulation')
     comment = request.POST.get('comment')
-    shop = request.POST.get('shop')
+    kassa = request.POST.get('kassa')
     user_profile = request.POST.get('user_profile')
     valyuta = request.POST.get('valyuta')
+    kurs = request.POST.get('kurs')
     
     RejaChiqim.objects.create(
         payment_date=payment_date,
-        total=total,
+        where=where,
         plan_total=plan_total,
-        debtor_id=debtor,
+        money_circulation_id=money_circulation,
         comment=comment,
-        kurs=Course.objects.last().som or 0,
-        shop_id=shop,
+        kurs=kurs,
         user_profile_id=user_profile,
-        valyuta_id=valyuta
+        valyuta_id=valyuta,
+        kassa_id=kassa,
     )
     return redirect(request.META['HTTP_REFERER'])
 
 def reja_chiqim_fin_edit(request, id):
     reja = RejaChiqim.objects.get(id=id)
     payment_date = request.POST.get('payment_date')
-    total = request.POST.get('total')
+    where = request.POST.get('where')
     plan_total = request.POST.get('plan_total')
-    debtor = request.POST.get('debtor')
+    money_circulation = request.POST.get('money_circulation')
     comment = request.POST.get('comment')
-    shop = request.POST.get('shop')
+    kassa = request.POST.get('kassa')
     user_profile = request.POST.get('user_profile')
     valyuta = request.POST.get('valyuta')
+    kurs = request.POST.get('kurs')
     reja.payment_date=payment_date
-    reja.total=total
+    reja.where=where
     reja.plan_total=plan_total
-    reja.debtor_id=debtor
+    reja.money_circulation_id=money_circulation
     reja.comment=comment
-    reja.shop_id=shop
+    reja.kassa_id=kassa
+    reja.kurs=kurs
     reja.valyuta_id=valyuta
     reja.user_profile_id=user_profile
     reja.save()
     return redirect(request.META['HTTP_REFERER'])
 
 def reja_chiqim_fin_del(request, id):
-    RejaChiqim.objects.get(id=id).delete()
+    RejaChiqim.objects.filter(id=id).update(is_active=False)
     return redirect(request.META['HTTP_REFERER'])
 
 

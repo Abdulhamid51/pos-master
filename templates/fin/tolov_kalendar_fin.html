@@ -230,9 +230,9 @@
                                                                 {% endif %}
                                                             </td>
                                                             {% for wek in weeks %}
-                                                                <td > {% if i.count == wek.count %} {{ i.plan }} {% else %} 0 {% endif  %} </td>
+                                                                <td > {% if i.count == wek.count %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
                                                                 <td ></td>
-                                                                <td >{% if i.count == wek.count  %} {{ i.total }} {% else %} 0 {% endif  %} </td>
+                                                                <td >{% if i.count == wek.count  %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
                                                             {% endfor %}
                                                         </tr>
                                                     {% endfor %}
@@ -244,9 +244,9 @@
                                                                 {% endif %}
                                                             </td>
                                                             {% for wek in weeks %}
-                                                                <td > {% if i.count == wek.count %} {{ i.plan }} {% else %} 0 {% endif  %} </td>
+                                                                <td > {% if i.count == wek.count %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
                                                                 <td ></td>
-                                                                <td >{% if i.count == wek.count  %} {{ i.total }} {% else %} 0 {% endif  %} </td>
+                                                                <td >{% if i.count == wek.count  %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
                                                             {% endfor %}
                                                         </tr>
                                                     {% endfor %}

@@ -335,8 +335,8 @@
                   
                     
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin money_circulation one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}active{% endif %}">
-                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin money_circulation one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}true{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}active{% endif %}">
+                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}true{% endif %}" class="dropdown-toggle">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-money-bill-trend-up" style="font-size: 17px;"></i>
                                     <span style="margin-left: 10px;">Moliya</span>
@@ -349,7 +349,7 @@
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin money_circulation one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}show{% endif %}"
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}show{% endif %}"
                                 id="filial-moliya" data-parent="#accordionExample">
                                     {% if custom_user_profile.is_kassa %} 
                                         <li class="menu {% if request.resolver_match.url_name == 'kassa' %}active{% endif %}">
@@ -375,7 +375,7 @@
                                         </li>
                                     {% endif %}
                                     {% if custom_user_profile.is_fin_hisoboti %} 
-                                            <li class="menu {% if url_name in 'fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin money_circulation' %}active{% endif %}">
+                                            <li class="menu {% if url_name in 'fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin ' %}active{% endif %}">
                                                 <a href="{% url 'fin_report' %}"> Fin hisobiti </a>
                                             </li>
                                     {% endif %}
@@ -554,8 +554,8 @@
 
                   
                     {% with url_name=request.resolver_match.url_name %}
-                    <li class="menu {% if url_name in 'price_type product_price_type nds_page hodim valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
-                        <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
+                    <li class="menu {% if url_name in 'money_circulation price_type product_price_type nds_page hodim valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
+                        <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'money_circulation price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
                             <div style="display: flex; align-items: center;">
                                 <i class="fa-solid fa-gear" style="font-size: 17px;"></i>
                                 <span style="margin-left: 10px;">Sozlamalar</span>
@@ -568,7 +568,7 @@
                                 </svg>
                             </div>
                         </a>
-                        <ul class="collapse submenu list-unstyled {% if url_name in 'price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
+                        <ul class="collapse submenu list-unstyled {% if url_name in 'money_circulation price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
                         id="narx-turi" data-parent="#accordionExample">
                             <li class="menu {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
                                 <a href="{% url 'price_type' %}">Narx Turi</a>
@@ -595,6 +595,9 @@
                             </li>
                             <li class="menu {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
                                 <a href="{% url 'kassa_new_list' %}">Kassa</a>
+                            </li>
+                              <li class="menu {% if request.resolver_match.url_name == 'money_circulation' %}active{% endif %}">
+                                <a href="{% url 'money_circulation' %}">Pul Muomalasi</a>
                             </li>
                         </ul>
                     </li>

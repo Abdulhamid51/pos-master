@@ -580,7 +580,7 @@ class ProductCategory(models.Model):
     def __str__(self):
         return self.name
     
-from django.db.models import Value
+from django.db.models import Sum, F, Value, FloatField
 
 class ProductFilial(models.Model):
     deliver = models.ManyToManyField(Deliver, related_name='products1', blank=True)
@@ -653,7 +653,12 @@ class ProductFilial(models.Model):
             carts = carts.filter(shop__date__date__gte=start_date, shop__date__date__lte=end_date)
         if debtor:
             carts = carts.filter(shop__debtor__id=debtor)
-        total = carts.aggregate(foo=Coalesce(Sum((F('price') - F('bring_price')) * F('quantity'), output_field=models.FloatField()), Value(0)))['foo']
+        total = carts.aggregate(
+            foo=Coalesce(
+                Sum((F('price') - F('bring_price')) * F('quantity'), output_field=FloatField()),
+                Value(0, output_field=FloatField())
+            )
+        )['foo']
         # total = carts.aggregate(
         #     foo=Coalesce(Sum((F('price') - F('bring_price')) * F('quantity')),output_field=float()),default=0)['foo']
         return total
@@ -2154,10 +2159,17 @@ class RejaTushum(models.Model):
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, null=True, blank=True)
+    external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, null=True , blank=True)
+    money_circulation = models.ForeignKey(MoneyCirculation, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE, null=True, blank=True)
+    where = models.CharField(max_length=255, null=True, blank=True)
     from_shop = models.BooleanField(default=False)
+    is_confirmed = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
 class RejaChiqim(models.Model):
     date = models.DateField(auto_now_add=True)
@@ -2166,11 +2178,16 @@ class RejaChiqim(models.Model):
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    money_circulation = models.ForeignKey(MoneyCirculation, on_delete=models.CASCADE, null=True, blank=True)
+    kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE, null=True, blank=True)
+    where = models.CharField(max_length=255, null=True, blank=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, null=True , blank=True)
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True , blank=True)
     from_shop = models.BooleanField(default=False)
+    is_confirmed = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     
 # class ProductFilialDaily(models.Model):
 #     rest = models.FloatField(default=0)
