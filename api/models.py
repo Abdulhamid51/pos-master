@@ -58,6 +58,7 @@ from collections import defaultdict
 class Valyuta(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     is_dollar = models.BooleanField(default=False)
+    is_som = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -256,7 +257,6 @@ class UserProfile(models.Model):
         if self.staff == 6:
             obj, created = FlexPrice.objects.get_or_create(user_profile=self, sana=date)
             obj.total  = Cart.objects.select_related('shop', 'shop__saler').filter(shop__call_center=self.username, shop__date__date=date).distinct().aggregate(all=Coalesce(Sum('quantity'), 0))['all']
-            print(obj.total, 'kk')
             obj.save() 
 
     def __str__(self):
@@ -361,7 +361,7 @@ class Deliver(models.Model):
 
                 elif isinstance(event, Recieve):
                     event.debt_old = summa
-                    summa += event.summa_total
+                    summa += event.total_bring_price
                     event.debt_new = summa
                     shop_to_update.append(event)
                 
@@ -636,6 +636,38 @@ class ProductFilial(models.Model):
 
         
 
+    @property
+    def pricetypevaluta_prices(self):
+        data = []
+        for v in Valyuta.objects.all():
+            dt = {
+                'valuta': v.name,
+                "valyuta_id": v.id,
+                'summas': [],
+            }
+            for p in PriceType.objects.all():
+                pr = ProductPriceType.objects.filter(valyuta=v, type=p, product=self).last() or ProductPriceType.objects.create(valyuta=v, type=p, product=self)
+                dt['summas'].append({
+                    "id": pr.id,
+                    "summa": str(pr.price).replace(',', '.')
+                })
+
+            data.append(dt)
+        return data
+
+    @property
+    def bring_prices(self):
+        data = []
+        for i in Valyuta.objects.all():
+            pr = ProductBringPrice.objects.filter(valyuta=i, product=self).last()
+            dt = {
+                "valyuta": i.name,
+                "id": pr.id if pr else None,
+                "valyuta_id": i.id,
+                "price": pr.price if pr else 0,
+            }
+            data.append(dt)
+        return data
 
         
     def return_recieves(self, start_date, end_date, deliver_id):
@@ -646,7 +678,6 @@ class ProductFilial(models.Model):
         
         if start_date and end_date:
             recieves = recieves.filter(recieve__date__date__gte=start_date, recieve__date__date__lte=end_date)
-        # print(recieves, 'aaa')
         total = recieves.aggregate(Sum('quantity'))['quantity__sum']
         return total if total else 0
     
@@ -679,6 +710,8 @@ class ProductFilial(models.Model):
         return total
     
 
+    
+
 class Recieve(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
@@ -693,17 +726,19 @@ class Recieve(models.Model):
     is_prexoded = models.BooleanField(default=False)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, null=True, blank=True)
-    
+    kurs = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
     
 
     # difference = models.IntegerField(default=0)
     def save(self, *args, **kwargs):
-        self.som = sum([i.som * i.quantity for i in self.receiveitem.all()])
-        self.sum_sotish_som = sum([i.sotish_som * i.quantity for i in self.receiveitem.all()])
-        self.dollar = 0
-        self.sum_sotish_dollar = 0
+        # self.som = sum([i.som * i.quantity for i in self.receiveitem.all()])
+        # self.sum_sotish_som = sum([i.sotish_som * i.quantity for i in self.receiveitem.all()])
+        # self.dollar = 0
+        # self.sum_sotish_dollar = 0
+        if self.status == 2:
+            self.deliver.refresh_debt()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -721,13 +756,45 @@ class Recieve(models.Model):
     def total_quantity(self):
         return self.receiveitem.all().aggregate(foo=Sum(F('quantity')))['foo']
 
-    @property
-    def summa_total(self):
-        return 0
     
+    @property
+    def total_bring_price(self):
+        return sum([i.total_bring_price for i in RecieveItem.objects.filter(recieve=self)])
+
+    @property
+    def expanses_summa(self):
+        data = []
+        for v in Valyuta.objects.all():
+            dt = {
+                "valyuta": v.name,
+                "valyuta_id": v.id,
+                'summa': RecieveExpanses.objects.filter(recieve=self, valyuta=v).aggregate(sum=Sum('summa'))['sum'] or 0
+            }
+            data.append(dt)
+        return data
+
+    @property
+    def expanse_total_dollar(self):
+        som = RecieveExpanses.objects.filter(recieve=self, valyuta__is_som=True).distinct().aggregate(sum=Sum('summa'))['sum'] or 0
+        dollar = RecieveExpanses.objects.filter(recieve=self, valyuta__is_dollar=True).distinct().aggregate(sum=Sum('summa'))['sum'] or 0
+
+        return dollar + (round(som / (self.kurs if self.kurs else 1),))
     
     class Meta:
         verbose_name_plural = '4) Recieve'
+
+
+class RecieveExpanseTypes(models.Model):
+    name = models.CharField(max_length=200)
+
+
+class RecieveExpanses(models.Model):
+    recieve = models.ForeignKey(Recieve, on_delete=models.CASCADE, related_name='expanses')
+    type = models.ForeignKey(RecieveExpanseTypes, on_delete=models.PROTECT)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    externaluser = models.ForeignKey("ExternalIncomeUser", on_delete=models.SET_NULL, blank=True, null=True)
+    summa = models.FloatField(default=0)
+    comment = models.TextField(blank=True, null=True)
 
 
 class RecieveItem(models.Model):
@@ -743,6 +810,50 @@ class RecieveItem(models.Model):
     old_quantity = models.IntegerField(default=0)
     old_sotish_som = models.IntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+
+    @property
+    def dollar_price(self):
+        if self.recieve.valyuta.is_som:
+            return self.total_bring_price / (self.recieve.kurs if self.recieve.kurs else 1)
+        return self.total_bring_price
+
+    @property
+    def percent(self):
+        return round(100 / self.recieve.total_bring_price * self.total_bring_price, 2)
+    
+    @property
+    def expanse(self):
+        return round(self.recieve.expanse_total_dollar / 100 * self.percent, 2)
+    
+    @property
+    def expanse_for_count(self):
+        return round(self.expanse / self.quantity, 2)
+    @property
+    def cost(self):
+        return self.dollar_price + (self.expanse_for_count)
+
+    @property
+    def bring_price(self):
+
+        br = ProductBringPrice.objects.filter(valyuta=self.recieve.valyuta, product=self.product, recieveitem=self).last()
+        return br.price if br else 0
+
+    @property
+    def total_bring_price(self):
+        return self.bring_price * self.quantity
+    
+    @property
+    def bring_prices(self):
+        data = []
+        for i in Valyuta.objects.all():
+            pr = ProductBringPrice.objects.filter(valyuta=i, product=self.product, recieveitem=self).last() or ProductBringPrice.objects.create(valyuta=i, product=self.product, recieveitem=self)
+            dt = {
+                "valyuta": i.name,
+                "valyuta_id": i.id,
+                "price": pr.price if pr else 0,
+            }
+            data.append(dt)
+        return data
 
     def __str__(self):
         return self.product.name
@@ -830,6 +941,12 @@ class RecieveItem(models.Model):
         verbose_name_plural = '4.1) RecieveItem'
 
 
+class ProductBringPrice(models.Model):
+    recieveitem = models.ForeignKey(RecieveItem,     on_delete=models.CASCADE, blank=True, null=True)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    price = models.FloatField(default=0)
+
 
 
 class Faktura(models.Model):
@@ -916,6 +1033,10 @@ class Shop(models.Model):
     nds_count = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
+
+    @property
+    def total_price(self):
+        return sum(i.total_price for i in Cart.objects.filter(shop=self))
 
 
     def save(self, *args, **kwargs):
@@ -1008,6 +1129,7 @@ class Cart(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     applied = models.BooleanField(default=False)
     skidka_total = models.IntegerField(default=0)
+    summa_total = models.FloatField(default=0)
 
     @property
     def foyda(self):
@@ -1024,17 +1146,15 @@ class Cart(models.Model):
     @property
     def for_call_center(self):
         if self.shop.call_center:
-            print(self.shop.call_center)
             call_center = UserProfile.objects.filter(username=self.shop.call_center).last()
-            print(call_center)
             if call_center:
                 return call_center.flex_price * self.quantity
             # return 0
         return 0
 
     def save(self, *args, **kwargs):
+        self.summa_total = self.total_price
         super().save(*args, **kwargs)
-        
         employes = UserProfile.objects.filter(staff__in=[3,6],  daily_wage=False)
         
         for i in employes:    
@@ -1042,9 +1162,7 @@ class Cart(models.Model):
             if i.staff == 3:
                 obj.total = Cart.objects.filter(shop__saler__staff=3, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0))['all']
             if i.staff == 6:
-                print(Cart.objects.filter(shop__call_center=i.username, date__date=self.date.date()), 'ooo')
                 obj.total = Cart.objects.filter(shop__call_center=i.username, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0))['all']
-                print(obj.total, 'eeee')
             
             obj.save()
         
@@ -2047,8 +2165,9 @@ class PriceType(models.Model):
 class ProductPriceType(models.Model):
     type = models.ForeignKey(PriceType, on_delete=models.CASCADE)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='price_types')
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, related_name='price_types', blank=True, null=True)
     price = models.DecimalField(max_digits=20, decimal_places=2, default=0)
-    price_dollar = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    # price_dollar = models.DecimalField(max_digits=20, decimal_places=2, default=0)
 
     class Meta:
         verbose_name_plural = 'Maxsulot narx turi'
