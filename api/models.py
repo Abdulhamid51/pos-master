@@ -1086,7 +1086,7 @@ class Debtor(models.Model):
     start_som = models.IntegerField(default=0)
     start_dollar = models.IntegerField(default=0)
 
-    start_date = models.DateTimeField(default=timezone.now())
+    start_date = models.DateTimeField(default=timezone.now)
 
     difference = models.IntegerField(default=0)
     lan = models.FloatField(default=0)
