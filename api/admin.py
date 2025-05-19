@@ -174,7 +174,7 @@ class PriceTypeAdmin(admin.ModelAdmin):
 
 @admin.register(ProductPriceType)
 class ProductPriceTypeAdmin(admin.ModelAdmin):
-    list_display = ['id', 'type', 'product', 'price', 'price_dollar']
+    list_display = ['id', 'type', 'product', 'valyuta', 'price']
     list_filter = ('type', 'product__group', 'product')
     search_fields = ['type__name', 'product__group__name', 'product__name']
 
@@ -419,6 +419,10 @@ class ChiqimCategoryAdmin(admin.ModelAdmin):
 @admin.register(ChiqimSubCategory)
 class ChiqimSubCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'category')
+
+@admin.register(ProductBringPrice)
+class ProductBringPriceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'recieveitem', 'product', 'valyuta', 'price')
 
 
 @admin.register(KassaNew)
