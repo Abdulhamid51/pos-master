@@ -1,348 +1,951 @@
 {% extends 'base.html' %}
-{% load mathfilters %}
+{% load humanize %}
 {% load static %}
 {% block title %}
-{% load humanize %}
-    <title>Ombor qabul | Bordo</title>
+    <title>Qabul | Bordo</title>
 {% endblock title %}
 {% block css %}
-    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM STYLES -->
-    <link href="{% static 'plugins/apex/apexcharts.css'%}" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/widgets/modules-widgets.css'%}">
-    <!-- END PAGE LEVEL PLUGINS/CUSTOM STYLES -->
-
-    <!-- BEGIN THEME GLOBAL STYLES -->
-    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
-    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
-    <!-- END THEME GLOBAL STYLES -->
+    <link href="{% static 'plugins/perfect-scrollbar/perfect-scrollbar.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
 
     <!--  BEGIN CUSTOM STYLE FILE  -->
-    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
-    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
-    <link href="{% static 'plugins/noUiSlider/custom-nouiSlider.css'%}" rel="stylesheet" type="text/css">
-    <link href="{% static 'plugins/bootstrap-range-Slider/bootstrap-slider.css'%}" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <style>
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-        }
-
-        /* Firefox */
-        input[type=number] {
-        -moz-appearance: textfield;
-        }
-    </style>
-    
+    <link href="{% static 'assets/css/apps/invoice.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!--  END CUSTOM STYLE FILE  -->
+    <style>
+        nput[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
+        /* Firefox uchun */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+    </style>
+
+<style>
+.custom-scroll-table {
+    overflow-x: auto;  /* faqat gorizontal scroll */
+    overflow-y: hidden;  /* vertikal scrollni o'chiramiz */
+    width: 100%;
+    display: block;
+    white-space: nowrap;  /* qatorlarni yangi qatorga tushmasligi uchun */
+}
+
+
+
+</style>
 {% endblock css %}
 {% block content %}
         <!--  BEGIN CONTENT AREA  -->
         <div id="content" class="main-content">
             <div class="layout-px-spacing">
-                <div class="row sales layout-top-spacing">
-                    <!-- <div class="col-12 layout-spacing">
-                        <div class="widget widget-table-two">
-                            <div class="widget-content pb-2">
+                <div class="row invoice layout-top-spacing">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="app-hamburger-container">
+                            <div class="hamburger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu chat-menu d-xl-none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+                        </div>
+                        <div class="doc-container">
+                            <div class="tab-title">
                                 <div class="row">
-                                    <div class="form-group mb-0 col-12">
-                                        <input id="rangeCalendarFlatpickr" class="form-control flatpickr flatpickr-input active" type="text" placeholder="Sanani tanlang">
+                                    <div class="col-md-12 col-sm-12 col-12">
+                                        <div class="">
+                                            <!-- <button style="width: 100%;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_add">
+                                                Yangi
+                                            </button> -->
+
+                                              <div class="modal fade" id="new_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                  <form action="{% url 'add_recieve' %}" class="modal-content" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="exampleModalLongTitle">Yangi qoshish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="form-group">
+                                                        <label for="">Partiya</label>
+                                                        <input type="text" class="form-control" name="name" required>
+
+                                                        <label for="">Yetkazib beruvchi</label>
+                                                        <div class="d-flex">
+                                                            <select class="form-control searchable" required name="deliver" id="">
+                                                                
+                                                                {% for del in delivers %}
+                                                                    <option value="{{del.id}}">{{ del.name }}</option>
+                                                                {% endfor %}
+                                                                    
+                                                            </select>
+                                                            <button style="width: 2rem;height: 2.2rem;padding: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_taminotchi">
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                        <label for="">Filial</label>
+                                                        <select class="form-control searchable" name="filial">
+                                                            {% for filial in filial %}
+                                                                    <option value="{{filial.id}}">{{ filial.name }}</option>
+                                                                {% endfor %}
+                                                        </select>
+
+                                                        <label for="">Valyuta</label>
+                                                        <select class="form-control searchable" name="valyuta">
+                                                            {% for valyuta in valyutas %}
+                                                                <option value="{{valyuta.id}}">{{ valyuta.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <label for="">Kurs</label>
+                                                        <input type="number" name="kurs" class="form-control">
+                                                        <label for="">Sana</label>
+                                                        <input type="datetime-local" name="date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
+                                                      </div>
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                      </div>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+
+
+                                              <div class="modal fade" id="add_taminotchi" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                  <form action="{% url 'create_deliver' %}" class="modal-content" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="exampleModalLongTitle">Taminotchi qoshish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="form-group">
+                                                        <label for="">Nomi</label>
+                                                        <input type="text" class="form-control" name="name" required>
+
+                                                        <label for="">Telefon 1</label>
+                                                        <input type="text" class="form-control" name="phone1" required>
+
+                                                        <label for="">Telefon 2</label>
+                                                        <input type="text" class="form-control" name="phone2" required>
+
+                                                        
+                                                        
+                                                      </div>
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                      </div>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+                                        </div>
+                                        <!-- <div class="search">
+                                            <input type="text" class="form-control" placeholder="Izlash">
+                                        </div> -->
+                                        <ul class="nav nav-pills inv-list-container d-block" id="pills-tab" role="tablist">
+                                            {% for recieve in recieves %}
+                                                <li data-id="{{recieve.id}}" class="nav-item nav_items
+                                                {% if forloop.first %}
+                                                    active
+                                                {% endif %}
+                                                    ">
+                                                    <div class="nav-link list-actions" id="invoice-{{ recieve.id }}" data-invoice-id="{{ recieve.id }}">
+                                                        <div class="f-m-body">
+                                                            <div class="f-body">
+                                                                <h6 class="invoice-customer-name">Partiya: {{ recieve.name }} </h6>
+                                                                <h6 class="invoice-customer-name"><span>Yetkazib beruvchi:</span> {{ recieve.deliver }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Valyuta:</span> {{ recieve.valyuta }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Summa:</span> {{ recieve.total_bring_price|intcomma }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Kurs:</span> {{ recieve.kurs|intcomma }}</h6>
+                                                                <!-- <p class="invoice-customer-name"><span>Dollar:</span> {{ recieve.dollar }}</p> -->
+                                                                <h6 class="invoice-generated-date">Sana: {{ recieve.date }}</h6>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+
+
+
+                                                <div class="modal fade" id="delete_modal{{recieve.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                      <div class="modal-content">
+                                                        <div class="modal-header">
+                                                          <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                        </div>
+                                                        <div class="modal-footer d-flex justify-content-between">
+                                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                          <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'delete_recieve'  recieve.id %}">O'chirish</a>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                            {% endfor %}
+                                        </ul>
+                                       
                                     </div>
                                 </div>
                             </div>
-                            <div class="widget-content">
-                                <div class="table-responsive">
-                                    <table class="table" id="html5-extension">
-                                        <thead>
-                                            <tr>
-                                                <th><div class="text-center">№</div></th>
-                                                <th><div class="text-center">Nomi</div></th>
-                                                <th><div class="text-center">Yetkazib beruvchi</div></th>
-                                                <th><div class="text-center">So`m</div></th>
-                                                <th><div class="text-center">Dollar</div></th>
-                                                <th><div class="text-center">Sana</div></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="war">
-                                            {% for w in wares %}
-                                                <tr onclick="Item({{ w.id }})">
-                                                    <td><div class="td-content">{{ forloop.counter }}</div></td>
-                                                    <td><div class="td-content">{{ w.name }}</div></td>
-                                                    <td><div class="td-content">{{ w.deliver }}</div></td>
-                                                    <td><div class="td-content">{{ w.som|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.dollar|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.date }}</div></td>
-                                                </tr>
-                                            {% endfor %}
-                                            <tr>
-                                                <td><div class="td-content">` + i + `</div></td>
-                                                <td><div class="td-content">` + dt.product + `</div></td>
-                                                <td><div class="td-content">` + String(dt.som) + `</div></td>
-                                                <td><div class="td-content">` + String(dt.dollar) + `</div></td>
-                                                <td><div class="td-content">` + String(dt.kurs) + `</div></td>
-                                                <td><div class="td-content">` + String(dt.quantity) + `</div></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
-                    <div class="col-12 layout-spacing" style = "position: sticky;top: 65px;width: 100%;height: 100%;">
-                        <div class="widget widget-table-two">
-                            <div class="widget-content">
-                                <div class="table-responsive scrollmenu" style="overflow-x:auto;">
-                                    <table class="table table-bordered" style="color: black;">
-                                        <thead>
-                                            <tr>
-                                                <th><div>№</div></th>
-                                                <th><div class="text-center">Maxsulot..............</div></th>
-                                                <th><div class="text-center">So`m</div></th>
-                                                <th><div class="text-center">Dollar</div></th>
-                                                <th><div class="text-center">Sotish so'm</div></th>
-                                                <th><div class="text-center">Sotish dollar</div></th>
-                                                <th><div class="text-center">Kurs</div></th>
-                                                <th><div class="text-center">Soni</div></th>
-                                                <th><div class="text-center">Jami summa kelish</div></th>
-                                                <th><div class="text-center">Jami summa sotish</div></th>
-                                                <th>Foyda</th>
-                                                <th>Zarar</th>
-                                                
-                                                {% for i in price_types %}
-                                                    <th>Foyda({{i.name}})</th>
-                                                {% endfor %}
-                                                    
-                                                {% for i in price_types %}
-                                                    <th>Zarar({{i.name}})</th>
-                                                {% endfor %}
-                                                <th style="white-space: nowrap; width: 10rem !important;"><div class="text-center">Maxsulot kelish narxi</div></th>
-                                                <th><div class="text-center">Soni</div></th>
-                                                <th><div class="text-center">Tasdiqlash</div></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="waritem">
-                                            
-                                            {% for object in object.receiveitem.all %}
-                                                
-                                            
-                                            <form action="{% url 'edit_receive_count' %}" method="post">
-                                                {% csrf_token %}
-                                                <tr>
-                                                    <input type="hidden" name="id" value="{{object.id}}">
-                                                    <td><div class="td-content" style="color: black;">{{ object.id }} </div></td>
-                                                    <td><div class="td-content text-center"><strong style="color: black;">{{ object.product }}</strong></div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.som|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.dollar|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.sotish_som|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.sotish_dollar|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.kurs|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.quantity|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.quantity|mul:object.som|intcomma }}</div></td>
-                                                    <td><div class="text-center" style="color: black;">{{ object.quantity|mul:object.sotish_som|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.pereotsenka_foyda|intcomma }}</div></td>
-                                                    <td><div class="td-content text-center" style="color: black;">{{ object.pereotsenka_zarar|intcomma }}</div></td>
-                                                    
 
-                                                    
-                                                    {% for i in object.pereotsenka_foyda_types %}
-                                                        <td style="color: black;"><div class="td-content text-center" style="color: black;">{{ i.total|intcomma }}</div></td>
-                                                    {% endfor %}
+                            <div class="invoice-container">
+                                <div class="invoice-inbox">
 
-                                                    {% for i in object.pereotsenka_zarar_types %}
-                                                        <td style="color: black;"><div class="td-content text-center" style="color: black;">{{ i.total|intcomma }}</div></td>
-                                                    {% endfor %}
+                                    <div class="inv-not-selected">
+                                        <p>Qabulni tanlang</p>
+                                    </div>
 
+                                    <div class="invoice-header-section">
+                                        <h4 class="inv-number"></h4>
+                                        <h4></h4>
+                                        <div class="invoice-action">
+                                        </div>
+                                    </div>
 
-                                                    <td>
-                                                        <div class="td-content text-center" style="width: 10rem">
-                                                            <input name="som" type="number" value="{{ object.som }}" class="form-control" required>
+                                    <div id="ct" style="max-width: 100%;">
+                                        {% for recieve in recieves %}
+                                            <div class="invoice-{{ recieve.id }}" id="{% if active_one == recieve %}active_page{% endif %}">
+                                                <div class="content-section  animated animatedFadeInUp fadeInUp">
+
+                                                    <!-- <div class="row">
+
+                                                        <div class="col-sm-6 col-6">
+                                                            <h3 class="in-heading">{{ recieve.name }}</h3>
                                                         </div>
-                                                    </td>
-
-                                                    <td>
-                                                        <div class="td-content text-center" style="width: 5rem">
-                                                            <input name="count" type="number" value="{{ object.quantity }}" class="form-control" required>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="td-content text-center" style="width: 5rem;">
-                                                            <button class="btn btn-success" type="submit">
-                                                                <i class="fa fa-check"></i>
+                                                        <div class="col-sm-6 col-6 d-flex justify-content-end text-right" style="gap: 10px;">
+                                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_product_add" id="" onclick="">
+                                                                Yangi 
                                                             </button>
+                                                            <a href="{% url 'recieve_completion' recieve.id %}">
+                                                                <button type="button" class="btn btn-success" >
+                                                                    Yakunlash
+                                                                </button>
+                                                             </a>
                                                         </div>
-                                                    </td>
-                                                </tr>
-                                            </form>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <th>Jami</th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th>{{ object.total_quantity|default_if_none:'0'|intcomma }}</th>
-                                            <th>{{ object.kelish_total|default_if_none:'0'|intcomma }}</th>
-                                            <th>{{ object.sotish_total|default_if_none:'0'|intcomma }}</th>
-                                            <th></th>
-                                            <th></th>
-                                            {% for i in price_types %}
-                                                    <th></th>
-                                                {% endfor %}
-                                                    
-                                                {% for i in price_types %}
-                                                    <th></th>
-                                                {% endfor %}
+                                                    </div> -->
+                                                    <div class="row">
 
-                                            <th></th>
-                                            <th></th>
-                                        </tfoot>
-                                    </table>
+                                                    </div>
+                                                   
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <select onchange="add_modal(this)" class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
+                                                                <option value="">Maxsulot tanlash</option>
+                                                                
+                                                                {% for i in products %}
+                                                                    <option value="{{i.id}}&{{i.name}}&{{i.som}}&{{i.sotish_som}}">{{ i.name }}</option>
+                                                                {% endfor %}
+                                                                    
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <h4>Maxsulotlar</h4>
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table datatable">
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <!-- <th scope="col"></th> -->
+                                                                            <th scope="col">Mahsulot</th>
+                                                                            <th  scope="col">Kelish narxi</th>
+                                                                            <th  scope="col">Soni</th>
+                                                                            <th  scope="col">Jami</th>
+                                                                            <th  scope="col">Dollar narxi</th>
+                                                                            <th  scope="col">Ulushi</th>
+                                                                            <th  scope="col">Chiqim</th>
+                                                                            <th  scope="col">Chiqim (dona)</th>
+                                                                            <th  scope="col">Tan narx</th>
+                                                                            <!-- <th  scope="col">Sotish jami</th> -->
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.receiveitem.all %}
+                                                                                <tr>
+                                                                                    <!-- <td>
+                                                                                        <label for="item{{ite.id}}"></label>
+                                                                                        <input type="checkbox" id="item{{item.id}}">
+                                                                                    </td> -->
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.product }}</td>
+                                                                                    <td >{{ item.bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.quantity|intcomma }}</td>
+                                                                                    <td >{{ item.total_bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.dollar_price_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.percent|intcomma }}%</td>
+                                                                                    <td >{{ item.expanse|intcomma }}</td>
+                                                                                    <td >{{ item.expanse_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.cost|intcomma }}</td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <!-- <th></th> -->
+                                                                            <th></th>
+                                                                            <th scope="col">Jami</th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col">{{ recieve.total_quantity|intcomma }}</th>
+                                                                            <th  scope="col">{{ recieve.total_bring_price|intcomma }}</th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <div class="d-flex justify-content-between">
+                                                                <h4>Qabul chiqimlar</h4>
+                                                                <div class="d-flex">
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_type_modal">Chiqim turi qo'shish</button>
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_modal{{recieve.id}}">Qo'shish</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table" sty>
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col">Turi</th>
+                                                                            <th scope="col">Summa</th>
+                                                                            <th scope="col">Valyuta</th>
+                                                                            <th scope="col">Turli shaxs</th>
+                                                                            <th scope="col">Izoh</th>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.expanses.all %}
+                                                                                <tr>
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.type.name }}</td>
+                                                                                    <td>{{ item.summa|intcomma }}</td>
+                                                                                    <td>{{ item.valyuta }}</td>
+                                                                                    <td>{{ item.externaluser.full_name }}</td>
+                                                                                    <td>{{ item.comment }}</td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_expanse_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#delete_expanse_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <th>Jami</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th>
+                                                                                
+                                                                                {% for q in recieve.expanses_summa %}
+                                                                                    {{q.valyuta}}: {{q.summa|intcomma}} <br>
+                                                                                {% endfor %}
+                                                                                    
+                                                                            </th>
+                                                                            <th>Jami dollar: {{recieve.expanse_total_dollar|intcomma}}</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="row mt-4">
+                                                        <div class="col-sm-5 col-12 order-sm-0 order-1">
+                                                            
+                                                        </div>
+                                                        <!-- <div class="col-sm-7 col-12 order-sm-1 order-0">
+                                                            <div class="inv--total-amounts text-sm-right">
+                                                                <div class="row">
+                                                                    <div class="col-sm-8 col-7">
+                                                                        <p class="">Summa: </p>
+                                                                    </div>
+                                                                    <div class="col-sm-4 col-5">
+                                                                        <p class="">{{ recieve.som|intcomma }} so'm</p>
+                                                                    </div>
+                                                                  
+                                                                </div>
+                                                            </div>
+                                                        </div> -->
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+
                                 </div>
+
+                            </div>
+                            
+                        </div>
+
+                    </div>
+                </div>
+                </div>
+
+
+
+
+                <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+                    Yangi 
+                </button>
+                
+
+
+                  <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_recieve_item_view' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
+                                  <label for="">Miqdori</label>
+                                  <input type="number" name="quantity" class="form-control" required>
+                                  
+                                <div class="form-group" id="recieve_item_add_product_div">
+      
+                                  
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                  <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  <div class="modal fade" id="add_expanse_type_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_expanse_type' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
+                                  <label for="">Nomi</label>
+                                  <input type="text" name="name" class="form-control" required>
+                                  
+                                <div class="modal-footer d-flex justify-content-between">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                  <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+
+                  <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <form action="{% url 'new_product_add' %}" class="modal-content" method="post">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                            <label for="">Nomi</label>
+                            <input type="text" class="form-control" name="name" required>
+                            <input type="hidden" class="form-control" name="filial_id" value="{{ active_one.filial.id }}">
+                            
+
+                            <!-- <label for="">Ishlab chiqaruvchi</label>
+                            <input type="text" class="form-control" name="preparer" required> -->
+
+                            <label for="">Ishlab chiqaruvchi</label>
+                            <select class="form-control searchable" required name="deliver" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in delivers %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="">Ulchov</label>
+                            <select class="form-control searchable" required name="measurement" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in measurements %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+
+                            <label for="">Min miqdor</label>
+                            <input type="number" class="form-control" name="min_count" required>
+
+
+                            <label for="">Guruh</label>
+                            <select class="form-control searchable" required name="group" id="">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in groups %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="">Shtrix kod</label>
+                            <input type="text" class="form-control" name="barcode" value="{{new_barcode}}" required>
+
+
+                            <!-- <label for="">Tan som</label>
+                            <input type="text" class="form-control" name="som" required>
+
+
+                            <label for="">Sotish som</label>
+                            <input type="text" class="form-control" name="sotish_som" required>
+
+
+                            <label for="">Miqdori</label>
+                            <input type="text" class="form-control" name="quantity" required> -->
+
+
+                            <!-- <label for="">Sotish som</label>
+                            <input type="text" class="form-control" name="name" required> -->
+
+                            
+                            
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                            <button type="submit" class="btn btn-primary">Saqlash</button>
                             </div>
                         </div>
+                        </form>
                     </div>
                 </div>
 
-            </div>
+
+                {% for recieve in recieves %}
+
+
+                <div class="modal fade" id="add_expanse_modal{{ recieve.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_recieve_expanse' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="recieve_id" value="{{ recieve.id }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqim qo‘shish</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <label>Chiqim turi</label>
+                            <select name="type" class="form-control" required>
+                              {% for t in expanse_types %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" required>
+                          </div>
+                          <div class="form-group">
+                            <label>Valyuta</label>
+                            <select name="valyuta" class="form-control" required>
+                              {% for v in valyutas %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Turli shaxs</label>
+                            <select name="externaluser" class="form-control">
+                              <option value="">-</option>
+                              {% for user in external_users %}
+                                <option value="{{ user.id }}">{{ user.full_name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Izoh</label>
+                            <textarea name="comment" class="form-control"></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  
+                  
+                  {% for item in recieve.expanses.all %}
+                  <div class="modal fade" id="recieve_expanse_add_modal_edit{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'edit_recieve_expanse' item.id %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqimni tahrirlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- Shu joyda ham xuddi qo'shish modalidagi form fieldlar bo'ladi, faqat qiymatlar bilan to'ldirilgan -->
+                          <!-- Misol uchun -->
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" value="{{ item.summa }}">
+                          </div>
+                          <!-- qolganlari ham shunday -->
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+
+                  <div class="modal fade" id="delete_expanse_modal{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form method="post" action="{% url 'delete_recieve_expanse' item.id %}" class="modal-content">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Tasdiqlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <p>Haqiqatan ham ushbu chiqimni o‘chirmoqchimisiz?</p>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                          <button type="submit" class="btn btn-danger">O‘chirish</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  {% endfor %}
+                    
+
+
+                {% for item in recieve.receiveitem.all %}
+
+
+                    <div class="modal fade" id="delete_item_modal{{item.id}}" tabindex="0" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                            <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'delete_recieve_item'  item.id %}">O'chirish</a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal fade" id="recieve_item_add_modal_edit{{item.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <form class="modal-content" method="post" action="{% url 'edit_recieve_item_view' %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" >Tahrirlash</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" >
+                                    <div class="form-group">
+                                        <input type="hidden" name="item" value="{{item.id}}">
+                                        
+                                        <label for="">Miqdori</label>
+                                        <input type="number" value="{{ item.quantity }}" name="quantity" class="form-control" required>
+                                        
+                                        {% for br in item.bring_prices %}
+                                            <label class="br" for="">Kelish {{br.valyuta}}</label>
+                                            <input type="number" name="br_{{br.valyuta_id}}_{{br.id}}" class="form-control" value="{{br.price|floatformat:'0'}}">                                
+                                        {% endfor %}
+
+                                        <label for="">Sotish narx </label>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>N</th>
+                                                    <th>Valyuta</th>
+                                                    {% for p in price_types %}
+                                                        <th>{{ p.name }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for row in item.product.pricetypevaluta_prices %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ row.valuta }}</td>
+                                                        {% for s in row.summas %}
+                                                            <td>
+                                                                <input step="any"
+                                                                    type="number" 
+                                                                    class="form-control"
+                                                                    name="price_{{ s.id }}_{{ row.valyuta_id }}" 
+                                                                    value="{{ s.summa }}"
+                                                                />
+                                                            </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+            
+                                        <!-- <label for="">Kelish narx</label>
+                                        <input value="{{item.som}}" type="number" name="som" class="form-control">
+                                        
+                                        <label for="">Sotish narx</label>
+                                        <input  value="{{item.sotish_som}}" type="number" name="sotish_som" class="form-control">
+            
+                                        
+                                        {% for pr_type in item.product.price_types.all %}
+                                            <label class="pr_type" for="">{{pr_type.type.name}}</label>
+                                            <input type="number" name="{{pr_type.id}}" class="form-control" value="{{pr_type.price|floatformat:'0'}}">                                
+                                        {% endfor %} -->
+                                            
+                                        
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-between">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                    </div>
+
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
 {% endblock content %}
 {% block js %}
-    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
-    <script src="{% static 'plugins/apex/apexcharts.min.js'%}"></script>
-    <script src="{% static 'assets/js/widgets/modules-widgets.js'%}"></script>
-    <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
-    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
 
-    <!-- BEGIN PAGE LEVEL SCRIPTS -->
-    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
-    <script src="{% static 'plugins/flatpickr/flatpickr.js'%}"></script>
-    <script src="{% static 'plugins/noUiSlider/nouislider.min.js'%}"></script>
-
-    <script src="{% static 'plugins/flatpickr/custom-flatpickr.js'%}"></script>
-    <script src="{% static 'plugins/noUiSlider/custom-nouiSlider.js'%}"></script>
-    <script src="{% static 'plugins/bootstrap-range-Slider/bootstrap-rangeSlider.js'%}"></script>
-    <!-- END PAGE LEVEL SCRIPTS -->
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+    <script src="{% static 'assets/js/apps/invoice.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
     <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+     <script>
+        $('.nav_items').click(function() {
+            let item = $(this)
+            let id = item.attr('data-id')
+            const currentUrl = new URL(window.location.href);
 
-    function getCSRFToken() {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            if (cookie.substring(0, 10) == ('csrftoken' + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(10));
-                break;
-            }
-            }
+            const paramName = 'active';
+            const paramValue = id;
+
+            currentUrl.searchParams.set(paramName, paramValue);
+
+            window.history.replaceState({}, '', currentUrl.toString());
+
+            })
+    </script>
+    <script>
+        let active = $('#active_page')
+        if (active.length) {
+            $(`#invoice-${"{{active_one.id}}"}`).click()
         }
-      return cookieValue;
-    }
-    function Item(id){
-        var csrfToken = getCSRFToken();
-        var dt = JSON.stringify({
-                id:id,
-            })
-        $.ajax({
-            headers: { "X-CSRFToken": csrfToken },
-            type: "POST",
-            url: "{% url 'getitem' %}",
-            data: dt,
-            success: function(data) {
-                var wares = data['items'];
+    </script>
+<!-- <script>
+    function add_modal(item) {
+        const itemValue = $(item).val(); // Get the value of the passed item
+        const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
 
-                $("#waritem").empty();
-                var i = 1;
-                for(dt of wares){
-                        var tr = `
-                            <tr>
-                                <td><div class="td-content">` + i + `</div></td>
-                                <td><div class="td-content">` + dt.product + `</div></td>
-                                <td><div class="td-content">` + String(dt.som) + `</div></td>
-                                <td><div class="td-content">` + String(dt.dollar) + `</div></td>
-                                <td><div class="td-content">` + String(dt.kurs) + `</div></td>
-                                <td><div class="td-content">` + String(dt.quantity) + `</div></td>
-                            </tr>
+
+        if (pr_id) {
+            $('#recieve_item_add_button').click();
+            $('#recieve_item_add_product_id').val(pr_id);
+
+            $('#recieve_item_add_recieve_som').val(pr_som);
+            $('#recieve_item_add_recieve_sotish_som').val(pr_sotish_som);
+            $('#recieve_item_add_recieve_id').val($(item).data('recieve')); 
+            $('#recieve_item_add_product_name').text(pr_name);
+            $('#recieve_item_add_product_div .pr_type').remove();
+            let price_types = $.get('/api/productpricetype/', { product:  pr_id}, function(data) {
+                console.log(data);
+                data.forEach(element => {
+                    $('#recieve_item_add_product_div').append(
                         `
-                        $('#waritem').append(tr);
-                        i++;
-                    }
-            }
-        });
+                        <label class="pr_type" for="">${element.name}</label>
+                        <input type="number" name="${element.id}" class="form-control pr_type" value="${element.price}">
+                        `
+                    )
+                });
+            });
+
+        }
     }
-    $(document).ready(function(){
-        $('#rangeCalendarFlatpickr').on("change", function (){
-            var csrfToken = getCSRFToken();
-            var date1 = $('#rangeCalendarFlatpickr').val().slice(0, 10);
-            var date2 = $('#rangeCalendarFlatpickr').val().slice(14, 24);
-            var dt = JSON.stringify({
-                date1:date1,
-                date2:date2,
-            })
-            $.ajax({
-                headers: { "X-CSRFToken": csrfToken },
-                type: "POST",
-                url: "{% url 'dataware' %}",
-                data: dt,
-                success: function(data) {
-                    var wares = data['wares'];
-                    var i = 1;
-                    $("#war").empty();
-                    for(dt of wares){
-                        var tr = `<tr onclick="Item(` + dt.id +`)">
-                            <td><div class="td-content customer-name">` + i + `</div></td>
-                            <td><div class="td-content customer-name">` + String(dt.name) + `</div></td>
-                            <td><div class="td-content customer-name">` + String(dt.deliver) + `</div></td>
-                            <td><div class="td-content customer-name">` + String(dt.som) + `</div></td>
-                            <td><div class="td-content customer-name">` + String(dt.dollar) + `</div></td>
-                            <td><div class="td-content pricing">` + String(dt.date) + `</div></td>
-                        </tr>`
-                        $('#war').append(tr);
-                        i++;
-                    }
+</script> -->
+<script>
+function add_modal(item) {
+    const itemValue = $(item).val(); // Get the value of the passed item
+    const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
+
+    if (pr_id) {
+        $('#recieve_item_add_button').click();
+        $('#recieve_item_add_product_id').val(pr_id);
+
+        // $('#recieve_item_add_recieve_som').val(pr_som);
+        // $('#recieve_item_add_recieve_sotish_som').val(pr_sotish_som);
+        $('#recieve_item_add_recieve_id').val($(item).data('recieve'));
+        $('#recieve_item_add_product_name').text(pr_name);
+        $('#recieve_item_add_product_div .pr_type').remove();
+
+        $.get("{% url 'get_product_prices' %}", { product: pr_id }, function(data) {
+            const container = $('#recieve_item_add_product_div');
+            container.empty()
+
+            // Kelish narxlari qo'shish
+            data.bring_prices.forEach(br => {
+                if (container.find('input[name="' + br.valyuta + '"]').length === 0) {
+                    container.append(`
+                        <label class="br" for="">Kelish ${br.valyuta}</label>
+                        <input type="number" name="br_${br.valyuta_id}_${br.id}" class="form-control" value="${parseFloat(br.price).toFixed(0)}">
+                    `);
                 }
             });
+
+            // Sotish narxlari jadvali
+            let table = container.find('table.table');
+            if (table.length === 0) {
+                // price_types bu ma'lumot kelmayapti JSONda, agar kerak bo'lsa backenddan berilishi kerak
+                // Shu sababdan ustun nomlarini backenddan olish yoki statik berish kerak
+                // Mana bu yerda misol uchun statik berilgan:
+                const price_types = data.price_types;
+
+                table = $(`
+                    <label for="">Sotish narx </label>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>N</th>
+                                <th>Valyuta</th>
+                                ${price_types.map(name => `<th>${name}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `);
+                container.append(table);
+            }
+
+            const tbody = table.find('tbody');
+            tbody.empty();
+
+            data.sell_prices.forEach((row, index) => {
+                const tds = row.summas.map(s => `
+                    <td>
+                        <input step="any" type="number" class="form-control" name="price_${s.id}_${row.valyuta_id}" value="${s.summa}">
+                    </td>
+                `).join('');
+
+                const tr = $(`
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.valuta}</td>
+                        ${tds}
+                    </tr>
+                `);
+                tbody.append(tr);
+            });
+        });
+    }
+}
+
+</script>
+
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    $(document).ready(function () {
+        $('.datatable').DataTable({
+            scrollX: true,
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false, // Agar saralash kerak bo'lmasa
+            fixedHeader: true
         });
     });
-    </script>
-
-
-    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
-    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
-    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
-    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
-    <script>
-        $('#html5-extension').DataTable( {
-            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-            buttons: {
-                buttons: [
-                    { extend: 'copy', className: 'btn' },
-                    { extend: 'csv', className: 'btn' },
-                    { extend: 'excel', className: 'btn' }
-                   
-                ]
-            },
-            "oLanguage": {
-                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
-                "sInfo": " _PAGE_ / _PAGES_",
-               "sLengthMenu": "Results :  _MENU_",
-            },
-            "stripeClasses": [],
-            "lengthMenu": [10, 20, 50, 100],
-            "pageLength": 15,
-            'scrollY': 900,
-            'scrollX': true,
-        } );
-    </script>
-    
-
-
+</script>
 {% endblock js %}

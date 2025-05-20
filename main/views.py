@@ -2628,6 +2628,8 @@ class OmborQabul(LoginRequiredMixin, TemplateView):
             recieve = recieve.filter(date__date__gte=datetime.now().date().replace(day=1))
         if deliver:
             recieve = recieve.filter(deliver_id=deliver)
+
+        valyutas = Valyuta.objects.all()
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['wares'] = recieve
@@ -2639,6 +2641,18 @@ class OmborQabul(LoginRequiredMixin, TemplateView):
         context['deliver'] = int(deliver) if deliver else 0
         context['start_date'] = start_date
         context['end_date'] = end_date
+        context['valyutas'] = valyutas
+
+        total_valyutas = []
+        for v in valyutas:
+            dt = {
+                "valyuta": v,
+                "summa": sum([i.total_bring_price for i in recieve.filter(valyuta=v)]),
+            }
+            total_valyutas.append(dt)
+        
+        context['total_valyutas'] = total_valyutas
+
         # for r in Recieve.objects.filter(date__gte=gte, date__lte=lte):
         #     print(r.date)
         return context
@@ -2650,11 +2664,47 @@ class ArticleDetailView(LoginRequiredMixin, DetailView):
     template_name = 'omborqabul_detail.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['dollar_kurs'] = Course.objects.last().som
-        context['price_types'] = PriceType.objects.all()
-
         
+    #     context = super().get_context_data(**kwargs)
+    #     context['dollar_kurs'] = Course.objects.last().som
+    #     context['price_types'] = PriceType.objects.all()
+    #     context['valyutas'] = Valyuta.objects.all()
+        
+    #     return context
+
+        context = super().get_context_data(**kwargs)
+        context['ombor'] = 'active'
+        context['ombor_t'] = 'true'
+        context['delivers'] = Deliver.objects.all().order_by('-id')
+        context['recieves'] = Recieve.objects.filter(id=self.object.id).order_by('-id')
+        context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=False).order_by('-id')[:1000]
+        context['dollar_kurs'] = Course.objects.last().som
+        context['products'] = ProductFilial.objects.all()
+        context['expanse_types'] = RecieveExpanseTypes.objects.all()
+        context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
+        context['groups'] = Groups.objects.all()
+        # context['delivers'] = Deliver.objects.all()
+        context['filial'] = Filial.objects.filter(is_activate=True)
+        context['price_types'] = PriceType.objects.filter(is_activate=True)
+        context['valyutas'] = Valyuta.objects.filter()
+        context['today'] = datetime.now()
+        context['measurements'] = [{
+            "id": i[0],
+            "name": i[1],
+        } for i in ProductFilial.measure]
+        max_barcode = (
+                ProductFilial.objects
+                .annotate(barcode_int=Cast('barcode', IntegerField()))
+                .aggregate(Max('barcode_int'))['barcode_int__max']
+            )
+        new_barcode = max_barcode+1 if max_barcode else 1
+
+        context['new_barcode'] = new_barcode
+
+
+        active_id = self.request.GET.get('active')
+        if active_id and Recieve.objects.filter(id=active_id):
+            context['active_one'] = Recieve.objects.get(id=active_id)
         return context
 
 def omborqabul_recieve_detail(request, id):

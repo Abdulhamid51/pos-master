@@ -79,22 +79,38 @@
                                                 <th><div>№</div></th>
                                                 <th><div>Nomi</div></th>
                                                 <th><div>Yetkazib beruvchi</div></th>
-                                                <th><div>So`m</div></th>
-                                                <th><div>Sotish som</div></th>
-                                                <th><div>Jami soni</div></th>
-                                                <th><div style="text-align: center;">Sana</div></th>
+                                                
+                                                {% for v in valyutas %}
+                                                    <th>{{ v.name }}</th>
+                                                {% endfor %}
+                                                    
+                                                <!-- <th><div>So`m</div></th>
+                                                <th><div>Sotish som</div></th> -->
+                                                <th class="text-center">Jami soni</th>
+                                                <th class="text-center">Sana</th>
                                             </tr>
                                         </thead>
                                         <tbody id="war">
                                             {% for w in wares %}
                                                 <tr>
                                                     <td><div class="td-content">{{ forloop.counter }}</div></td>
-                                                    <td><a href="{% url 'omborqabuldetail' w.id %}" target="_blank" rel="noopener noreferrer"><div class="td-content">{{ w.name }}</a></div></td>
+                                                    <td><a href="{% url 'omborqabuldetail' w.id %}?active={{w.id}}" target="_blank" rel="noopener noreferrer"><div class="td-content">{{ w.name }}</a></div></td>
                                                     <td><div class="td-content">{{ w.deliver }}</div></td>
-                                                    <td><div class="td-content">{{ w.som|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.sum_sotish_som|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.total_quantity|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.date }}</div></td>
+                                                    <!-- <td><div class="td-content">{{ w.som|intcomma }}</div></td>
+                                                    <td><div class="td-content">{{ w.sum_sotish_som|intcomma }}</div></td> -->
+                                                    
+                                                    {% for v in valyutas %}
+                                                        <td>
+                                                            {% if w.valyuta == v %}
+                                                                {{w.total_bring_price|intcomma}}
+                                                            {% else %}
+                                                                0
+                                                            {% endif %}   
+                                                        </td>
+                                                    {% endfor %}
+                                                        
+                                                    <td class="text-center">{{ w.total_quantity|intcomma }}</td>
+                                                    <td class="text-center">{{ w.date|date:'d-m-Y H:i' }}</td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -102,9 +118,14 @@
                                             <td></td>
                                             <td>Jami:</td>
                                             <td></td>
-                                            <td>{{total_som|intcomma}}</td>
-                                            <td>{{total_som_sotish|intcomma}}</td>
-                                            <td>{{total_quantity|intcomma}}</td>
+                                            
+                                            {% for v in total_valyutas %}
+                                                <td>{{v.summa|intcomma}}</td>
+                                            {% endfor %}
+                                                
+                                            <!-- <td>{{total_som|intcomma}}</td>
+                                            <td>{{total_som_sotish|intcomma}}</td> -->
+                                            <td class="text-center">{{total_quantity|intcomma}}</td>
                                             <td></td>
                                         </tfoot>
                                     </table>

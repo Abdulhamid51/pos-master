@@ -816,10 +816,14 @@ class RecieveItem(models.Model):
         if self.recieve.valyuta.is_som:
             return self.total_bring_price / (self.recieve.kurs if self.recieve.kurs else 1)
         return self.total_bring_price
+    
+    @property
+    def dollar_price_for_count(self):
+        return round(self.dollar_price / self.quantity, 2)
 
     @property
     def percent(self):
-        return round(100 / self.recieve.total_bring_price * self.total_bring_price, 2)
+        return round(100 / (self.recieve.total_bring_price if self.recieve.total_bring_price else 1) * self.total_bring_price, 2)
     
     @property
     def expanse(self):
@@ -830,7 +834,7 @@ class RecieveItem(models.Model):
         return round(self.expanse / self.quantity, 2)
     @property
     def cost(self):
-        return self.dollar_price + (self.expanse_for_count)
+        return self.dollar_price_for_count + (self.expanse_for_count)
 
     @property
     def bring_price(self):
