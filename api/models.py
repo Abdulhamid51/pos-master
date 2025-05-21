@@ -634,6 +634,10 @@ class ProductFilial(models.Model):
     class Meta:
         verbose_name_plural = '3.1) Product Filial'
 
+    @property
+    def cost(self):
+        last = RecieveItem.objects.filter(product=self).last()
+        return last.cost if last else 0
         
 
     @property
@@ -813,6 +817,8 @@ class RecieveItem(models.Model):
 
     @property
     def dollar_price(self):
+        if not self.recieve.valyuta:
+            return 0
         if self.recieve.valyuta.is_som:
             return self.total_bring_price / (self.recieve.kurs if self.recieve.kurs else 1)
         return self.total_bring_price
@@ -1135,6 +1141,9 @@ class Cart(models.Model):
     skidka_total = models.IntegerField(default=0)
     summa_total = models.FloatField(default=0)
 
+    @property
+    def total_cost(self):
+        return round(self.quantity * self.product.cost, 2)
     @property
     def foyda(self):
         return self.quantity * (self.price - self.bring_price)
