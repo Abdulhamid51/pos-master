@@ -12,7 +12,32 @@
     <link href="{% static 'assets/css/apps/invoice.css'%}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!--  END CUSTOM STYLE FILE  -->
-    
+    <style>
+        nput[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox uchun */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+    </style>
+
+<style>
+.custom-scroll-table {
+    overflow-x: auto;  /* faqat gorizontal scroll */
+    overflow-y: hidden;  /* vertikal scrollni o'chiramiz */
+    width: 100%;
+    display: block;
+    white-space: nowrap;  /* qatorlarni yangi qatorga tushmasligi uchun */
+}
+
+
+
+</style>
 {% endblock css %}
 {% block content %}
         <!--  BEGIN CONTENT AREA  -->
@@ -31,10 +56,6 @@
                                             <button style="width: 100%;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_add">
                                                 Yangi
                                             </button>
-                                            
-                                        
-
-
 
                                               <div class="modal fade" id="new_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                                                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -70,6 +91,15 @@
                                                                     <option value="{{filial.id}}">{{ filial.name }}</option>
                                                                 {% endfor %}
                                                         </select>
+
+                                                        <label for="">Valyuta</label>
+                                                        <select class="form-control searchable" name="valyuta">
+                                                            {% for valyuta in valyutas %}
+                                                                <option value="{{valyuta.id}}">{{ valyuta.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <label for="">Kurs</label>
+                                                        <input type="number" name="kurs" class="form-control">
                                                         <label for="">Sana</label>
                                                         <input type="datetime-local" name="date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
                                                       </div>
@@ -129,11 +159,13 @@
                                                     <div class="nav-link list-actions" id="invoice-{{ recieve.id }}" data-invoice-id="{{ recieve.id }}">
                                                         <div class="f-m-body">
                                                             <div class="f-body">
-                                                                <p class="invoice-customer-name">Partiya: {{ recieve.name }} <button type="button" class="btn" data-toggle="modal" data-target="#delete_modal{{recieve.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button> </p>
-                                                                <p class="invoice-customer-name"><span>Yetkazib beruvchi:</span> {{ recieve.deliver }} so'm</p>
-                                                                <p class="invoice-customer-name"><span>So'm:</span> {{ recieve.som }}</p>
+                                                                <h6 class="invoice-customer-name">Partiya: {{ recieve.name }} <button type="button" class="btn" data-toggle="modal" data-target="#delete_modal{{recieve.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button> </h6>
+                                                                <h6 class="invoice-customer-name"><span>Yetkazib beruvchi:</span> {{ recieve.deliver }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Valyuta:</span> {{ recieve.valyuta }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Summa:</span> {{ recieve.total_bring_price|intcomma }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Kurs:</span> {{ recieve.kurs|intcomma }}</h6>
                                                                 <!-- <p class="invoice-customer-name"><span>Dollar:</span> {{ recieve.dollar }}</p> -->
-                                                                <p class="invoice-generated-date">Sana: {{ recieve.date }}</p>
+                                                                <h6 class="invoice-generated-date">Sana: {{ recieve.date }}</h6>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -177,11 +209,10 @@
                                         <h4 class="inv-number"></h4>
                                         <h4></h4>
                                         <div class="invoice-action">
-{#                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-printer action-print" data-toggle="tooltip" data-placement="top" data-original-title="Reply"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>#}
                                         </div>
                                     </div>
 
-                                    <div id="ct" class="">
+                                    <div id="ct" style="max-width: 100%;">
                                         {% for recieve in recieves %}
                                             <div class="invoice-{{ recieve.id }}" id="{% if active_one == recieve %}active_page{% endif %}">
                                                 <div class="content-section  animated animatedFadeInUp fadeInUp">
@@ -206,18 +237,7 @@
                                                     <div class="row">
 
                                                     </div>
-                                                    <!-- <div class="row inv--detail-section">
-
-                                                        <div class="col-sm-7 align-self-center">
-                                                        </div>
-                                                        <div class="col-sm-5 align-self-center  text-sm-right order-sm-0 order-1">
-                                                        </div>
-
-                                                        <div class="col-sm-7 align-self-center">
-                                                        </div>
-                                                        <div class="col-sm-5 align-self-center  text-sm-right order-2">
-                                                        </div>
-                                                    </div> -->
+                                                   
                                                     <div class="row">
                                                         <div class="col-md-4">
                                                             <select onchange="add_modal(this)" class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
@@ -233,60 +253,130 @@
 
                                                     <div class="row inv--product-table-section">
                                                         <div class="col-12">
-                                                            <div class="table-responsive">
-                                                                <table class="table">
+                                                            <h4>Maxsulotlar</h4>
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table datatable">
                                                                     <thead class="">
                                                                         <tr>
                                                                             <th scope="col"></th>
-                                                                            <th scope="col"></th>
+                                                                            <!-- <th scope="col"></th> -->
                                                                             <th scope="col">Mahsulot</th>
-                                                                            <th class="text-right" scope="col">So'm</th>
-                                                                            <th class="text-right" scope="col">Sotish som</th>
-                                                                            <th class="text-right" scope="col">Soni</th>
-                                                                            <th class="text-right" scope="col">Jami</th>
-                                                                            <th class="text-right" scope="col">Sotish jami</th>
-                                                                            <th class="text-right" scope="col"></th>
-                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th  scope="col">Kelish narxi</th>
+                                                                            <th  scope="col">Soni</th>
+                                                                            <th  scope="col">Jami</th>
+                                                                            <th  scope="col">Dollar narxi</th>
+                                                                            <th  scope="col">Ulushi</th>
+                                                                            <th  scope="col">Chiqim</th>
+                                                                            <th  scope="col">Chiqim (dona)</th>
+                                                                            <th  scope="col">Tan narx</th>
+                                                                            <!-- <th  scope="col">Sotish jami</th> -->
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
                                                                         {% for item in recieve.receiveitem.all %}
                                                                                 <tr>
-                                                                                    <td>
+                                                                                    <!-- <td>
                                                                                         <label for="item{{ite.id}}"></label>
                                                                                         <input type="checkbox" id="item{{item.id}}">
-                                                                                    </td>
+                                                                                    </td> -->
                                                                                     <td>{{ forloop.counter }}</td>
                                                                                     <td>{{ item.product }}</td>
-                                                                                    <td class="text-right">{{ item.som|intcomma }}</td>
-                                                                                    <td class="text-right">{{ item.sotish_som|intcomma }}</td>
-                                                                                    <!-- <td class="text-right">{{ item.kurs|intcomma }}</td> -->
-                                                                                    <td class="text-right">{{ item.quantity|floatformat:0|intcomma }}</td>
-                                                                                    <td class="text-right">{{ item.total_som|floatformat:0|intcomma }}</td>
-                                                                                    <td class="text-right">{{ item.total_sotish_som|floatformat:0|intcomma }}</td>
-                                                                                    <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
-                                                                                    <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                    <td >{{ item.bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.quantity|intcomma }}</td>
+                                                                                    <td >{{ item.total_bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.dollar_price_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.percent|intcomma }}%</td>
+                                                                                    <td >{{ item.expanse|intcomma }}</td>
+                                                                                    <td >{{ item.expanse_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.cost|intcomma }}</td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
                                                                                 </tr>
                                                                         {% endfor %}
                                                                     </tbody>
                                                                     <tfoot class="">
                                                                         <tr>
-                                                                            <th></th>
+                                                                            <!-- <th></th> -->
                                                                             <th></th>
                                                                             <th scope="col">Jami</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.som|intcomma }}</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.sum_sotish_som|intcomma }}</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.total_quantity|intcomma }}</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.kelish_total|intcomma }}</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.sotish_total|intcomma }}</th>
-                                                                            <th class="text-right" scope="col"></th>
-                                                                            <th class="text-right" scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col">{{ recieve.total_quantity|intcomma }}</th>
+                                                                            <th  scope="col">{{ recieve.total_bring_price|intcomma }}</th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
                                                                         </tr>
                                                                     </tfoot>
                                                                 </table>
                                                             </div>
                                                         </div>
                                                     </div>
+
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <div class="d-flex justify-content-between">
+                                                                <h4>Qabul chiqimlar</h4>
+                                                                <div class="d-flex">
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_type_modal">Chiqim turi qo'shish</button>
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_modal{{recieve.id}}">Qo'shish</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table" sty>
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col">Turi</th>
+                                                                            <th scope="col">Summa</th>
+                                                                            <th scope="col">Valyuta</th>
+                                                                            <th scope="col">Turli shaxs</th>
+                                                                            <th scope="col">Izoh</th>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.expanses.all %}
+                                                                                <tr>
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.type.name }}</td>
+                                                                                    <td>{{ item.summa|intcomma }}</td>
+                                                                                    <td>{{ item.valyuta }}</td>
+                                                                                    <td>{{ item.externaluser.full_name }}</td>
+                                                                                    <td>{{ item.comment }}</td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_expanse_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#delete_expanse_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <th>Jami</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th>
+                                                                                
+                                                                                {% for q in recieve.expanses_summa %}
+                                                                                    {{q.valyuta}}: {{q.summa|intcomma}} <br>
+                                                                                {% endfor %}
+                                                                                    
+                                                                            </th>
+                                                                            <th>Jami dollar: {{recieve.expanse_total_dollar|intcomma}}</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
 
                                                     <div class="row mt-4">
                                                         <div class="col-sm-5 col-12 order-sm-0 order-1">
@@ -325,9 +415,11 @@
 
 
 
+
                 <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
                     Yangi 
                 </button>
+                
 
 
                   <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -341,25 +433,44 @@
                           </button>
                         </div>
                         <div class="modal-body" >
-                                <div class="form-group" id="recieve_item_add_product_div">
-                                  <input type="hidden" name="product" id="recieve_item_add_product_id">
-                                  <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
-                                 
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
                                   <label for="">Miqdori</label>
-                                  <input type="number" name="quantity" class="form-control">
-      
-                                  <label for="">Kelish narx</label>
-                                  <input id="recieve_item_add_recieve_som" type="number" name="som" class="form-control">
+                                  <input type="number" name="quantity" class="form-control" required>
                                   
-                                  <label for="">Sotish narx</label>
-                                  <input id="recieve_item_add_recieve_sotish_som" type="number" name="sotish_som" class="form-control">
-      
-                                  <!-- <label for="">Kurs</label>
-                                  <input value="12800" type="number" name="kurs" class="form-control"> -->
-      
+                                <div class="form-group" id="recieve_item_add_product_div">
       
                                   
                                 </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                  <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  <div class="modal fade" id="add_expanse_type_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_expanse_type' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
+                                  <label for="">Nomi</label>
+                                  <input type="text" name="name" class="form-control" required>
+                                  
                                 <div class="modal-footer d-flex justify-content-between">
                                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
                                   <button type="submit" class="btn btn-primary">Saqlash</button>
@@ -454,6 +565,113 @@
 
 
                 {% for recieve in recieves %}
+
+
+                <div class="modal fade" id="add_expanse_modal{{ recieve.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_recieve_expanse' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="recieve_id" value="{{ recieve.id }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqim qo‘shish</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <label>Chiqim turi</label>
+                            <select name="type" class="form-control" required>
+                              {% for t in expanse_types %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" required>
+                          </div>
+                          <div class="form-group">
+                            <label>Valyuta</label>
+                            <select name="valyuta" class="form-control" required>
+                              {% for v in valyutas %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Turli shaxs</label>
+                            <select name="externaluser" class="form-control">
+                              <option value="">-</option>
+                              {% for user in external_users %}
+                                <option value="{{ user.id }}">{{ user.full_name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Izoh</label>
+                            <textarea name="comment" class="form-control"></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  
+                  
+                  {% for item in recieve.expanses.all %}
+                  <div class="modal fade" id="recieve_expanse_add_modal_edit{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'edit_recieve_expanse' item.id %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqimni tahrirlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- Shu joyda ham xuddi qo'shish modalidagi form fieldlar bo'ladi, faqat qiymatlar bilan to'ldirilgan -->
+                          <!-- Misol uchun -->
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" value="{{ item.summa }}">
+                          </div>
+                          <!-- qolganlari ham shunday -->
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+
+                  <div class="modal fade" id="delete_expanse_modal{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form method="post" action="{% url 'delete_recieve_expanse' item.id %}" class="modal-content">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Tasdiqlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <p>Haqiqatan ham ushbu chiqimni o‘chirmoqchimisiz?</p>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                          <button type="submit" class="btn btn-danger">O‘chirish</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  {% endfor %}
+                    
+
+
                 {% for item in recieve.receiveitem.all %}
 
 
@@ -491,21 +709,55 @@
                                         <input type="hidden" name="item" value="{{item.id}}">
                                         
                                         <label for="">Miqdori</label>
-                                        <input type="number" value="{{ item.quantity }}" name="quantity" class="form-control">
+                                        <input type="number" value="{{ item.quantity }}" name="quantity" class="form-control" required>
+                                        
+                                        {% for br in item.bring_prices %}
+                                            <label class="br" for="">Kelish {{br.valyuta}}</label>
+                                            <input type="number" name="br_{{br.valyuta_id}}_{{br.id}}" class="form-control" value="{{br.price|floatformat:'0'}}">                                
+                                        {% endfor %}
+
+                                        <label for="">Sotish narx </label>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>N</th>
+                                                    <th>Valyuta</th>
+                                                    {% for p in price_types %}
+                                                        <th>{{ p.name }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for row in item.product.pricetypevaluta_prices %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ row.valuta }}</td>
+                                                        {% for s in row.summas %}
+                                                            <td>
+                                                                <input step="any"
+                                                                    type="number" 
+                                                                    class="form-control"
+                                                                    name="price_{{ s.id }}_{{ row.valyuta_id }}" 
+                                                                    value="{{ s.summa }}"
+                                                                />
+                                                            </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
             
-                                        <label for="">Kelish narx</label>
+                                        <!-- <label for="">Kelish narx</label>
                                         <input value="{{item.som}}" type="number" name="som" class="form-control">
                                         
                                         <label for="">Sotish narx</label>
                                         <input  value="{{item.sotish_som}}" type="number" name="sotish_som" class="form-control">
             
-                                        <!-- <label for="">Kurs</label>
-                                        <input value="12800" type="number" name="kurs" class="form-control"> -->
                                         
                                         {% for pr_type in item.product.price_types.all %}
                                             <label class="pr_type" for="">{{pr_type.type.name}}</label>
                                             <input type="number" name="{{pr_type.id}}" class="form-control" value="{{pr_type.price|floatformat:'0'}}">                                
-                                        {% endfor %}
+                                        {% endfor %} -->
                                             
                                         
                                     </div>
@@ -551,7 +803,7 @@
             $(`#invoice-${"{{active_one.id}}"}`).click()
         }
     </script>
-<script>
+<!-- <script>
     function add_modal(item) {
         const itemValue = $(item).val(); // Get the value of the passed item
         const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
@@ -580,32 +832,121 @@
 
         }
     }
-</script>
+</script> -->
 <script>
-    // function delete_modal() {
-    //     console.log('aaaaaa')
-    //     console.log($('.modal-backdrop'))
-    //     $('.modal-backdrop').remove()
-    // }
-    function delete_modal() {
-    setTimeout(function() {
-        console.log($('.modal-backdrop'));
-        $('.modal-backdrop').removeClass('modal-backdrop');
-    }, 100); // Delay of 100 milliseconds
+function add_modal(item) {
+    const itemValue = $(item).val(); // Get the value of the passed item
+    const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
+
+    if (pr_id) {
+        $('#recieve_item_add_button').click();
+        $('#recieve_item_add_product_id').val(pr_id);
+
+        // $('#recieve_item_add_recieve_som').val(pr_som);
+        // $('#recieve_item_add_recieve_sotish_som').val(pr_sotish_som);
+        $('#recieve_item_add_recieve_id').val($(item).data('recieve'));
+        $('#recieve_item_add_product_name').text(pr_name);
+        $('#recieve_item_add_product_div .pr_type').remove();
+
+        $.get("{% url 'get_product_prices' %}", { product: pr_id }, function(data) {
+            const container = $('#recieve_item_add_product_div');
+            container.empty()
+
+            // Kelish narxlari qo'shish
+            data.bring_prices.forEach(br => {
+                if (container.find('input[name="' + br.valyuta + '"]').length === 0) {
+                    container.append(`
+                        <label class="br" for="">Kelish ${br.valyuta}</label>
+                        <input type="number" name="br_${br.valyuta_id}_${br.id}" class="form-control" value="${parseFloat(br.price).toFixed(0)}">
+                    `);
+                }
+            });
+
+            // Sotish narxlari jadvali
+            let table = container.find('table.table');
+            if (table.length === 0) {
+                // price_types bu ma'lumot kelmayapti JSONda, agar kerak bo'lsa backenddan berilishi kerak
+                // Shu sababdan ustun nomlarini backenddan olish yoki statik berish kerak
+                // Mana bu yerda misol uchun statik berilgan:
+                const price_types = data.price_types;
+
+                table = $(`
+                    <label for="">Sotish narx </label>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>N</th>
+                                <th>Valyuta</th>
+                                ${price_types.map(name => `<th>${name}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `);
+                container.append(table);
+            }
+
+            const tbody = table.find('tbody');
+            tbody.empty();
+
+            data.sell_prices.forEach((row, index) => {
+                const tds = row.summas.map(s => `
+                    <td>
+                        <input step="any" type="number" class="form-control" name="price_${s.id}_${row.valyuta_id}" value="${s.summa}">
+                    </td>
+                `).join('');
+
+                const tr = $(`
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.valuta}</td>
+                        ${tds}
+                    </tr>
+                `);
+                tbody.append(tr);
+            });
+        });
+    }
 }
-</script>
-<script>
-    // function delete_modal() {
-    //     console.log('aaaaaa')
-    //     console.log($('.modal-backdrop'))
-    //     $('.modal-backdrop').remove()
-    // }
-    function delete_modal() {
-    setTimeout(function() {
-        console.log($('.modal-backdrop'));
-        $('.modal-backdrop').removeClass('modal-backdrop');
-    }, 100); // Delay of 100 milliseconds
-}
+
 </script>
 
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    $(document).ready(function () {
+        $('.datatable').DataTable({
+            scrollX: true,
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false, // Agar saralash kerak bo'lmasa
+            fixedHeader: true
+        });
+    });
+</script>
 {% endblock js %}

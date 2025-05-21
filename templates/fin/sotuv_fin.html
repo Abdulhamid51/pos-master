@@ -188,7 +188,7 @@
                                                         <th>Narx</th>
                                                         <th>Soni</th>
                                                         <th>Itog</th>
-                                                        <th>Sebes Stoimos</th>
+                                                        <th>Sebestoimos</th>
                                                         <th>Sebes <br> itog</th>
                                                         <th>Kategoriya</th>
                                                         <th>Mijoz</th>
@@ -207,13 +207,14 @@
                                                         <td>{{ i.quantity }}</td>
                                                         <td>{{ i.total|intcomma }}</td>
                                                         <td>
-                                                            {% if i.product.sotish_som > 0 %}
+                                                            <!-- {% if i.product.sotish_som > 0 %}
                                                                 {{i.product.sotish_som  |intcomma }}
                                                             {% else %}
                                                                 {{i.product.sotish_dollar|intcomma}}
-                                                            {% endif %}
+                                                            {% endif %} -->
+                                                            {{i.product.cost|intcomma}}
                                                         </td>
-                                                        <td>Sebes <br> itog</td>
+                                                        <td>{{i.total_cost|intcomma }}</td>
                                                         <td>{{ i.product.group.name }}</td>
                                                         <td>{{ i.shop.debtor.fio }}</td>
                                                         <td>Izoh</td>

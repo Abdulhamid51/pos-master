@@ -249,9 +249,15 @@ urlpatterns = [
     path('add_bonus', add_bonus, name='add_bonus'),
     path('set_start_summa', set_start_summa, name='set_start_summa'),
     path('filial_kassalar', filial_kassalar, name='filial_kassalar'),
+    path('get_product_prices', get_product_prices, name='get_product_prices'),
     path('customer_debt_create/<int:id>', customer_debt_create, name='customer_debt_create'),
     path('external_income_user_debt_create/<int:id>', external_income_user_debt_create, name='external_income_user_debt_create'),
     path('externalincomeuser_detail/<int:id>', externalincomeuser_detail, name='externalincomeuser_detail'),
     path('majburiyat_chiqim_fin_add', majburiyat_chiqim_fin_add, name='majburiyat_chiqim_fin_add'),
+    path('recieve-expanse/add/', add_recieve_expanse, name='add_recieve_expanse'),
+    path('add_expanse_type', add_expanse_type, name='add_expanse_type'),
+    path('recieve-expanse/<int:pk>/edit/', edit_recieve_expanse, name='edit_recieve_expanse'),
+    path('recieve-expanse/<int:pk>/delete/', delete_recieve_expanse, name='delete_recieve_expanse'),
+
 
 ]

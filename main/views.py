@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.db.models import Sum, F
@@ -16,6 +16,8 @@ from django.conf import settings
 from .sms_sender import sendSmsOneContact
 import calendar
 from django.utils import timezone
+from itertools import groupby
+from operator import itemgetter
 
 
 
@@ -51,70 +53,112 @@ def daily_data():
     return gte, lte
 
 
-def ChartHome(request):
+# def ChartHome(request):
 
+#     year = request.GET.get('year')
+#     if not year:
+#         year = datetime.today().year
+#     else:
+#         year = int(year)
+#     kirims = []
+#     kirimd = []
+#     chiqims = []
+#     chiqimd = []
+#     yalpi = []
+#     nasiyas = []
+#     filial_sum = []
+#     for i in range(1, 13):
+#         date = datetime.now().date()
+#         if i == 12:
+#             month2 = 1
+#             year2 = year + 1
+#         else:
+#             month2 = i + 1
+#             year2 = year
+#         gte = f'{str(year)}-{str(i)}-01 00:01:00'
+#         lte = f'{str(year2)}-{str(month2)}-01 00:01:00'
+#         # kirr = Shop.objects.filter(date__gte=gte, date__lte=lte).aggregate(kir = Sum('naqd')+Sum('plastik')+Sum('nasiya'))
+#         kirr = Shop.objects.filter(date__gte=gte, date__lte=lte)
+#         ks = 0
+#         kd = 0
+#         filial_count = 0
+#         nasiya = 0
+#         for kir in kirr:
+#             ks += kir.naqd_som + kir.plastik + kir.nasiya_som + kir.transfer + kir.skidka_som
+#             filial_count += kir.naqd_som + kir.plastik + kir.nasiya_som + kir.transfer 
+#             kd += kir.naqd_dollar + kir.nasiya_dollar + kir.skidka_dollar
+#             nasiya += kir.nasiya_som
+#         chs = 0
+#         chd = 0
+#         chiqq = Recieve.objects.filter(date__gte=gte, date__lte=lte)
+#         yalpi_mahsulot = Yalpi_savdo.objects.filter(date__gte=gte, date__lte=lte)
+#         yalpi_sum = 0
+#         for item in yalpi_mahsulot:
+#             yalpi_sum += item.total_sum
+#         # print(yalpi_sum,"yalpi mahsulot keldi")
+#         for chiq in chiqq:
+#             chs += chiq.som
+#             chd += chiq.dollar
+#         kirims.append(ks)
+#         kirimd.append(kd)
+
+#         chiqims.append(chs)
+#         chiqimd.append(chd)
+#         nasiyas.append(nasiya)
+#         yalpi.append(yalpi_sum)
+#         filial_sum.append(filial_count)
+#     dt = {
+#         'kirims': kirims,
+#         'kirimd': kirimd,
+#         'chiqims': chiqims,
+#         'chiqimd': chiqimd,
+#         'nasiyas': nasiyas,
+#         'yalpi':yalpi,
+#         'filial_sum':filial_sum
+#     }
+#     return JsonResponse(dt)
+
+
+def ChartHome(request):
     year = request.GET.get('year')
     if not year:
         year = datetime.today().year
     else:
         year = int(year)
-    kirims = []
-    kirimd = []
-    chiqims = []
-    chiqimd = []
-    yalpi = []
-    nasiyas = []
-    filial_sum = []
-    for i in range(1, 13):
-        date = datetime.now().date()
-        if i == 12:
-            month2 = 1
-            year2 = year + 1
-        else:
-            month2 = i + 1
-            year2 = year
-        gte = f'{str(year)}-{str(i)}-01 00:01:00'
-        lte = f'{str(year2)}-{str(month2)}-01 00:01:00'
-        # kirr = Shop.objects.filter(date__gte=gte, date__lte=lte).aggregate(kir = Sum('naqd')+Sum('plastik')+Sum('nasiya'))
-        kirr = Shop.objects.filter(date__gte=gte, date__lte=lte)
-        ks = 0
-        kd = 0
-        filial_count = 0
-        nasiya = 0
-        for kir in kirr:
-            ks += kir.naqd_som + kir.plastik + kir.nasiya_som + kir.transfer + kir.skidka_som
-            filial_count += kir.naqd_som + kir.plastik + kir.nasiya_som + kir.transfer 
-            kd += kir.naqd_dollar + kir.nasiya_dollar + kir.skidka_dollar
-            nasiya += kir.nasiya_som
-        chs = 0
-        chd = 0
-        chiqq = Recieve.objects.filter(date__gte=gte, date__lte=lte)
-        yalpi_mahsulot = Yalpi_savdo.objects.filter(date__gte=gte, date__lte=lte)
-        yalpi_sum = 0
-        for item in yalpi_mahsulot:
-            yalpi_sum += item.total_sum
-        # print(yalpi_sum,"yalpi mahsulot keldi")
-        for chiq in chiqq:
-            chs += chiq.som
-            chd += chiq.dollar
-        kirims.append(ks)
-        kirimd.append(kd)
 
-        chiqims.append(chs)
-        chiqimd.append(chd)
-        nasiyas.append(nasiya)
-        yalpi.append(yalpi_sum)
-        filial_sum.append(filial_count)
-    dt = {
-        'kirims': kirims,
-        'kirimd': kirimd,
-        'chiqims': chiqims,
-        'chiqimd': chiqimd,
-        'nasiyas': nasiyas,
-        'yalpi':yalpi,
-        'filial_sum':filial_sum
-    }
-    return JsonResponse(dt)
+    valyutas = Valyuta.objects.all()
+    valutas_data = []
+
+    for valyuta in valyutas:
+        val_id = valyuta.id
+        valuta_result = {
+            'name': valyuta.name,
+            'summas': [],
+        }
+
+        for month in range(1, 13):
+            if month == 12:
+                next_month = 1
+                next_year = year + 1
+            else:
+                next_month = month + 1
+                next_year = year
+
+            gte = datetime(year, month, 1)
+            lte = datetime(next_year, next_month, 1)
+
+            shops = Shop.objects.filter(date__gte=gte, date__lt=lte, valyuta_id=val_id)
+            summa = 0
+
+            for s in shops:
+                
+                summa += s.total_price
+
+            valuta_result['summas'].append(summa)
+
+        valutas_data.append(valuta_result)
+
+    return JsonResponse({'valutas': valutas_data})
 
 
 def FilialKirim(request):
@@ -976,177 +1020,662 @@ def GetItem_html(request):
     return JsonResponse(dt1)
 
 
+# class Home(LoginRequiredMixin, TemplateView):
+#     template_name = 'home.html'
+
+#     def get_context_data(self, **kwargs):
+#         gte, lte = daily_data() #
+
+#         year = self.request.GET.get('year', datetime.now().year)
+#         start_date = self.request.GET.get('start_date', None)
+#         end_date = self.request.GET.get('end_date', None)
+        
+#         if start_date and end_date:
+#             gte = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+#             lte = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+
+#         # else:
+#         #     gte = datetime.now().date().replace(day=1)
+#         #     lte = datetime.now().date()
+
+#         try:
+#             salers = UserProfile.objects.extra(
+#                 select={
+#                     'naqd_som': 'select sum(api_shop.naqd_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'naqd_dollar': 'select sum(api_shop.naqd_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'plastik': 'select sum(api_shop.plastik) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'nasiya_som': 'select sum(api_shop.nasiya_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'nasiya_dollar': 'select sum(api_shop.nasiya_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'transfer': 'select sum(api_shop.transfer) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'skidka_som': 'select sum(api_shop.skidka_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'skidka_dollar': 'select sum(api_shop.skidka_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+                    
+#                 }
+#             )
+#             filials = Filial.objects.extra(
+#                 select={
+#                     'naqd_som': 'select sum(api_shop.naqd_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'naqd_dollar': 'select sum(api_shop.naqd_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'plastik': 'select sum(api_shop.plastik) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'nasiya_som': 'select sum(api_shop.nasiya_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'nasiya_dollar': 'select sum(api_shop.nasiya_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'transfer': 'select sum(api_shop.transfer) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'skidka_som': 'select sum(api_shop.skidka_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'skidka_dollar': 'select sum(api_shop.skidka_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
+#                         gte, lte),
+#                     'pay_som': 'select sum(api_payhistory.som) from api_payhistory where api_payhistory.filial_id = api_filial.id and api_payhistory.date > "{}" and api_payhistory.date < "{}"'.format(
+#                         gte, lte),
+#                     'pay_dollar': 'select sum(api_payhistory.dollar) from api_payhistory where api_payhistory.filial_id = api_filial.id and api_payhistory.date > "{}" and api_payhistory.date < "{}"'.format(
+#                         gte, lte),
+#                     'yalpi_daromad': 'select sum(api_yalpi_savdo.total_sum) from api_yalpi_savdo where api_yalpi_savdo.filial_id = api_filial.id and api_yalpi_savdo.date > "{}" and api_yalpi_savdo.date < "{}"'.format(
+#                         gte, lte),
+#                 }
+#             )
+#         except Exception as e:
+#             return HttpResponse(str(e),"nima bu")
+
+
+#         top_debtors = (
+#             PayHistory.objects
+#             .values('debtor', 'debtor__fio') 
+#             .annotate(total_som=Sum('som'), total_dollar=Sum('dollar')) 
+#             .order_by('-total_som', '-total_dollar')[:10]  
+#         )
+#         top_products = (
+#             Cart.objects
+#             .values('product__name')
+#             .annotate(total_quantity=Sum('quantity'))
+#             .order_by('-total_quantity')[:10]
+#         )
+
+#         top_products_profit = (
+#             Cart.objects
+#             .values('product__name')
+#             .annotate(
+#                 total_profit_som=Sum(F('quantity') * (F('product__sotish_som') - F('product__som'))),
+#                 total_profit_dollar=Sum(F('quantity') * (F('product__sotish_dollar') - F('product__dollar')))
+#             )
+#             .order_by('-total_profit_som', '-total_profit_dollar')[:10] 
+#         )
+
+#         shops = Shop.objects.filter(date__gte=gte, date__lte=lte)
+#         naqd_som = 0
+#         naqd_dollar = 0
+#         plastik = 0
+#         nasiya_som = 0
+#         nasiya_dollar = 0
+#         transfer = 0
+#         skidka_som = 0
+#         skidka_dollar = 0
+#         for shop in shops:
+#             naqd_som += shop.naqd_som
+#             naqd_dollar += shop.naqd_dollar
+#             plastik += shop.plastik
+#             nasiya_som += shop.nasiya_som
+#             nasiya_dollar += shop.nasiya_dollar
+#             transfer += shop.transfer
+#             skidka_som += shop.skidka_som
+#             skidka_dollar += shop.skidka_dollar
+#         som = naqd_som + plastik + nasiya_som + transfer + skidka_som
+#         dollar = naqd_dollar + plastik + nasiya_dollar + transfer + skidka_dollar
+
+#         jami = 0
+#         try:
+#             for f in filials:
+                
+#                 if f.naqd_som is None:
+#                     f.naqd_som = 0
+#                 if f.plastik is None:
+#                     f.plastik = 0
+#                 if f.nasiya_som is None:
+#                     f.nasiya = 0
+#                 jami += int(f.naqd_som) + int(f.plastik) + int(f.nasiya_som)
+#         except Exception as e:
+#             print(e,"nonemi bu")
+
+        
+#         context = super().get_context_data(**kwargs)
+#         context['home'] = 'active'
+#         context['valyuta'] = Valyuta.objects.all()
+#         context['home_t'] = 'true'
+#         context['salers'] = salers
+#         context['sellers'] = salers.filter(staff=3)
+#         context['filials'] = filials
+#         context['jamisum'] = jami
+#         context['top_debtors'] = top_debtors
+#         context['top_products'] = top_products
+#         context['top_products_profit'] = top_products_profit
+
+#         context['filters'] = {
+#             'year':year,
+#             'start_date':gte,
+#             'end_date':lte,
+#         }
+
+#         if som != 0:
+#             context['naqd_som'] = naqd_som
+#             context['naqd_dollar'] = naqd_dollar
+#             context['plastik'] = plastik
+#             context['nasiya_som'] = nasiya_som
+#             context['nasiya_dollar'] = nasiya_dollar
+#             context['transfer'] = transfer
+#             context['skidka_som'] = skidka_som
+#             context['skidka_dollar'] = skidka_dollar
+#         else:
+#             context['naqd_som'] = 0
+#             context['naqd_dollar'] = 0
+#             context['plastik'] = 0
+#             context['nasiya_som'] = 0
+#             context['nasiya_dollar'] = 0
+#             context['transfer'] = 0
+#             context['skidka_som'] = 0
+#             context['skidka_dollar'] = 0
+#             context['dollar_kurs'] = Course.objects.last().som
+#         return context
+
+
+# class Home(LoginRequiredMixin, TemplateView):
+#     template_name = 'home.html'
+
+#     def get_context_data(self, **kwargs):
+#         gte, lte = daily_data() #
+#         valyutas = Valyuta.objects.all()
+
+#         year = self.request.GET.get('year', datetime.now().year)
+#         start_date = self.request.GET.get('start_date', None)
+#         end_date = self.request.GET.get('end_date', None)
+        
+#         if start_date and end_date:
+#             gte = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+#             lte = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+
+#         # else:
+#         #     gte = datetime.now().date().replace(day=1)
+#         #     lte = datetime.now().date()
+
+#         salers = UserProfile.objects.all()
+            
+
+
+#         # top_debtors = Debtor.objects.all()
+
+#         # for i in top_debtors:
+#         #     i.valutas = i.debt_haqimiz
+
+#         top_debtors_per_currency = []
+#         top_creditors_per_currency = []
+
+#         for valyuta in Valyuta.objects.all():
+#             # Qarzdorlar (summa < 0)
+#             top_debtors = (
+#                 Wallet.objects
+#                 .filter(valyuta=valyuta, summa__lt=0, customer__isnull=False)
+#                 .values('customer__id', 'customer__fio')
+#                 .annotate(total_debt=Sum('summa'))
+#                 .order_by('total_debt')[:10]
+#             )
+#             top_debtors_per_currency.append({
+#                 'valyuta': valyuta,
+#                 'debtors': list(top_debtors)
+#             })
+
+#             # Haqqi borlar (summa > 0)
+#             top_creditors = (
+#                 Wallet.objects
+#                 .filter(valyuta=valyuta, summa__gt=0, customer__isnull=False)
+#                 .values('customer__id', 'customer__fio')
+#                 .annotate(total_credit=Sum('summa'))
+#                 .order_by('-total_credit')[:10]
+#             )
+            
+#             top_creditors_per_currency.append({
+#                 'valyuta': valyuta,
+#                 'creditors': list(top_creditors)
+#             })
+
+
+
+
+
+#         top_sell_products = (
+#             Cart.objects
+#             .values('product__name')
+#             .annotate(total_quantity=Sum('quantity'))
+#             .order_by('-total_quantity')[:10]
+#         )
+
+#         top_products_profit = []
+
+#         # 3. Ushbu maksimal summaga mos keladigan mahsulotlarni topamiz
+        
+#         aggregated = (
+#             Cart.objects
+#             .values('shop__valyuta', 'shop__valyuta_id', 'product__id', 'product__name')  # Added 'shop__valyuta_id' here
+#             .annotate(
+#                 total_sum=Coalesce(
+#                     Sum('summa_total', output_field=FloatField()), 
+#                     Value(0.0, output_field=FloatField())
+#                 )
+#             )
+#         )
+
+
+#         # top_profit_product = []
+
+#         # for valyuta_obj in valyutas:
+#         #     valyuta_name = valyuta_obj.name
+#         #     valyuta_id = valyuta_obj.id
+
+#         #     currency_products = [
+#         #         p for p in aggregated 
+#         #         if p.get('shop__valyuta') is not None and p['shop__valyuta_id'] == valyuta_id
+#         #     ]
+
+#         #     if not currency_products:
+#         #         continue
+
+#         #     # Eng yuqori 10 mahsulotni total_sum bo‘yicha tartiblash
+#         #     top_products_raw = sorted(currency_products, key=lambda p: p['total_sum'], reverse=True)[:10]
+
+#         #     # Faol ro‘yxatga tushirish
+#         #     top_products = [
+#         #         {
+#         #             'product_id': p['product__id'],
+#         #             'product': p['product__name'],
+#         #             'summa': p['total_sum']
+#         #         }
+#         #         for p in top_products_raw
+#         #     ]
+
+#         #     top_profit_product.append({
+#         #         'valyuta': valyuta_name,
+#         #         'products': top_products
+#         #     })
+
+#         aggregated = (
+#             Cart.objects
+#             .values(
+#                 'shop__valyuta',
+#                 'shop__valyuta_id',
+#                 'shop__saler_id',
+#                 'product__id',
+#                 'product__name'
+#             )
+#             .annotate(
+#                 total_sum=Coalesce(
+#                     Sum('summa_total', output_field=FloatField()),
+#                     Value(0.0, output_field=FloatField())
+#                 )
+#             )
+#         )
+
+#         top_profit_product = []
+
+#         for valyuta_obj in valyutas:
+#             valyuta_name = valyuta_obj.name
+#             valyuta_id = valyuta_obj.id
+
+#             currency_products = [
+#                 p for p in aggregated 
+#                 if p.get('shop__valyuta') is not None and p['shop__valyuta_id'] == valyuta_id
+#             ]
+
+#             if not currency_products:
+#                 continue
+
+#             top_products_raw = sorted(currency_products, key=lambda p: p['total_sum'], reverse=True)[:10]
+
+#             top_products = [
+#                 {
+#                     'product_id': p['product__id'],
+#                     'product': p['product__name'],
+#                     'summa': p['total_sum']
+#                 }
+#                 for p in top_products_raw
+#             ]
+
+#             top_profit_product.append({
+#                 'valyuta': valyuta_name,
+#                 'products': top_products
+#             })
+
+        
+#         aggregated_salers = (
+#             Cart.objects
+#             .values('shop__valyuta', 'shop__valyuta_id', 'shop__saler_id')
+#             .annotate(
+#                 total_sum=Coalesce(
+#                     Sum('summa_total', output_field=FloatField()),
+#                     Value(0.0, output_field=FloatField())
+#                 )
+#             )
+#         )
+
+#         saler_map = {
+#             saler.id: str(saler)  # yoki saler.full_name, saler.user.username
+#             for saler in UserProfile.objects.all()
+#         }
+
+#         # 2. Har bir valyuta va sotuvchi bo‘yicha umumiy summa hisoblash
+#         aggregated_salers = (
+#             Cart.objects
+#             .exclude(shop__saler__isnull=True)
+#             .values('shop__valyuta', 'shop__valyuta_id', 'shop__saler_id')
+#             .annotate(
+#                 total_sum=Coalesce(
+#                     Sum('summa_total', output_field=FloatField()),
+#                     Value(0.0, output_field=FloatField())
+#                 )
+#             )
+#         )
+
+#         # 3. Top 10 sotuvchi har bir valyuta bo‘yicha
+#         aggregated_salers = (
+#             Cart.objects
+#             .values('shop__valyuta', 'shop__valyuta_id', 'shop__saler', 'shop__saler_id')
+#             .annotate(total_sum=Coalesce(Sum('summa_total', output_field=FloatField()), 0))
+#         )
+
+#         # Saler ma'lumotlarini olish (id => name)
+#         saler_map = {
+#             s.id: str(s)  # yoki s.full_name yoki s.user.username
+#             for s in UserProfile.objects.filter(id__in=[row['shop__saler_id'] for row in aggregated_salers])
+#         }
+
+#         top_salers_by_valyuta = []
+
+#         for valyuta_obj in valyutas:
+#             valyuta_id = valyuta_obj.id
+#             valyuta_name = valyuta_obj.name
+
+#             saler_entries = [
+#                 entry for entry in aggregated_salers
+#                 if entry['shop__valyuta_id'] == valyuta_id
+#             ]
+
+#             if not saler_entries:
+#                 continue
+
+#             # Eng yuqori 10 ta sotuvchini olish
+#             top_salers_raw = sorted(saler_entries, key=lambda x: x['total_sum'], reverse=True)[:10]
+
+#             top_salers = []
+#             for s in top_salers_raw:
+#                 saler_id = s['shop__saler_id']
+#                 saler_name = saler_map.get(saler_id, "Noma'lum")
+
+#                 top_salers.append({
+#                     'saler_id': saler_id,
+#                     'saler_name': saler_name,
+#                     'summa': s['total_sum']
+#                 })
+
+#             top_salers_by_valyuta.append({
+#                 'valyuta': valyuta_name,
+#                 'salers': top_salers
+#             })
+
+#                 # top_profit_by_saler.append(saler_entry)
+        
+#         # [
+#         #     "saler_id": 1,
+#         #     "saler_name": 1,
+#         #     "saler_id": 1,
+#         #     "saler_id": 1,
+#         #     "saler_id": 1,
+#         # ]
+
+
+#         # shops = Shop.objects.filter(date__gte=gte, date__lte=lte)
+#         # naqd_som = 0
+#         # naqd_dollar = 0
+#         # plastik = 0
+#         # nasiya_som = 0
+#         # nasiya_dollar = 0
+#         # transfer = 0
+#         # skidka_som = 0
+#         # skidka_dollar = 0
+#         # for shop in shops:
+#         #     naqd_som += shop.naqd_som
+#         #     naqd_dollar += shop.naqd_dollar
+#         #     plastik += shop.plastik
+#         #     nasiya_som += shop.nasiya_som
+#         #     nasiya_dollar += shop.nasiya_dollar
+#         #     transfer += shop.transfer
+#         #     skidka_som += shop.skidka_som
+#         #     skidka_dollar += shop.skidka_dollar
+#         # som = naqd_som + plastik + nasiya_som + transfer + skidka_som
+#         # dollar = naqd_dollar + plastik + nasiya_dollar + transfer + skidka_dollar
+
+#         # jami = 0
+#         # try:
+#         #     for f in filials:
+                
+#         #         if f.naqd_som is None:
+#         #             f.naqd_som = 0
+#         #         if f.plastik is None:
+#         #             f.plastik = 0
+#         #         if f.nasiya_som is None:
+#         #             f.nasiya = 0
+#         #         jami += int(f.naqd_som) + int(f.plastik) + int(f.nasiya_som)
+#         # except Exception as e:
+#         #     print(e,"nonemi bu")
+
+#         context = super().get_context_data(**kwargs)
+#         context['home'] = 'active'
+#         context['valyuta'] = valyutas
+#         context['top_debtors_per_currency'] = top_debtors_per_currency
+#         context['top_creditors_per_currency'] = top_creditors_per_currency
+#         context['top_salers_by_valyuta'] = top_salers_by_valyuta
+#         context['home_t'] = 'true'
+#         context['salers'] = salers
+#         context['sellers'] = salers.filter(staff=3)
+#         context['top_profit_product'] = top_profit_product
+#         # context['jamisum'] = jami
+#         context['top_debtors'] = top_debtors
+#         context['top_sell_products'] = top_sell_products
+#         context['top_products_profit'] = top_products_profit
+
+#         context['filters'] = {
+#             'year':year,
+#             'start_date':gte,
+#             'end_date':lte,
+#         }
+
+#         # if som != 0:
+#         #     context['naqd_som'] = naqd_som
+#         #     context['naqd_dollar'] = naqd_dollar
+#         #     context['plastik'] = plastik
+#         #     context['nasiya_som'] = nasiya_som
+#         #     context['nasiya_dollar'] = nasiya_dollar
+#         #     context['transfer'] = transfer
+#         #     context['skidka_som'] = skidka_som
+#         #     context['skidka_dollar'] = skidka_dollar
+#         # else:
+#         #     context['naqd_som'] = 0
+#         #     context['naqd_dollar'] = 0
+#         #     context['plastik'] = 0
+#         #     context['nasiya_som'] = 0
+#         #     context['nasiya_dollar'] = 0
+#         #     context['transfer'] = 0
+#         #     context['skidka_som'] = 0
+#         #     context['skidka_dollar'] = 0
+#         #     context['dollar_kurs'] = Course.objects.last().som
+#         return context
+
+
 class Home(LoginRequiredMixin, TemplateView):
     template_name = 'home.html'
 
     def get_context_data(self, **kwargs):
-        gte, lte = daily_data() #
-        # print(gte, lte)
-        # lte = datetime.now() #2022-03-11 11:43:51.290605
-        # gte = lte - timedelta(days=1) #2022-03-10 11:43:51.290605 
-        # lte = lte.date()
-        # gte = gte.date()
+        from django.db.models import Sum, FloatField, Value
+        from django.db.models.functions import Coalesce
 
+        gte, lte = daily_data()
+
+        # Foydalanuvchi filtrlarini olish
         year = self.request.GET.get('year', datetime.now().year)
-        start_date = self.request.GET.get('start_date', None)
-        end_date = self.request.GET.get('end_date', None)
-        
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+
         if start_date and end_date:
             gte = datetime.strptime(start_date, '%Y-%m-%d').date()
-
             lte = datetime.strptime(end_date, '%Y-%m-%d').date()
+            shops = Shop.objects.filter(date__date__gte=gte, date__date__lte=lte)
+        else: 
+            shops = Shop.objects.filter(date__date__gte=datetime.now().date().replace(day=1))
 
+        valyutas = Valyuta.objects.all()
+        salers = UserProfile.objects.all()
+        
 
-        # else:
-        #     gte = datetime.now().date().replace(day=1)
-        #     lte = datetime.now().date()
+        # =============================
+        # 1. Top 10 qarzdor va haqqi borlar
+        # =============================
+        top_debtors_per_currency = []
+        top_creditors_per_currency = []
 
-        try:
-            salers = UserProfile.objects.extra(
-                select={
-                    'naqd_som': 'select sum(api_shop.naqd_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'naqd_dollar': 'select sum(api_shop.naqd_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'plastik': 'select sum(api_shop.plastik) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'nasiya_som': 'select sum(api_shop.nasiya_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'nasiya_dollar': 'select sum(api_shop.nasiya_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'transfer': 'select sum(api_shop.transfer) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'skidka_som': 'select sum(api_shop.skidka_som) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'skidka_dollar': 'select sum(api_shop.skidka_dollar) from api_shop where api_shop.saler_id = api_userprofile.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    
-                }
+        for valyuta in valyutas:
+            # Qarzdorlar (summa < 0)
+            debtors = (
+                Wallet.objects
+                .filter(valyuta=valyuta, summa__lt=0, customer__isnull=False)
+                .values('customer__id', 'customer__fio')
+                .annotate(total_debt=Sum('summa'))
+                .order_by('total_debt')[:10]
             )
-            filials = Filial.objects.extra(
-                select={
-                    'naqd_som': 'select sum(api_shop.naqd_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'naqd_dollar': 'select sum(api_shop.naqd_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'plastik': 'select sum(api_shop.plastik) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'nasiya_som': 'select sum(api_shop.nasiya_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'nasiya_dollar': 'select sum(api_shop.nasiya_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'transfer': 'select sum(api_shop.transfer) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'skidka_som': 'select sum(api_shop.skidka_som) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'skidka_dollar': 'select sum(api_shop.skidka_dollar) from api_shop where api_shop.filial_id = api_filial.id and api_shop.date > "{}" and api_shop.date < "{}"'.format(
-                        gte, lte),
-                    'pay_som': 'select sum(api_payhistory.som) from api_payhistory where api_payhistory.filial_id = api_filial.id and api_payhistory.date > "{}" and api_payhistory.date < "{}"'.format(
-                        gte, lte),
-                    'pay_dollar': 'select sum(api_payhistory.dollar) from api_payhistory where api_payhistory.filial_id = api_filial.id and api_payhistory.date > "{}" and api_payhistory.date < "{}"'.format(
-                        gte, lte),
-                    'yalpi_daromad': 'select sum(api_yalpi_savdo.total_sum) from api_yalpi_savdo where api_yalpi_savdo.filial_id = api_filial.id and api_yalpi_savdo.date > "{}" and api_yalpi_savdo.date < "{}"'.format(
-                        gte, lte),
-                }
+            top_debtors_per_currency.append({
+                'valyuta': valyuta,
+                'debtors': list(debtors)
+            })
+
+            # Haqqi borlar (summa > 0)
+            creditors = (
+                Wallet.objects
+                .filter(valyuta=valyuta, summa__gt=0, customer__isnull=False)
+                .values('customer__id', 'customer__fio')
+                .annotate(total_credit=Sum('summa'))
+                .order_by('-total_credit')[:10]
             )
-        except Exception as e:
-            return HttpResponse(str(e),"nima bu")
+            top_creditors_per_currency.append({
+                'valyuta': valyuta,
+                'creditors': list(creditors)
+            })
 
-
-        top_debtors = (
-            PayHistory.objects
-            .values('debtor', 'debtor__fio') 
-            .annotate(total_som=Sum('som'), total_dollar=Sum('dollar')) 
-            .order_by('-total_som', '-total_dollar')[:10]  
-        )
-        top_products = (
-            Cart.objects
+        # =============================
+        # 2. Eng ko‘p sotilgan mahsulotlar
+        # =============================
+        top_sell_products = (
+            Cart.objects.filter(shop__in=shops)
             .values('product__name')
             .annotate(total_quantity=Sum('quantity'))
             .order_by('-total_quantity')[:10]
         )
 
-        top_products_profit = (
-            Cart.objects
-            .values('product__name')
+        # =============================
+        # 3. Har valyuta bo‘yicha eng ko‘p foyda keltirgan mahsulotlar
+        # =============================
+        aggregated_products = (
+            Cart.objects.filter(shop__in=shops)
+            .values('shop__valyuta_id', 'product__id', 'product__name')
             .annotate(
-                total_profit_som=Sum(F('quantity') * (F('product__sotish_som') - F('product__som'))),
-                total_profit_dollar=Sum(F('quantity') * (F('product__sotish_dollar') - F('product__dollar')))
+                total_sum=Coalesce(Sum('summa_total', output_field=FloatField()), Value(0.0))
             )
-            .order_by('-total_profit_som', '-total_profit_dollar')[:10] 
         )
 
-        shops = Shop.objects.filter(date__gte=gte, date__lte=lte)
-        naqd_som = 0
-        naqd_dollar = 0
-        plastik = 0
-        nasiya_som = 0
-        nasiya_dollar = 0
-        transfer = 0
-        skidka_som = 0
-        skidka_dollar = 0
-        for shop in shops:
-            naqd_som += shop.naqd_som
-            naqd_dollar += shop.naqd_dollar
-            plastik += shop.plastik
-            nasiya_som += shop.nasiya_som
-            nasiya_dollar += shop.nasiya_dollar
-            transfer += shop.transfer
-            skidka_som += shop.skidka_som
-            skidka_dollar += shop.skidka_dollar
-        som = naqd_som + plastik + nasiya_som + transfer + skidka_som
-        dollar = naqd_dollar + plastik + nasiya_dollar + transfer + skidka_dollar
+        top_profit_product = []
+        for valyuta in valyutas:
+            filtered = [
+                p for p in aggregated_products
+                if p['shop__valyuta_id'] == valyuta.id
+            ]
+            top_10 = sorted(filtered, key=lambda x: x['total_sum'], reverse=True)[:10]
+            top_profit_product.append({
+                'valyuta': valyuta.name,
+                'products': [
+                    {
+                        'product_id': p['product__id'],
+                        'product': p['product__name'],
+                        'summa': p['total_sum']
+                    } for p in top_10
+                ]
+            })
 
-        jami = 0
-        try:
-            for f in filials:
-                
-                if f.naqd_som is None:
-                    f.naqd_som = 0
-                if f.plastik is None:
-                    f.plastik = 0
-                if f.nasiya_som is None:
-                    f.nasiya = 0
-                jami += int(f.naqd_som) + int(f.plastik) + int(f.nasiya_som)
-        except Exception as e:
-            print(e,"nonemi bu")
+        # =============================
+        # 4. Har valyuta bo‘yicha eng ko‘p sotgan sotuvchilar
+        # =============================
+        aggregated_salers = (
+            Cart.objects.filter(shop__in=shops)
+            .exclude(shop__saler__isnull=True)
+            .values('shop__valyuta_id', 'shop__saler_id')
+            .annotate(total_sum=Coalesce(Sum('summa_total', output_field=FloatField()), Value(0.0)))
+        )
 
-        
-        context = super().get_context_data(**kwargs)
-        context['home'] = 'active'
-        context['home_t'] = 'true'
-        context['salers'] = salers
-        context['filials'] = filials
-        context['jamisum'] = jami
-        context['top_debtors'] = top_debtors
-        context['top_products'] = top_products
-        context['top_products_profit'] = top_products_profit
-
-        context['filters'] = {
-            'year':year,
-            'start_date':gte,
-            'end_date':lte,
+        saler_map = {
+            saler.id: str(saler)
+            for saler in UserProfile.objects.filter(id__in=[row['shop__saler_id'] for row in aggregated_salers])
         }
 
-        if som != 0:
-            context['naqd_som'] = naqd_som
-            context['naqd_dollar'] = naqd_dollar
-            context['plastik'] = plastik
-            context['nasiya_som'] = nasiya_som
-            context['nasiya_dollar'] = nasiya_dollar
-            context['transfer'] = transfer
-            context['skidka_som'] = skidka_som
-            context['skidka_dollar'] = skidka_dollar
-        else:
-            context['naqd_som'] = 0
-            context['naqd_dollar'] = 0
-            context['plastik'] = 0
-            context['nasiya_som'] = 0
-            context['nasiya_dollar'] = 0
-            context['transfer'] = 0
-            context['skidka_som'] = 0
-            context['skidka_dollar'] = 0
-            context['dollar_kurs'] = Course.objects.last().som
+        top_salers_by_valyuta = []
+        for valyuta in valyutas:
+            filtered = [
+                row for row in aggregated_salers
+                if row['shop__valyuta_id'] == valyuta.id
+            ]
+            top_10 = sorted(filtered, key=lambda x: x['total_sum'], reverse=True)[:10]
+            top_salers_by_valyuta.append({
+                'valyuta': valyuta.name,
+                'salers': [
+                    {
+                        'saler_id': row['shop__saler_id'],
+                        'saler_name': saler_map.get(row['shop__saler_id'], 'Noma\'lum'),
+                        'summa': row['total_sum']
+                    }
+                    for row in top_10
+                ]
+            })
+
+        # =============================
+        # 5. Kontekstga hammasini joylash
+        # =============================
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'home': 'active',
+            'home_t': 'true',
+            'valyuta': valyutas,
+            'salers': salers,
+            'sellers': salers.filter(staff=3),
+            'top_debtors_per_currency': top_debtors_per_currency,
+            'top_creditors_per_currency': top_creditors_per_currency,
+            'top_sell_products': top_sell_products,
+            'top_profit_product': top_profit_product,
+            'top_salers_by_valyuta': top_salers_by_valyuta,
+            'filters': {
+                'year': year,
+                'start_date': gte,
+                'end_date': lte,
+            }
+        })
+
         return context
 
 
@@ -2099,6 +2628,8 @@ class OmborQabul(LoginRequiredMixin, TemplateView):
             recieve = recieve.filter(date__date__gte=datetime.now().date().replace(day=1))
         if deliver:
             recieve = recieve.filter(deliver_id=deliver)
+
+        valyutas = Valyuta.objects.all()
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['wares'] = recieve
@@ -2110,6 +2641,18 @@ class OmborQabul(LoginRequiredMixin, TemplateView):
         context['deliver'] = int(deliver) if deliver else 0
         context['start_date'] = start_date
         context['end_date'] = end_date
+        context['valyutas'] = valyutas
+
+        total_valyutas = []
+        for v in valyutas:
+            dt = {
+                "valyuta": v,
+                "summa": sum([i.total_bring_price for i in recieve.filter(valyuta=v)]),
+            }
+            total_valyutas.append(dt)
+        
+        context['total_valyutas'] = total_valyutas
+
         # for r in Recieve.objects.filter(date__gte=gte, date__lte=lte):
         #     print(r.date)
         return context
@@ -2121,11 +2664,47 @@ class ArticleDetailView(LoginRequiredMixin, DetailView):
     template_name = 'omborqabul_detail.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['dollar_kurs'] = Course.objects.last().som
-        context['price_types'] = PriceType.objects.all()
-
         
+    #     context = super().get_context_data(**kwargs)
+    #     context['dollar_kurs'] = Course.objects.last().som
+    #     context['price_types'] = PriceType.objects.all()
+    #     context['valyutas'] = Valyuta.objects.all()
+        
+    #     return context
+
+        context = super().get_context_data(**kwargs)
+        context['ombor'] = 'active'
+        context['ombor_t'] = 'true'
+        context['delivers'] = Deliver.objects.all().order_by('-id')
+        context['recieves'] = Recieve.objects.filter(id=self.object.id).order_by('-id')
+        context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=False).order_by('-id')[:1000]
+        context['dollar_kurs'] = Course.objects.last().som
+        context['products'] = ProductFilial.objects.all()
+        context['expanse_types'] = RecieveExpanseTypes.objects.all()
+        context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
+        context['groups'] = Groups.objects.all()
+        # context['delivers'] = Deliver.objects.all()
+        context['filial'] = Filial.objects.filter(is_activate=True)
+        context['price_types'] = PriceType.objects.filter(is_activate=True)
+        context['valyutas'] = Valyuta.objects.filter()
+        context['today'] = datetime.now()
+        context['measurements'] = [{
+            "id": i[0],
+            "name": i[1],
+        } for i in ProductFilial.measure]
+        max_barcode = (
+                ProductFilial.objects
+                .annotate(barcode_int=Cast('barcode', IntegerField()))
+                .aggregate(Max('barcode_int'))['barcode_int__max']
+            )
+        new_barcode = max_barcode+1 if max_barcode else 1
+
+        context['new_barcode'] = new_barcode
+
+
+        active_id = self.request.GET.get('active')
+        if active_id and Recieve.objects.filter(id=active_id):
+            context['active_one'] = Recieve.objects.get(id=active_id)
         return context
 
 def omborqabul_recieve_detail(request, id):
@@ -2240,9 +2819,13 @@ class Recieves(LoginRequiredMixin, TemplateView):
         context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=False).order_by('-id')[:1000]
         context['dollar_kurs'] = Course.objects.last().som
         context['products'] = ProductFilial.objects.all()
+        context['expanse_types'] = RecieveExpanseTypes.objects.all()
+        context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
         context['groups'] = Groups.objects.all()
-        context['delivers'] = Deliver.objects.all()
+        # context['delivers'] = Deliver.objects.all()
         context['filial'] = Filial.objects.filter(is_activate=True)
+        context['price_types'] = PriceType.objects.filter(is_activate=True)
+        context['valyutas'] = Valyuta.objects.filter()
         context['today'] = datetime.now()
         context['measurements'] = [{
             "id": i[0],
@@ -4574,8 +5157,10 @@ def add_recieve(request):
     deliver = request.POST.get('deliver')
     filial = request.POST.get('filial')
     date = request.POST.get('date')
+    valyuta = request.POST.get('valyuta')
+    kurs = request.POST.get('kurs')
 
-    obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date)
+    obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs)
 
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
@@ -4587,84 +5172,193 @@ def add_recieve(request):
 
 from django.views.decorators.http import require_POST
 
+# @require_POST
+# def add_recieve_item_view(request):
+#     r = request.POST
+#     recieve = int(request.POST.get('recieve'))
+#     product = int(request.POST.get('product'))
+
+#     som = int(request.POST.get('som'))
+#     sotish_som = int(request.POST.get('sotish_som'))
+#     # kurs = int(request.POST.get('kurs'))
+#     quantity = int(request.POST.get('quantity'))
+#     product = ProductFilial.objects.get(id=product)
+
+#     price_types = product.price_types.all()
+
+#     for i in price_types:
+#         dt = request.POST.get(f'{i.id}')
+#         if dt:
+#             i.price = dt
+#             i.save()
+    
+#     rec = Recieve.objects.get(id=recieve)
+#     r = RecieveItem.objects.create(
+#         recieve=rec,
+#         product=product,
+#         som=som,
+#         sotish_som=sotish_som,
+#         quantity=quantity
+#     )
+#     if rec.status == 0:
+#         rec.status=1
+#         rec.save()
+   
+#     rec.som += som * quantity
+#     rec.sum_sotish_som += sotish_som * quantity
+#     rec.save()
+
+#     # s = self.get_serializer_class()(r)
+#     return redirect(request.META['HTTP_REFERER'])
+
+
 @require_POST
 def add_recieve_item_view(request):
-    r = request.POST
     recieve = int(request.POST.get('recieve'))
     product = int(request.POST.get('product'))
-
-    som = int(request.POST.get('som'))
-    sotish_som = int(request.POST.get('sotish_som'))
-    # kurs = int(request.POST.get('kurs'))
-    quantity = int(request.POST.get('quantity'))
-    product = ProductFilial.objects.get(id=product)
-
-    price_types = product.price_types.all()
-
-    for i in price_types:
-        dt = request.POST.get(f'{i.id}')
-        if dt:
-            i.price = dt
-            i.save()
-    
+    quantity = float(request.POST.get('quantity'))
     rec = Recieve.objects.get(id=recieve)
-    r = RecieveItem.objects.create(
+    # item_id = request.POST.get("item")
+    # item = RecieveItem.objects.get(id=item_id)
+    product = ProductFilial.objects.get(id=product)
+    item = RecieveItem.objects.create(
         recieve=rec,
         product=product,
-        som=som,
-        sotish_som=sotish_som,
         quantity=quantity
     )
-    if rec.status == 0:
-        rec.status=1
-        rec.save()
+    quantity = request.POST.get("quantity")
+    if quantity:
+        item.quantity = int(quantity)
    
-    rec.som += som * quantity
-    rec.sum_sotish_som += sotish_som * quantity
-    rec.save()
+    for key, value in request.POST.items():
+        if key.startswith("br_"):
+            _, valuta_id, id = key.split("_")
+            valyuta = Valyuta.objects.get(id=valuta_id)
 
-    # s = self.get_serializer_class()(r)
-    return redirect(request.META['HTTP_REFERER'])
+           
+
+            bring_price_obj, _ = ProductBringPrice.objects.get_or_create(
+            valyuta=valyuta,
+            product=item.product,
+            recieveitem=item
+            )
+            bring_price_obj.price = float(value)
+            bring_price_obj.save()
 
 
+    for key, value in request.POST.items():
+        if key.startswith("price_"):
+            _, type_id, valuta_id = key.split("_")
+            # price_type = PriceType.objects.get(id=type_id)
+            valyuta = Valyuta.objects.get(id=valuta_id)
+            ppt = ProductPriceType.objects.get(id=type_id)
+            ppt.price = float(value)
+            ppt.save()
 
-
-
-@require_POST
-def edit_recieve_item_view(request):
-    r = request.POST
-    item = int(request.POST.get('item'))
-
-    som = int(request.POST.get('som'))
-    sotish_som = int(request.POST.get('sotish_som'))
-    # kurs = int(request.POST.get('kurs'))
-    quantity = int(request.POST.get('quantity'))
-    item = RecieveItem.objects.get(id=item)
-
-    price_types = item.product.price_types.all()
-
-    for i in price_types:
-        dt = request.POST.get(f'{i.id}')
-        if dt:
-            i.price = dt
-            i.save()
     
-    rec = item.recieve
-    item.som = som
-    item.sotish_som = sotish_som
-    item.quantity = quantity
     item.save()
 
     if rec.status == 0:
         rec.status=1
         rec.save()
    
-    rec.som += som * quantity
-    rec.sum_sotish_som += sotish_som * quantity
     rec.save()
 
-    # s = self.get_serializer_class()(r)
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+
+
+# @require_POST
+# def edit_recieve_item_view(request):
+#     r = request.POST
+#     item = int(request.POST.get('item'))
+
+#     som = int(request.POST.get('som'))
+#     sotish_som = int(request.POST.get('sotish_som'))
+#     # kurs = int(request.POST.get('kurs'))
+#     quantity = int(request.POST.get('quantity'))
+#     item = RecieveItem.objects.get(id=item)
+
+#     price_types = item.product.price_types.all()
+
+#     for i in price_types:
+#         dt = request.POST.get(f'{i.id}')
+#         if dt:
+#             i.price = dt
+#             i.save()
+    
+#     rec = item.recieve
+#     item.som = som
+#     item.sotish_som = sotish_som
+#     item.quantity = quantity
+#     item.save()
+
+#     if rec.status == 0:
+#         rec.status=1
+#         rec.save()
+   
+#     rec.som += som * quantity
+#     rec.sum_sotish_som += sotish_som * quantity
+#     rec.save()
+
+#     # s = self.get_serializer_class()(r)
+#     return redirect(request.META['HTTP_REFERER'])
+
+
+@require_POST
+def edit_recieve_item_view(request):
+    item_id = request.POST.get("item")
+    item = RecieveItem.objects.get(id=item_id)
+    
+    quantity = request.POST.get("quantity")
+    if quantity:
+        item.quantity = int(quantity)
+   
+    for key, value in request.POST.items():
+        if key.startswith("br_"):
+            _, valuta_id, id = key.split("_")
+            valyuta = Valyuta.objects.get(id=valuta_id)
+            if id:
+                bring_price_obj = ProductBringPrice.objects.get(id=id)
+            else:
+                bring_price_obj, _ = ProductBringPrice.objects.get_or_create(
+                valyuta=valyuta,
+                product=item.product,
+                recieveitem=item
+            )
+            bring_price_obj.price = float(value)
+            bring_price_obj.save()
+
+    item.save()
+
+    for key, value in request.POST.items():
+        if key.startswith("price_"):
+            _, type_id, valuta_id = key.split("_")
+            # price_type = PriceType.objects.get(id=type_id)
+            valyuta = Valyuta.objects.get(id=valuta_id)
+            ppt = ProductPriceType.objects.get(id=type_id)
+            ppt.price = float(value)
+            ppt.save()
+
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+def get_product_prices(request):
+    product_id = request.GET.get('product')
+    try:
+        product = ProductFilial.objects.get(id=product_id)
+    except ProductFilial.DoesNotExist:
+        return JsonResponse([], safe=False)
+
+
+    data = {
+        'bring_prices': product.bring_prices,
+        'sell_prices': product.pricetypevaluta_prices,
+        'price_types': [i.name for i in PriceType.objects.all()],
+    }
+
+    return JsonResponse(data, safe=False)
 
 
 
@@ -4682,6 +5376,45 @@ def delete_recieve_item(request, id):
     # recieve.sum_sotish_som -= item.sotish_som * item.quantity
     recieve.save()
     return redirect(request.META['HTTP_REFERER'])
+
+
+
+@require_POST
+def add_recieve_expanse(request):
+    recieve_id = request.POST.get("recieve_id")
+    recieve = get_object_or_404(Recieve, id=recieve_id)
+    RecieveExpanses.objects.create(
+        recieve=recieve,
+        type_id=request.POST.get("type"),
+        summa=request.POST.get("summa"),
+        valyuta_id=request.POST.get("valyuta"),
+        externaluser_id=request.POST.get("externaluser") or None,
+        comment=request.POST.get("comment")
+    )
+    return redirect(request.META.get('HTTP_REFERER'))
+
+@require_POST
+def edit_recieve_expanse(request, pk):
+    expanse = get_object_or_404(RecieveExpanses, id=pk)
+    # expanse.type_id = request.POST.get("type")
+    expanse.summa = request.POST.get("summa")
+    # expanse.valyuta_id = request.POST.get("valyuta")
+    # expanse.externaluser_id = request.POST.get("externaluser") or None
+    # expanse.comment = request.POST.get("comment")
+    expanse.save()
+    return redirect(request.META.get('HTTP_REFERER'))
+
+@require_POST
+def delete_recieve_expanse(request, pk):
+    expanse = get_object_or_404(RecieveExpanses, id=pk)
+    expanse.delete()
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+def add_expanse_type(request):
+    name = request.POST.get('name')
+    RecieveExpanseTypes.objects.create(name=name)
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 
@@ -5442,8 +6175,6 @@ def users_restrictions_limit(request, id):
         is_qabul = request.POST.get('is_qabul')
         is_nds = request.POST.get('is_nds')
         is_kassa_tarixi = request.POST.get('is_kassa_tarixi')
-        print(is_balans_hisobi)
-        print(is_ombor_boshkaruvi_qabul)
         
 
         user_profile.is_bussines=True if  is_bussines == 'on' else False
@@ -6310,9 +7041,6 @@ def write_off_item_add(request):
     write_off_id = request.POST.get('write_off_id')
     product_filial = request.POST.get('product_filial')
     quantity = int(request.POST.get('quantity'))
-    print(write_off_id)
-    print(product_filial)
-    print(quantity)
     WriteOffItem.objects.create(
         write_off_id=write_off_id,
         product_id=product_filial,
@@ -6704,7 +7432,6 @@ def cf_fin(request):
         'data_pl':data_pl
     }
     end = time.time()
-    print(round(end - start, 4))
     return render(request, 'fin/cf_fin.html', context)
 
 def daily_cf_fin(request):
@@ -7606,7 +8333,6 @@ def payment_shop_ajax(request, id):
     else:
         shop.naqd_som = amount
         shop.nasiya_som = nasiya
-    print(amount)
     objec, create = PayHistory.objects.get_or_create(shop=shop, debtor=shop.debtor)
     objec.comment = 'B2B savdo'
     objec.valyuta = shop.valyuta
@@ -7615,8 +8341,6 @@ def payment_shop_ajax(request, id):
     objec.save()
     shop.save()
     shop.debtor.refresh_debt()
-    print(111111)
-    print(objec)
     return JsonResponse({'success': True})
 
 def product_remove_quantity(request, shop_id):
@@ -7651,7 +8375,6 @@ def product_remove_quantity(request, shop_id):
         obj.payment_date = shop.debt_return
         obj.from_shop = True
         obj.save()
-        print(obj)
     return JsonResponse({'success': True})
     
 
