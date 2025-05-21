@@ -27,6 +27,9 @@
             color: white !important;
             text-align: center;
         }
+        td {
+            text-align: center;
+        }
     </style>
     <style>
          .tab {
@@ -112,6 +115,14 @@
                             </div>
                         </div>
                         <div class="col-12 layout-spacing">
+                            <div class="row">
+                                <div class="col-md-10"></div>
+                                   <div class="col-md-2">
+                                        <br>
+                                        <p></p>
+                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap" style="height: 40px;">Qoshish</button>
+                                    </div>
+                            </div>
                         </div>
                         <div class="col-lg-6">
                             <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
@@ -129,13 +140,15 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody >
+                                                    {% for i in reja %}
                                                     <tr>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
+                                                        <td>{{ i.plan_total|intcomma }}</td>
+                                                        <td>{{ i.kassa.name }}</td>
+                                                        <td style="text-align: center;">{{ i.date|date:'m' }}</td>
+                                                        <td style="text-align: center;">{{ i.date|date:'y' }}</td>
+                                                        <td>{{ i.comment }}</td>
                                                     </tr>
+                                                    {% endfor %}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -172,6 +185,109 @@
                             </div>
                         </div>
                     </div>
+                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content" style="width: 700px;">
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Majburiyat</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="post" action="{% url 'majburiyat_chiqim_fin_add' %}" >
+                                            {% csrf_token %}
+                                            
+                                            <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-date" class="col-form-label">Sana:</label>
+                                                            <input type="date" class="form-control"  name="date" required value="{{ today|date:'Y-m-d' }}">
+                                                        </div>
+                                                    </div>
+                                                     <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-deadline" class="col-form-label">Yakuniy Sana:</label>
+                                                            <input type="date" class="form-control"  name="deadline" required value="{{ today|date:'Y-m-d' }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-plan_total" class="col-form-label">Summa: </label>
+                                                            <input type="number" class="form-control" id="recipient-plan_total" name="plan_total">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-where" class="col-form-label">Qayerga: </label>
+                                                            <input type="text" class="form-control" name="where">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-kurs" class="col-form-label">Kurs: </label>
+                                                            <input type="number" class="form-control" id="recipient-kurs" name="kurs" value="{{kurs}}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-kassa" class="col-form-label">Kassa:</label>
+                                                            <select name="kassa"  class="form-control searchable" required>
+                                                                <option value="">-------------</option>
+                                                                    {% for i in kassa %}
+                                                                    <option value="{{ i.id }}">{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-money_circulation" class="col-form-label">Pul Muomalasi:</label>
+                                                            <select name="money_circulation" id="recipient-money_circulation" class="form-control searchable" required>
+                                                                <option value="">-------------</option>
+                                                                    {% for i in money_circulation %}
+                                                                    <option value="{{ i.id }}">{{ i.name }}</option>
+                                                                    {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-valyuta" class="col-form-label">Valyuta:</label>
+                                                            <select name="valyuta" id="recipient-valyuta" class="form-control searchable" required>
+                                                                <option value="">-------------</option>
+                                                                    {% for valyuta in valyuta %}
+                                                                    <option value="{{ valyuta.id }}">{{ valyuta.name }}</option>
+                                                                    {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <label for="recipient-shop" class="col-form-label">Masul shaxs:</label>
+                                                            <select name="user_profile" id="recipient-shop" class="form-control searchable" required>
+                                                                <option value="">-------------</option>
+                                                                    {% for i in user_profile %}
+                                                                    <option value="{{ i.id }}" {% if i.user == request.user %} selected {% endif %} >{{ i.username }}</option>
+                                                                    {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="message-comment" class="col-form-label">Text:</label>
+                                                <textarea class="form-control" id="message-comment" name="comment"></textarea>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                <button type="submit" class="btn btn-success" >Saqlash</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
             </div>
     </div>
         

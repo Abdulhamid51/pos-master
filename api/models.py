@@ -2144,8 +2144,9 @@ class KassaDaily(models.Model):
     dollar = models.IntegerField(default=0)
     plastik = models.IntegerField(default=0)
     hisob_raqam = models.IntegerField(default=0)
-
+    summa = models.IntegerField(default=0)
     obyekt = models.ForeignKey(Kassa, on_delete=models.CASCADE)
+    kassa_merge = models.ForeignKey(KassaMerge, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField(default=timezone.now)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -2223,8 +2224,9 @@ class RejaTushum(models.Model):
     is_active = models.BooleanField(default=True)
 
 class RejaChiqim(models.Model):
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=timezone.now())
     payment_date = models.DateField(null=True, blank=True)
+    deadline = models.DateField(null=True, blank=True)
     total = models.IntegerField(default=0)
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
@@ -2239,6 +2241,7 @@ class RejaChiqim(models.Model):
     from_shop = models.BooleanField(default=False)
     is_confirmed = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_majburiyat = models.BooleanField(default=False)
     
 # class ProductFilialDaily(models.Model):
 #     rest = models.FloatField(default=0)

@@ -7071,46 +7071,28 @@ def balans_fin(request):
     bebt_deliver_dict = {item['date__month'] : { 'sum':item['sum']} for item in bebt_deliver}
 
     bebt_deliver_data = [
-                {
-                    'sum':bebt_deliver_dict.get(num, {}).get('sum', 0),
-                }
-        for num , month in months_dict.items()
-    ]
-
-    kassa_daily = (
-        KassaDaily.objects.filter(date__year=year)
-        .values('date__month')
-        .annotate(
-            som=Coalesce(Sum('som'), 0, output_field=FloatField()),
-            dollar=Coalesce(Sum('dollar'), 0, output_field=FloatField()),
-            plastik=Coalesce(Sum('plastik'), 0, output_field=FloatField()),
-            hisob_raqam=Coalesce(Sum('hisob_raqam'), 0, output_field=FloatField()),
-        )
-    )
-
-    kassa_daily_dict = {
-            
-        kassa_item['date__month'] : 
             {
-             'som':kassa_item['som'],
-             'dollar':kassa_item['dollar'],
-             'plastik':kassa_item['plastik'],
-             'hisob_raqam':kassa_item['hisob_raqam'],
+                'sum':bebt_deliver_dict.get(num, {}).get('sum', 0),
             }
-            
-        for kassa_item in kassa_daily
-    }
-
-    kassa_daily_data = [
-                {
-                    'som':kassa_daily_dict.get(num, {}).get('som', 0),
-                    'dollar':kassa_daily_dict.get(num, {}).get('dollar', 0),
-                    'plastik':kassa_daily_dict.get(num, {}).get('plastik', 0),
-                    'hisob_raqam':kassa_daily_dict.get(num, {}).get('hisob_raqam', 0),
-                }
         for num , month in months_dict.items()
     ]
 
+    kassa_daily = KassaDaily.objects.filter(date__year=year)
+    
+    kassa_daily_data = []
+
+    for i in Valyuta.objects.all():
+        dt = {
+            'valyuta_name':i.name,
+            'month':[]
+        }
+        for num , month in months_dict.items():
+            mon_dt = {
+                'month':num,
+                'summa':kassa_daily.filter(date__month=num, valyuta=i).aggregate(all=Coalesce(Sum(selected_field), 0, output_field=IntegerField()))['all']
+            }
+            dt['month'].append(mon_dt)
+        kassa_daily_data.append(dt)
     product = (
         ProductFilialDaily.objects.filter(date__year=year)
         .values('date__month')
@@ -7137,7 +7119,16 @@ def balans_fin(request):
     return render(request, 'fin/balans_fin.html', context)
 
 def majburiyat_fin(request):
+    today = datetime.now().date()
+    reja = RejaChiqim.objects.filter(is_active=True, is_majburiyat=True)
     context = {
+        'today':today,
+        'reja':reja,
+        'kassa':KassaNew.objects.all(),
+        'money_circulation':MoneyCirculation.objects.all(),
+        'valyuta':Valyuta.objects.all(),
+        'user_profile':UserProfile.objects.all(),
+        'kurs':Course.objects.last().som or 0,
     }
     return render(request, 'fin/majburiyat_fin.html', context)
 
@@ -7186,8 +7177,8 @@ def tolov_kalendar_fin(request):
         dushanba = week['dushanba']
         shanba = week['shanba']
         
-        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
-        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
+        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True ,is_majburiyat=False,payment_date__gte=dushanba, payment_date__lte=shanba)
+        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,is_majburiyat=False,payment_date__gte=dushanba, payment_date__lte=shanba)
 
         plan_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
         total_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
@@ -7319,7 +7310,7 @@ def reja_chiqim_fin(request):
         "month":month,
     }
     if year and month:
-        reja = reja.filter(payment_date__year=year, payment_date__month=month)
+        reja = reja.filter(date__year=year, date__month=month)
     context = {
         'today':today,
         'reja':reja,
@@ -8273,3 +8264,29 @@ def add_bonus(request):
     
 
 
+def majburiyat_chiqim_fin_add(request):
+    deadline = request.POST.get('deadline')
+    date = request.POST.get('date')
+    where = request.POST.get('where')
+    plan_total = request.POST.get('plan_total')
+    money_circulation = request.POST.get('money_circulation')
+    comment = request.POST.get('comment')
+    kassa = request.POST.get('kassa')
+    user_profile = request.POST.get('user_profile')
+    valyuta = request.POST.get('valyuta')
+    kurs = request.POST.get('kurs')
+    
+    RejaChiqim.objects.create(
+        deadline=deadline,
+        date=date,
+        where=where,
+        plan_total=plan_total,
+        money_circulation_id=money_circulation,
+        comment=comment,
+        kurs=kurs,
+        user_profile_id=user_profile,
+        valyuta_id=valyuta,
+        kassa_id=kassa,
+        is_majburiyat=True,
+    )
+    return redirect(request.META['HTTP_REFERER'])

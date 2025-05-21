@@ -112,8 +112,8 @@ def add_daliy_rests():
     for i in Deliver.objects.all():
         new = DeliverDaily.objects.create(rest=i.som, obyekt=i, date=day)
 
-    for i in Kassa.objects.all():
-        new = KassaDaily.objects.create(som=i.som, dollar=i.dollar, plastik=i.plastik, hisob_raqam=i.hisob_raqam, obyekt=i, date=day)
+    for i in KassaMerge.objects.filter(is_active=True):
+        new = KassaDaily.objects.create(kassa_merge=i, summa=i.summa, valyuta=i.valyuta, date=day)
     
 
 # add_daliy_rests()

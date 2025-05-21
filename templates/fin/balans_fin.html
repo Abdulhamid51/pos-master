@@ -175,36 +175,15 @@
                                                             <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">0</td>
                                                         {% endfor %}
                                                     </tr>
-                                                    <tr style="text-align: right;">
-                                                        <td>Som</td>
-                                                        {% for kassa_daily_data in kassa_daily_data %}
-                                                            <td>{{ kassa_daily_data.som|intcomma }}</td>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr style="text-align: right;">
-                                                        <td>Dollar</td>
-                                                        {% for kassa_daily_data in kassa_daily_data %}
-                                                            <td>{{ kassa_daily_data.dollar|intcomma }}</td>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr style="text-align: right;">
-                                                        <td>Plastik</td>
-                                                        {% for kassa_daily_data in kassa_daily_data %}
-                                                            <td>{{ kassa_daily_data.plastik|intcomma }}</td>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr style="text-align: right;">
-                                                        <td>Hisob raqam</td>
-                                                        {% for kassa_daily_data in kassa_daily_data %}
-                                                            <td>{{ kassa_daily_data.hisob_raqam|intcomma }}</td>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr style="text-align: right;">
-                                                        <td></td>
-                                                        {% for months in months %}
-                                                            <td></td>
-                                                        {% endfor %}
-                                                    </tr>
+                                                    {% for  kassa_daily_data in kassa_daily_data %}
+                                                        <tr style="text-align: right;">
+                                                            <td>{{ kassa_daily_data.valyuta_name }}</td>
+                                                            {% for x in kassa_daily_data.month %}
+                                                                <td>{{ x.summa }}</td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    {% endfor %}
+                                                    
                                                     <tr style="text-align: right;">
                                                         <td>Нераспределенная Прибыль</td>
                                                         {% for product_data in product_data %}

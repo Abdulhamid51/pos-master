@@ -252,7 +252,6 @@ urlpatterns = [
     path('customer_debt_create/<int:id>', customer_debt_create, name='customer_debt_create'),
     path('external_income_user_debt_create/<int:id>', external_income_user_debt_create, name='external_income_user_debt_create'),
     path('externalincomeuser_detail/<int:id>', externalincomeuser_detail, name='externalincomeuser_detail'),
-
-
+    path('majburiyat_chiqim_fin_add', majburiyat_chiqim_fin_add, name='majburiyat_chiqim_fin_add'),
 
 ]
