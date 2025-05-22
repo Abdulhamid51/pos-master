@@ -638,6 +638,11 @@ class ProductFilial(models.Model):
     def cost(self):
         last = RecieveItem.objects.filter(product=self).last()
         return last.cost if last else 0
+
+    @property
+    def cost_som(self):
+        last = RecieveItem.objects.filter(product=self).last()
+        return last.cost_som if last else 0
         
 
     @property
@@ -841,6 +846,10 @@ class RecieveItem(models.Model):
     @property
     def cost(self):
         return self.dollar_price_for_count + (self.expanse_for_count)
+
+    @property
+    def cost_som(self):
+        return (self.dollar_price_for_count + (self.expanse_for_count)) * self.kurs
 
     @property
     def bring_price(self):
