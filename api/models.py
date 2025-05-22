@@ -1852,6 +1852,8 @@ class Chiqim(models.Model):
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     deliverpayment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, blank=True, null=True)
     is_approved = models.BooleanField(default=True) 
+    reja_chiqim = models.ForeignKey('RejaChiqim', on_delete=models.CASCADE, blank=True, null=True)
+
 
     def __str__(self) -> str:
         return f'{self.qayerga.nomi if self.qayerga else ""} {str(self.qachon)}'
@@ -2374,6 +2376,15 @@ class RejaChiqim(models.Model):
     is_confirmed = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_majburiyat = models.BooleanField(default=False)
+    
+    @property
+    def is_chiqim(self):
+        return Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+
+    @property
+    def chiqim_sum(self):
+        return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+
     
 # class ProductFilialDaily(models.Model):
 #     rest = models.FloatField(default=0)

@@ -178,6 +178,7 @@
                                                         <th>Status</th>
                                                         <th>Izoh</th>
                                                         <th>Tahrirlash</th>
+                                                        <th>Bajarish</th>
                                                         <th>Ochirish</th>
                                                        
                                                     </tr>
@@ -201,9 +202,15 @@
                                                                 <i class="fa-solid fa-x"></i>
                                                                 {% endif %}
                                                             </td>
-                                                            <td>{{ i.comment }}</td>
+                                                            <td>{{ i.comment }} </td>
                                                             <td>
                                                                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#exampleModalEdit{{i.id}}" data-whatever="@getbootstrap"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                            </td>
+                                                            <td>
+                                                                {% if i.is_chiqim >= i.plan_total %}
+                                                                {% else %}
+                                                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalBajarish{{ i.id }}" data-whatever="@getbootstrap" >Bajarish</button>
+                                                                {% endif %}
                                                             </td>
                                                             <td>
                                                                 <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#exampleModalDel{{ i.id }}" data-whatever="@getbootstrap" ><i class="fa-solid fa-trash"></i></button>
@@ -218,6 +225,72 @@
                                                                 <div class="modal-footer">
                                                                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Yoq</button>
                                                                   <button type="submit" class="btn btn-primary"> <a href="{% url 'reja_chiqim_fin_del' i.id %}" style="color: white !important;">Ha</a> </button>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal fade" id="exampleModalBajarish{{ i.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                              <div class="modal-content">
+                                                                <div class="modal-body">
+                                                                   <form method="post" action="{% url 'reja_chiqim_bajarish' i.id %}" >
+                                                                            {% csrf_token %}
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label for="recipient-plan_total" class="col-form-label">Rejadagi Summa: </label>
+                                                                                    <input type="number" class="form-control" id="recipient-plan_total" name="plan_total" min="0" max="{{i.chiqim_sum}}" value="{{ i.plan_total }}" required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label for="recipient-kurs" class="col-form-label">Kurs: </label>
+                                                                                    <input type="number" class="form-control" id="recipient-kurs" name="kurs" value="{{ i.kurs }}">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-kassa" class="col-form-label">Kassa:</label>
+                                                                                            <select name="kassa" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for kassa in kassa %}
+                                                                                                        <option value="{{ kassa.id }}"  {% if kassa == i.kassa %} selected {% endif %} >{{ kassa.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-money_circulation" class="col-form-label">Pul Muomalasi:</label>
+                                                                                            <select name="money_circulation" id="recipient-money_circulation" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for money_circulation in money_circulation %}
+                                                                                                    <option value="{{ money_circulation.id }}"  {% if money_circulation == i.money_circulation %} selected {% endif %} >{{ money_circulation.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-valyuta" class="col-form-label">Valyuta:</label>
+                                                                                            <select name="valyuta" id="recipient-valyuta" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for valyuta in valyuta %}
+                                                                                                    <option value="{{ valyuta.id }}" {% if valyuta == i.valyuta %} selected {% endif %} >{{ valyuta.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                         </div>
+                                                                         <div class="form-group">
+                                                                             <label for="message-comment" class="col-form-label">Text:</label>
+                                                                             <textarea class="form-control" id="message-comment" name="comment" >{{ i.comment }}</textarea>
+                                                                         </div>
+                                                                         <div class="modal-footer">
+                                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                                             <button type="submit" class="btn btn-success" >Saqlash</button>
+                                                                         </div>
+                                                                    </form>
                                                                 </div>
                                                               </div>
                                                             </div>
@@ -243,8 +316,8 @@
                                                                                     </div>
                                                                                     <div class="col-md-6">
                                                                                         <div class="form-group">
-                                                                                            <label for="recipient-plan_total" class="col-form-label">Rejadagi Summa: </label>
-                                                                                            <input type="number" class="form-control" id="recipient-plan_total" name="plan_total" value="{{ i.plan_total }}">
+                                                                                            <label class="col-form-label">Rejadagi Summa: </label>
+                                                                                            <input type="number" class="form-control" name="plan_total" value="{{ i.plan_total }}">
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="col-md-6">
@@ -348,8 +421,8 @@
                                                     </div>
                                                     <div class="col-md-6">
                                                         <div class="form-group">
-                                                            <label for="recipient-plan_total" class="col-form-label">Rejadagi Summa: </label>
-                                                            <input type="number" class="form-control" id="recipient-plan_total" name="plan_total">
+                                                            <label class="col-form-label">Rejadagi Summa: </label>
+                                                            <input type="number" class="form-control"  name="plan_total">
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -429,6 +502,8 @@
         
 {% endblock content %}
 {% block js %}
+
+
 <script>
     document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
 

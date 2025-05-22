@@ -253,11 +253,13 @@ urlpatterns = [
     path('customer_debt_create/<int:id>', customer_debt_create, name='customer_debt_create'),
     path('external_income_user_debt_create/<int:id>', external_income_user_debt_create, name='external_income_user_debt_create'),
     path('externalincomeuser_detail/<int:id>', externalincomeuser_detail, name='externalincomeuser_detail'),
+
     path('majburiyat_chiqim_fin_add', majburiyat_chiqim_fin_add, name='majburiyat_chiqim_fin_add'),
     path('recieve-expanse/add/', add_recieve_expanse, name='add_recieve_expanse'),
     path('add_expanse_type', add_expanse_type, name='add_expanse_type'),
     path('recieve-expanse/<int:pk>/edit/', edit_recieve_expanse, name='edit_recieve_expanse'),
     path('recieve-expanse/<int:pk>/delete/', delete_recieve_expanse, name='delete_recieve_expanse'),
+    path('reja_chiqim_bajarish/<int:id>/', reja_chiqim_bajarish, name='reja_chiqim_bajarish'),
 
 
 ]

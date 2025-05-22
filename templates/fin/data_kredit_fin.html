@@ -172,7 +172,9 @@
                                                 <thead>
                                                     <tr >
                                                         <th rowspan="3" style="width: 450px;">
-                                                            <img src="/static/bordo.png" style="width: 250px; height: 90px;" alt="">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" style="width: 250px; height: 50px;"  viewBox="0 0 576 512"><path d="M304 240l0-223.4c0-9 7-16.6 16-16.6C443.7 0 544 100.3 544 224c0 9-7.6 16-16.6 16L304 240zM32 272C32 150.7 122.1 50.3 239 34.3c9.2-1.3 17 6.1 17 15.4L256 288 412.5 444.5c6.7 6.7 6.2 17.7-1.5 23.1C371.8 495.6 323.8 512 272 512C139.5 512 32 404.6 32 272zm526.4 16c9.3 0 16.6 7.8 15.4 17c-7.7 55.9-34.6 105.6-73.9 142.3c-6 5.6-15.4 5.2-21.2-.7L320 288l238.4 0z"/></svg>                                                            <!-- <img src="/static/bordo.png" style="width: 250px; height: 90px;" alt=""> -->
+
+                                                            <!-- <img src="/static/bordo.png" style="width: 250px; height: 90px;" alt=""> -->
                                                         </th>
                                                     </tr>
                                                     <tr>
@@ -187,32 +189,61 @@
                                                             <th style="width: 60px !important;">Tolov</th>
                                                         {% endfor %}
                                                     </tr>
-                                                    <tr class="itogi">
+                                                    <!-- <tr class="itogi">
                                                         <td style="width: 250px;">Itogi</td>
-                                                        {% for i in itogi_data %}
+                                                        {% for i in months %}
                                                             <td >{{ i.first_day|default_if_none:'0'|intcomma }}</td>
                                                             <td>{{ i.sotuv|default_if_none:'0'|intcomma }}</td>
                                                             <td>{{ i.tolov|default_if_none:'0'|intcomma }}</td>
                                                         {% endfor %}
-                                                    </tr>
+                                                    </tr> -->
                                                 </thead>
                                                 <tbody>
+                                                   
+                                                    <tr style="background-color: rgb(0, 162, 255) !important;">
+                                                        <td style="color: white !important; width: 250px !important;">Itogi</td>
+                                                        {% for i in itog %}
+                                                            <td style="color: white !important;">0</td>
+                                                            <td style="color: white !important;">{{ i.total|default_if_none:'0'|intcomma }}</td>
+                                                            <td style="color: white !important;">{{ i.summa|default_if_none:'0'|intcomma  }}</td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    {% for debt in debtor_data %}
+                                                        <tr >
+                                                            <td >{{debt.fio}}</td>
+                                                            {% for i in debt.month %}
+                                                                <td>{{ i.debt|intcomma }}</td>
+                                                                <td>{{ i.total|default_if_none:'0'|intcomma }}</td>
+                                                                <td>{{ i.summa|default_if_none:'0'|intcomma  }}</td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    {% endfor %}
                                                     <tr >
                                                         <td style="background-color: red !important; color: white !important; width: 250px !important;">Yetkazib beruvchilar bilan hisob-kitoblar kreditor: (+), qarzdor (-)</td>
-                                                            {% for i in months %}
-                                                                <th class="qoldik-class" style="width: 40px;" >Qoldik</th>
-                                                                <th style="width: 40px !important;">Sotuv</th>
-                                                                <th style="width: 60px !important;">Tolov</th>
-                                                            {% endfor %}
+                                                        {% for i in months %}
+                                                            <th class="qoldik-class" style="width: 40px;" >Qoldik</th>
+                                                            <th style="width: 40px !important;">Sotuv</th>
+                                                            <th style="width: 60px !important;">Tolov</th>
+                                                        {% endfor %}
                                                     </tr>
                                                     <tr style="background-color: rgb(0, 162, 255) !important;">
                                                         <td style="color: white !important; width: 250px !important;">Itogi</td>
-                                                        {% for i in deliver_data %}
-                                                            <td style="color: white !important;">{{ i.first_day|default_if_none:'0'|intcomma }}</td>
-                                                            <td style="color: white !important;">{{ i.sotuv|default_if_none:'0'|intcomma }}</td>
-                                                            <td style="color: white !important;">{{ i.tolov|default_if_none:'0'|intcomma }}</td>
+                                                        {% for i in deliver_itog %}
+                                                            <td style="color: white !important;">{{i.debt|intcomma}}</td>
+                                                            <td style="color: white !important;">{{ i.total|default_if_none:'0'|intcomma }}</td>
+                                                            <td style="color: white !important;">{{ i.summa|default_if_none:'0'|intcomma  }}</td>
                                                         {% endfor %}
                                                     </tr>
+                                                    {% for debt in deliver_data %}
+                                                        <tr >
+                                                            <td >{{debt.name}}</td>
+                                                            {% for i in debt.month %}
+                                                                <td>0</td>
+                                                                <td>{{ i.total|default_if_none:'0'|intcomma }}</td>
+                                                                <td>{{ i.summa|default_if_none:'0'|intcomma  }}</td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    {% endfor %}
                                                 </tbody>
                                             </table>
                                         </div>

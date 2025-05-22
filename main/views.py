@@ -7299,7 +7299,163 @@ def data_fin(request):
     }
     return render(request, 'fin/data_fin.html', context)
 
+from django.db.models import ExpressionWrapper
+
+def first_day_we_stayed_deliver(debtor_id, year, month):
+    target_date = date(year, month, 1)
+    summa = 0
+
+    models = [Shop, PayHistory, Bonus]
+
+    for model in models:
+        result = model.objects.filter(
+            debtor_id=debtor_id,
+            date=target_date
+        ).aggregate(total=Sum('debt_new'))
+        summa += result['total'] or 0
+
+    return summa
+
+def first_day_we_stayed_deliver(deliver_id, year, month):
+    target_date = date(year, month, 1)
+    summa = 0
+
+    models = [Bonus, PayHistory, Recieve]
+
+    for model in models:
+        result = model.objects.filter(
+            deliver_id=deliver_id,
+            date=target_date
+        ).aggregate(total=Sum('debt_new'))
+        summa += result['total'] or 0
+
+    return summa
+
 def debet_kredit_fin(request):
+    today = datetime.now()
+    year = int(request.GET.get('year_filter', today.year))
+    debtor = Debtor.objects.all().values('id', 'fio')[:4]
+    deliver = Deliver.objects.all().values('id', 'name')[:4]
+    filters = {'year_filter': str(year)}
+
+    months_dict = {
+        1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
+        5: "May", 6: "Iyun", 7: "Iyul", 8: "Avgust",
+        9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
+    }
+
+    shops = Shop.objects.filter(date__year=year).values('date__month', 'valyuta_id', 'debtor_id').annotate(
+        total_price=Sum(
+            ExpressionWrapper(
+                F('cart__quantity') * F('cart__price'),
+                output_field=IntegerField()
+            )
+        )
+    )
+    pay_history = PayHistory.objects.filter(date__year=year).values('debtor_id', 'valyuta_id', 'date__month', 'deliver_id').annotate(
+        summa=Sum('summa')
+    )
+
+    recieve = Recieve.objects.filter(date__year=year).values('date__month', 'deliver_id', 'valyuta_id').annotate(
+        total=Sum('debt_old')
+    )
+
+    shops_dict = {(item['date__month'], item['debtor_id']): item for item in shops}
+    pay_history_dict = {(item['date__month'], item['debtor_id']): item for item in pay_history}
+        
+    debtor_data = []
+
+    for deb in debtor:
+        debtor_dt = {
+            'fio':deb['fio'],
+            'month':[],
+        }
+        for month in range(1, 13):
+            shop_data = shops_dict.get((month, deb['id']), {})
+            pay_history_data = pay_history_dict.get((month, deb['id']), {})
+            debtor_dt['month'].append({'month':month, 'total':shop_data.get('total_price', 0), 'summa':pay_history_data.get('summa', 0), 'debt':first_day_we_stayed_deliver(deb['id'], year, month)})
+        debtor_data.append(debtor_dt)
+
+
+    deliver_pay_history_dict = {(item['date__month'], item['deliver_id']): item for item in pay_history}
+    deliver_recieve_dict = {(item['date__month'], item['deliver_id']): item for item in recieve}
+
+    deliver_data = []
+
+    for deli in deliver:
+        deliver_dt = {
+            'name':deli['name'],
+            'month':[],
+        }
+        for month in range(1, 13):
+
+            deliver_pay_history_data = deliver_pay_history_dict.get((month, deli['id']), {})
+            deliver_recieve_data = deliver_recieve_dict.get((month, deli['id']), {})
+            deliver_dt['month'].append({'month':month, 'summa':deliver_pay_history_data.get('summa', 0),
+                                         'total':deliver_recieve_data.get('total', 0), 'debt':first_day_we_stayed_deliver(deli['id'], year, month)})
+
+        deliver_data.append(deliver_dt)
+
+
+    debtor_shops = Shop.objects.filter(date__year=year, debtor__isnull=False).values('date__month').annotate(
+        total_price=Sum(
+            ExpressionWrapper(
+                F('cart__quantity') * F('cart__price'),
+                output_field=IntegerField()
+            )
+        )
+    )
+    
+    debtor_pay_history = PayHistory.objects.filter(date__year=year, debtor__isnull=False).values('date__month').annotate(
+        summa=Sum('summa')
+    )
+
+    deliver_pay_history = PayHistory.objects.filter(date__year=year, deliver__isnull=False).values('date__month').annotate(
+        summa=Sum('summa')
+    )
+
+    deliver_recieve = Recieve.objects.filter(date__year=year, deliver__isnull=False ).values('date__month').annotate(
+        total=Sum('debt_old')
+    )
+
+    itog_shops_dict = {(item['date__month']): item for item in debtor_shops}
+    itog_pay_history_dict = {(item['date__month']): item for item in debtor_pay_history}
+
+    itog_deliver_pay_dict = {(item['date__month']): item for item in deliver_pay_history}
+    itog_deliver_recieve_dict = {(item['date__month']): item for item in deliver_recieve}
+
+    itog = []
+    deliver_itog = []
+
+    for month in range(1, 13):
+        dt = {
+            'month':month,
+            'total':itog_shops_dict.get(month, {}).get('total_price', 0),
+            'summa':itog_pay_history_dict.get(month, {}).get('summa', 0),
+        }
+        et = {
+            'month':month,
+            'total':itog_deliver_recieve_dict.get(month, {}).get('total', 0),
+            'summa':itog_deliver_pay_dict.get(month, {}).get('summa', 0),
+        }
+        itog.append(dt)
+
+        deliver_itog.append(et)
+
+
+    context = {
+        'filters': filters,
+        'months': list(months_dict.values()),
+        'debtor_data':debtor_data,
+        'itog':itog,
+        'deliver_data':deliver_data,
+        'deliver_itog':deliver_itog,
+    }
+
+    return render(request, 'fin/data_kredit_fin.html', context)
+
+
+def debet_kredit_fin_copy(request):
     today = datetime.now()
     type_valyuta = request.GET.get('type_valyuta')
     year = int(request.GET.get('year_filter', today.year))
@@ -7848,9 +8004,11 @@ def balans_fin(request):
 def majburiyat_fin(request):
     today = datetime.now().date()
     reja = RejaChiqim.objects.filter(is_active=True, is_majburiyat=True)
+    reja_conf = RejaChiqim.objects.filter(is_active=True, is_majburiyat=True, is_confirmed=True)
     context = {
         'today':today,
         'reja':reja,
+        'reja_conf':reja_conf,
         'kassa':KassaNew.objects.all(),
         'money_circulation':MoneyCirculation.objects.all(),
         'valyuta':Valyuta.objects.all(),
@@ -7904,8 +8062,8 @@ def tolov_kalendar_fin(request):
         dushanba = week['dushanba']
         shanba = week['shanba']
         
-        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True ,is_majburiyat=False,payment_date__gte=dushanba, payment_date__lte=shanba)
-        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,is_majburiyat=False,payment_date__gte=dushanba, payment_date__lte=shanba)
+        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True,payment_date__gte=dushanba, payment_date__lte=shanba)
+        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
 
         plan_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
         total_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
@@ -9012,4 +9170,37 @@ def majburiyat_chiqim_fin_add(request):
         kassa_id=kassa,
         is_majburiyat=True,
     )
+    return redirect(request.META['HTTP_REFERER'])
+
+
+def reja_chiqim_bajarish(request, id):
+    reja = RejaChiqim.objects.get(id=id)
+    plan_total_raw = request.POST.get('plan_total', '0')
+    plan_total_clean = plan_total_raw.replace('\xa0', '').replace(' ', '')  
+    plan_total = int(plan_total_clean)
+
+    kurs = request.POST.get('kurs')
+    kassa_id = request.POST.get('kassa')
+    valyuta = request.POST.get('valyuta')
+    comment = request.POST.get('comment')
+    kassa = get_object_or_404(KassaMerge, kassa_id=kassa_id, valyuta_id=valyuta)
+    kassa.summa -= plan_total
+    kassa.save()
+    pay = PayHistory.objects.create(
+        kassa=kassa,
+        valyuta_id=valyuta,
+        summa=plan_total,
+        comment=comment,
+        type_pay=2
+    )
+    Chiqim.objects.create(
+        payhistory=pay,
+        izox=comment,
+        summa=plan_total,
+        valyuta_id=valyuta,
+        kassa=kassa,
+        reja_chiqim=reja,
+    )
+    reja.is_confirmed = True
+    reja.save()
     return redirect(request.META['HTTP_REFERER'])

@@ -136,6 +136,7 @@
                                                         <th >Manba</th>
                                                         <th >Oy</th>
                                                         <th>Yil</th>
+                                                        <th>Status</th>
                                                         <th>Izoh</th>
                                                     </tr>
                                                 </thead>
@@ -146,6 +147,13 @@
                                                         <td>{{ i.kassa.name }}</td>
                                                         <td style="text-align: center;">{{ i.date|date:'m' }}</td>
                                                         <td style="text-align: center;">{{ i.date|date:'y' }}</td>
+                                                        <td>
+                                                                {% if i.is_confirmed %}
+                                                                <i class="fa-solid fa-check"></i>
+                                                                {% else %}
+                                                                <i class="fa-solid fa-x"></i>
+                                                                {% endif %}
+                                                            </td>
                                                         <td>{{ i.comment }}</td>
                                                     </tr>
                                                     {% endfor %}
@@ -171,12 +179,14 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody >
+                                                    {% for i in reja_conf %}
                                                     <tr>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ i.is_chiqim|intcomma }}</td>
+                                                        <td>{{ i.date|date:'m' }}</td>
+                                                        <td>{{ i.date|date:'Y' }}</td>
                                                     </tr>
+                                                    {% endfor %}
                                                 </tbody>
                                             </table>
                                         </div>
