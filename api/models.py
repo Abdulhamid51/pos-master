@@ -1156,10 +1156,11 @@ class Cart(models.Model):
         reciece = RecieveItem.objects.filter(product=self.product).last()
         if self.shop.valyuta.is_dollar:
             if reciece:
-                summa = reciece.cost - self.total
-        # elif self.shop.valyuta.is_som:
-        #     if reciece:
-        #         summa = reciece.cost_som - self.total
+                summa = (self.quantity * reciece.cost) - self.total
+        elif self.shop.valyuta.is_som:
+            if reciece:
+                summa = (self.quantity * reciece.cost_som) - self.total
+        print(summa)
         return summa
 
     @property

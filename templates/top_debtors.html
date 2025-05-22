@@ -75,7 +75,10 @@
                                             <th>Buyurtma soni</th>
                                             <th>Sotilgan maxsulot soni</th>
                                             {% for i in valyuta %}
-                                                <th>{{i.name}} </th>
+                                                <th>(Sotish) {{i.name}} </th>
+                                            {% endfor %}
+                                            {% for i in valyuta %}
+                                                <th>(Foyda) {{i.name}} </th>
                                             {% endfor %}
                                             <!-- <th>Sotilgan summa</th>
                                             <th>Foyda</th> -->
@@ -90,6 +93,9 @@
                                                 <td class="intcomma">{{ dt.total_count|floatformat:'0' }}</td>
                                                 {% for x in dt.valyuta %}
                                                     <td>{{x.summa|intcomma}}</td>
+                                                {% endfor %}
+                                                 {% for x in dt.valyuta %}
+                                                    <td>{{x.foyda|intcomma}}</td>
                                                 {% endfor %}
                                                 <!-- <td class="intcomma">{{ dt.total_price|floatformat:'0' }}</td>
                                                 <td class="intcomma">{{ dt.foyda|floatformat:'0' }}</td>

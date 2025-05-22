@@ -6098,10 +6098,13 @@ def top_debtors(request):
             summa =  baskets.filter(shop__debtor=i, shop__valyuta=x).aggregate(
                          total=Coalesce(Sum('total'), 0,output_field=IntegerField())
                 )['total']
+            foyda = sum([
+                    cart.foyda_total for cart in baskets
+                ])
             val = {
                 'valyuta': x,
                 'summa':summa,
-                'foyda':0,
+                'foyda':foyda,
             }
             # if x.is_dollar:
                 # val['foyda'] = RecieveItem.objects.filter(product=)
