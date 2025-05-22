@@ -1142,8 +1142,22 @@ class Cart(models.Model):
     summa_total = models.FloatField(default=0)
 
     @property
+    def foyda_total(self):
+        summa = 0
+        reciece = RecieveItem.objects.filter(product=self.product).last()
+        if self.shop.valyuta.is_dollar:
+            if reciece:
+                summa = reciece.cost - self.total
+        # elif self.shop.valyuta.is_som:
+        #     if reciece:
+        #         summa = reciece.cost_som - self.total
+        return summa
+
+    @property
     def total_cost(self):
         return round(self.quantity * self.product.cost, 2)
+    
+        
     @property
     def foyda(self):
         return self.quantity * (self.price - self.bring_price)

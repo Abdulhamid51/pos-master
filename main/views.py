@@ -6062,8 +6062,6 @@ def top_debtors(request):
     end_date = request.GET.get('end_date')
     seller_id = [int(i) for i in request.GET.getlist('seller')  if i != '']
     hudud = [int(i) for i in request.GET.getlist('hudud')  if i != '']
-    # type_country = [int(i) for i in request.GET.getlist('country')  if i != '']
-
 
     orders = Shop.objects.all()
     
@@ -6078,29 +6076,40 @@ def top_debtors(request):
     if seller_id:
         orders = orders.filter(saler_id__in=seller_id)
     
+    valyuta = Valyuta.objects.all()
         
     baskets = Cart.objects.filter(shop__in=orders)
-
-    # if type_country:
-    #     baskets = baskets.filter(product__product__type_country__in=type_country)
-
-    
-    
 
     debtors = Debtor.objects.filter(debtor_shops__in=orders).distinct()
     
     data = []
 
     for i in debtors:
-        data.append({
+        dt = {
             'debtor': i,
             'order_count': orders.filter(debtor=i).count(),
-            'total_price': baskets.filter(shop__debtor=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
-            'foyda': baskets.filter(shop__debtor=i).aggregate(foo=Coalesce(Sum(F('total') - (F('quantity') * F('bring_price'))), float(0), output_field=FloatField()))['foo'],
             'total_count': baskets.filter(shop__debtor=i).aggregate(foo=Coalesce(Sum('quantity'), float(0), output_field=FloatField()))['foo'],
-        })
+            'valyuta': []
+
+            # 'total_price': baskets.filter(shop__debtor=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
+            # 'foyda': baskets.filter(shop__debtor=i).aggregate(foo=Coalesce(Sum(F('total') - (F('quantity') * F('bring_price'))), float(0), output_field=FloatField()))['foo'],
+        }
+        for x in valyuta:
+            summa =  baskets.filter(shop__debtor=i, shop__valyuta=x).aggregate(
+                         total=Coalesce(Sum('total'), 0,output_field=IntegerField())
+                )['total']
+            val = {
+                'valyuta': x,
+                'summa':summa,
+                'foyda':0,
+            }
+            # if x.is_dollar:
+                # val['foyda'] = RecieveItem.objects.filter(product=)
+            dt['valyuta'].append(val)
+        data.append(dt)
         
-    
+        
+        
     totals = {
         'order_count': orders.count(),
         'total_price': baskets.aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
@@ -6119,13 +6128,33 @@ def top_debtors(request):
         'totals': totals,
         'filters': filters,
         'data': data,
+        'valyuta':valyuta,
         'viloyatlar': Teritory.objects.all(),
-        # 'countries': countries,
-        # 'products': Store.objects.all(),
         'sellers': UserProfile.objects.filter(staff=3).distinct()
     }
 
     return render(request, 'top_debtors.html', context)
+
+def detail_top_debtors(request, id):
+    cart = Cart.objects.filter(shop__debtor_id=id)
+    valyuta = request.GET.get('valyuta')
+    if valyuta:
+        cart = cart.filter(shop__valyuta_id=valyuta)
+    
+    filters = {
+        'valyuta':valyuta
+    }
+    totals = {
+        'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
+        'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
+    }
+    context = {
+        'cart':cart,
+        'totals':totals,
+        'valyuta':Valyuta.objects.all(),
+        'filters':filters,
+    }
+    return render(request, 'detail_top_debtors.html', context)
 
 
 

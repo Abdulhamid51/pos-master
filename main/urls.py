@@ -125,6 +125,7 @@ urlpatterns = [
     path('detail_call_center_count/<int:employee_id>', detail_call_center_count, name='detail_call_center_count'),
     path('top_products/', top_products, name='top_products'),
     path('top_debtors/', top_debtors, name='top_debtors'),
+    path('detail_top_debtors/<int:id>', detail_top_debtors, name='detail_top_debtors'),
     path('top_delivers/', top_delivers, name='top_delivers'),
     path('create_order/', create_order, name='create_order'),
     path('check_price/', check_price, name='check_price'),
