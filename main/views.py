@@ -7334,17 +7334,26 @@ def first_day_we_stayed_deliver(deliver_id, year, month):
 def debet_kredit_fin(request):
     today = datetime.now()
     year = int(request.GET.get('year_filter', today.year))
+    valyuta = request.GET.get('valyuta')
     debtor = Debtor.objects.all().values('id', 'fio')[:4]
     deliver = Deliver.objects.all().values('id', 'name')[:4]
-    filters = {'year_filter': str(year)}
-
+    filters = {'year_filter': str(year), 'valyuta':valyuta}
     months_dict = {
         1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
         5: "May", 6: "Iyun", 7: "Iyul", 8: "Avgust",
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
 
-    shops = Shop.objects.filter(date__year=year).values('date__month', 'valyuta_id', 'debtor_id').annotate(
+    shop = Shop.objects.filter(date__year=year)
+    pay = PayHistory.objects.filter(date__year=year)
+    recie = Recieve.objects.filter(date__year=year)
+
+    if valyuta:
+        shop = shop.filter(valyuta_id=valyuta)
+        pay = pay.filter(valyuta_id=valyuta)
+        recie = recie.filter(valyuta_id=valyuta)
+
+    shops = shop.values('date__month', 'valyuta_id', 'debtor_id').annotate(
         total_price=Sum(
             ExpressionWrapper(
                 F('cart__quantity') * F('cart__price'),
@@ -7352,11 +7361,11 @@ def debet_kredit_fin(request):
             )
         )
     )
-    pay_history = PayHistory.objects.filter(date__year=year).values('debtor_id', 'valyuta_id', 'date__month', 'deliver_id').annotate(
+    pay_history = pay.values('debtor_id', 'valyuta_id', 'date__month', 'deliver_id').annotate(
         summa=Sum('summa')
     )
 
-    recieve = Recieve.objects.filter(date__year=year).values('date__month', 'deliver_id', 'valyuta_id').annotate(
+    recieve = recie.values('date__month', 'deliver_id', 'valyuta_id').annotate(
         total=Sum('debt_old')
     )
 
@@ -7397,7 +7406,7 @@ def debet_kredit_fin(request):
         deliver_data.append(deliver_dt)
 
 
-    debtor_shops = Shop.objects.filter(date__year=year, debtor__isnull=False).values('date__month').annotate(
+    debtor_shops = shop.filter(debtor__isnull=False).values('date__month').annotate(
         total_price=Sum(
             ExpressionWrapper(
                 F('cart__quantity') * F('cart__price'),
@@ -7406,15 +7415,15 @@ def debet_kredit_fin(request):
         )
     )
     
-    debtor_pay_history = PayHistory.objects.filter(date__year=year, debtor__isnull=False).values('date__month').annotate(
+    debtor_pay_history = pay.filter(debtor__isnull=False).values('date__month').annotate(
         summa=Sum('summa')
     )
 
-    deliver_pay_history = PayHistory.objects.filter(date__year=year, deliver__isnull=False).values('date__month').annotate(
+    deliver_pay_history = pay.filter(deliver__isnull=False).values('date__month').annotate(
         summa=Sum('summa')
     )
 
-    deliver_recieve = Recieve.objects.filter(date__year=year, deliver__isnull=False ).values('date__month').annotate(
+    deliver_recieve = recie.filter(deliver__isnull=False ).values('date__month').annotate(
         total=Sum('debt_old')
     )
 
@@ -7450,6 +7459,7 @@ def debet_kredit_fin(request):
         'itog':itog,
         'deliver_data':deliver_data,
         'deliver_itog':deliver_itog,
+        'valyuta':Valyuta.objects.all(),
     }
 
     return render(request, 'fin/data_kredit_fin.html', context)
