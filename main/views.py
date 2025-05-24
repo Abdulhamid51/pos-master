@@ -6668,25 +6668,23 @@ def order_detail_ajax(request, order_id):
        'order_id_check':order_id,
     }
     return render(request, 'create_order.html', context)
+from django.core.serializers.json import DjangoJSONEncoder
 
 def create_check(request, order_id):
     shop = Shop.objects.get(id=order_id)
     cart = Cart.objects.filter(shop=shop)
     data = {
         'chek':order_id,
-        'seller':shop.saler,
+        'seller':shop.saler.first_name,
         'date':shop.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'valyuta':shop.valyuta.name if shop.valyuta else '',
         'items':[
                 {"name": cart.product.name, "quantity": cart.quantity, "price": cart.price, "total": cart.total}
             for cart in cart
         ],
-        'som': shop.naqd_som,
-        'dollar': shop.naqd_dollar,
-        'skidka_dollar': shop.skidka_dollar,
-        'skidka_som': shop.skidka_som,
-
+        'summa': shop.total_price,
     }
-    return JsonResponse(data)
+    return JsonResponse(data, encoder=DjangoJSONEncoder)
 
 def shop_nakladnoy(request, order_id):
     shop = Shop.objects.get(id=order_id)
@@ -6696,6 +6694,7 @@ def shop_nakladnoy(request, order_id):
         'seller':shop.saler,
         'date_time':shop.date,
         'customer':shop.debtor.fio,
+        'valyuta':shop.valyuta.name if shop.valyuta else '',
         'customer_phone':shop.debtor.phone1,
         'date':shop.date.strftime('%Y-%m-%d %H:%M:%S'),
         'items':[
@@ -6729,7 +6728,6 @@ def shop_nakladnoy(request, order_id):
     }
     return render(request, 'shop_nakladnoy.html', context)
 
-
 def check_price(request):
     price_type = request.GET.get('type')
     product = request.GET.get('product')
@@ -6752,6 +6750,124 @@ def check_price(request):
 
 from django.core.paginator import Paginator
 
+def b2c_shop_view(request):
+    price_types = PriceType.objects.all()
+    products = ProductFilial.objects.all()
+    customers = Debtor.objects.all()
+    call_center = UserProfile.objects.filter(staff=6)
+
+    context = {
+       'price_types': price_types,
+       'products': products,
+       'call_center': call_center,
+       'customers': customers,
+       'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
+       'valyuta':Valyuta.objects.all(),
+       'filial':Filial.objects.filter(is_activate=True),
+    }
+    return render(request, 'b2c_shop.html', context)
+
+def b2c_shop_add(request):
+    shop = Shop.objects.create(
+        valyuta_id=request.POST.get('valyuta'),
+        type_price_id=request.POST.get('type_price'),
+        debtor_id=request.POST.get('debtor'),
+        saler_id=request.POST.get('call_center'),
+        debt_return=request.POST.get('debt_return'),
+        filial_id=request.POST.get('filial'),
+    )
+    return redirect('b2c_shop_detail', shop.id)
+
+def b2c_shop_detail(request, id):
+    shop = Shop.objects.get(id=id)
+    price_types = PriceType.objects.all()
+    products = ProductFilial.objects.all()
+    customers = Debtor.objects.all()
+    call_center = UserProfile.objects.filter(staff=6)
+    cart = Cart.objects.filter(shop=shop)
+    totals = {
+        'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
+        'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
+    }
+    context = {
+       'shop':shop,
+       'cart':cart,
+       'totals':totals,
+       'price_types': price_types,
+       'products': products,
+       'call_center': call_center,
+       'customers': customers,
+       'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
+       'valyuta':Valyuta.objects.all(),
+       'filial':Filial.objects.filter(is_activate=True),
+    }
+    return render(request, 'b2c_shop_detail.html', context)
+
+@csrf_exempt
+def b2c_shop_cart_add(request, id):
+    product_id = request.POST.get('product_id')  
+    quantity = int(request.POST.get('quantity'))  
+    agreed_price = request.POST.get('agreed_price')  
+    product_price = request.POST.get('product_price')  
+    shop = Shop.objects.get(id=id)
+    product = ProductFilial.objects.get(id=product_id)
+    if product.quantity < float(quantity):
+        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+    cart_item = Cart.objects.create(
+        shop=shop,
+        product=product,
+        quantity=quantity,
+        price=int(agreed_price),
+        price_without_skidka = product_price,
+        total=int(quantity) * int(agreed_price)
+    )
+    product.quantity -= quantity
+    product.save()
+    return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+
+@csrf_exempt
+def b2c_shop_cart_edit(request, id):
+    quantity = request.POST.get('quantity')  
+    cart_item = Cart.objects.get(id=id)
+    product = cart_item.product
+    product.quantity += cart_item.quantity
+    product.quantity -= int(quantity)
+    if product.quantity < 0:
+        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+    cart_item.quantity = quantity
+    cart_item.total = int(quantity) * cart_item.price
+    cart_item.save()
+    product.save()
+    print(quantity)
+    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi'})
+
+
+
+@csrf_exempt
+def b2c_shop_cart_del(request, id):
+    cart = Cart.objects.get(id=id)
+    product = cart.product
+    product.quantity += cart.quantity
+    product.save()
+    cart.delete()
+    return JsonResponse({'success': True, 'message': 'Maxsulot o\'chirildi'})
+
+@csrf_exempt
+def b2c_shop_finish(request, id):
+    shop = Shop.objects.get(id=id)
+    summa = request.POST.get('summa')
+    shop.is_finished = True
+    PayHistory.objects.create(
+        shop=shop,
+        debtor=shop.debtor,
+        filial=shop.filial,
+        valyuta=shop.valyuta,
+        summa=summa,
+    )
+    debtor = Debtor.objects.get(id=shop.debtor.id)
+    debtor.refresh_debt()
+    shop.save()
+    return JsonResponse({'success': True, 'message': 'Yakunlandi'})
 
 
 def today_sales(request):

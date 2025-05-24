@@ -99,18 +99,18 @@
               <div class="invoice-title">
                 <div class="mb-4 logo_container">
                   <h2 class="mb-1 text-white">
-                   Bordo
+                   Eco Maruf
                   </h2>
-                  <img src="{{brand.logo.url}}" alt="logo1" class="logo" />
+                  <!-- <img src="{{brand.logo.url}}" alt="logo1" class="logo" /> -->
                 </div>
-                <div class="text-muted">
+                <!-- <div class="text-muted">
                   <p class="mb-1">
                     {{ brand.location|default_if_none:' ' }}
                   </p>
                   <p>
                     <i class="uil uil-phone me-1"></i> {{ brand.phone|default_if_none:'' }}
                   </p>
-                </div>
+                </div> -->
               </div>
               <hr class="my-4" />
               <div class="box_to_print row" style="font-size: 12px">
@@ -121,6 +121,8 @@
                     <p class="">{{ order.customer.hudud.name }}</p>
                     <h7 class="">Telefon nomer:</h7>
                     <p class="">{{ data.customer_phone}}</p>
+                    <h7 class="">Valyuta:</h7>
+                    <p class="">{{ data.valyuta}}</p>
                   </div>
                 </div>
                 <div class="col-6">

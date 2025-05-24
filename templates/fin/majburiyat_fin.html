@@ -138,6 +138,7 @@
                                                         <th>Yil</th>
                                                         <th>Status</th>
                                                         <th>Izoh</th>
+                                                        <th>Bajarish</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody >
@@ -155,7 +156,79 @@
                                                                 {% endif %}
                                                             </td>
                                                         <td>{{ i.comment }}</td>
+                                                       <td>
+                                                                {% if i.is_chiqim >= i.plan_total %}
+                                                                {% else %}
+                                                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalBajarish{{ i.id }}" data-whatever="@getbootstrap" >Bajarish</button>
+                                                                {% endif %}
+                                                        </td>
                                                     </tr>
+                                                          <div class="modal fade" id="exampleModalBajarish{{ i.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                              <div class="modal-content">
+                                                                <div class="modal-body">
+                                                                   <form method="post" action="{% url 'reja_chiqim_bajarish' i.id %}" >
+                                                                            {% csrf_token %}
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label for="recipient-plan_total" class="col-form-label">Rejadagi Summa: </label>
+                                                                                    <input type="number" class="form-control" id="recipient-plan_total" name="plan_total" min="0" max="{{i.chiqim_sum}}" value="{{ i.plan_total }}" required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label for="recipient-kurs" class="col-form-label">Kurs: </label>
+                                                                                    <input type="number" class="form-control" id="recipient-kurs" name="kurs" value="{{ i.kurs }}">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-kassa" class="col-form-label">Kassa:</label>
+                                                                                            <select name="kassa" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for kassa in kassa %}
+                                                                                                        <option value="{{ kassa.id }}"  {% if kassa == i.kassa %} selected {% endif %} >{{ kassa.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-money_circulation" class="col-form-label">Pul Muomalasi:</label>
+                                                                                            <select name="money_circulation" id="recipient-money_circulation" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for money_circulation in money_circulation %}
+                                                                                                    <option value="{{ money_circulation.id }}"  {% if money_circulation == i.money_circulation %} selected {% endif %} >{{ money_circulation.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                            <div class="col-md-6">
+                                                                                        <div class="form-group">
+                                                                                            <label for="recipient-valyuta" class="col-form-label">Valyuta:</label>
+                                                                                            <select name="valyuta" id="recipient-valyuta" class="form-control searchable" required>
+                                                                                                <option value="">-------------</option>
+                                                                                                    {% for valyuta in valyuta %}
+                                                                                                    <option value="{{ valyuta.id }}" {% if valyuta == i.valyuta %} selected {% endif %} >{{ valyuta.name }}</option>
+                                                                                                    {% endfor %}
+                                                                                            </select>
+                                                                                        </div>
+                                                                            </div>
+                                                                         </div>
+                                                                         <div class="form-group">
+                                                                             <label for="message-comment" class="col-form-label">Text:</label>
+                                                                             <textarea class="form-control" id="message-comment" name="comment" >{{ i.comment }}</textarea>
+                                                                         </div>
+                                                                         <div class="modal-footer">
+                                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                                             <button type="submit" class="btn btn-success" >Saqlash</button>
+                                                                         </div>
+                                                                    </form>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                        </div>
                                                     {% endfor %}
                                                 </tbody>
                                             </table>
@@ -176,6 +249,7 @@
                                                         <th>FAKT BO'YICHA</th>
                                                         <th>Oy</th>
                                                         <th>Yil</th>
+                                                        
                                                     </tr>
                                                 </thead>
                                                 <tbody >
@@ -278,7 +352,7 @@
                                                             <select name="user_profile" id="recipient-shop" class="form-control searchable" required>
                                                                 <option value="">-------------</option>
                                                                     {% for i in user_profile %}
-                                                                    <option value="{{ i.id }}" {% if i.user == request.user %} selected {% endif %} >{{ i.username }}</option>
+                                                                    <option value="{{ i.id }}" {% if i.user == request.user %} selected {% endif %} >{{ i.username }} - {{i.first_name|default_if_none:''}} </option>
                                                                     {% endfor %}
                                                             </select>
                                                         </div>

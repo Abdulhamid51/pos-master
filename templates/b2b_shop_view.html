@@ -108,7 +108,7 @@
                                                             <div class="col-md-4">
                                                                 <label>* Склад</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" id="shop_select_filial" required>
-                                                                    <option value="" disabled selected>Выберите склад</option>
+                                                                    <!-- <option value="" disabled selected>Выберите склад</option> -->
                                                                     {% for i in filial %}
                                                                     <option value="{{i.id}}">{{ i.name }}</option>
                                                                     {% endfor %}
@@ -151,7 +151,7 @@
                                                             <div class="col-md-3">
                                                                 <label>* Тип цены</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_type_price" required>
-                                                                    <option value="" selected disabled>Выберите Тип цены</option>
+                                                                    <!-- <option value="" selected disabled>Выберите Тип цены</option> -->
                                                                     {% for i in price_type %}
                                                                     <option value="{{i.id}}">{{ i.name }}</option>
                                                                     {% endfor %}

@@ -127,6 +127,16 @@ urlpatterns = [
     path('top_debtors/', top_debtors, name='top_debtors'),
     path('detail_top_debtors/<int:id>', detail_top_debtors, name='detail_top_debtors'),
     path('top_delivers/', top_delivers, name='top_delivers'),
+    # >>>>>>>>>>>>>
+    path('b2c_shop/', b2c_shop_view, name='b2c_shop'),
+    path('b2c_shop_add/', b2c_shop_add, name='b2c_shop_add'),
+    path('b2c_shop_detail/<int:id>', b2c_shop_detail, name='b2c_shop_detail'),
+    path('b2c_shop_cart_add/<int:id>', b2c_shop_cart_add, name='b2c_shop_cart_add'),
+    path('b2c_shop_cart_add/<int:id>', b2c_shop_cart_add, name='b2c_shop_cart_add'),
+    path('b2c_shop_cart_edit/<int:id>', b2c_shop_cart_edit, name='b2c_shop_cart_edit'),
+    path('b2c_shop_finish/<int:id>', b2c_shop_finish, name='b2c_shop_finish'),
+    
+    #>>>>>>>>>>>>>>
     path('create_order/', create_order, name='create_order'),
     path('check_price/', check_price, name='check_price'),
     path('create_order_ajax/', create_order_ajax, name='create_order_ajax'),

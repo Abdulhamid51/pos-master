@@ -1,0 +1,616 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+        
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+     <style>
+        .selectize-input {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            line-height: 2.7rem !important;
+        }
+
+    .btn-check:checked + .btn {
+        background-color: #007bff;
+        color: white;
+    }
+
+
+    .price_type_input {
+        display: none;
+    }
+
+    #alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        width: 30rem;
+    }
+
+     </style>
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+
+                    <div class="row layout-top-spacing" id="cancel-row">
+                        <div id="alert-container"></div>
+                        <div class="col-xl-8 col-lg-8 col-sm-12  layout-spacing">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select name="valyuta" class="form-control" required>
+                                    {% for i in valyuta %}
+                                        <option value="{{i.id}}" {% if shop.valyuta == i %} selected {% endif %}>{{i.name}}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <select onchange="add_modal(this)" class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
+                                        <option value=""></option>
+                                        {% for i in products %}
+                                            <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}">{{ i.name }} - {{i.barcode}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="btn-group col-md-5" role="group" aria-label="Price Types">
+                                    {% if shop.type_price %}  
+                                    <input type="radio" class="btn-check price_type_input" name="type_price" id="{{shop.type_price.name}}{{shop.type_price.id}}"  value="{{shop.type_price.id}}" autocomplete="off" checked >
+                                    <label class="btn btn-outline-primary" for="{{shop.type_price.name}}{{shop.type_price.id}}">{{shop.type_price.name}}</label>
+                                    {% else %}
+                                    <input type="radio" class="btn-check price_type_input" autocomplete="off"  id="oddiy" name="type_price" checked>
+                                    <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
+                                    {% endif %}
+
+                                </div>
+                            </div>
+                            <div class="widget-content widget-content-area br-6">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table id="" class="table table-hover non-hover" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Maxsulot nomi</th>
+                                                <th>Shtrix kod</th>
+                                                <th>Ayrish</th>
+                                                <th>Miqdori</th>
+                                                <th>Qo'shish</th>
+                                                <th>Narx</th>
+                                                <th>Kelishilgan narx</th>
+                                                <th>Jami</th>
+                                                <th>Ochirish</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody> 
+                                            {% for i in cart %}
+                                                <tr data-id="{{i.id}}">
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ i.product.name }}</td>
+                                                    <td>{{ i.product.barcode }}</td>
+                                                    <td class="text-right"><button type="button" class="btn btn-primary quantity-minus">-</button></td>
+                                                    <td  class="quantity text-center product_quantity">{{ i.quantity }}</td>
+                                                    <td><button type="button" class="btn btn-primary quantity-plus">+</button></td>
+                                                    <td>{{ i.price_without_skidka }}</td>
+                                                    <td class="price">{{ i.price }}</td>
+                                                    <td class="total" data-value="{{i.total_price}}">{{ i.total_price|intcomma }}</td>
+                                                    <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                        <tr>
+                                            <td>Jami</td>
+                                            <th></th>
+                                            <td></td>
+                                            <td></td>
+                                            <td class="text-center" id="quantity_total">{{ totals.quantity|intcomma }}</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td id="all_total">{{ totals.total|intcomma }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4 col-lg-4 col-sm-12  layout-spacing">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="widget-content widget-content-area br-6">
+
+                                        <label for="">Mijoz</label>
+                                        <select class="form-control searchable" name="debtor" required>
+                                            <option value=""></option>
+                                            {% for i in customers %}
+                                                <option value="{{i.id}}" {% if shop.debtor == i %} selected {% endif %}>{{ i.fio }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <label for="">To'lov sanasi</label>
+                                        <input type="date" class="form-control" value="{{ shop.debt_return|date:'Y-m-d' }}"  name="debt_return" required>
+
+                                        <label for="">Call center</label>
+                                        <select class="form-control searchable" name="call_center" required>
+                                            <option value=""></option>
+                                            {% for i in call_center %}
+                                                <option value="{{i.id}}" {% if shop.saler == i %} selected {% endif %}>{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <label for="">Filial</label>
+                                        <select class="form-control searchable" name="filial" required>
+                                            <option value=""></option>
+                                            {% for i in filial %}
+                                                <option value="{{i.id}}" {% if shop.filial == i %} selected {% endif %} >{{ i.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if not shop %}
+                                        <button  style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button>
+                                        {% endif %}
+                                        <br><hr style="color: black;">
+                                        <label for="">Summa</label>
+                                        <input  type="number" class="form-control" id="naqd_summa" value="0" name="naqd_summa">
+                                        
+                                        <br><hr>
+                                        <label for="">Nasiya {{ shop.valyuta.name }}</label>
+                                        <input value="{{shop.total_price}}" type="number" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
+
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <br>
+                                    <a style="width: 100%;" class="btn btn-primary" onclick="Yakunlash()">Yakunlash</a>
+                                </div>
+                                <div class="col-md-4">
+                                    <br>
+                                    <button type="button" class="btn btn-success" onclick="fetchReceipt()" style="width: 100%;">CHEK V1</button>
+                                </div>
+                                <div class="col-md-4">
+                                    <br>
+                                     <button type="button" class="btn btn-warning" style="width: 100%; "> 
+                                        <a href="{% url 'shop_nakladnoy' shop.id %}" target="_blank" rel="noopener noreferrer" style="color: white !important;">CHEK V2</a>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+            Yangi 
+        </button>
+        <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <form id="add_form" class="modal-content" method="post" action="">
+                {% csrf_token %}
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" >
+                        <div class="form-group" id="recieve_item_add_product_div">
+                          <input type="hidden" name="product" id="recieve_item_add_product_id">
+                          
+                          <label for="">Shtrix kod</label>
+                          <input id="product_barcode" type="number" name="barcode" class="form-control" disabled>
+                          
+                          <label for="">Omborda qoldiq</label>
+                          <input id="ombor_qoldiq" type="number" name="qoldiq" class="form-control" disabled>
+
+                          <label for="">Narx</label>
+                          <input id="sotuv_sotish_som" type="number" name="sotish_som" class="form-control" disabled>
+
+                          <label for="">Kelishilgan narxi</label>
+                          <input id="sotuv_kelishilgan_som" type="number" name="sotish_som" class="form-control">
+
+                          <label for="">Miqdori</label>
+                          <input type="number" id="modal_quantity_input" name="quantity" class="form-control">
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button id="modal_delete" type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                    </div>
+                </div>
+              </form>
+            </div>
+        </div>
+        <input type="hidden" id="order_id" value="{{shop.id}}">
+
+{% endblock content %}
+{% block js %}
+<script>
+
+        function Yakunlash(element) {
+            let summa = document.getElementById('naqd_summa').value
+            let orderId = $("#order_id").val();  
+            console.log(summa)
+            if (summa > 0) {
+                $.ajax({
+                    url: `/b2c_shop_finish/${orderId}`,
+                    type: "POST",
+                    data: { summa: summa },
+                    success: function (response) {
+                        if (response.success) {
+                            showAlert(response.message, "success");
+                            window.location.replace('/b2c_shop')
+                        } else {
+                            showAlert(response.message, "danger");
+                        }
+                    },
+                    error: function () {
+                        showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+                    },
+                })
+                
+            }else {
+                showAlert("Summa kiriting", "warning");
+            }
+            
+        }
+
+        async function fetchReceipt() {
+            try {
+                let response = await fetch('/create_check/' + "{{ shop.id }}");
+                let data = await response.json();
+                generateReceipt(data);
+            } catch (error) {
+                console.error("Xatolik:", error);
+            }
+        }
+        function generateReceipt(data) {
+            let receiptWindow = window.open('', '', 'width=800,height=1000');
+            receiptWindow.document.write(`
+                <html>
+                <head>
+                    <style>
+                        @media print {
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 0;
+                                padding: 20mm;
+                                width: 210mm;
+                                height: 297mm;
+                            }
+                            .receipt {
+                                width: 100%;
+                                max-width: 190mm;
+                                font-size: 14pt;
+                                margin: auto;
+                            }
+                            .header {
+                                font-size: 22pt;
+                                font-weight: bold;
+                                text-align: center;
+                                margin-bottom: 10mm;
+                            }
+                            .line {
+                                border-top: 2px solid black;
+                                margin: 5mm 0;
+                            }
+                            .item {
+                                display: flex;
+                                justify-content: space-between;
+                                font-size: 14pt;
+                            }
+                            .bold {
+                                font-weight: bold;
+                                font-size: 16pt;
+                            }
+                        }
+                        
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 20mm;
+                            width: 210mm;
+                            height: 297mm;
+                        }
+                        .receipt {
+                            width: 100%;
+                            max-width: 190mm;
+                            font-size: 14pt;
+                            margin: auto;
+                        }
+                        .header {
+                            font-size: 22pt;
+                            font-weight: bold;
+                            text-align: center;
+                            margin-bottom: 10mm;
+                        }
+                        .line {
+                            border-top: 2px solid black;
+                            margin: 5mm 0;
+                        }
+                        .item {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 14pt;
+                        }
+                        .bold {
+                            font-weight: bold;
+                            font-size: 16pt;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        <div class="header">🛒 Eco Maruf jamoasi</div>
+                        <div class="bold">Chek: ${data.chek}</div>
+                        <div>Sotuvchi: ${data.seller}</div>
+                        <div>Sana: ${data.date}</div>
+                        <div class="line"></div>
+            `);
+    
+            let totalAmount = 0;
+    
+            data.items.forEach((item, index) => {
+                totalAmount += item.total;
+                receiptWindow.document.write(`
+                    <div class="item">
+                        <span>${index + 1}. ${item.name}</span>
+                        <span>${item.quantity} x ${item.price} = ${item.total.toLocaleString('en-US')}</span>
+                    </div>
+                `);
+            });
+    
+            receiptWindow.document.write(`
+                    <div class="line"></div>
+                    <div class="bold">Jami summa: ${totalAmount.toLocaleString('en-US')} ${data.valyuta} </div>
+                    <div class="line"></div>
+                    <div style="font-size: 14pt; text-align: center;">Biz bilan hamkorlik qilayotganingizdan xursandmiz!</div>
+                    <div style="font-size: 14pt; text-align: center;">📞 +998901254042</div>
+                    <div style="font-size: 14pt; text-align: center;">📞 +998901252647</div>
+                    <div style="font-size: 14pt; text-align: center;">📞 +998910197071</div>
+                    <div class="line"></div>
+                </div>
+                </body>
+                </html>
+            `);
+    
+            receiptWindow.document.close();
+            receiptWindow.print();
+        }
+    </script>
+    <script>
+         function formatNumber(num) {
+            return new Intl.NumberFormat("en-US").format(num);
+        }
+         const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `);
+
+            $("#alert-container").append(alertElement);
+
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000); 
+        };
+        function add_modal(item) {
+            const itemValue = $(item).val(); 
+            const [pr_id, pr_name, quantity, barcode] = itemValue.split('&');
+            const price_type = document.querySelector('input[name="type_price"]:checked').value
+            if (pr_id) {
+                $('#recieve_item_add_button').click();
+                $('#recieve_item_add_product_id').val(pr_id);
+                $('#product_barcode').val(barcode);
+                $('#ombor_qoldiq').val(quantity);
+                $('#recieve_item_add_product_name').text(pr_name);
+                console.log(pr_name)
+                $('#sotuv_sotish_som').val(); 
+                $('#recieve_item_add_product_div .pr_type').remove();
+                let price_types = $.get("{% url 'check_price' %}", { product:  pr_id, type: price_type}, function(data) {
+                    let price = parseInt(data['price'])
+                    $('#sotuv_sotish_som').val(price); 
+                    $('#sotuv_kelishilgan_som').val(price); 
+                });
+
+            }
+        }
+    </script>
+    <script>
+        $("#add_form").submit(function (event) {
+        event.preventDefault();
+        $('#modal_delete').click();
+
+        let productid = $("#recieve_item_add_product_id").val();
+        let productName = $("#recieve_item_add_product_name").text();
+        let barcode = $("#product_barcode").val();
+        let quantity = parseInt($("input[name='quantity']").val()) || 0;
+        let price = parseFloat($("#sotuv_sotish_som").val()) || 0;
+        let agreedPrice = parseFloat($("#sotuv_kelishilgan_som").val()) || 0;
+        let total = agreedPrice * quantity;
+        let productId = $("#recieve_item_add_product_id").val();
+        let orderId = $("#order_id").val();  
+        $.ajax({
+            url: `/b2c_shop_cart_add/${orderId}`,
+            type: "POST",
+            data: {
+                product_id: productId,
+                quantity: quantity,
+                product_price: price,
+                agreed_price: agreedPrice,
+            },
+           success: function (response) {
+                if (response.success == true) {
+                    showAlert(response.message, "success");
+                    let newRow = `
+                        <tr data-id="${response.cart_id}">
+                            <td>${$("tbody tr").length + 1}</td>
+                            <td>${productName}</td>
+                            <td>${barcode}</td>
+                            <td class="text-right"><button type="button" class="btn btn-primary quantity-minus" >-</button></td>
+                            <td contenteditable="true" class="quantity text-center product_quantity">${quantity}</td>
+                            <td><button type="button" class="btn btn-primary quantity-plus">+</button></td>
+                            <td>${formatNumber(price.toFixed(2))}</td>
+                            <td class="price">${formatNumber(agreedPrice.toFixed(2))}</td>
+                            <td class="total" data-value="${total.toFixed(2)}">${formatNumber(total)}</td>
+                            <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+                        </tr>`;
+                    
+                    $("tbody").append(newRow);
+                    $('#modal_quantity_input').val("");
+                    updateTotals()
+
+                } else {
+                    showAlert(response.message, "danger");
+                }
+                updateTotals()
+            },
+
+            error: function () {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+                updateTotals()
+            }
+        });
+        
+    });
+    $(document).on("click", ".quantity-plus, .quantity-minus", function () {
+        let row = $(this).closest("tr");
+        let quantityElem = row.find(".quantity");
+        let quantity = parseInt(quantityElem.text()) + ($(this).hasClass("quantity-plus") ? 1 : -1);
+        
+        if (quantity > 0) {
+            quantityElem.text(quantity);
+            let agreedPrice = parseFloat(row.find("td:eq(7)").text().replace(/,/g, "")) || 0;
+            let total = agreedPrice * quantity;
+            onQuantityChange(row, quantity)
+            updateTotals()
+
+        }
+
+        function onQuantityChange($row, newQuantity) {
+            const cart_id = $row.data("id");
+            $.ajax({
+                url: `/b2c_shop_cart_edit/${cart_id}`,
+                type: "POST",
+                data: { quantity: newQuantity },
+                success: function (response) {
+                    if (response.success) {
+                        showAlert(response.message, "success");
+                        updateTotals();
+                    } else {
+                        showAlert(response.message, "danger");
+                    }
+                },
+                error: function () {
+                    showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+                },
+                complete: function () {
+                    isUpdating = false;
+                }
+        });
+    }
+    });
+    $(document).on("click", ".product-delete", function () {
+        const tr_item = $(this).closest("tr")
+        let cart_id = tr_item.data("id");
+        $.ajax({
+            url: `/b2c_shop_cart_del/${cart_id}`,
+            type: "POST",
+            success: function (response) {
+                if (response.success == true) {
+                    showAlert(response.message, "success");
+                    tr_item.remove();
+                } else {
+                    showAlert(response.message, "danger");
+                }
+                updateTotals()
+            },
+            error: function () {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.", "danger");
+
+            }
+        });
+        updateTotals()
+    });
+    function updateTotals() {
+        let totalQuantity = 0;
+        let totalSum = 0;
+
+        $("tbody tr").each(function () {
+            let quantity = parseInt($(this).find(".quantity").text()) || 0;
+
+            let priceText = $(this).find(".price").text();
+            let cleanPrice = parseFloat(priceText.replace(/\s|,/g, '')) || 0;
+
+            totalQuantity += quantity;
+            totalSum += cleanPrice * quantity;
+        });
+
+        console.log(totalSum);
+
+        $("#quantity_total").text(formatNumber(totalQuantity));
+        $("#all_total").text(formatNumber(totalSum));
+        calculateRemaining();
+    }
+
+    function calculateRemaining() {
+        let total = parseFloat($("#all_total").text().replace(/[,\s]/g, "")) || 0;
+        let naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
+
+        let remaining = Math.max(total - naqd_summa, 0);
+        $("#nasiya_summa").val(remaining.toFixed(0));
+    }
+
+
+    $("#naqd_summa").on("input change", function () {
+        calculateRemaining();
+    });
+    </script>
+
+
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+    </script>
+{% endblock js %}

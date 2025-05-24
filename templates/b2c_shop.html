@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+        
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+     <style>
+        .selectize-input {
+            height: 2.7rem !important;
+            min-height: 2.7rem !important;
+            line-height: 2.7rem !important;
+        }
+
+    .btn-check:checked + .btn {
+        background-color: #007bff;
+        color: white;
+    }
+
+
+    .price_type_input {
+        display: none;
+    }
+
+    #alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        width: 30rem;
+    }
+
+     </style>
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <form action="{% url 'b2c_shop_add' %}" method="post">
+                    {% csrf_token %}
+                    <div class="row layout-top-spacing" id="cancel-row">
+                        <div id="alert-container"></div>
+                        <div class="col-xl-8 col-lg-8 col-sm-12  layout-spacing">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select name="valyuta" class="form-control" required>
+                                    {% for i in valyuta %}
+                                        <option value="{{i.id}}">{{i.name}}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <select class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                                <div class="btn-group col-md-5" role="group" aria-label="Price Types">
+                                    <input type="radio" class="btn-check price_type_input" name="type_price" id="oddiy" value="" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
+                                    {% for i in price_types %}
+                                        <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="widget-content widget-content-area br-6">
+                                <div class="table-responsive mb-4 mt-4">
+                                    <table id="" class="table table-hover non-hover" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Maxsulot nomi</th>
+                                                <th>Shtrix kod</th>
+                                                <th>Qo'shish</th>
+                                                <th>Miqdori</th>
+                                                <th>Ayrish</th>
+                                                <th>Narx</th>
+                                                <th>Kelishilgan narx</th>
+                                                <th>Skidka</th>
+                                                <th>Jami</th>
+                                                <th>Ochirish</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody> 
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4 col-lg-4 col-sm-12  layout-spacing">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="widget-content widget-content-area br-6">
+
+                                        <label for="">Mijoz</label>
+                                        <select class="form-control searchable" name="debtor" required >
+                                            <option value=""></option>
+                                            {% for i in customers %}
+                                                <option value="{{i.id}}">{{ i.fio }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <label for="">To'lov sanasi</label>
+                                        <input type="date" class="form-control" name="debt_return" required>
+
+                                        <label for="">Call center</label>
+                                        <select class="form-control searchable" name="call_center" required>
+                                            <option value=""></option>
+                                            {% for i in call_center %}
+                                                <option value="{{i.id}}">{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <label for="">Filial</label>
+                                        <select class="form-control searchable" name="filial" required>
+                                            <option value=""></option>
+                                            {% for i in filial %}
+                                                <option value="{{i.id}}">{{ i.name }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <button  style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+    <script>
+        if ("{{order}}") {
+            parseFloat($("input[id='dollar_kurs']").val({{order.kurs}}))
+        }
+    </script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+    </script>
+{% endblock js %}
