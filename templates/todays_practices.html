@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link href="{% static 'assets/css/dashboard/dash_2.css'%}" rel="stylesheet" type="text/css" />
+    
+{% endblock css %}
+{% block content %}
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="middle-content container-xxl p-0">
+            <div class="row layout-top-spacing">
+                <!-- <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                    <form action="">
+                        <div class="row">
+                            <div class="col-md-7"></div>
+                            <div class="col-md-2">
+                                <select name="valyuta" class="form-control">
+                                    <option value=""> ----- Valyuta ----- </option>
+                                    {% for valyuta in valyuta %}
+                                        <option value="{{ valyuta.id }}">{{ valyuta.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="filial" class="form-control">
+                                    <option value=""> ------ Filial ------- </option>
+                                    {% for filial in filial %}
+                                        <option value="{{ filial.id }}">{{ filial.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-primary" type="submit" style="height: 2.6rem;">Filter</button>
+                            </div>
+                        </div>
+                    </form>
+                </div> -->
+                <div class="col-xl-9 col-lg-8 col-sm-8  layout-spacing">
+                    <div class="widget-content widget-content-area br-8">
+                        <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Filial</th>
+                                    <th>Mijoz</th>
+                                    <th>Valyuta</th>
+                                    <th>Narx Turi</th>
+                                    <th>Summa</th>
+                                    <th>Izoh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shop in shop %}
+                                <tr>
+                                    <td>{{ shop.filial.name }}</td>
+                                    <td>{{ shop.debtor.fio }}</td>
+                                    <td>{{ shop.valyuta.name }}</td>
+                                    <td>{{ shop.type_price.name }}</td>
+                                    <td>{{ shop.total_price|intcomma }}</td>
+                                    <td>{{ shop.comment }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <div class="widget widget-three">
+                        <div class="widget-heading">
+                            <h5 class="">Jami Savdo</h5>
+                        </div>
+                        <div class="widget-content">
+                            <div class="order-summary">
+                                {% for i in totals_shop %}
+                                <div class="summary-list">
+                                    <div class="w-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                    </div>
+                                    <div class="w-summary-details">
+                                        <div class="w-summary-info">
+                                            <h6>{{ i.name }}</h6>
+                                            <p class="summary-count">{{i.summa|default_if_none:'0'|intcomma}}</p>
+                                        </div>
+                                        <div class="w-summary-stats">
+                                            <div class="progress">
+                                                <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xl-9 col-lg-12 col-sm-12  layout-spacing">
+                    <div class="widget-content widget-content-area br-8">
+                        <table id="zero-config1" class="table table-striped dt-table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Filial</th>
+                                    <th>Mijoz</th>
+                                    <th>Taminotchi</th>
+                                    <th>Turli shaxs</th>
+                                    <th>Turi</th>
+                                    <th>Valyuta</th>
+                                    <th>Summa</th>
+                                    <th>Izoh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pay in pay %}
+                                <tr>
+                                    <td>{{ pay.filial.name }}</td>
+                                    <td>{{ pay.debtor.fio }}</td>
+                                    <td>{{ pay.deliver.name }}</td>
+                                    <td>{{ pay.external_income_user.full_name }}</td>
+                                    <td>
+                                        {% if pay.type_pay == 1 %}
+                                        Kirim
+                                        {% else %}
+                                        Chiqim
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pay.valyuta.name }}</td>
+                                    <td>{{ pay.summa|intcomma }}</td>
+                                    <td>{{ pay.comment }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>Salary</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-12 layout-spacing">
+                    <div class="widget widget-three">
+                        <div class="widget-heading">
+                            <h5 class="">Jami Tolovlar</h5>
+                        </div>
+                        <div class="widget-content">
+                            <div class="order-summary">
+                                {% for i in totals_shop %}
+                                <div class="summary-list">
+                                    <div class="w-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                    </div>
+                                    <div class="w-summary-details">
+                                        <div class="w-summary-info">
+                                            <h6>{{ i.name }}</h6>
+                                            <p class="summary-count">{{i.pay|default_if_none:'0'|intcomma}}</p>
+                                        </div>
+                                        <div class="w-summary-stats">
+                                            <div class="progress">
+                                                <div class="progress-bar bg-gradient-warning" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    <script src="{% static 'plugins/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'assets/js/custom.js' %}"></script>
+    <script src="{% static 'assets/js/dashboard/dash_2.js'%}"></script>
+
+    <script>
+        $('#zero-config').DataTable({
+            "dom": "<'dt--top-section'<'row'<'col-12 col-sm-6 d-flex justify-content-sm-start justify-content-center'l><'col-12 col-sm-6 d-flex justify-content-sm-end justify-content-center mt-sm-0 mt-3'f>>>" +
+        "<'table-responsive'tr>" +
+        "<'dt--bottom-section d-sm-flex justify-content-sm-between text-center'<'dt--pages-count  mb-sm-0 mb-3'i><'dt--pagination'p>>",
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": "Showing page _PAGE_ of _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Search...",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [7, 10, 20, 50],
+            "pageLength": 10 
+        });
+    </script>
+     <script>
+        $('#zero-config1').DataTable({
+            "dom": "<'dt--top-section'<'row'<'col-12 col-sm-6 d-flex justify-content-sm-start justify-content-center'l><'col-12 col-sm-6 d-flex justify-content-sm-end justify-content-center mt-sm-0 mt-3'f>>>" +
+        "<'table-responsive'tr>" +
+        "<'dt--bottom-section d-sm-flex justify-content-sm-between text-center'<'dt--pages-count  mb-sm-0 mb-3'i><'dt--pagination'p>>",
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": "Showing page _PAGE_ of _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Search...",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [7, 10, 20, 50],
+            "pageLength": 10 
+        });
+    </script>
+{% endblock js %}
