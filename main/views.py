@@ -2785,11 +2785,41 @@ class OmborMinus(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        products = ProductFilial.objects.filter(quantity__lte=100).select_related('group')
+        valyutas = list(Valyuta.objects.all())
+        prices = ProductBringPrice.objects.filter(
+            product__in=products,
+            valyuta__in=valyutas
+        ).select_related('product', 'valyuta').order_by('product_id', 'valyuta_id', '-id')
+
+        last_price_dict = {}
+        for price in prices:
+            key = (price.product_id, price.valyuta_id)
+            if key not in last_price_dict:  
+                last_price_dict[key] = price.price
+
+        data = []
+        for product in products:
+            dt = {
+                'name': product.name,
+                'preparer': product.preparer,
+                'kurs': product.kurs,
+                'quantity': product.quantity,
+                'barcode': product.barcode,
+                'group': product.group,
+                'valyuta': []
+            }
+            for val in valyutas:
+                summa = last_price_dict.get((product.id, val.id))
+                dt['valyuta'].append({'summa': summa})
+            data.append(dt)
+
+
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
-        context['ombors'] = ProductFilial.objects.filter(quantity__lte=100)
-        context['total_som'] = ProductFilial.objects.filter(quantity__lte=100).aggregate(Sum('som'))['som__sum']
-        context['total_dollar'] = ProductFilial.objects.filter(quantity__lte=100).aggregate(Sum('dollar'))['dollar__sum']
+        context['valyuta'] = valyutas
+        context['ombors'] = data
         context['total_soni'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
         context['dollar_kurs'] = Course.objects.last().som
         return context
@@ -9362,3 +9392,101 @@ def reja_chiqim_bajarish(request, id):
     reja.is_confirmed = True
     reja.save()
     return redirect(request.META['HTTP_REFERER'])
+
+
+
+def todays_practices(request):
+    today = datetime.today().date()
+    shop = Shop.objects.filter(date__date=today)
+    pay = PayHistory.objects.filter(date__date=today)
+    query_valyuta = Valyuta.objects.all()
+    user_profile = UserProfile.objects.filter(user=request.user).last()
+    
+    if user_profile.filial:
+        shop = shop.filter(filial=user_profile.filial)
+        pay = pay.filter(filial=user_profile.filial)
+
+    # filial = request.GET.get('filial')
+    # valyuta = request.GET.get('valyuta')
+    # if filial:
+    #     shop = shop.filter(filial_id=filial)
+    #     pay = pay.filter(filial_id=filial)
+    # if valyuta:
+    #     shop = shop.filter(valyuta_id=valyuta)
+    #     pay = pay.filter(valyuta_id=valyuta)
+    
+    totals_shop = []
+    for i in query_valyuta:
+        sh_dt = {
+            'name': i.name,
+            'summa': shop.filter(
+                date__date=today,
+                valyuta=i
+            ).aggregate(
+                total_price=Sum(
+                    ExpressionWrapper(
+                        F('cart__quantity') * F('cart__price'),
+                        output_field=IntegerField()
+                    )
+                )
+            )['total_price'],
+            'pay':pay.filter(date__date=today, valyuta=i).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all'],
+        }
+        totals_shop.append(sh_dt)
+
+        
+    context = {
+        'shop':shop,
+        'pay':pay,
+        'filial':Filial.objects.filter(is_activate=True),
+        'valyuta':query_valyuta,
+        'totals_shop':totals_shop,
+    }
+    return render(request, 'todays_practices.html', context)
+
+
+
+def reviziya(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    filial = request.GET.get('filial')
+    filters = {
+        'start_date':start_date,
+        'end_date':end_date,
+        'filial':filial,
+    }
+    data = []
+    if start_date and end_date and filial:
+        product = ProductFilial.objects.filter(filial_id=filial)
+
+        recieve_data = RecieveItem.objects.filter(
+            recieve__date__date__range=(start_date, end_date),
+            recieve__filial_id=filial
+        ).values('product_id').annotate(
+            recieve_quantity=Coalesce(Sum('quantity'), 0)
+        )
+
+        cart_data = Cart.objects.filter(
+            shop__date__date__range=(start_date, end_date),
+            shop__filial__id=filial
+        ).values('product_id').annotate(
+            cart_quantity=Coalesce(Sum('quantity'), 0)
+        )
+        recieve_dict = {item['product_id']: item['recieve_quantity'] for item in recieve_data}
+        cart_dict = {item['product_id']: item['cart_quantity'] for item in cart_data}
+
+        for i in product:
+            dt = {
+                'name': i.name,
+                'quantity': i.quantity,
+                'recieve_quantity': recieve_dict.get(i.id, 0),
+                'cart_quantity': cart_dict.get(i.id, 0),
+            }
+            data.append(dt)
+
+    context = {
+        'data': data,
+        'filters':filters,
+        'filial': Filial.objects.filter(is_activate=True),
+    }
+    return render(request, 'reviziya.html', context)

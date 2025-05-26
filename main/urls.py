@@ -272,5 +272,9 @@ urlpatterns = [
     path('recieve-expanse/<int:pk>/delete/', delete_recieve_expanse, name='delete_recieve_expanse'),
     path('reja_chiqim_bajarish/<int:id>/', reja_chiqim_bajarish, name='reja_chiqim_bajarish'),
 
+    path('todays_practices', todays_practices, name='todays_practices'),
+
+    path('reviziya', reviziya, name='reviziya'),
+
 
 ]

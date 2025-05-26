@@ -166,8 +166,8 @@
                         </ul>
                     </li>
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'today_sales shops b2b_shop b2b_shop_ajax b2c_shop b2c_shop_detail' %}active{% endif %}">
-                            <a href="#narx-sotuvlar" data-toggle="collapse" aria-expanded="{% if url_name in 'today_sales b2c_shop b2c_shop_detail shops b2b_shop b2b_shop_ajax'  %}true{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name in 'reviziya todays_practices today_sales shops b2b_shop b2b_shop_ajax b2c_shop b2c_shop_detail' %}active{% endif %}">
+                            <a href="#narx-sotuvlar" data-toggle="collapse" aria-expanded="{% if url_name in 'reviziya todays_practices today_sales b2c_shop b2c_shop_detail shops b2b_shop b2b_shop_ajax'  %}true{% endif %}" class="dropdown-toggle">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-cart-shopping" style="font-size: 17px;"></i>
                                     <span style="margin-left: 10px;">Sotuvlar</span>
@@ -180,7 +180,7 @@
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'today_sales shops b2c_shop b2c_shop_detail b2b_shop b2b_shop_ajax'  %}show{% endif %}" 
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'reviziya todays_practices today_sales shops b2c_shop b2c_shop_detail b2b_shop b2b_shop_ajax'  %}show{% endif %}" 
                             id="narx-sotuvlar" data-parent="#accordionExample">
                             
                                 {% if custom_user_profile.is_bugungi_sotuvlar %} 
@@ -203,6 +203,12 @@
                                         <a href="{% url 'b2b_shop' %}">B2B Savdo</a>
                                     </li>
                                 {% endif %}
+                                <li class="menu {% if request.resolver_match.url_name == 'todays_practices'%}active{% endif %}">
+                                    <a href="{% url 'todays_practices' %}">Bugungi amaliyotlar</a>
+                                </li>
+                                <li class="menu {% if request.resolver_match.url_name == 'reviziya'%}active{% endif %}">
+                                    <a href="{% url 'reviziya' %}">Reviziya</a>
+                                </li>
                             </ul>
                         </li>
                     {% endwith %}
