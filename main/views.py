@@ -2785,11 +2785,41 @@ class OmborMinus(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        products = ProductFilial.objects.filter(quantity__lte=100).select_related('group')
+        valyutas = list(Valyuta.objects.all())
+        prices = ProductBringPrice.objects.filter(
+            product__in=products,
+            valyuta__in=valyutas
+        ).select_related('product', 'valyuta').order_by('product_id', 'valyuta_id', '-id')
+
+        last_price_dict = {}
+        for price in prices:
+            key = (price.product_id, price.valyuta_id)
+            if key not in last_price_dict:  
+                last_price_dict[key] = price.price
+
+        data = []
+        for product in products:
+            dt = {
+                'name': product.name,
+                'preparer': product.preparer,
+                'kurs': product.kurs,
+                'quantity': product.quantity,
+                'barcode': product.barcode,
+                'group': product.group,
+                'valyuta': []
+            }
+            for val in valyutas:
+                summa = last_price_dict.get((product.id, val.id))
+                dt['valyuta'].append({'summa': summa})
+            data.append(dt)
+
+
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
-        context['ombors'] = ProductFilial.objects.filter(quantity__lte=100)
-        context['total_som'] = ProductFilial.objects.filter(quantity__lte=100).aggregate(Sum('som'))['som__sum']
-        context['total_dollar'] = ProductFilial.objects.filter(quantity__lte=100).aggregate(Sum('dollar'))['dollar__sum']
+        context['valyuta'] = valyutas
+        context['ombors'] = data
         context['total_soni'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
         context['dollar_kurs'] = Course.objects.last().som
         return context
