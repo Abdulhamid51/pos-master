@@ -195,7 +195,7 @@
                                 {% endif %}
                                 {% if custom_user_profile.is_savdo %} 
                                 <li class="menu {% if request.resolver_match.url_name == 'b2c_shop' or request.resolver_match.url_name == 'b2c_shop_detail'  %}active{% endif %}">
-                                    <a href="{% url 'create_order' %}">Savdo</a>
+                                    <a href="{% url 'b2c_shop' %}">Savdo</a>
                                 </li>
                                 {% endif %}
                                 {% if custom_user_profile.is_b2b_savdo %} 
