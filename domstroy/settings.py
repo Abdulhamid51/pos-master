@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     # sms send
     "django_crontab",
     "import_export",
+    'tg_bot',
     "mathfilters", #pip install django-mathfilters
 ]
 
@@ -238,6 +239,9 @@ USE_L10N = True
 USE_TZ = False
 
 LOGIN_URL = "/login"
+
+TELEGRAM_BOT_TOKEN = ''
+
 
 #sms
 SMS_EMAIL = 'abdullox19990604@gmail.com'

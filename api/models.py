@@ -1227,6 +1227,7 @@ class DebtorType(models.Model):
         return self.name
 
 class Debtor(models.Model):
+    tg_id = models.CharField(max_length=255, null=True, blank=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     type = models.ForeignKey(DebtorType, on_delete=models.PROTECT, blank=True, null=True)
     teritory = models.ForeignKey('Teritory', on_delete=models.PROTECT, blank=True, null=True)

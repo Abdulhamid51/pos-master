@@ -28,6 +28,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     # Main app URL-lari
     path('', include('main.urls')),
+    path('bot/', include('tg_bot.urls')),
 
     # Login va Logout
     path('login/', Login, name='login'),
