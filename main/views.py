@@ -2992,6 +2992,8 @@ class Debtors(LoginRequiredMixin, TemplateView):
         paginator_debtor = Paginator(debtor, 50)
         page_number = self.request.GET.get('page')
         page_debtor = paginator_debtor.get_page(page_number)
+        dollar_kurs = Course.objects.last().som
+
         context['debtor'] = 'active'
         context['debtor_t'] = 'true'
         context['debtors'] = page_debtor
@@ -2999,6 +3001,7 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['teritory'] = Teritory.objects.all()
         context['agent'] = MobilUser.objects.all()
         context['valyuta'] = Valyuta.objects.all()
+        context['dollar_kurs'] = dollar_kurs
         context['cashes'] = KassaNew.objects.filter(is_active=True)
         return context
 
@@ -3881,9 +3884,10 @@ def chiqim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
             chiqim.payhistory=pay
-            deb=Debtor.objects.get(id=debtor).refresh_debt()
+            deb = Debtor.objects.get(id=debtor)
+            deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'Valyuta {chiqim.valyuta.name} - {chiqim.summa}'
+            text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
             chat_id = deb.tg_id
             send_message(chat_id, text)
         
@@ -4111,7 +4115,8 @@ def chiqim_qilish_edit(request):
     
 #kirim
 
-from tg_bot.bot import send_message
+from tg_bot.bot import send_message, send_kirim_message
+from django.contrib.humanize.templatetags.humanize import intcomma
 
 def kirim_qilish(request):
 
@@ -4143,11 +4148,16 @@ def kirim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
-            deb = Debtor.objects.get(id=debtor).refresh_debt()
+            deb = Debtor.objects.get(id=debtor)
+            deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'Valyuta {kirim.valyuta.name} - {kirim.summa}'
+            text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
+            text += f'💸 {intcomma(kirim.currency) }'
+            text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
+            if kirim.izox:
+                text += f'💬 {kirim.izox}'
             chat_id = deb.tg_id
-            send_message(chat_id, text)
+            send_kirim_message(chat_id, text, kirim.id)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
