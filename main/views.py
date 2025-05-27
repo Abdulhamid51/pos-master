@@ -3881,7 +3881,11 @@ def chiqim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
             chiqim.payhistory=pay
-            Debtor.objects.get(id=debtor).refresh_debt()
+            deb=Debtor.objects.get(id=debtor).refresh_debt()
+            text = 'Pul olindi \n'
+            text += f'Valyuta {chiqim.valyuta.name} - {chiqim.summa}'
+            chat_id = deb.tg_id
+            send_message(chat_id, text)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
@@ -4106,6 +4110,9 @@ def chiqim_qilish_edit(request):
 #         return redirect('/kassa/')
     
 #kirim
+
+from tg_bot.bot import send_message
+
 def kirim_qilish(request):
 
     """ Kassadan kirim qiladi """
@@ -4136,7 +4143,11 @@ def kirim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
-            Debtor.objects.get(id=debtor).refresh_debt()
+            deb = Debtor.objects.get(id=debtor).refresh_debt()
+            text = 'Pul olindi \n'
+            text += f'Valyuta {kirim.valyuta.name} - {kirim.summa}'
+            chat_id = deb.tg_id
+            send_message(chat_id, text)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
@@ -4151,6 +4162,8 @@ def kirim_qilish(request):
 
         kassa.save()
         kirim.save()
+       
+
         return redirect(request.META['HTTP_REFERER'])
 
 
