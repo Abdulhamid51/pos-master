@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
 import requests
-from api.models import Wallet, Debtor, Cart, Shop
+from api.models import Wallet, Debtor, Cart, Shop, Kirim
 import datetime
 from django.contrib.humanize.templatetags.humanize import intcomma
 
@@ -15,6 +15,18 @@ def webhook(request):
         chat_id = message.get('chat', {}).get('id')
         text = message.get('text', '').strip().lower()
 
+        if 'callback_query' in data:
+            callback = data['callback_query']
+            chat_id = callback['message']['chat']['id']
+            data = callback['data']
+            if data == "confirm_payment":
+                send_message(chat_id, "✅ To'lov tasdiqlandi!")
+            elif data == "reject_payment":
+                kirim_id = callback['kirim_id']
+                confirim_kirim(kirim_id)
+                send_message(chat_id, "⛔ To'lov rad etildi!")
+            return JsonResponse({"status": "ok"})
+        
         if text == '/start':
             send_menu(chat_id)
         elif text in ['balans', '💰 balans', '💰 balans'.lower()]:
@@ -46,6 +58,22 @@ def send_message(chat_id, text):
     response = requests.post(url, json=payload)
     print(response.json())
 
+def send_kirim_message(chat_id, text, kirim_id):
+    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        'chat_id': chat_id, 
+        'text': text,
+        'reply_markup':{
+            "inline_keyboard": [
+                [
+                    {"text": "✅ Tasdiklash", "callback_data": "confirm_payment"},
+                    {"text": "⛔ Notogri summa", "callback_data": "reject_payment", "kirim_id":kirim_id}
+                ]
+            ]
+        }
+        }
+    response = requests.post(url, json=payload)
+    print(response.json())
 
 def send_menu(chat_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -98,6 +126,12 @@ def get_balance(chat_id):
 
     return text
 
+
+def confirim_kirim(kirim_id):
+    kirim =  Kirim.objects.get(id=kirim_id)
+    kirim.is_approved = False
+    kirim.save()
+    return True
 
 import logging
 
