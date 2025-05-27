@@ -18,13 +18,21 @@ def webhook(request):
         if 'callback_query' in data:
             callback = data['callback_query']
             chat_id = callback['message']['chat']['id']
-            data = callback['data']
-            if data == "confirm_payment":
+            message_id = callback['message']['message_id']  
+
+            callback_data = json.loads(callback['data'])  
+            remove_inline_buttons(chat_id, message_id)
+
+            if callback_data['action'] == "confirm_payment":
                 send_message(chat_id, "✅ To'lov tasdiqlandi!")
-            elif data == "reject_payment":
-                kirim_id = callback['kirim_id']
-                confirim_kirim(kirim_id)
-                send_message(chat_id, "⛔ To'lov rad etildi!")
+            elif callback_data['action'] == "reject_payment":
+                kirim_id = callback_data.get('kirim_id')
+                if kirim_id:
+                    confirim_kirim(kirim_id)
+                    send_message(chat_id, "⛔ To'lov rad etildi!")
+                else:
+                    send_message(chat_id, "⚠️ ID topilmadi.")
+            
             return JsonResponse({"status": "ok"})
         
         if text == '/start':
@@ -58,6 +66,19 @@ def send_message(chat_id, text):
     response = requests.post(url, json=payload)
     print(response.json())
 
+import json
+
+def remove_inline_buttons(chat_id, message_id):
+    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup"
+    payload = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "reply_markup": {}
+    }
+    response = requests.post(url, json=payload)
+    print(response.json())
+
+
 def send_kirim_message(chat_id, text, kirim_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
@@ -66,14 +87,22 @@ def send_kirim_message(chat_id, text, kirim_id):
         'reply_markup':{
             "inline_keyboard": [
                 [
-                    {"text": "✅ Tasdiklash", "callback_data": "confirm_payment"},
-                    {"text": "⛔ Notogri summa", "callback_data": "reject_payment", "kirim_id":kirim_id}
+                    {
+                        "text": "✅ Tasdiqlash", 
+                        "callback_data": json.dumps({"action": "confirm_payment"})
+                    },
+                    {
+                        "text": "⛔ Notogri summa", 
+                        "callback_data": json.dumps({"action": "reject_payment", "kirim_id": kirim_id})
+                    }
                 ]
             ]
         }
-        }
+    }
     response = requests.post(url, json=payload)
     print(response.json())
+
+
 
 def send_menu(chat_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"

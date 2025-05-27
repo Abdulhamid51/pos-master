@@ -3886,10 +3886,6 @@ def chiqim_qilish(request):
             chiqim.payhistory=pay
             deb = Debtor.objects.get(id=debtor)
             deb.refresh_debt()
-            text = 'Pul olindi \n'
-            text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
-            chat_id = deb.tg_id
-            send_message(chat_id, text)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
@@ -4149,9 +4145,16 @@ def kirim_qilish(request):
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
             deb = Debtor.objects.get(id=debtor)
+            deb = Debtor.objects.get(id=debtor)
             deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'Valyuta {kirim.valyuta.name} - {kirim.summa}'
+            text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name} \n'
+            text += f'💸 Dollar kursi {intcomma(kirim.currency) }\n'
+            text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}\n"
+            if kirim.izox:
+                text += f'💬 {kirim.izox}'
+
+            text += "\n\n Agar summa notogri bolsa, iltimos, ⛔ bekor qilish tugmasini bosing."
             chat_id = deb.tg_id
             send_kirim_message(chat_id, text, kirim.id)
         
