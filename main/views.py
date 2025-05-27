@@ -3881,9 +3881,10 @@ def chiqim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
             chiqim.payhistory=pay
-            deb=Debtor.objects.get(id=debtor).refresh_debt()
+            deb = Debtor.objects.get(id=debtor)
+            deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'Valyuta {chiqim.valyuta.name} - {chiqim.summa}'
+            text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
             chat_id = deb.tg_id
             send_message(chat_id, text)
         
@@ -4143,9 +4144,10 @@ def kirim_qilish(request):
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
-            deb = Debtor.objects.get(id=debtor).refresh_debt()
+            deb = Debtor.objects.get(id=debtor)
+            deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'Valyuta {kirim.valyuta.name} - {kirim.summa}'
+            text += f'\t\t\t{kirim.summa}-{kirim.valyuta.name}'
             chat_id = deb.tg_id
             send_message(chat_id, text)
         
