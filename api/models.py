@@ -1014,6 +1014,8 @@ class Course(models.Model):
     class Meta:
         verbose_name_plural = "Dollar kursi"
 
+from django.contrib.humanize.templatetags.humanize import intcomma
+
 
 class Shop(models.Model):
     desktop_id = models.SlugField(blank=True, null=True)
@@ -1060,16 +1062,21 @@ class Shop(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.is_finished:
-            obj, created = PayHistory.objects.get_or_create(shop=self, debtor = self.debtor)
-            # obj.debtor = self.debtor
-            obj.filial = self.filial
-            obj.som = self.naqd_som
-            obj.dollar = self.naqd_dollar
-            obj.click = self.click
-            obj.plastik = self.plastik
-            obj.currency = self.kurs
-            obj.save()
+        if self.is_finished and self.debtor:
+            from tg_bot.bot import send_message
+            chat_id = self.debtor.tg_id
+            if chat_id:
+                text = "Yuk chiqarildi \n"
+                text = f"{self.debtor.fio} - {intcomma(self.total_price)} {self.valyuta.name if self.valyuta else '-'}\n"
+                if self.date:
+                    text += f"📅 Buyurtma vaqti: {self.date.strftime('%Y-%m-%d %H:%M')}\n"
+                if self.debt_return:
+                    text += f"🚚 Yetkazib berish vaqti: {self.debt_return.strftime('%Y-%m-%d')}\n"
+                for x in Cart.objects.filter(shop=self):
+                    text += f"\t 📦 {x.product.name} \n"
+                    text += f"\t\t\t\t\t    {intcomma(x.quantity)} x {intcomma(x.price)} = {intcomma(x.total_price)}\n"
+
+                send_message(chat_id, text)
     
     @property
     def model_name(self):
