@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product | Bordo</title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link href="{% static 'assets/css/dashboard/dash_2.css'%}" rel="stylesheet" type="text/css" />
+    <style>
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 30rem;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="middle-content container-xxl p-0">
+            <div class="row layout-top-spacing">
+                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                    <div id="alert-container"></div>
+
+                    <div class="widget-content widget-content-area br-8">
+                         <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
+                                <option value="">Mahsulotni tanlang</option>
+                                {% for i in product %}
+                                    <option value="{{ i.id }}|{{i.quantity}}|{{i.kelish_narx}}|{{i.sotish_narx}}" >{{ i.name }}</option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                </div>
+              <script>
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                const data = [];
+
+                function SelectProduct(element) {
+                    const selectedOption = element.options[element.selectedIndex];
+                    const product_name = selectedOption.text;
+                    const product_value = element.value;
+
+                    if (!product_value) return;
+
+                    const [id, quantity, kelish_narx, sotish_narx] = product_value.split('|');
+
+                    const table_zero = document.getElementById('zero-config');
+                    const tbody = table_zero.querySelector('tbody');
+                    const existingProducts = tbody.querySelectorAll('.product_name');
+
+                    let productExists = Array.from(existingProducts).some(product => product.textContent === product_name);
+                    if (productExists) {
+                        showAlert("Maxsulot allaqachon qo‘shilgan!", "warning");
+                        return;
+                    }
+
+                    const newRow = `
+                        <tr>
+                            <td class="product_name" data-product_id="${id}">${product_name}</td>
+                            <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" oninput="pushData(this)"></td>
+                            <td class="quantity_td">${quantity}</td>
+                            <td class="status_td"></td>
+                            <td class="kelish_narx_td">${kelish_narx}</td>
+                            <td class="kelish_itog_td"></td>
+                            <td class="sotish_narx_td">${sotish_narx}</td>
+                            <td class="sotish_itog_td"></td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', newRow);
+                }
+                function pushData(item) {
+                    const item_tr = item.closest('tr');
+                    const item_product_id = item_tr.querySelector('.product_name').dataset.product_id;
+                    const item_input_quantity = parseFloat(item.value) || 0;
+                    const item_quantity_td = parseFloat(item_tr.querySelector('.quantity_td').textContent);
+                    const item_status_td = item_tr.querySelector('.status_td');
+
+                    const kelish_narx_td = item_tr.querySelector('.kelish_narx_td');
+                    const kelish_itog_td = item_tr.querySelector('.kelish_itog_td');
+                    const sotish_narx_td = item_tr.querySelector('.sotish_narx_td');
+                    const sotish_itog_td = item_tr.querySelector('.sotish_itog_td');
+
+                    const kelish_narx = parseFloat(kelish_narx_td.textContent);
+                    const sotish_narx = parseFloat(sotish_narx_td.textContent);
+
+                    let productExists = data.find(el => el.id == item_product_id);
+
+                    if (productExists) {
+                        productExists.quantity = item_input_quantity;
+                    } else {
+                        data.push({ id: item_product_id, quantity: item_input_quantity, kelish_narx: kelish_narx, sotish_narx: sotish_narx });
+                    }
+
+                    if (item_input_quantity === 0) {
+                        item_status_td.innerHTML = '';
+                    } else if (item_input_quantity === item_quantity_td) {
+                        item_status_td.innerHTML = '<button class="btn btn-success"></button>';
+                    } else if (item_input_quantity < item_quantity_td && item_input_quantity != 0) {
+                        item_status_td.innerHTML = '<button class="btn btn-warning"></button>';
+                    } else if (item_input_quantity > item_quantity_td) {
+                        item_status_td.innerHTML = '<button class="btn btn-danger"></button>';
+                    }
+
+                    if (!isNaN(kelish_narx) && item_input_quantity > 0) {
+                        kelish_itog_td.textContent = (kelish_narx * item_input_quantity).toFixed(2);
+                    }
+
+                    if (!isNaN(sotish_narx) && item_input_quantity > 0) {
+                        sotish_itog_td.textContent = (sotish_narx * item_input_quantity).toFixed(2);
+                    }
+
+                    let jami_miqdor = 0;
+                    let jami_kelish_itog = 0;
+                    let jami_sotish_itog = 0;
+                    let jami_total_ombor_qoldik= 0;
+
+                    const allRows = document.querySelectorAll('#zero-config tbody tr');
+                    allRows.forEach(row => {
+                        const qty_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                        const kelish_narx = parseFloat(row.querySelector('.kelish_narx_td').textContent) || 0;
+                        const sotish_narx = parseFloat(row.querySelector('.sotish_narx_td').textContent) || 0;
+
+                        jami_total_ombor_qoldik+=parseFloat(row.querySelector('.quantity_td').textContent) || 0;
+                        jami_miqdor += qty_input;
+                        jami_kelish_itog += qty_input * kelish_narx;
+                        jami_sotish_itog += qty_input * sotish_narx;
+                    });
+
+                    document.getElementById('total_miqdor').textContent = jami_miqdor.toFixed(2);
+                    // document.getElementById('total_ombor_qoldik').textContent = jami_total_ombor_qoldik
+                    document.getElementById('total_kelish_itog').textContent = jami_kelish_itog.toFixed(2);
+                    document.getElementById('total_sotish_itog').textContent = jami_sotish_itog.toFixed(2);
+
+                    console.log(data);
+                }
+
+
+                function saveBack() {
+                    if (data.length > 0) {
+                        $.ajax({
+                            url: `/revision_item_add/{{revision.id}}`,
+                            type: "POST",
+                            data: JSON.stringify(data),
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+                            success: function(response) {
+                                showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
+                                window.location.replace('/reviziya')
+                            },
+                            error: function () {
+                                showAlert("Server bilan bog'lanishda xatolik", "danger");
+                            }
+                        });
+                    }
+                }
+            </script>
+            <script>
+                const showAlert = (message, type) => {
+                    const alertElement = $(`
+                        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                            ${message}
+                        </div>
+                    `);
+                    $("#alert-container").append(alertElement);
+                    setTimeout(() => {
+                        alertElement.fadeOut(500, function () { $(this).remove(); });
+                    }, 3000);
+                };
+            </script>
+
+                
+                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                    <div class="widget-content widget-content-area br-8">
+                        <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Maxsulot</th>
+                                    <th>Miqdor</th>
+                                    <th>Ombor qoldigi</th>
+                                    <th>Status</th>
+                                    <th>Kelish narxi</th>
+                                    <th>Kelish itog</th>
+                                    <th>Sotish narxi</th>
+                                    <th>Sotish itog</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                   {% for i in item %}
+                                   <tr>
+                                        <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
+                                        <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" value="{{i.quantity}}" oninput="pushData(this)"></td>
+                                        <td class="quantity_td">{{ i.product.quantity }}</td>
+                                        <td class="status_td"></td>
+                                        <td class="kelish_narx_td">{{i.arrival_price }}</td>
+                                        <td class="kelish_itog_td">{{i.total_arrival_price}}</td>
+                                        <td class="sotish_narx_td">{{ i.selling_price }}</td>
+                                        <td class="sotish_itog_td">{{i.total_selling_price}}</td>
+                                    </tr>
+                                   {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Jami</th>
+                                    <th id="total_miqdor"></th>
+                                    <th id="total_ombor_qoldik"></th>
+                                    <th></th>
+                                    <th> </th>
+                                    <th id="total_kelish_itog"></th>
+                                    <th></th>
+                                    <th id="total_sotish_itog"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-11"></div>
+                <div class="col-md-1"><button class="btn btn-success" onclick="saveBack()">Saqlash</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    <script src="{% static 'plugins/perfect-scrollbar/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'assets/js/custom.js' %}"></script>
+    <script src="{% static 'assets/js/dashboard/dash_2.js'%}"></script>
+   
+    
+{% endblock js %}

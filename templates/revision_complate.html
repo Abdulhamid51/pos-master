@@ -23,7 +23,7 @@
                 <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
                     <form action="">
                         <div class="row">
-                            <div class="col-md-4"></div>
+                            <div class="col-md-5"></div>
                               <div class="col-md-2">
                                <input type="date" class="form-control" name="start_date" value="{{ filters.start_date }}">
                             </div>
@@ -41,9 +41,6 @@
                             <div class="col-md-1">
                                 <button class="btn btn-primary" type="submit" style="height: 2.6rem;">Filter</button>
                             </div>
-                            <div class="col-md-1">
-                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" style="height: 2.6rem;"><i class="fa-solid fa-plus"></i></button>
-                            </div>
                         </div>
                     </form>
                 </div>
@@ -59,7 +56,6 @@
                                     <th>Status</th>
                                     <th>Valyuta</th>
                                     <th>Narx Turi</th>
-                                    <th>Tasdiklash</th>
                                     <th>Izoh</th>
                                 </tr>
                             </thead>
@@ -67,7 +63,7 @@
                                 {% for i in revision %}
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
-                                        <td> <a href="{% url 'revision_detail' i.id%}">{{ i.date|date:'Y-m-d' }}</a></td>
+                                        <td> <a href="{% url 'revision_complate_items' i.id%}">{{ i.date|date:'Y-m-d' }}</a></td>
                                         <td>{{ i.user_profile}}</td>
                                         <td>{{ i.filial.name }}</td>
                                         <td>
@@ -79,28 +75,6 @@
                                         </td>
                                         <td>{{i.valyuta.name}}</td>
                                         <td>{{i.price_type.name}}</td>
-                                        <td>
-                                            {% if i.status == 1 %}
-                                                
-                                            {% else %}
-                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampl{{i.id}}">
-                                                Tasdiqlash
-                                                </button>
-                                                <div class="modal fade" id="exampl{{i.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <div class="modal-content">
-                                                        <div class="modal-body">
-                                                            <h4>Haqiqatdan ham tasdiqlaysizmi</h4>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-danger" data-dismiss="modal">Yoq</button>
-                                                            <button type="button" class="btn btn-success"> <a href="{% url 'revison_complate' i.id %}" style="color: white !important;">Ha</a> </button>
-                                                        </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                        </td>
                                         <td>{{i.comment}}</td>
                                     </tr>
                                 {% endfor %}
@@ -120,65 +94,6 @@
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <form method="post" action="{% url 'revision_add' %}">
-        {% csrf_token %}
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label  class="col-form-label">Sana:</label>
-                    <input type="date" class="form-control" name="date" value="{{today|date:'Y-m-d'}}" required>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Foydalanuvchi:</label>
-                    <select name="user_profile" class="form-control">
-                        <option value="">--------------</option>
-                        {% for usr in user_profile %}
-                        <option value="{{usr.id}}">{{usr.username}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Filial:</label>
-                    <select name="filial" class="form-control" required>
-                        <option value="">--------------</option>
-                        {% for filial in filial %}
-                            <option value="{{filial.id}}">{{filial.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Valyuta:</label>
-                    <select name="valyuta" class="form-control" required>
-                        <option value="">--------------</option>
-                        {% for valyuta in valyuta %}
-                            <option value="{{valyuta.id}}">{{valyuta.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Narx Turi:</label>
-                    <select name="price_type" class="form-control" required>
-                        <option value="">--------------</option>
-                        {% for price_type in price_type %}
-                            <option value="{{price_type.id}}">{{price_type.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="col-form-label">Izoh:</label>
-                    <textarea class="form-control" name="comment"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                <button type="submit" class="btn btn-primary">Saqlash</button>
-            </div>
-        </div>
-    </form>
-  </div>
 </div>
 {% endblock content %}
 {% block js %}

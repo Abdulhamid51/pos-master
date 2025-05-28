@@ -275,6 +275,14 @@ urlpatterns = [
     path('todays_practices', todays_practices, name='todays_practices'),
 
     path('reviziya', reviziya, name='reviziya'),
+    path('revision_add', revision_add, name='revision_add'),
+    path('revision_detail/<int:id>', revision_detail, name='revision_detail'),
+    path('revision_item_add/<int:id>', revision_item_add, name='revision_item_add'),
+    path('revison_complate/<int:id>', revison_complate, name='revison_complate'),
+
+    path('revision_complate', revision_complate, name='revision_complate'),
+    path('revision_complate_items/<int:id>', revision_complate_items, name='revision_complate_items'),
+
 
 
 ]

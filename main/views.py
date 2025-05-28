@@ -3886,6 +3886,10 @@ def chiqim_qilish(request):
             chiqim.payhistory=pay
             deb = Debtor.objects.get(id=debtor)
             deb.refresh_debt()
+            text = 'Pul olindi \n'
+            text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
+            chat_id = deb.tg_id
+            send_message(chat_id, text)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
@@ -4145,16 +4149,13 @@ def kirim_qilish(request):
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
             deb = Debtor.objects.get(id=debtor)
-            deb = Debtor.objects.get(id=debtor)
             deb.refresh_debt()
             text = 'Pul olindi \n'
-            text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name} \n'
-            text += f'💸 Dollar kursi {intcomma(kirim.currency) }\n'
-            text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}\n"
+            text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
+            text += f'💸 {intcomma(kirim.currency) }'
+            text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
             if kirim.izox:
                 text += f'💬 {kirim.izox}'
-
-            text += "\n\n Agar summa notogri bolsa, iltimos, ⛔ bekor qilish tugmasini bosing."
             chat_id = deb.tg_id
             send_kirim_message(chat_id, text, kirim.id)
         
@@ -9472,43 +9473,156 @@ def reviziya(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     filial = request.GET.get('filial')
+    today = datetime.now().date()
     filters = {
         'start_date':start_date,
         'end_date':end_date,
         'filial':filial,
     }
-    data = []
-    if start_date and end_date and filial:
-        product = ProductFilial.objects.filter(filial_id=filial)
+    revision = Revision.objects.filter(is_completed=False)
 
-        recieve_data = RecieveItem.objects.filter(
-            recieve__date__date__range=(start_date, end_date),
-            recieve__filial_id=filial
-        ).values('product_id').annotate(
-            recieve_quantity=Coalesce(Sum('quantity'), 0)
-        )
-
-        cart_data = Cart.objects.filter(
-            shop__date__date__range=(start_date, end_date),
-            shop__filial__id=filial
-        ).values('product_id').annotate(
-            cart_quantity=Coalesce(Sum('quantity'), 0)
-        )
-        recieve_dict = {item['product_id']: item['recieve_quantity'] for item in recieve_data}
-        cart_dict = {item['product_id']: item['cart_quantity'] for item in cart_data}
-
-        for i in product:
-            dt = {
-                'name': i.name,
-                'quantity': i.quantity,
-                'recieve_quantity': recieve_dict.get(i.id, 0),
-                'cart_quantity': cart_dict.get(i.id, 0),
-            }
-            data.append(dt)
+    if start_date and end_date:
+        revision = revision.filter(date__range=(start_date, end_date))
+    if filial:
+        revision = revision.filter(filial_id=filial)
 
     context = {
-        'data': data,
+        'revision': revision,
+        'today':today,
         'filters':filters,
         'filial': Filial.objects.filter(is_activate=True),
+        'price_type': PriceType.objects.filter(is_activate=True),
+        'valyuta':Valyuta.objects.all(),
+        'user_profile':UserProfile.objects.all(),
     }
     return render(request, 'reviziya.html', context)
+
+
+def revision_complate(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    filial = request.GET.get('filial')
+    today = datetime.now().date()
+    filters = {
+        'start_date':start_date,
+        'end_date':end_date,
+        'filial':filial,
+    }
+    revision = Revision.objects.filter(is_completed=True)
+
+    if start_date and end_date:
+        revision = revision.filter(date__range=(start_date, end_date))
+    if filial:
+        revision = revision.filter(filial_id=filial)
+
+    context = {
+        'revision': revision,
+        'today':today,
+        'filters':filters,
+    }
+    return render(request, 'revision_complate.html', context)
+
+def revision_complate_items(request ,id):
+    revision = Revision.objects.get(id=id)
+    item = RevisionItems.objects.filter(revision=revision)
+    totals = {
+        'quantity':item.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
+        'arrival_price':item.aggregate(all=Coalesce(Sum(F('quantity') * F('arrival_price')), 0, output_field=IntegerField()))['all'],
+        'selling_price':item.aggregate(all=Coalesce(Sum(F('quantity') * F('selling_price')), 0, output_field=IntegerField()))['all'],
+    }
+    context = {
+        'item': item,
+        'totals':totals,
+    }
+    return render(request, 'revision_complate_items.html', context)
+
+def revision_add(request):
+    date = request.POST.get('date')
+    user_profile = request.POST.get('user_profile')
+    filial = request.POST.get('filial')
+    valyuta = request.POST.get('valyuta')
+    comment = request.POST.get('comment')
+    price_type = request.POST.get('price_type')
+    Revision.objects.create(
+        date=date,
+        user_profile_id=user_profile,
+        filial_id=filial,
+        valyuta_id=valyuta,
+        comment=comment,
+        price_type_id=price_type,
+    )
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def revision_detail(request, id):
+    revision = Revision.objects.select_related('filial').get(id=id)
+
+    products = ProductFilial.objects.filter(filial=revision.filial).select_related('filial')
+
+    product_ids = products.values_list('id', flat=True)
+
+    price_types = {
+        p.product_id: p for p in ProductPriceType.objects.filter(
+            product_id__in=product_ids,
+            valyuta=revision.valyuta,
+            type=revision.price_type,
+        ).order_by('product_id', '-id')
+    }
+
+    bring_prices = {
+        b.product_id: b for b in ProductBringPrice.objects.filter(
+            product_id__in=product_ids,
+            valyuta=revision.valyuta
+        ).order_by('product_id', '-id')
+    }
+
+    data = []
+    for i in products:
+        price_type = price_types.get(i.id)
+        bring_price = bring_prices.get(i.id)
+        dt = {
+            'id': i.id,
+            'name': i.name,
+            'quantity': i.quantity,
+            'kelish_narx': price_type.price if price_type else 0,
+            'sotish_narx': bring_price.price if bring_price else 0,
+        }
+        data.append(dt)
+
+    context = {
+        'revision': revision,
+        'product': data,
+        'item':RevisionItems.objects.filter(revision=revision)
+    }
+    return render(request, 'revision_detail.html', context)
+
+
+def revision_item_add(request, id):
+    data = json.loads(request.body)
+    print(data)
+    revision = Revision.objects.get(id=id)
+    for i in data:
+        if i['quantity'] > 0:
+            RevisionItems.objects.create(
+                revision=revision,
+                product_id=i['id'],
+                quantity=i['quantity'],
+                arrival_price=i['kelish_narx'],
+                selling_price=i['sotish_narx'],
+            )
+    revision.status = 2
+    revision.save()
+    return redirect('reviziya')
+
+
+def revison_complate(request, id):
+    revision = Revision.objects.get(id=id)
+    item = RevisionItems.objects.filter(revision=revision)
+    for i in item:
+        i.product.quantity = i.quantity 
+        i.product.save()
+    revision.is_completed = True
+    revision.save()
+    return redirect(request.META['HTTP_REFERER'])
+    

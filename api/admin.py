@@ -67,6 +67,8 @@ admin.site.register(KassaMerge)
 # admin.site.register(CustomerDebt)
 admin.site.register(RejaChiqim)
 admin.site.register(MainTool)
+admin.site.register(Revision)
+admin.site.register(RevisionItems)
 
 @admin.register(RejaTushum)
 class RejaTushumAdmin(ExportActionMixin, admin.ModelAdmin):

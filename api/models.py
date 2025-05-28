@@ -2601,3 +2601,32 @@ class MainTool(models.Model):
 
     class Meta:
         verbose_name_plural = 'Asossiy Vosita'
+
+
+
+class Revision(models.Model):
+    date = models.DateField()
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    filial = models.ForeignKey(Filial, on_delete=models.CASCADE)
+    status = models.IntegerField(choices=((1, 'new'), (2, 'completed')), default=1)
+    is_completed = models.BooleanField(default=False)
+    comment = models.TextField(null=True, blank=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    price_type = models.ForeignKey(PriceType, on_delete=models.CASCADE, null=True, blank=True)
+    summa = models.IntegerField(default=0)
+
+
+class RevisionItems(models.Model):
+    revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=0)
+    arrival_price = models.IntegerField(default=0, verbose_name='Kelish narx')
+    selling_price = models.IntegerField(default=0, verbose_name='Sotish narx')
+
+
+    @property
+    def total_arrival_price(self):
+        return self.arrival_price * self.quantity
+    @property
+    def total_selling_price(self):
+        return self.selling_price * self.quantity
