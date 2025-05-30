@@ -7203,11 +7203,16 @@ def money_circulation_delete(request, id):
 def write_off(request):
     write_off = WriteOff.objects.filter(is_activate=True)
     today = datetime.now()
+
+    totals = {
+
+    }
     
     context = {
         'today':today,
         'write_off':write_off,
         'ombor':Filial.objects.all(),
+        'valyutas':Valyuta.objects.all(),
         'money': MoneyCirculation.objects.filter(is_delete=False),
         'products': ProductFilial.objects.all(),
         'write_off_item': WriteOffItem.objects.all(),
@@ -7220,6 +7225,45 @@ def write_off(request):
         context['active_id'] = active_id
 
     return render(request, 'write_off.html', context)
+
+# def write_off(request):
+#     write_off = WriteOff.objects.filter(is_activate=True)
+#     today = datetime.now()
+#     write_off_item = WriteOffItem.objects.all()
+
+#     # price_totals = []
+#     # total_price_totals = []
+
+#     # for i in write_off_item:
+#     #     price_totals.append()
+#     # for valyuta in valyutas:
+#     #     total = 0
+#     #     for item in write_off_item:
+#     #         price_obj = item.prices.filter(valyuta=valyuta).last()
+#     #         if price_obj:
+#     #             total += price_obj.price * item.quantity
+#     #     totals.append({
+#     #         'valyuta': valyuta,
+#     #         'total': total
+#     #     })
+
+    
+#     context = {
+#         'today':today,
+#         'write_off':write_off,
+#         'ombor':Filial.objects.all(),
+#         'valyutas':Valyuta.objects.all(),
+#         'money': MoneyCirculation.objects.filter(is_delete=False),
+#         'products': ProductFilial.objects.all(),
+#         'write_off_item': WriteOffItem.objects.all(),
+#         'active_one':'',
+#     }
+#     active_id = request.GET.get('active')
+#     if active_id and WriteOff.objects.filter(id=active_id):
+#         context['active_one'] = WriteOff.objects.get(id=active_id)
+#         context['active_id'] = active_id
+
+#     return render(request, 'write_off.html', context)
 
 def write_off_add(request):
     number = request.POST.get('number')
@@ -7341,7 +7385,7 @@ def deliver_return_add(request):
     # som = request.POST.get('som')
     # dollar = request.POST.get('dollar')
     date = request.POST.get('date')
-    valyuta = request.POST.get('valyuta')
+    # valyuta = request.POST.get('valyuta')
     kurs =Course.objects.last()
 
     ReturnProductToDeliver.objects.create(
@@ -7350,7 +7394,7 @@ def deliver_return_add(request):
         # som=som,
         # dollar=dollar,
         date=date,
-        valyuta_id=valyuta,
+        # valyuta_id=valyuta,
         kurs=kurs.som if kurs else 0,
 
     )
@@ -7359,15 +7403,16 @@ def deliver_return_add(request):
 def deliver_return_item_add(request):
     returnproduct = request.POST.get('returnproduct')
     product = request.POST.get('product_filial')
-    quantity = float(request.POST.get('quantity').replace(',', '.'))
+    quantity = int(request.POST.get('quantity'))
     som = int(request.POST.get('som') or 0)
     dollar = int(request.POST.get('dollar') or 0)
     ReturnProductToDeliverItem.objects.create(
         returnproduct_id=returnproduct,
         product_id=product,
-        som=som,
-        dollar=dollar,
+        summa=summa,
+        # dollar=dollar,
         quantity=quantity,
+        valyuta_id=valyuta
     )
     pr = ProductFilial.objects.get(id=product)
     pr.quantity -= int(quantity)
@@ -7384,7 +7429,7 @@ def deliver_return_item_del(request, id):
 
 def deliver_return_item_edit(request, id):
     item = ReturnProductToDeliverItem.objects.get(id=id)
-    quantity = float(request.POST.get('quantity').replace(',', '.'))
+    quantity = int(request.POST.get('quantity'))
     som = int(request.POST.get('som'))
     dollar = int(request.POST.get('dollar'))
     sum = quantity - item.quantity 
@@ -7392,8 +7437,8 @@ def deliver_return_item_edit(request, id):
     pr.quantity -= int(sum)
     pr.save()
     item.quantity = quantity
-    item.som = som
-    item.dollar = dollar
+    item.summa = summa
+    item.valyuta_id = valyuta
     item.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -7436,6 +7481,7 @@ def deliver_return_exit(request, id):
     r = ReturnProductToDeliver.objects.get(id=id)
     r.is_activate = False
     r.save()
+    r.deliver.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 
