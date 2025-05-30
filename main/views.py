@@ -4153,7 +4153,7 @@ def kirim_qilish(request):
             text = 'Pul olindi \n'
             text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
             text += f'💸 {intcomma(kirim.currency) }'
-            text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
+            text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}"
             if kirim.izox:
                 text += f'💬 {kirim.izox}'
             chat_id = deb.tg_id
