@@ -4151,7 +4151,7 @@ def kirim_qilish(request):
             deb.refresh_debt()
             text = 'Pul olindi \n'
             text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
-            text += f'💸 {intcomma(kirim.currency) }'
+            text += f'💸 {intcomma(kirim.currency)}'
             text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
             if kirim.izox:
                 text += f'💬 {kirim.izox}'
