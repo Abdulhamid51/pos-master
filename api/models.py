@@ -597,6 +597,11 @@ class ProductCategory(models.Model):
     
 from django.db.models import Sum, F, Value, FloatField
 
+class MeasurementType(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
 class ProductFilial(models.Model):
     deliver = models.ManyToManyField(Deliver, related_name='products1', blank=True)
     measure = [
@@ -606,6 +611,7 @@ class ProductFilial(models.Model):
         ('metr', 'metr')
     ]
     name = models.CharField(max_length=255)
+    measurement_type = models.ForeignKey(MeasurementType, on_delete=models.CASCADE, null=True, blank=True)
     preparer = models.CharField(max_length=255, default="")
     som = models.IntegerField(default=0) #kelish narxi
     sotish_som = models.IntegerField(default=0) #sotish narxi
@@ -620,8 +626,8 @@ class ProductFilial(models.Model):
     min_count = models.IntegerField(default=0)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
     # filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
-    quantity = models.IntegerField(default=0)
-    start_quantity = models.IntegerField(default=0)
+    quantity = models.FloatField(default=0)
+    start_quantity = models.FloatField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     distributsiya = models.IntegerField(default=0)
@@ -814,9 +820,9 @@ class RecieveItem(models.Model):
     dollar = models.IntegerField(default=0)
     sotish_dollar = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
-    quantity = models.IntegerField(default=0)
+    quantity = models.FloatField(default=0)
     old_prices = models.JSONField(blank=True, null=True)
-    old_quantity = models.IntegerField(default=0)
+    old_quantity = models.FloatField(default=0)
     old_sotish_som = models.IntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -1149,9 +1155,9 @@ class Cart(models.Model):
     bring_price = models.FloatField(default=0)
     after_cart = models.FloatField(default=0)
     price_without_skidka = models.IntegerField(default=0)
-    price = models.IntegerField(default=0)
-    quantity = models.IntegerField(default=0)
-    total = models.IntegerField(blank=True, null=True)
+    price = models.FloatField(default=0)
+    quantity = models.FloatField(default=0)
+    total = models.FloatField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
     applied = models.BooleanField(default=False)
     skidka_total = models.IntegerField(default=0)
@@ -1185,7 +1191,7 @@ class Cart(models.Model):
     
     @property
     def total_price(self):
-        return self.quantity * self.price
+        return float(self.quantity) * float(self.price)
 
     @property
     def for_call_center(self):
@@ -1204,9 +1210,9 @@ class Cart(models.Model):
         for i in employes:    
             obj, created = FlexPrice.objects.get_or_create(user_profile=i, sana=self.date.date())
             if i.staff == 3:
-                obj.total = Cart.objects.filter(shop__saler__staff=3, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0))['all']
+                obj.total = Cart.objects.filter(shop__saler__staff=3, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all']
             if i.staff == 6:
-                obj.total = Cart.objects.filter(shop__call_center=i.username, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0))['all']
+                obj.total = Cart.objects.filter(shop__call_center=i.username, date__date=self.date.date()).aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all']
             
             obj.save()
         
@@ -2335,6 +2341,7 @@ class WriteOff(models.Model):
     kurs = models.FloatField(default=0)
     money_type = models.ForeignKey(MoneyCirculation, on_delete=models.CASCADE, null=True, blank=True)
     product_filial = models.ForeignKey(Filial, on_delete=models.CASCADE, null=True, blank=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     izoh = models.TextField(default="")
     is_activate = models.BooleanField(default=True)
 
@@ -2619,9 +2626,10 @@ class Revision(models.Model):
 class RevisionItems(models.Model):
     revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0)
-    arrival_price = models.IntegerField(default=0, verbose_name='Kelish narx')
-    selling_price = models.IntegerField(default=0, verbose_name='Sotish narx')
+    old_quantity = models.FloatField(default=0)
+    quantity = models.FloatField(default=0)
+    arrival_price = models.FloatField(default=0, verbose_name='Kelish narx')
+    selling_price = models.FloatField(default=0, verbose_name='Sotish narx')
 
 
     @property

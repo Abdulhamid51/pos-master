@@ -197,7 +197,7 @@ class ShopAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
 
     def all_count(self, obj):
-        return Cart.objects.select_related('shop', 'shop__saler').filter(shop=obj).distinct().aggregate(all=Coalesce(Sum('quantity'), 0))['all']
+        return Cart.objects.select_related('shop', 'shop__saler').filter(shop=obj).distinct().aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all']
 
 
 @admin.register(Cart)

@@ -68,7 +68,7 @@
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
                                         <td> <a href="{% url 'revision_detail' i.id%}">{{ i.date|date:'Y-m-d' }}</a></td>
-                                        <td>{{ i.user_profile}}</td>
+                                        <td>{{ i.user_profile.username}}</td>
                                         <td>{{ i.filial.name }}</td>
                                         <td>
                                             {% if i.status == 1 %}

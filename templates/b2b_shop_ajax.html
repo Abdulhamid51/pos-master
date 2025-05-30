@@ -689,12 +689,12 @@
             const queryText = document.getElementById('query_select_product_name');
             const recipient_name = document.getElementById('recipient-name');
             
-
+            console.log(modalButton)
             let lastQuery = ""; 
 
             selectizeInstance.on('type', function (query) {
                 lastQuery = query;
-
+                console.log(lastQuery)
                 if (query && selectizeInstance.currentResults.items.length === 0) {
                     console.log("🆕 Hech nima topilmadi, tugma ochildi!");
                     modalButton.style.display = 'block';
@@ -703,7 +703,7 @@
 
                     queryText.textContent = `🛒 "${query}" maxsulotni qo'shmoqchimisiz? + tugmasini bosing`;
 
-                    recipient_name.value = query
+                    recipient_name.value = lastQuery
 
                 } else {
                     console.log("✅ Natija topildi, tugma yashirildi!");
@@ -830,7 +830,7 @@
                         },
                         success: function(response) {
                             showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                            window.location.replace('/b2b_shop');
+                            // window.location.replace('/b2b_shop');
                         },
                         error: function () {
                             showAlert("Server bilan bog'lanishda xatolik3", "danger");
@@ -855,7 +855,7 @@
                             },
                             success: function(response) {
                                 // showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                                window.location.replace('/b2b_shop');
+                                // window.location.replace('/b2b_shop');
 
                             },
                             error: function () {

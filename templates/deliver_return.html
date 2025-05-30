@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load static %}
+{% load custom_filters %}
+
 {% block title %}
     <title>Qabul | Bordo</title>
 {% endblock title %}
@@ -195,7 +197,7 @@
                                                                                     <td>{{ item.product }}</td>
                                                                                     <td class="text-right"> {{ item.dollar|intcomma }} $</td>
                                                                                     <td class="text-right">{{ item.som|intcomma }} som</td>
-                                                                                    <td class="text-right">{{ item.quantity|floatformat:0|intcomma }}</td>
+                                                                                    <td class="text-right">{{ item.quantity|floatformat:1|intcomma }}</td>
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
                                                                                 </tr>
@@ -250,7 +252,7 @@
                               <input type="hidden" name="product_filial" id="recieve_item_add_product_id" class="form-control">
 
                               <label for="">Miqdori</label>
-                              <input type="number" name="quantity" class="form-control" required>
+                              <input type="number" step="any" name="quantity" class="form-control" required>
                               <label for="">Som</label>
                               <input type="number" id="recieve_item_add_som" name="som" class="form-control">
                               <label for="">Dollar</label>
@@ -301,7 +303,8 @@
                             <div class="modal-body" >
                                 <div class="form-group">
                                     <label for="">Miqdori</label>
-                                    <input type="number" value="{{ item.quantity|floatformat:0 }}" name="quantity" class="form-control">
+                                    <input type="number" step="any" value="{{ item.quantity|comma_to_dot }}" name="quantity" class="form-control">
+
                                 </div>
                                 <div class="form-group">
                                     <label for="">Som</label>

@@ -21,6 +21,9 @@
             z-index: 1050;
             width: 30rem;
         }
+        th {
+            border-bottom: 1px solid blue !important;
+        }
     </style>
 {% endblock css %}
 {% block content %}
@@ -30,18 +33,7 @@
     <div class="layout-px-spacing">
         <div class="middle-content container-xxl p-0">
             <div class="row layout-top-spacing">
-                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                    <div id="alert-container"></div>
-
-                    <div class="widget-content widget-content-area br-8">
-                         <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
-                                <option value="">Mahsulotni tanlang</option>
-                                {% for i in product %}
-                                    <option value="{{ i.id }}|{{i.quantity}}|{{i.kelish_narx}}|{{i.sotish_narx}}" >{{ i.name }}</option>
-                                {% endfor %}
-                        </select>
-                    </div>
-                </div>
+                <div id="alert-container"></div>
               <script>
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -76,10 +68,48 @@
                             <td class="kelish_itog_td"></td>
                             <td class="sotish_narx_td">${sotish_narx}</td>
                             <td class="sotish_itog_td"></td>
+                            <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
                     `;
                     tbody.insertAdjacentHTML('beforeend', newRow);
                 }
+                
+                function DelTbody(item) {
+                    const tr = item.closest('tr');
+                    const productId = tr.querySelector('.product_name').dataset.product_id;
+
+                    tr.remove();
+
+                    const index = data.findIndex(el => el.id === productId);
+                    if (index !== -1) {
+                        data.splice(index, 1);
+                    }
+
+                    updateTotals();
+                    console.log(data)
+                }
+                function updateTotals() {
+                        let jami_miqdor = 0;
+                        let jami_kelish_itog = 0;
+                        let jami_sotish_itog = 0;
+
+                        const allRows = document.querySelectorAll('#zero-config tbody tr');
+                        allRows.forEach(row => {
+                            const qty_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                            const kelish_narx = parseFloat(row.querySelector('.kelish_narx_td').textContent) || 0;
+                            const sotish_narx = parseFloat(row.querySelector('.sotish_narx_td').textContent) || 0;
+
+                            jami_miqdor += qty_input;
+                            jami_kelish_itog += qty_input * kelish_narx;
+                            jami_sotish_itog += qty_input * sotish_narx;
+                        });
+
+                        document.getElementById('total_miqdor').textContent = jami_miqdor.toFixed(2);
+                        document.getElementById('total_kelish_itog').textContent = jami_kelish_itog.toFixed(2);
+                        document.getElementById('total_sotish_itog').textContent = jami_sotish_itog.toFixed(2);
+                    }
+
+
                 function pushData(item) {
                     const item_tr = item.closest('tr');
                     const item_product_id = item_tr.querySelector('.product_name').dataset.product_id;
@@ -106,9 +136,9 @@
                     if (item_input_quantity === 0) {
                         item_status_td.innerHTML = '';
                     } else if (item_input_quantity === item_quantity_td) {
-                        item_status_td.innerHTML = '<button class="btn btn-success"></button>';
-                    } else if (item_input_quantity < item_quantity_td && item_input_quantity != 0) {
                         item_status_td.innerHTML = '<button class="btn btn-warning"></button>';
+                    } else if (item_input_quantity < item_quantity_td && item_input_quantity != 0) {
+                        item_status_td.innerHTML = '<button class="btn btn-success"></button>';
                     } else if (item_input_quantity > item_quantity_td) {
                         item_status_td.innerHTML = '<button class="btn btn-danger"></button>';
                     }
@@ -124,22 +154,35 @@
                     let jami_miqdor = 0;
                     let jami_kelish_itog = 0;
                     let jami_sotish_itog = 0;
-                    let jami_total_ombor_qoldik= 0;
-
+                    let jami_ombor_qoldik = 0;
                     const allRows = document.querySelectorAll('#zero-config tbody tr');
                     allRows.forEach(row => {
                         const qty_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
                         const kelish_narx = parseFloat(row.querySelector('.kelish_narx_td').textContent) || 0;
                         const sotish_narx = parseFloat(row.querySelector('.sotish_narx_td').textContent) || 0;
 
-                        jami_total_ombor_qoldik+=parseFloat(row.querySelector('.quantity_td').textContent) || 0;
+                        const ombor_qoldik = parseFloat(row.querySelector('.quantity_td').textContent) || 0;
+                        jami_ombor_qoldik+=ombor_qoldik
                         jami_miqdor += qty_input;
                         jami_kelish_itog += qty_input * kelish_narx;
                         jami_sotish_itog += qty_input * sotish_narx;
                     });
 
+                    document.getElementById('total_rows').innerHTML = '';
+                    let rows = `
+                                <div class="col-md-4">
+                                    Miqdor : <p id="total_miqdor" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    Kelish itog: <p  id="total_kelish_itog" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
+                                </div>
+                                <div class="col-md-4">
+                                    Sotish itog : <p id="total_sotish_itog" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
+                                </div>
+                            `;
+                    document.getElementById('total_rows').insertAdjacentHTML('beforeend', rows);
+      
                     document.getElementById('total_miqdor').textContent = jami_miqdor.toFixed(2);
-                    // document.getElementById('total_ombor_qoldik').textContent = jami_total_ombor_qoldik
                     document.getElementById('total_kelish_itog').textContent = jami_kelish_itog.toFixed(2);
                     document.getElementById('total_sotish_itog').textContent = jami_sotish_itog.toFixed(2);
 
@@ -184,46 +227,75 @@
                 
                 <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
                     <div class="widget-content widget-content-area br-8">
-                        <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>Maxsulot</th>
-                                    <th>Miqdor</th>
-                                    <th>Ombor qoldigi</th>
-                                    <th>Status</th>
-                                    <th>Kelish narxi</th>
-                                    <th>Kelish itog</th>
-                                    <th>Sotish narxi</th>
-                                    <th>Sotish itog</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                   {% for i in item %}
-                                   <tr>
-                                        <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
-                                        <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" value="{{i.quantity}}" oninput="pushData(this)"></td>
-                                        <td class="quantity_td">{{ i.product.quantity }}</td>
-                                        <td class="status_td"></td>
-                                        <td class="kelish_narx_td">{{i.arrival_price }}</td>
-                                        <td class="kelish_itog_td">{{i.total_arrival_price}}</td>
-                                        <td class="sotish_narx_td">{{ i.selling_price }}</td>
-                                        <td class="sotish_itog_td">{{i.total_selling_price}}</td>
-                                    </tr>
-                                   {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Jami</th>
-                                    <th id="total_miqdor"></th>
-                                    <th id="total_ombor_qoldik"></th>
-                                    <th></th>
-                                    <th> </th>
-                                    <th id="total_kelish_itog"></th>
-                                    <th></th>
-                                    <th id="total_sotish_itog"></th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Maxsulot</th>
+                                            <th>Miqdor</th>
+                                            <th>Ombor qoldigi</th>
+                                            <th>Status</th>
+                                            <th>Kelish narxi</th>
+                                            <th>Kelish itog</th>
+                                            <th>Sotish narxi</th>
+                                            <th>Sotish itog</th>
+                                            <th>Ochirish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in item %}
+                                        <tr>
+                                                <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
+                                                <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" value="{{i.quantity}}" oninput="pushData(this)"></td>
+                                                <td class="quantity_td">{{ i.product.quantity }}</td>
+                                                <td class="status_td"></td>
+                                                <td class="kelish_narx_td">{{i.arrival_price }}</td>
+                                                <td class="kelish_itog_td">{{i.total_arrival_price}}</td>
+                                                <td class="sotish_narx_td">{{ i.selling_price }}</td>
+                                                <td class="sotish_itog_td">{{i.total_selling_price}}</td>
+                                                <td></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th></th>
+                                                <th ></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th> </th>
+                                                <th ></th>
+                                                <th></th>
+                                                <th ></th>
+                                                <th></th>
+                                            </tr>
+                                            
+                                        </tfoot>
+                                </table>
+                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
+                                        <option value="">Mahsulotni tanlang</option>
+                                        {% for i in product %}
+                                            <option value="{{ i.id }}|{{i.quantity}}|{{i.kelish_narx}}|{{i.sotish_narx}}" >{{ i.name }}</option>
+                                        {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                            </div>
+                            <div class="col-md-5">
+                                <div class="row" id="total_rows">
+                                    <div class="col-md-3">
+                                        Miqdor: <p id="total_miqdor"></p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        Kelish itog: <p id="total_kelish_itog"></p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        Sotish itog: <p id="total_sotish_itog"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-11"></div>
