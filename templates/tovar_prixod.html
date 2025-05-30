@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load static %}
+{% load custom_filters %}
+
 {% block title %}
     <title>Qabul | Bordo</title>
 {% endblock title %}
@@ -235,9 +237,9 @@
                                                                                     <td class="text-right">{{ item.som|intcomma }}</td>
                                                                                     <td class="text-right">{{ item.sotish_som|intcomma }}</td>
                                                                                     <!-- <td class="text-right">{{ item.kurs|intcomma }}</td> -->
-                                                                                    <td class="text-right">{{ item.quantity|floatformat:0|intcomma }}</td>
-                                                                                    <td class="text-right">{{ item.total_som|floatformat:0|intcomma }}</td>
-                                                                                    <td class="text-right">{{ item.total_sotish_som|floatformat:0|intcomma }}</td>
+                                                                                    <td class="text-right">{{ item.quantity|floatformat:1|intcomma }}</td>
+                                                                                    <td class="text-right">{{ item.total_som|floatformat:1|intcomma }}</td>
+                                                                                    <td class="text-right">{{ item.total_sotish_som|floatformat:1|intcomma }}</td>
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
                                                                                 </tr>
@@ -320,7 +322,8 @@
                                   <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
                                  
                                   <label for="">Miqdori</label>
-                                  <input type="number" name="quantity" class="form-control">
+                                  <input type="number" step="any"  name="quantity" class="form-control">
+
       
                                   <label for="">Kelish narx</label>
                                   <input id="recieve_item_add_recieve_som" type="number" name="som" class="form-control">
@@ -463,7 +466,7 @@
                                         <input type="hidden" name="item" value="{{item.id}}">
                                         
                                         <label for="">Miqdori</label>
-                                        <input type="number" value="{{ item.quantity }}" name="quantity" class="form-control">
+                                        <input type="number" step="any" value="{{ item.quantity|comma_to_dot }}" name="quantity" class="form-control">
             
                                         <label for="">Kelish narx</label>
                                         <input value="{{item.som}}" type="number" name="som" class="form-control">

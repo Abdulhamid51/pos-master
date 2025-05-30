@@ -5279,9 +5279,9 @@ def add_recieve_item_view(request):
         product=product,
         quantity=quantity
     )
-    quantity = request.POST.get("quantity")
+    quantity = request.POST.get("quantity").replace(',','.')
     if quantity:
-        item.quantity = int(quantity)
+        item.quantity = float(quantity)
    
     for key, value in request.POST.items():
         if key.startswith("br_"):
@@ -5366,7 +5366,7 @@ def edit_recieve_item_view(request):
     
     quantity = request.POST.get("quantity")
     if quantity:
-        item.quantity = int(quantity)
+        item.quantity = float(quantity)
    
     for key, value in request.POST.items():
         if key.startswith("br_"):
@@ -6859,7 +6859,7 @@ def b2c_shop_detail(request, id):
 @csrf_exempt
 def b2c_shop_cart_add(request, id):
     product_id = request.POST.get('product_id')  
-    quantity = int(request.POST.get('quantity'))  
+    quantity = float(request.POST.get('quantity'))  
     agreed_price = request.POST.get('agreed_price')  
     product_price = request.POST.get('product_price')  
     shop = Shop.objects.get(id=id)
@@ -6870,9 +6870,9 @@ def b2c_shop_cart_add(request, id):
         shop=shop,
         product=product,
         quantity=quantity,
-        price=int(agreed_price),
+        price=float(agreed_price),
         price_without_skidka = product_price,
-        total=int(quantity) * int(agreed_price)
+        total=float(quantity) * float(agreed_price)
     )
     product.quantity -= quantity
     product.save()
@@ -6884,11 +6884,11 @@ def b2c_shop_cart_edit(request, id):
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
     product.quantity += cart_item.quantity
-    product.quantity -= int(quantity)
+    product.quantity -= float(quantity)
     if product.quantity < 0:
         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
     cart_item.quantity = quantity
-    cart_item.total = int(quantity) * cart_item.price
+    cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
     print(quantity)
@@ -7212,6 +7212,7 @@ def write_off(request):
         'money': MoneyCirculation.objects.filter(is_delete=False),
         'products': ProductFilial.objects.all(),
         'write_off_item': WriteOffItem.objects.all(),
+        'valyuta': Valyuta.objects.all(),
         'active_one':'',
     }
     active_id = request.GET.get('active')
@@ -7228,6 +7229,7 @@ def write_off_add(request):
     money_type = request.POST.get('money_type')
     product_filial = request.POST.get('product_filial')
     izoh = request.POST.get('izoh')
+    valyuta = request.POST.get('valyuta')
     WriteOff.objects.create(
         number=number,
         date_time=date_time,
@@ -7235,13 +7237,14 @@ def write_off_add(request):
         money_type_id=money_type,
         product_filial_id=product_filial,
         izoh=izoh,
+        valyuta_id=valyuta,
     )
     return redirect(request.META['HTTP_REFERER'])
 
 def write_off_item_add(request):
     write_off_id = request.POST.get('write_off_id')
     product_filial = request.POST.get('product_filial')
-    quantity = int(request.POST.get('quantity'))
+    quantity = float(request.POST.get('quantity').replace(',','.'))
     WriteOffItem.objects.create(
         write_off_id=write_off_id,
         product_id=product_filial,
@@ -7249,7 +7252,7 @@ def write_off_item_add(request):
     )
     pr = ProductFilial.objects.get(id=product_filial)
     # if pr.quantity >= quantity:
-    pr.quantity -= int(quantity)
+    pr.quantity -= float(quantity)
     pr.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -7262,11 +7265,11 @@ def write_off_delete(request, id):
     return redirect('write_off')
 
 def write_off_item_edit(request, id):
-    quantity = int(request.POST.get('quantity'))
+    quantity = float(request.POST.get('quantity').replace(',', ''))
     item =  WriteOffItem.objects.get(id=id)
     sum = quantity - item.quantity 
     pr = ProductFilial.objects.get(id=item.product.id)
-    pr.quantity -= int(sum)
+    pr.quantity -= float(sum)
     pr.save()
     item.quantity = quantity
     item.save()
@@ -7357,7 +7360,7 @@ def deliver_return_add(request):
 def deliver_return_item_add(request):
     returnproduct = request.POST.get('returnproduct')
     product = request.POST.get('product_filial')
-    quantity = int(request.POST.get('quantity'))
+    quantity = float(request.POST.get('quantity').replace(',', '.'))
     som = int(request.POST.get('som') or 0)
     dollar = int(request.POST.get('dollar') or 0)
     ReturnProductToDeliverItem.objects.create(
@@ -7382,7 +7385,7 @@ def deliver_return_item_del(request, id):
 
 def deliver_return_item_edit(request, id):
     item = ReturnProductToDeliverItem.objects.get(id=id)
-    quantity = int(request.POST.get('quantity'))
+    quantity = float(request.POST.get('quantity').replace(',', '.'))
     som = int(request.POST.get('som'))
     dollar = int(request.POST.get('dollar'))
     sum = quantity - item.quantity 
@@ -9470,19 +9473,18 @@ def todays_practices(request):
 
 
 def reviziya(request):
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    filial = request.GET.get('filial')
     today = datetime.now().date()
+    start_date = request.GET.get('start_date', today.replace(day=1))
+    end_date = request.GET.get('end_date', today)
+    filial = request.GET.get('filial')
     filters = {
-        'start_date':start_date,
-        'end_date':end_date,
+        'start_date':str(start_date),
+        'end_date':str(end_date),
         'filial':filial,
     }
     revision = Revision.objects.filter(is_completed=False)
 
-    if start_date and end_date:
-        revision = revision.filter(date__range=(start_date, end_date))
+    revision = revision.filter(date__range=(start_date, end_date))
     if filial:
         revision = revision.filter(filial_id=filial)
 
@@ -9626,3 +9628,26 @@ def revison_complate(request, id):
     revision.save()
     return redirect(request.META['HTTP_REFERER'])
     
+
+def measurement_type_list(request):
+    mesur = MeasurementType.objects.filter(is_active=True)
+    context = {
+        'mesur':mesur
+    }
+    return render(request, 'measurement_type_list.html', context)
+
+def measurement_type_add(request):
+    name = request.POST.get('name')
+    code = request.POST.get('code')
+    MeasurementType.objects.create(name=name, code=code)
+    return redirect(request.META['HTTP_REFERER'])
+
+def measurement_type_edit(request,id):
+    name = request.POST.get('name')
+    code = request.POST.get('code')
+
+    valyuta = MeasurementType.objects.get(id=id)
+    valyuta.name=name
+    valyuta.code=code
+    valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])

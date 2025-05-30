@@ -132,7 +132,7 @@ urlpatterns = [
     path('b2c_shop_add/', b2c_shop_add, name='b2c_shop_add'),
     path('b2c_shop_detail/<int:id>', b2c_shop_detail, name='b2c_shop_detail'),
     path('b2c_shop_cart_add/<int:id>', b2c_shop_cart_add, name='b2c_shop_cart_add'),
-    path('b2c_shop_cart_add/<int:id>', b2c_shop_cart_add, name='b2c_shop_cart_add'),
+    path('b2c_shop_cart_del/<int:id>', b2c_shop_cart_del, name='b2c_shop_cart_del'),
     path('b2c_shop_cart_edit/<int:id>', b2c_shop_cart_edit, name='b2c_shop_cart_edit'),
     path('b2c_shop_finish/<int:id>', b2c_shop_finish, name='b2c_shop_finish'),
     
@@ -283,6 +283,8 @@ urlpatterns = [
     path('revision_complate', revision_complate, name='revision_complate'),
     path('revision_complate_items/<int:id>', revision_complate_items, name='revision_complate_items'),
 
-
+    path('measurement_type_list', measurement_type_list, name='measurement_type_list'),
+    path('measurement_type_add', measurement_type_add, name='measurement_type_add'),
+    path('measurement_type_edit/<int:id>', measurement_type_edit, name='measurement_type_edit'),
 
 ]
