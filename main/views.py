@@ -3134,8 +3134,7 @@ def debtor_detail(request, id):
 
 
 
-def deliver_detail(request):
-    id = request.GET.get('d')
+def deliver_detail(request, id):
     valyuta = Valyuta.objects.all()
     debt_shot = Wallet.objects.filter(deliver_id=id)
     deliver = Deliver.objects.get(id=id)

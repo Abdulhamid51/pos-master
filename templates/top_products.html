@@ -90,9 +90,9 @@
                                             <tr class="qwerty" data-id="qwer{{productfilial.id}}" data-som="{{ productfilial.som }}">
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ dt.store }}</td>
-                                                <td class="intcomma">{{ dt.total_count|floatformat:'0' }}</td>
-                                                <td class="intcomma">{{ dt.total_price|floatformat:'0' }}</td>
-                                                <td class="intcomma">{{ dt.foyda|floatformat:'0' }}</td>
+                                                <td class="intcomma">{{ dt.total_count }}</td>
+                                                <td class="intcomma">{{ dt.total_price }}</td>
+                                                <td class="intcomma">{{ dt.foyda }}</td>
                                       
                                             </tr>
                                         {% endfor %}
