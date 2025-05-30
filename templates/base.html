@@ -586,8 +586,8 @@
 
                   
                     {% with url_name=request.resolver_match.url_name %}
-                    <li class="menu {% if url_name in 'measurement_type_list money_circulation price_type product_price_type nds_page hodim valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
-                        <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'measurement_type_list money_circulation price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
+                    <li class="menu {% if url_name in 'measurement_type_list money_circulation price_type product_price_type nds_page users_restrictions valyuta_list kassa_merge kassa_new_list' %}active{% endif %}">
+                        <a href="#narx-turi" data-toggle="collapse" aria-expanded="{% if url_name in 'measurement_type_list money_circulation price_type product_price_type filial_list nds_page users_restrictions valyuta_list kassa_merge kassa_new_list'  %}true{% endif %}" class="dropdown-toggle">
                             <div style="display: flex; align-items: center;">
                                 <i class="fa-solid fa-gear" style="font-size: 17px;"></i>
                                 <span style="margin-left: 10px;">Sozlamalar</span>
@@ -600,7 +600,7 @@
                                 </svg>
                             </div>
                         </a>
-                        <ul class="collapse submenu list-unstyled {% if url_name in 'measurement_type_list money_circulation price_type product_price_type filial_list nds_page hodim valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
+                        <ul class="collapse submenu list-unstyled {% if url_name in 'measurement_type_list money_circulation price_type product_price_type filial_list nds_page users_restrictions valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
                         id="narx-turi" data-parent="#accordionExample">
                             <li class="menu {% if request.resolver_match.url_name == 'measurement_type_list' %}active{% endif %}">
                                 <a href="{% url 'measurement_type_list' %}">O'lchov turlari</a>
@@ -618,8 +618,8 @@
                             </li>
                             {% endif %}
                             {% if custom_user_profile.is_kadrlar %} 
-                                <li class="menu {% if request.resolver_match.url_name == 'hodim' %}active{% endif %}">
-                                    <a href="{% url 'hodim' %}">Foydalanuvchilar</a>
+                                <li class="menu {% if request.resolver_match.url_name == 'users_restrictions' %}active{% endif %}">
+                                    <a href="{% url 'users_restrictions' %}">Foydalanuvchilar</a>
                                 </li>
                             {% endif %}
                             <li class="menu {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
