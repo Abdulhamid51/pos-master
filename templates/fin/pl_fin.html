@@ -116,6 +116,33 @@
                         </div>
                         <div class="col-lg-12">
                             <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <form class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <input type="number" class="form-control" value="{{year}}" name="year" id="yearInput" min="2000" max="2100" step="1" placeholder="Yil tanlang">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <select name="valyuta" class="form-control" id="">
+                                                
+                                                {% for i in valyutas %}
+                                                    <option value="{{i.id}}" 
+                                                    {% if valyuta_filter == i.id %}
+                                                        selected
+                                                    {% endif %}
+                                                        >{{i.name}}</option>
+                                                {% endfor %}
+                                                    
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-primary">Filterlash</button>
+                                        </div>
+                                    </div>
+                                </form>
                                 <div class="statbox widget box box-shadow">
                                     <div class="widget-content widget-content-area">
                                         <div class="table-responsive">
@@ -131,7 +158,10 @@
                                                         <th></th>
                                                         <th></th>
                                                         <th></th>
-                                                        <th> </th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th></th>
                                                         <th></th>
                                                         <th></th>
                                                     </tr>
@@ -145,21 +175,49 @@
                                                         <th>7 </th>
                                                         <th>8</th>
                                                         <th>9</th>
+                                                        <th>10</th>
+                                                        <th>11</th>
+                                                        <th>12</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody >
                                                         <tr>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td></td>
+                                                            <td>Tan narx - {{total_cost|intcomma}}</td>
+                                                            
+                                                            {% for i in cost_totals %}
+                                                                <td><strong>{{i|intcomma}}</strong></td>
+                                                            {% endfor %}
+                                                                
                                                         </tr>
+
+                                                        
+                                                            {% for i in categories %}
+                                                                <tr>
+                                                                    <td class="text-right">{{i}} ({{i.cost_percent}}%)</td>
+                                                                    
+                                                                    {% for m in i.cost_months %}
+                                                                        <td>{{ m|intcomma }}</td>
+                                                                    {% endfor %}
+                                                                </tr>
+                                                            {% endfor %}
+                                                                
+
+                                                        <tr>
+                                                            <td>Marja - {{total_marja|intcomma}}</td>
+                                                            {% for i in marja_totals %}
+                                                                <td><strong>{{i|intcomma}}</strong></td>
+                                                            {% endfor %}
+                                                        </tr>
+
+                                                        {% for i in categories %}
+                                                            <tr>
+                                                                <td class="text-right">{{i}} ({{i.percent}}%)</td>
+                                                                
+                                                                {% for m in i.months %}
+                                                                    <td>{{ m|intcomma }}</td>
+                                                                {% endfor %}
+                                                            </tr>
+                                                        {% endfor %}
                                                 </tbody>
                                             </table>
                                         </div>

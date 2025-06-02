@@ -4152,7 +4152,7 @@ def kirim_qilish(request):
             text = 'Pul olindi \n'
             text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
             text += f'💸 {intcomma(kirim.currency)}'
-            text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
+            # text += f'📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}'
             if kirim.izox:
                 text += f'💬 {kirim.izox}'
             chat_id = deb.tg_id
@@ -8186,7 +8186,55 @@ def sotuv_fin(request):
     return render(request, 'fin/sotuv_fin.html', context)
 
 def pl_fin(request):
+    year_filter = request.GET.get('year', '')
+    valyuta_filter = request.GET.get('valyuta_filter', Valyuta.objects.last().id)
+    if year_filter:
+        year = str(year_filter)
+    else:
+        year = datetime.now().year
+        
+    categories = ProductCategory.objects.all()
+    valyutas = Valyuta.objects.all()
+
+    allcart = Cart.objects.filter(shop__valyuta_id=valyuta_filter)
+
+    months = list(range(1, 13))
+
+    total_marja = allcart.filter(shop__date__year=year).aggregate(sum=Sum(F('price') - F('bring_price')))['sum'] or 0
+    marja_totals = [allcart.filter(shop__date__year=year, shop__date__month=m).aggregate(sum=Sum(F('price') - F('bring_price')))['sum'] or 0 for m in months]
+    for i in categories:
+        products = ProductFilial.objects.filter(category=i)
+        i.months = []
+        for m in months:
+            carts = allcart.filter(shop__date__year=year, shop__date__month=m, product__category=i)
+            total = carts.aggregate(sum=Sum(F('price') - F('bring_price')))['sum'] or 0
+            i.months.append(total)
+        i.percent = sum(i.months) / (total_marja if total_marja else 1) * 100
+
+    
+    total_cost = allcart.filter(shop__date__year=year).aggregate(sum=Sum(F('bring_price')))['sum'] or 0
+    cost_totals = [allcart.filter(shop__date__year=year, shop__date__month=m).aggregate(sum=Sum(F('bring_price')))['sum'] or 0 for m in months]
+
+    for i in categories:
+        products = ProductFilial.objects.filter(category=i)
+        i.cost_months = []
+        for m in months:
+            carts = allcart.filter(shop__date__year=year, shop__date__month=m, product__category=i)
+            total = carts.aggregate(sum=Sum(F('bring_price')))['sum'] or 0
+            i.cost_months.append(total)
+        i.cost_percent = sum(i.cost_months) / (total_cost if total_cost else 1) * 100
+
+
     context = {
+        'categories': categories,
+        'total_marja': total_marja,
+        'total_cost': total_cost,
+        'valyutas': valyutas,
+        'year': year,
+        'valyuta_filter': int(valyuta_filter),
+        'marja_totals': marja_totals,
+        'cost_totals': cost_totals,
+
     }
     return render(request, 'fin/pl_fin.html', context)
 
