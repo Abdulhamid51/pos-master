@@ -8186,13 +8186,12 @@ def sotuv_fin(request):
     return render(request, 'fin/sotuv_fin.html', context)
 
 def pl_fin(request):
-    year_filter = request.GET.get('year', '')
-    valyuta_filter = request.GET.get('valyuta_filter', Valyuta.objects.last().id)
-    if year_filter:
-        year = str(year_filter)
-    else:
-        year = datetime.now().year
-        
+    year_filter = request.GET.get('year', datetime.now().year)
+    last_valyuta = Valyuta.objects.last()
+    valyuta_filter = request.GET.get('valyuta', last_valyuta.id if last_valyuta else None)
+
+    year = str(year_filter)
+
     categories = ProductCategory.objects.all()
     valyutas = Valyuta.objects.all()
 
