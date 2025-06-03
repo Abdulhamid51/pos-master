@@ -203,9 +203,11 @@
                                         <a href="{% url 'b2b_shop' %}">B2B Savdo</a>
                                     </li>
                                 {% endif %}
+                                {% if custom_user_profile.is_bugungi_amaliyotlar %} 
                                 <li class="menu {% if request.resolver_match.url_name == 'todays_practices'%}active{% endif %}">
                                     <a href="{% url 'todays_practices' %}">Bugungi amaliyotlar</a>
                                 </li>
+                                {% endif %}
                                 
                             </ul>
                         </li>
@@ -227,14 +229,19 @@
                             </a>
                             <ul class="collapse submenu list-unstyled {% if url_name in 'reviziya revision_detail revision_complate revision_complate_items'  %}show{% endif %}" 
                             id="narx-Inventarizatsiya" data-parent="#accordionExample">
+                                {% if custom_user_profile.is_reviziya %} 
                                 
                                 <li class="menu {% if request.resolver_match.url_name == 'reviziya' or request.resolver_match.url_name == 'revision_detail'%}active{% endif %}">
                                     <a href="{% url 'reviziya' %}">Reviziya</a>
                                 </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_reviziya_tarixi %} 
                                   
                                 <li class="menu {% if request.resolver_match.url_name == 'revision_complate' or request.resolver_match.url_name == 'revision_complate_items'%}active{% endif %}">
                                     <a href="{% url 'revision_complate' %}">Tarix</a>
                                 </li>
+                                {% endif %}
+
                             </ul>
                         </li>
                     {% endwith %}
@@ -270,7 +277,7 @@
                                         <a href="{% url 'debtor' %}">Mijozlar qarzdorligi</a>
                                     </li>
                                 {% endif %}
-                                {% if custom_user_profile.is_mijozlar_qarzdorligi %} 
+                                {% if custom_user_profile.is_turli_shaxs %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'externalincomeuser' %}active{% endif %}">
                                         <a href="{% url 'externalincomeuser' %}">Turli shaxslar</a>
                                     </li>
@@ -357,10 +364,13 @@
                                 <li class="menu {% if request.resolver_match.url_name == 'deliver_return' %}active{% endif %}">
                                     <a href="{% url 'deliver_return' %}">Taminotchi Qaytuv</a>
                                 </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_taminotchi_qaytuv_tarix  %}
                                 <li class="menu {% if request.resolver_match.url_name == 'deliver_return_tarix' %}active{% endif %}">
                                     <a href="{% url 'deliver_return_tarix' %}">Taminotchi Tarix</a>
                                 </li>
-                            {% endif %}
+                                {% endif %}
                             </ul>
                         </li>
                     {% endwith %}
@@ -388,9 +398,12 @@
                                             <a href="{% url 'kassa' %}"> Kassa </a>
                                         </li>
                                     {% endif %}
+                                    {% if custom_user_profile.is_filial_kassalar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'filial_kassalar' %}active{% endif %}">
-                                        <a href="{% url 'kassa' %}"> Kassa Filial</a>
+                                        <a href="{% url 'filial_kassalar' %}"> Kassa Filial</a>
                                     </li>
+                                    {% endif %}
+
                                     {% if custom_user_profile.is_analiz_xarajatlar %} 
                                         <li class="menu {% if request.resolver_match.url_name == 'analysis_costs' %}active{% endif %}">
                                             <a href="{% url 'analysis_costs' %}"> Analiz Harajatlar </a>
@@ -602,15 +615,26 @@
                         </a>
                         <ul class="collapse submenu list-unstyled {% if url_name in 'measurement_type_list money_circulation price_type product_price_type filial_list nds_page users_restrictions valyuta_list kassa_merge kassa_new_list'  %}show{% endif %}" 
                         id="narx-turi" data-parent="#accordionExample">
+                            {% if custom_user_profile.is_measurement_type %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'measurement_type_list' %}active{% endif %}">
                                 <a href="{% url 'measurement_type_list' %}">O'lchov turlari</a>
                             </li>
+                            {% endif %}
+
+                            {% if custom_user_profile.is_price_type %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
                                 <a href="{% url 'price_type' %}">Narx Turi</a>
                             </li>
+                            {% endif %}
+
+                            {% if custom_user_profile.is_filial_list %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'filial_list' %}active{% endif %}">
                                 <a href="{% url 'filial_list' %}">Filial</a>
                             </li>
+                            {% endif %}
                             
                             {% if custom_user_profile.is_nds %} 
                             <li class="menu {% if request.resolver_match.url_name == 'nds_page' %}active{% endif %}">
@@ -622,18 +646,34 @@
                                     <a href="{% url 'users_restrictions' %}">Foydalanuvchilar</a>
                                 </li>
                             {% endif %}
+                            {% if custom_user_profile.is_valyuta %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
                                 <a href="{% url 'valyuta_list' %}">Valyuta</a>
                             </li>
+                            {% endif %}
+
+                            {% if custom_user_profile.is_kassa_merge %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'kassa_merge' %}active{% endif %}">
                                 <a href="{% url 'kassa_merge' %}">Kassa Biriktirish</a>
                             </li>
+                            {% endif %}
+
+                            {% if custom_user_profile.is_kassa_new %} 
+
                             <li class="menu {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
                                 <a href="{% url 'kassa_new_list' %}">Kassa</a>
                             </li>
-                              <li class="menu {% if request.resolver_match.url_name == 'money_circulation' %}active{% endif %}">
+                            {% endif %}
+
+                            {% if custom_user_profile.is_money_circulation %} 
+
+                            <li class="menu {% if request.resolver_match.url_name == 'money_circulation' %}active{% endif %}">
                                 <a href="{% url 'money_circulation' %}">Pul Muomalasi</a>
                             </li>
+                            {% endif %}
+
                         </ul>
                     </li>
                 {% endwith %}

@@ -134,6 +134,7 @@
                                                     <tr style="background-color: red;">
                                                         <th style="width: 60px;">Hisoblangan<br>summa</th>
                                                         <th >Manba</th>
+                                                        <th >Qaysi oy uchun</th>
                                                         <th >Oy</th>
                                                         <th>Yil</th>
                                                         <th>Status</th>
@@ -146,6 +147,7 @@
                                                     <tr>
                                                         <td>{{ i.plan_total|intcomma }}</td>
                                                         <td>{{ i.kassa.name }}</td>
+                                                        <td>{{ i.get_qaysi_oy_display }}</td>
                                                         <td style="text-align: center;">{{ i.date|date:'m' }}</td>
                                                         <td style="text-align: center;">{{ i.date|date:'y' }}</td>
                                                         <td>

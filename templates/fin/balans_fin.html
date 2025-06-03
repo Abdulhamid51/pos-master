@@ -133,9 +133,9 @@
                                                         <td colspan="100"></th>
                                                     </tr>
                                                     <tr >
-                                                        <td>Основные средства</td>
-                                                        {% for months in months %}
-                                                            <td>0</td>
+                                                        <td>Asosiy vosita</td>
+                                                        {% for main in main_tool_data %}
+                                                            <td>{{ main.sum|intcomma }}</td>
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="background-color: rgb(149, 148, 148); ">
@@ -168,7 +168,7 @@
                                                             <td>0</td>
                                                         {% endfor %}
                                                     </tr>
-
+                                                  
                                                     <tr style="background-color: rgb(60, 173, 221); ">
                                                         <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Деньги</td>
                                                         {% for months in months %}
@@ -183,7 +183,20 @@
                                                             {% endfor %}
                                                         </tr>
                                                     {% endfor %}
-                                                    
+                                                    <tr style="background-color: rgb(60, 173, 221); ">
+                                                        <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Majburiyat</td>
+                                                        {% for months in months %}
+                                                            <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">0</td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                     {% for  reja_chiqim_data in reja_chiqim_data %}
+                                                        <tr style="text-align: right;">
+                                                            <td>{{ reja_chiqim_data.valyuta_name }}</td>
+                                                            {% for x in reja_chiqim_data.month %}
+                                                                <td>{{ x.summa }}</td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    {% endfor %}
                                                     <tr style="text-align: right;">
                                                         <td>Нераспределенная Прибыль</td>
                                                         {% for product_data in product_data %}

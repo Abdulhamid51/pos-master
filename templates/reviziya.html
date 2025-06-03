@@ -56,9 +56,9 @@
                                     <th>Sana</th>
                                     <th>Foydalanuvchi</th>
                                     <th>Filial</th>
+                                    <th>Farqi</th>
+                                    <th>Farqi</th>
                                     <th>Status</th>
-                                    <th>Valyuta</th>
-                                    <th>Narx Turi</th>
                                     <th>Tasdiklash</th>
                                     <th>Izoh</th>
                                 </tr>
@@ -70,6 +70,16 @@
                                         <td> <a href="{% url 'revision_detail' i.id%}">{{ i.date|date:'Y-m-d' }}</a></td>
                                         <td>{{ i.user_profile.username}}</td>
                                         <td>{{ i.filial.name }}</td>
+                                        <td style="background-color: rgb(34, 255, 0); color: white !important;">
+                                            {% if i.farqi_ombor > 0 %}
+                                                {{ i.farqi_ombor }}
+                                            {% endif %}
+                                        </td>
+                                        <td style="background-color: red; color: white !important;">
+                                            {% if i.farqi_ombor < 0 %}
+                                                {{ i.farqi_ombor }}
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% if i.status == 1 %}
                                                 Yangi
@@ -77,8 +87,6 @@
                                                 Tasdiqlangan
                                             {% endif %}
                                         </td>
-                                        <td>{{i.valyuta.name}}</td>
-                                        <td>{{i.price_type.name}}</td>
                                         <td>
                                             {% if i.status == 1 %}
                                                 
@@ -146,24 +154,6 @@
                         <option value="">--------------</option>
                         {% for filial in filial %}
                             <option value="{{filial.id}}">{{filial.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Valyuta:</label>
-                    <select name="valyuta" class="form-control" required>
-                        <option value="">--------------</option>
-                        {% for valyuta in valyuta %}
-                            <option value="{{valyuta.id}}">{{valyuta.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label  class="col-form-label">Narx Turi:</label>
-                    <select name="price_type" class="form-control" required>
-                        <option value="">--------------</option>
-                        {% for price_type in price_type %}
-                            <option value="{{price_type.id}}">{{price_type.name}}</option>
                         {% endfor %}
                     </select>
                 </div>

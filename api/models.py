@@ -211,6 +211,7 @@ class UserProfile(models.Model):
     is_maxsulot_boshkaruvi = models.BooleanField(default=False)
     is_maxsulot_tahriri = models.BooleanField(default=False)
     is_taminotchi_qaytuv = models.BooleanField(default=False)
+    is_taminotchi_qaytuv_tarix = models.BooleanField(default=False)
     is_bugungi_sotuvlar = models.BooleanField(default=False)
     is_maxsutlo_tahlili = models.BooleanField(default=False)
     is_analiz_xarajatlar = models.BooleanField(default=False)
@@ -239,12 +240,25 @@ class UserProfile(models.Model):
     is_kassa = models.BooleanField(default=False)
     is_savdo = models.BooleanField(default=False)
     is_b2b_savdo = models.BooleanField(default=False)
+    is_bugungi_amaliyotlar = models.BooleanField(default=False)
     is_kassa_tasdiklanmagan = models.BooleanField(default=False)
     is_qabul = models.BooleanField(default=False)
 
     is_nds = models.BooleanField(default=False)
     is_kassa_tarixi = models.BooleanField(default=False)
+    
+    is_reviziya = models.BooleanField(default=False)
+    is_reviziya_tarixi = models.BooleanField(default=False)
+    is_turli_shaxs = models.BooleanField(default=False)
+    is_filial_kassalar = models.BooleanField(default=False)
 
+    is_measurement_type = models.BooleanField(default=False)
+    is_price_type = models.BooleanField(default=False)
+    is_filial_list = models.BooleanField(default=False)
+    is_valyuta = models.BooleanField(default=False)
+    is_kassa_merge = models.BooleanField(default=False)
+    is_kassa_new = models.BooleanField(default=False)
+    is_money_circulation = models.BooleanField(default=False)
 
     def refresh_total(self, date):
         if type(date) == str:
@@ -967,7 +981,7 @@ class RecieveItem(models.Model):
 
 
 class ProductBringPrice(models.Model):
-    recieveitem = models.ForeignKey(RecieveItem,     on_delete=models.CASCADE, blank=True, null=True)
+    recieveitem = models.ForeignKey(RecieveItem, on_delete=models.CASCADE, blank=True, null=True)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     price = models.FloatField(default=0)
@@ -1892,6 +1906,10 @@ class Chiqim(models.Model):
     is_approved = models.BooleanField(default=True) 
     reja_chiqim = models.ForeignKey('RejaChiqim', on_delete=models.CASCADE, blank=True, null=True)
 
+    qaysi = models.DateField(null=True, blank=True)
+    money_circulation = models.ForeignKey('MoneyCirculation', on_delete=models.CASCADE, null=True, blank=True)
+
+
 
     def __str__(self) -> str:
         return f'{self.qayerga.nomi if self.qayerga else ""} {str(self.qachon)}'
@@ -2397,7 +2415,7 @@ class RejaTushum(models.Model):
     is_active = models.BooleanField(default=True)
 
 class RejaChiqim(models.Model):
-    date = models.DateField(default=timezone.now())
+    date = models.DateField(default=timezone.now)
     payment_date = models.DateField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
     total = models.IntegerField(default=0)
@@ -2415,6 +2433,10 @@ class RejaChiqim(models.Model):
     is_confirmed = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_majburiyat = models.BooleanField(default=False)
+   
+
+    qaysi = models.DateField(null=True, blank=True)
+
     
     @property
     def is_chiqim(self):
@@ -2423,6 +2445,25 @@ class RejaChiqim(models.Model):
     @property
     def chiqim_sum(self):
         return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+
+    @property
+    def get_month(self):
+        OY_CHOICES = {
+            1: 'Yanvar',
+            2: 'Fevral',
+            3: 'Mart',
+            4: 'Aprel',
+            5: 'May',
+            6: 'Iyun',
+            7: 'Iyul',
+            8: 'Avgust',
+            9: 'Sentabr',
+            10: 'Oktabr',
+            11: 'Noyabr',
+            12: 'Dekabr',
+        }
+        month = self.qaysi.month
+        return OY_CHOICES.get(month)
 
     
 # class ProductFilialDaily(models.Model):
@@ -2618,23 +2659,24 @@ class Revision(models.Model):
     status = models.IntegerField(choices=((1, 'new'), (2, 'completed')), default=1)
     is_completed = models.BooleanField(default=False)
     comment = models.TextField(null=True, blank=True)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
-    price_type = models.ForeignKey(PriceType, on_delete=models.CASCADE, null=True, blank=True)
     summa = models.IntegerField(default=0)
 
+    @property
+    def farqi_ombor(self):
+        return RevisionItems.objects.filter(revision=self).aggregate(all=Coalesce(Sum(F('quantity')-F('old_quantity')), 0, output_field=FloatField()))['all']
 
+    @property
+    def total_quantity(self):
+        return RevisionItems.objects.filter(revision=self).aggregate(all=Coalesce(Sum(F('quantity')), 0, output_field=FloatField()))['all']
+    
 class RevisionItems(models.Model):
     revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
     old_quantity = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
-    arrival_price = models.FloatField(default=0, verbose_name='Kelish narx')
-    selling_price = models.FloatField(default=0, verbose_name='Sotish narx')
-
-
+    som_arrival_price = models.FloatField(default=0, verbose_name='Som Kelish narx')
+    dollar_arrival_price = models.FloatField(default=0, verbose_name='Dollar Kelish narx')
+  
     @property
-    def total_arrival_price(self):
-        return self.arrival_price * self.quantity
-    @property
-    def total_selling_price(self):
-        return self.selling_price * self.quantity
+    def farqi(self):
+        return self.quantity - self.old_quantity

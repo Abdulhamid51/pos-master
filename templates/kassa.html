@@ -10,7 +10,13 @@
         <link href="{% static 'assets/css/components/custom-countdown.css' %}" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
-
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            #chart-container {
+            width: 300px;
+            margin: auto;
+            }
+        </style>
     {% endblock css %}
 
 
@@ -284,6 +290,8 @@
                                             <tr>
                                                 <th style="text-align: left;">#</th>
                                                 <th style="text-align: left;">Kassa</th>
+                                                <th style="text-align: left;">Pul Muomalasi</th>
+                                                <th style="text-align: left;">Qaysi oy uchun</th>
                                                 
                                                 {% for v in valutas %}
                                                     <th style="text-align: left;">{{ v.name }}</th>
@@ -306,18 +314,19 @@
                                                 <td style="text-align: left;">
                                                     {{ chiqim.kassa.kassa.name }}
                                                 </td>
-                                                
-                                                
+                                                <td style="text-align: left;">
+                                                    {{ chiqim.money_circulation.name }}
+                                                </td><td style="text-align: left;">
+                                                    {{ chiqim.qaysi|date:'Y-m' }}
+                                                </td>
                                                 {% for q in chiqim.summa_for_valutas %}
                                                     <td style="text-align: left;">
                                                         {{ q.summa|intcomma }}
                                                     </td>
                                                 {% endfor %}
-                                                    
                                                 <td style="text-align: left;">
                                                     {{ chiqim.kassa_new|default_if_none:'0' | intcomma }}
                                                 </td>
-                                                
                                                 <td style="text-align: left;">{{ chiqim.subcategory.category|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ chiqim.subcategory|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ chiqim.payhistory.kontr_agent|default_if_none:'' }}</td>
@@ -328,7 +337,6 @@
                                                         Tahrirlash
                                                     </button>
                                                 </td>
-
                                               
                                             </tr>
 
@@ -389,15 +397,123 @@
                                 </div>
                             </div>
                         </div>
-
-
-
                         
+                        <div class="col-xl-8 col-lg-8 col-sm-12 layout-spacing">
+                            <div class="widget-content widget-content-area br-6">
+                                <canvas id="chiqimChart" width="600" height="400"></canvas>
+                                <script>
+                                    const chartData = {{ chart_month|safe }}
 
+                                    const labels_month = chartData.map(item => item.month)
+                                    const chiqim_data = chartData.map(item => item.chiqim_summa)
+                                    const shop_data = chartData.map(item => item.shop_summa)
+
+                                    const ctx_month = document.getElementById('chiqimChart').getContext('2d')
+                                    new Chart(ctx_month, {
+                                        type: 'bar',
+                                        data: {
+                                            labels: labels_month,
+                                            datasets: [
+                                                {
+                                                    label: 'Chiqim',
+                                                    data: chiqim_data,
+                                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                                    borderWidth: 1
+                                                },
+                                                {
+                                                    label: 'Savdo',
+                                                    data: shop_data,
+                                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                                    borderWidth: 1
+                                                }
+                                            ]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            scales: {
+                                                y: {
+                                                    beginAtZero: true
+                                                }
+                                            },
+                                            plugins: {
+                                                legend: {
+                                                    position: 'top'
+                                                },
+                                                title: {
+                                                    display: true,
+                                                    text: 'Oylar bo‘yicha chiqim va savdo'
+                                                }
+                                            }
+                                        }
+                                    })
+                                </script>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-lg-8 col-sm-12  layout-spacing">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="widget-content widget-content-area br-6">
+                                        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+                                        <script type="text/javascript">
+                                            google.charts.load("current", {packages:["corechart"]});
+                                            google.charts.setOnLoadCallback(drawChart);
+                                            function drawChart() {
+                                                const data_som = google.visualization.arrayToDataTable([
+                                                ['Name', 'Summa'],
+                                                {% for item in round_chart %}
+                                                    ['{{ item.name }}', {{ item.summa_som }}],
+                                                {% endfor %}
+                                                ]);
+                                                const options_som = {
+                                                    title: 'Kassadagi pul Som',
+                                                    is3D: true,
+                                                    pieSliceText: 'value',
+                                                    backgroundColor: 'transparent' ,
+                                                    sliceVisibilityThreshold:0
+                                                };
+                                                const chart_som = new google.visualization.PieChart(document.getElementById('piechart_3d'));
+                                                chart_som.draw(data_som, options_som);
+                                            }
+                                            </script>
+                                        <div id="piechart_3d" style="width: 500px; height: 250px;"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <br>
+                                    <div class="widget-content widget-content-area br-6">
+                                        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+                                        <script type="text/javascript">
+                                            google.charts.load("current", {packages:["corechart"]});
+                                            google.charts.setOnLoadCallback(roundChart);
+                                            function roundChart() {
+                                                const data_dol = google.visualization.arrayToDataTable([
+                                                ['Name', 'Summa'],
+                                                {% for item in round_chart %}
+                                                    ['{{ item.name }}', {{ item.summa_dol }}],
+                                                {% endfor %}
+                                                ]);
+                                                const options_dol = {
+                                                    title: 'Kassadagi pul Dollar',
+                                                    is3D: true,
+                                                    pieSliceText: 'value',
+                                                    backgroundColor: 'transparent' ,
+                                                    sliceVisibilityThreshold:0
+
+                                                    };
+                                                const chart_dol = new google.visualization.PieChart(document.getElementById('piechart_dol_3d'));
+                                                chart_dol.draw(data_dol, options_dol);
+                                            }
+                                            </script>
+                                        <div id="piechart_dol_3d" style="width: 500px; height: 250px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-                
             </div>
 
             {% for hodim in hodimlar_qarz %}
@@ -475,6 +591,42 @@
                                     <option value="{{ k.id }}">{{ k.name }}</option>
                                 {% endfor %}
                             </select>
+                            <br>
+                            <label for="">Pul Muomalasi</label>
+                            <select name="money_circulation" id="" class="form-control">
+                                <option value="">- - - - - - - </option>
+                                {% for k in money_circulation %}
+                                    <option value="{{ k.id }}">{{ k.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label  class="col-form-label">Qaysi Oy uchun: </label>
+                                        <select class="form-control" name="qaysi_oy"> 
+                                                    <option value="1" >Yanvar</option>
+                                                    <option value="2" >Fevral</option>
+                                                    <option value="3">Mart</option>
+                                                    <option value="4" >Aprel</option>
+                                                    <option value="5" >May</option>
+                                                    <option value="6" >Iyun</option>
+                                                    <option value="7">Iyul</option>
+                                                    <option value="8" >Avgust</option>
+                                                    <option value="9" >Sentyabr</option>
+                                                    <option value="10">Oktyabr</option>
+                                                    <option value="11">Noyabr</option>
+                                                    <option value="12">Dekabr</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label  class="col-form-label">Qaysi Yil uchun:</label>
+                                        <input type="number"  name="qaysi_yil" class="form-control" value="{{bugun_year}}">
+                                    </div>
+                                </div>
+                            </div>
                             <br>
                             <label for="">Summa</label>
                             <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>

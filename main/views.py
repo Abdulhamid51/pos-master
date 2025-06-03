@@ -3510,9 +3510,23 @@ def Login(request):
                 'is_savdo': 'create_order',
                 'is_nds': 'nds_page',
                 'is_b2b_savdo': 'b2b_shop',
+                'is_bugungi_amaliyotlar':'todays_practices',
                 'is_kassa_tasdiklanmagan': 'kassa_is_approved',
                 'is_kassa_tarixi': 'desktop_kassa',
                 'is_qabul': 'recieve',
+                'is_reviziya':'reviziya',
+                'is_reviziya_tarixi':'revision_complate',
+                'is_turli_shaxs':'externalincomeuser',
+                'is_taminotchi_qaytuv_tarix':'deliver_return_tarix',
+                'is_filial_kassalar':'filial_kassalar',
+                'is_measurement_type':'measurement_type_list',
+                'is_price_type':'price_type',
+                'is_filial_list':'filial_list',
+                'is_valyuta':'valyuta_list',
+                'is_kassa_merge':'kassa_merge',
+                'is_kassa_new':'kassa_new_list',
+                'is_money_circulation':'money_circulation',
+                
             }
 
             if profile:
@@ -3665,7 +3679,52 @@ def kassa(request):
         "summa": shu_oylik_chiqimlar.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum']
     } for v in valutas]
 
+    round_chart = []
+
+    for i in KassaNew.objects.all():
+        dt = {
+            'name':i.name,
+            'summa_som': kassa.filter(kassa=i, valyuta__is_som=True).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'] ,
+            'summa_dol': kassa.filter(kassa=i, valyuta__is_dollar=True).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'] ,
+        }
+        round_chart.append(dt)
+
+
+    chart_month = []
+
+    year = datetime.date.fromisoformat(start_date).year if start_date else bugun.year
+
+    months = {
+        '1': 'Yan', '2': 'Fev', '3': 'Mart', '4': 'Apr',
+        '5': 'May', '6': 'Iyun', '7': 'Iyul', '8': 'Avg',
+        '9': 'Sen', '10': 'Okt', '11': 'Noy', '12': 'Dek',
+    }
+
+    chart_chiqim = Chiqim.objects.filter(qachon__year=year) \
+        .values('qachon__month') \
+        .annotate(summa=Coalesce(Sum(F('summa') / F('currency')), 0, output_field=IntegerField()))
+    
+    chart_shop = Shop.objects.filter(date__year=year) \
+        .values('date__month') \
+        .annotate(total=Sum((F('cart__quantity')*F('cart__price')) / F('kurs')))
+    
+    chart_chiqim_dict = {item['qachon__month']: item for item in chart_chiqim}
+    chart_shop_dict = {item['date__month']: item for item in chart_shop}
+
+
+    for i in range(1, 13):
+        chiqim_sum = chart_chiqim_dict.get(i, {}).get('summa') or 0
+        shop_sum = chart_shop_dict.get(i, {}).get('total') or 0
+        cht_month = {
+            'month': months.get(str(i), ''),
+            'chiqim_summa': chiqim_sum,
+            'shop_summa': shop_sum,
+        }
+        chart_month.append(cht_month)
+
     content = {
+        'chart_month':chart_month,
+        'round_chart':round_chart,
         'kassa_active':'active',
         'kassa_true':'true',
         'kirim_totals':kirim_totals,
@@ -3700,6 +3759,8 @@ def kassa(request):
         'debtors': Debtor.objects.all(),
         'valuta': Valyuta.objects.all(),
         'cashes': KassaNew.objects.all(),
+        'money_circulation': MoneyCirculation.objects.filter(is_delete=True),
+        'bugun_year':bugun.year,
         'data':data,
         'filters': {
             'start_date': start_date,
@@ -3868,14 +3929,25 @@ def chiqim_qilish(request):
         debtor = request.POST.get('debtor')
         deliver = request.POST.get('deliver')
         partner = request.POST.get('partner')
+        qaysi_oy = int(request.POST.get('qaysi_oy'))
+        qaysi_yil = int(request.POST.get('qaysi_yil'))
+        qaysi = date(qaysi_yil, qaysi_oy, 1)
+        money_circulation = request.POST.get('money_circulation')
         
         valuta = Valyuta.objects.get(id=valuta_id)
         cash = KassaNew.objects.get(id=kassa_id)
 
         kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
 
-        chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
-        
+        chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory,
+                                        kassa=kassa, valyuta=valuta, currency=kurs, 
+                                        summa=summa, money_circulation_id=money_circulation, qaysi=qaysi,
+                                        )
+
+        reja = RejaChiqim.objects.create(kassa=cash, valyuta=valuta,
+                                          plan_total=summa, kurs=kurs, is_confirmed=True,
+                                          money_circulation_id=money_circulation, qaysi=qaysi,)
+        chiqim.reja_chiqim=reja
         kassa.summa -= float(summa)
 
         chiqim.kassa_new = kassa.summa
@@ -6259,8 +6331,37 @@ def users_restrictions_limit(request, id):
         is_qabul = request.POST.get('is_qabul')
         is_nds = request.POST.get('is_nds')
         is_kassa_tarixi = request.POST.get('is_kassa_tarixi')
-        
+        is_bugungi_amaliyotlar = request.POST.get('is_bugungi_amaliyotlar')
 
+        is_reviziya = request.POST.get('is_reviziya')
+        is_reviziya_tarixi = request.POST.get('is_reviziya_tarixi')
+        is_turli_shaxs = request.POST.get('is_turli_shaxs')
+        is_taminotchi_qaytuv_tarix = request.POST.get('is_taminotchi_qaytuv_tarix')
+        is_filial_kassalar = request.POST.get('is_filial_kassalar')
+
+        is_measurement_type = request.POST.get('is_measurement_type')
+        is_price_type = request.POST.get('is_price_type')
+        is_filial_list = request.POST.get('is_filial_list')
+        is_valyuta = request.POST.get('is_valyuta')
+        is_kassa_merge = request.POST.get('is_kassa_merge')
+        is_kassa_new = request.POST.get('is_kassa_new')
+        is_money_circulation = request.POST.get('is_money_circulation')
+
+        user_profile.is_measurement_type=True if  is_measurement_type == 'on' else False
+        user_profile.is_price_type=True if  is_price_type == 'on' else False
+        user_profile.is_filial_list=True if  is_filial_list == 'on' else False
+        user_profile.is_valyuta=True if  is_valyuta == 'on' else False
+        user_profile.is_kassa_merge=True if  is_kassa_merge == 'on' else False
+        user_profile.is_kassa_new=True if  is_kassa_new == 'on' else False
+        user_profile.is_money_circulation=True if  is_money_circulation == 'on' else False
+
+        user_profile.is_filial_kassalar=True if  is_filial_kassalar == 'on' else False
+        user_profile.is_taminotchi_qaytuv_tarix=True if  is_taminotchi_qaytuv_tarix == 'on' else False
+        user_profile.is_turli_shaxs=True if  is_turli_shaxs == 'on' else False
+        user_profile.is_reviziya=True if  is_reviziya == 'on' else False
+        user_profile.is_reviziya_tarixi=True if  is_reviziya_tarixi == 'on' else False
+
+        user_profile.is_bugungi_amaliyotlar=True if  is_bugungi_amaliyotlar == 'on' else False
         user_profile.is_bussines=True if  is_bussines == 'on' else False
         user_profile.is_maxsulot_boshkaruvi=True if  is_maxsulot_boshkaruvi == 'on' else False
         user_profile.is_maxsulot_tahriri=True if  is_maxsulot_tahriri == 'on' else False
@@ -8158,6 +8259,20 @@ def balans_fin(request):
         5: "May", 6: "Iyun", 7: "Iyul", 8: "Avgust",
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
+    main_tool = (
+        MainTool.objects.filter(is_active=True, date__year=year)
+        .values('date__month')
+        .annotate(sum=Sum('summa'))
+    )
+    
+
+    main_tool_dict = { item['date__month'] : { 'sum':item['sum']} for item in main_tool }
+
+    main_tool_data = [
+        {'sum':main_tool_dict.get(num, {}).get('sum', 0)}
+
+        for num , month in months_dict.items()
+    ]
 
     bebt_deliver = (
         DebtDeliver.objects.filter(date__year=year)
@@ -8177,6 +8292,33 @@ def balans_fin(request):
     
     kassa_daily_data = []
 
+    reja_chiqim = (
+        RejaChiqim.objects.filter(date__year=year, is_active=True)
+        .values('date__month', 'valyuta_id')
+        .annotate(sum=Sum('plan_total'))
+    )
+
+    reja_chiqim_dict = {
+        (item['date__month'], item['valyuta_id']): {'sum': item['sum']} 
+        for item in reja_chiqim
+    }
+
+    reja_chiqim_data = []
+
+    for i in Valyuta.objects.all():
+        dt_chiqim = {
+            'valyuta_name': i.name,
+            'month': []
+        }
+        for num, month in months_dict.items():
+            chiqim_mon_dt = {
+                'month': num,
+                'summa': reja_chiqim_dict.get((num, i.id), {}).get('sum', 0)
+            }
+            dt_chiqim['month'].append(chiqim_mon_dt)
+        reja_chiqim_data.append(dt_chiqim)
+
+    
     for i in Valyuta.objects.all():
         dt = {
             'valyuta_name':i.name,
@@ -8211,6 +8353,8 @@ def balans_fin(request):
         'bebt_deliver_data':bebt_deliver_data,
         'kassa_daily_data':kassa_daily_data,
         'product_data':product_data,
+        'main_tool_data':main_tool_data,
+        'reja_chiqim_data':reja_chiqim_data,
     }
     return render(request, 'fin/balans_fin.html', context)
 
@@ -8431,7 +8575,9 @@ def reja_chiqim_fin_add(request):
     user_profile = request.POST.get('user_profile')
     valyuta = request.POST.get('valyuta')
     kurs = request.POST.get('kurs')
-    
+    qaysi_oy = int(request.POST.get('qaysi_oy'))
+    qaysi_yil = int(request.POST.get('qaysi_yil'))
+    qaysi = date(qaysi_yil, qaysi_oy, 1)
     RejaChiqim.objects.create(
         payment_date=payment_date,
         where=where,
@@ -8442,6 +8588,7 @@ def reja_chiqim_fin_add(request):
         user_profile_id=user_profile,
         valyuta_id=valyuta,
         kassa_id=kassa,
+        qaysi=qaysi,
     )
     return redirect(request.META['HTTP_REFERER'])
 
@@ -8456,6 +8603,10 @@ def reja_chiqim_fin_edit(request, id):
     user_profile = request.POST.get('user_profile')
     valyuta = request.POST.get('valyuta')
     kurs = request.POST.get('kurs')
+    qaysi_oy = int(request.POST.get('qaysi_oy'))
+    qaysi_yil = int(request.POST.get('qaysi_yil'))
+    qaysi = date(qaysi_yil, qaysi_oy, 1)
+    
     reja.payment_date=payment_date
     reja.where=where
     reja.plan_total=plan_total
@@ -8463,6 +8614,7 @@ def reja_chiqim_fin_edit(request, id):
     reja.comment=comment
     reja.kassa_id=kassa
     reja.kurs=kurs
+    reja.qaysi=qaysi
     reja.valyuta_id=valyuta
     reja.user_profile_id=user_profile
     reja.save()
@@ -9541,77 +9693,138 @@ def revision_add(request):
     date = request.POST.get('date')
     user_profile = request.POST.get('user_profile')
     filial = request.POST.get('filial')
-    valyuta = request.POST.get('valyuta')
     comment = request.POST.get('comment')
-    price_type = request.POST.get('price_type')
-    Revision.objects.create(
+    rev=Revision.objects.create(
         date=date,
         user_profile_id=user_profile,
         filial_id=filial,
-        valyuta_id=valyuta,
         comment=comment,
-        price_type_id=price_type,
     )
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect('revision_detail', rev.id)
 
 
 
 def revision_detail(request, id):
     revision = Revision.objects.select_related('filial').get(id=id)
-
+    item = RevisionItems.objects.filter(revision=revision)
     products = ProductFilial.objects.filter(filial=revision.filial).select_related('filial')
 
     product_ids = products.values_list('id', flat=True)
 
-    price_types = {
-        p.product_id: p for p in ProductPriceType.objects.filter(
-            product_id__in=product_ids,
-            valyuta=revision.valyuta,
-            type=revision.price_type,
-        ).order_by('product_id', '-id')
-    }
-
-    bring_prices = {
+    som_bring_prices = {
         b.product_id: b for b in ProductBringPrice.objects.filter(
             product_id__in=product_ids,
-            valyuta=revision.valyuta
+            valyuta__is_som=True,
         ).order_by('product_id', '-id')
     }
-
+    dollar_bring_prices = {
+        b.product_id: b for b in ProductBringPrice.objects.filter(
+            product_id__in=product_ids,
+            valyuta__is_dollar=True,
+        ).order_by('product_id', '-id')
+    }
     data = []
     for i in products:
-        price_type = price_types.get(i.id)
-        bring_price = bring_prices.get(i.id)
+        bring_price_som = som_bring_prices.get(i.id)
+        bring_price_dollar = dollar_bring_prices.get(i.id)
         dt = {
             'id': i.id,
             'name': i.name,
             'quantity': i.quantity,
-            'kelish_narx': price_type.price if price_type else 0,
-            'sotish_narx': bring_price.price if bring_price else 0,
+            'som_kelish_narx': bring_price_som.price if bring_price_som else 0,
+            'dollar_kelish_narx': bring_price_dollar.price if bring_price_dollar else 0,
         }
         data.append(dt)
 
+    valyuta=Valyuta.objects.all()
+    totals = []
+    for val in valyuta:
+        dtt = {
+            'id':val.id,
+            'name':val.name,
+            'total':item.aggregate(all=Coalesce(Sum((F('quantity')-F('old_quantity'))), 0, output_field=FloatField()))['all'],
+        }
+        totals.append(dtt)
     context = {
         'revision': revision,
         'product': data,
-        'item':RevisionItems.objects.filter(revision=revision)
+        'price_type':PriceType.objects.filter(is_activate=True),
+        'valyuta':valyuta,
+        'item':item,
+        'totals':totals,
+        'totals_quantity':item.aggregate(all=Coalesce(Sum(F('quantity')-F('old_quantity')), 0, output_field=FloatField()))['all'],
     }
     return render(request, 'revision_detail.html', context)
 
 
-def revision_item_add(request, id):
+def list_product_price_revision(request):
     data = json.loads(request.body)
-    print(data)
+    result = []
+
+    for item in data:
+        product_id = item['id']
+        old_quantity = item['old_quantity']
+        quantity = item['quantity']
+        if quantity == old_quantity or quantity == 0:
+            result.clear()
+        elif quantity > old_quantity:
+            plus = quantity - old_quantity
+            for val in Valyuta.objects.all():   
+                price = ProductBringPrice.objects.filter(product_id=product_id, valyuta=val).last()
+                if price:
+                    dt = {
+                            'id': val.id,
+                            'plus_summa': price.price * plus,
+                            'minus_summa': 0,
+                        }
+                    result.append(dt)
+        elif quantity < old_quantity:
+            minus = old_quantity - quantity
+            for val in Valyuta.objects.all():   
+                price = ProductBringPrice.objects.filter(product_id=product_id, valyuta=val).last()
+                if price:
+                    dt = {
+                            'id': val.id,
+                            'plus_summa': 0,
+                            'minus_summa': price.price * minus,
+                        }
+                    result.append(dt)
+    print(result)
+    return JsonResponse({'data': result})
+
+def revision_one_item_add(request, id):
+    data = json.loads(request.body)
     revision = Revision.objects.get(id=id)
     for i in data:
-        if i['quantity'] > 0:
-            RevisionItems.objects.create(
-                revision=revision,
-                product_id=i['id'],
-                quantity=i['quantity'],
-                arrival_price=i['kelish_narx'],
-                selling_price=i['sotish_narx'],
-            )
+        obj, created = RevisionItems.objects.get_or_create(
+            revision=revision,
+            product_id=i['id'],
+        )
+        obj.quantity+=i['quantity']
+        obj.old_quantity=i['old_quantity']
+        obj.som_arrival_price=i['som_arrival_price']
+        obj.dollar_arrival_price=i['dollar_arrival_price']
+        obj.save()
+    return JsonResponse({'data':True})
+
+def revision_one_item_del(request, id):
+    product_id = request.POST.get('product_id')
+    RevisionItems.objects.get(revision_id=id,product_id=product_id).delete()
+    return JsonResponse({'data':True})
+
+def revision_item_add(request, id):
+    data = json.loads(request.body)
+    revision = Revision.objects.get(id=id)
+    for i in data:
+        obj, created = RevisionItems.objects.get_or_create(
+            revision=revision,
+            product_id=i['id'],
+        )
+        obj.quantity+=i['quantity']
+        obj.old_quantity=i['old_quantity']
+        obj.som_arrival_price=i['som_arrival_price']
+        obj.dollar_arrival_price=i['dollar_arrival_price']
+        obj.save()
     revision.status = 2
     revision.save()
     return redirect('reviziya')

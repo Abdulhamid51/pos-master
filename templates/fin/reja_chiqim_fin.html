@@ -170,6 +170,7 @@
                                                         <th>Rejadagi <br> tolov sanasi</th>
                                                         <th>Rejadagi <br> summa</th>
                                                         <th>Kurs</th>
+                                                        <th>Qaysi oy uchun</th>
                                                         <th>Valyuta</th>
                                                         <th>Qayerga</th>
                                                         <th>Kassa</th>
@@ -190,6 +191,7 @@
                                                             <td>{{ i.payment_date|date:'Y-m-d' }}</td>
                                                             <td>{{ i.plan_total|intcomma }}</td>
                                                             <td>{{ i.kurs }}</td>
+                                                            <td>{{ i.qaysi|date:'Y-m' }}</td>
                                                             <td>{{ i.valyuta.name }}</td>
                                                             <td>{{ i.where|default_if_none:''  }}</td>
                                                             <td>{{ i.kassa.name|default_if_none:'' }}</td>
@@ -333,6 +335,35 @@
                                                                                         </div>
                                                                                     </div>
                                                                                     <div class="col-md-6">
+                                                                                       <div class="row">
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="form-group">
+                                                                                                    <label  class="col-form-label">Qaysi Oy uchun: </label>
+                                                                                                    <select class="form-control" name="qaysi_oy"> 
+                                                                                                                <option value="1" {% if i.qaysi.month == 1 %} selected {% endif %}>Yanvar</option>
+                                                                                                                <option value="2" {% if i.qaysi.month == 2 %} selected {% endif %}>Fevral</option>
+                                                                                                                <option value="3" {% if i.qaysi.month == 3 %} selected {% endif %}>Mart</option>
+                                                                                                                <option value="4" {% if i.qaysi.month == 4 %} selected {% endif %}>Aprel</option>
+                                                                                                                <option value="5" {% if i.qaysi.month == 5 %} selected {% endif %}>May</option>
+                                                                                                                <option value="6" {% if i.qaysi.month == 6 %} selected {% endif %}>Iyun</option>
+                                                                                                                <option value="7" {% if i.qaysi.month == 7 %} selected {% endif %}>Iyul</option>
+                                                                                                                <option value="8" {% if i.qaysi.month == 8 %} selected {% endif %}>Avgust</option>
+                                                                                                                <option value="9" {% if i.qaysi.month == 9 %} selected {% endif %}>Sentyabr</option>
+                                                                                                                <option value="10" {% if i.qaysi.month == 10 %} selected {% endif %}>Oktyabr</option>
+                                                                                                                <option value="11" {% if i.qaysi.month == 11 %} selected {% endif %}>Noyabr</option>
+                                                                                                                <option value="12" {% if i.qaysi.month == 12 %} selected {% endif %}>Dekabr</option>
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="form-group">
+                                                                                                    <label  class="col-form-label">Qaysi Yil uchun:</label>
+                                                                                                    <input type="number"  name="qaysi_yil" class="form-control" value="{{ i.qaysi|date:'Y' }}">
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-6">
                                                                                         <div class="form-group">
                                                                                             <label for="recipient-kassa" class="col-form-label">Kassa:</label>
                                                                                             <select name="kassa" class="form-control searchable" required>
@@ -422,7 +453,7 @@
                                                     <div class="col-md-6">
                                                         <div class="form-group">
                                                             <label class="col-form-label">Rejadagi Summa: </label>
-                                                            <input type="number" class="form-control"  name="plan_total">
+                                                            <input type="number" class="form-control"  name="plan_total" required>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -435,6 +466,35 @@
                                                         <div class="form-group">
                                                             <label for="recipient-kurs" class="col-form-label">Kurs: </label>
                                                             <input type="number" class="form-control" id="recipient-kurs" name="kurs" value="{{kurs}}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label  class="col-form-label">Qaysi Oy uchun: </label>
+                                                                    <select class="form-control" name="qaysi_oy"> 
+                                                                                <option value="1" >Yanvar</option>
+                                                                                <option value="2" >Fevral</option>
+                                                                                <option value="3">Mart</option>
+                                                                                <option value="4" >Aprel</option>
+                                                                                <option value="5" >May</option>
+                                                                                <option value="6" >Iyun</option>
+                                                                                <option value="7">Iyul</option>
+                                                                                <option value="8" >Avgust</option>
+                                                                                <option value="9" >Sentyabr</option>
+                                                                                <option value="10">Oktyabr</option>
+                                                                                <option value="11">Noyabr</option>
+                                                                                <option value="12">Dekabr</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label  class="col-form-label">Qaysi Yil uchun:</label>
+                                                                    <input type="number"  name="qaysi_yil" class="form-control" value="{{filter.year}}">
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">

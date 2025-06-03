@@ -2,6 +2,8 @@
 {% load static %}
 {% load humanize %}
 {% load mathfilters %}
+{% load custom_filters %}
+
 {% block title %}
     <title>Product | Bordo</title>
 {% endblock title %}
@@ -35,18 +37,36 @@
             <div class="row layout-top-spacing">
                 <div id="alert-container"></div>
               <script>
+
+
+
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
                 const data = [];
 
                 function SelectProduct(element) {
+                    if (data.length > 0) {
+                        $.ajax({
+                            url: `/revision_one_item_add/{{revision.id}}`,
+                            type: "POST",
+                            data: JSON.stringify(data),
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+                            success: function(response) {
+                                data.length = 0;
+                            },
+                            error: function () {
+                            }
+                        });
+                    }
                     const selectedOption = element.options[element.selectedIndex];
                     const product_name = selectedOption.text;
                     const product_value = element.value;
 
                     if (!product_value) return;
 
-                    const [id, quantity, kelish_narx, sotish_narx] = product_value.split('|');
+                    const [id, quantity, som_kelish_narx, dollar_kelish_narx] = product_value.split('|');
 
                     const table_zero = document.getElementById('zero-config');
                     const tbody = table_zero.querySelector('tbody');
@@ -55,141 +75,164 @@
                     let productExists = Array.from(existingProducts).some(product => product.textContent === product_name);
                     if (productExists) {
                         showAlert("Maxsulot allaqachon qo‘shilgan!", "warning");
-                        return;
                     }
-
                     const newRow = `
                         <tr>
                             <td class="product_name" data-product_id="${id}">${product_name}</td>
                             <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" oninput="pushData(this)"></td>
                             <td class="quantity_td">${quantity}</td>
                             <td class="status_td"></td>
-                            <td class="kelish_narx_td">${kelish_narx}</td>
-                            <td class="kelish_itog_td"></td>
-                            <td class="sotish_narx_td">${sotish_narx}</td>
-                            <td class="sotish_itog_td"></td>
+                            <td class="som_kelish_narx_td">${som_kelish_narx}</td>
+                            <td class="dollar_kelish_narx_td">${dollar_kelish_narx}</td>
+                            <td class="farq_td"></td>
                             <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
                     `;
                     tbody.insertAdjacentHTML('beforeend', newRow);
+                    data.length = 0;
+                    updateTotals()
                 }
                 
                 function DelTbody(item) {
+                    updateTotals()
                     const tr = item.closest('tr');
                     const productId = tr.querySelector('.product_name').dataset.product_id;
-
                     tr.remove();
-
                     const index = data.findIndex(el => el.id === productId);
                     if (index !== -1) {
                         data.splice(index, 1);
                     }
-
-                    updateTotals();
-                    console.log(data)
+                    $.ajax({
+                        url: `/revision_one_item_del/{{revision.id}}`,
+                        type: "POST",
+                        data: {'product_id':productId},
+                        headers: {
+                            "X-CSRFToken": csrfToken
+                        },
+                        success: function(response) {
+                        },
+                        error: function () {
+                        }
+                    });
+                    updateTotals()
                 }
-                function updateTotals() {
-                        let jami_miqdor = 0;
-                        let jami_kelish_itog = 0;
-                        let jami_sotish_itog = 0;
+                 function updateTotals() {
+                        let jami_som_kelish_narx_plus = 0;
+                        let jami_dollar_kelish_narx_plus = 0;
 
+                        let jami_som_kelish_narx_minus = 0;
+                        let jami_dollar_kelish_narx_minus = 0;
+
+                        let jami_plus_miqdor = 0;
+                        let jami_minus_miqdor = 0;
+
+                        let sum_miqdori = 0;
+                        let som_kelish_narx_sum = 0;
+                        let dollar_kelish_narx_sum = 0;
                         const allRows = document.querySelectorAll('#zero-config tbody tr');
+
                         allRows.forEach(row => {
-                            const qty_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
-                            const kelish_narx = parseFloat(row.querySelector('.kelish_narx_td').textContent) || 0;
-                            const sotish_narx = parseFloat(row.querySelector('.sotish_narx_td').textContent) || 0;
+                            const qty_miqor_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                            const kelish_narx_som = parseFloat(row.querySelector('.som_kelish_narx_td').textContent) || 0;
+                            const kelish_narx_dollar = parseFloat(row.querySelector('.dollar_kelish_narx_td').textContent) || 0;
+                            const td_farq = parseFloat(row.querySelector('.farq_td').textContent) || 0;
+                            if (td_farq > 0) {
+                                jami_som_kelish_narx_plus += kelish_narx_som * td_farq
+                                jami_dollar_kelish_narx_plus += kelish_narx_dollar * td_farq
+                                jami_plus_miqdor+= td_farq
+                            }else if ( td_farq < 0) {
+                                jami_som_kelish_narx_minus += kelish_narx_som * td_farq
+                                jami_dollar_kelish_narx_minus += kelish_narx_dollar * td_farq
+                                jami_minus_miqdor+= td_farq
+                            }
+                            sum_miqdori+=qty_miqor_input
+                            som_kelish_narx_sum += kelish_narx_som * qty_miqor_input
+                            dollar_kelish_narx_sum += kelish_narx_dollar * qty_miqor_input
 
-                            jami_miqdor += qty_input;
-                            jami_kelish_itog += qty_input * kelish_narx;
-                            jami_sotish_itog += qty_input * sotish_narx;
                         });
+                        document.getElementById('som_kelish_narx_plus').textContent = jami_som_kelish_narx_plus.toFixed(2);
+                        document.getElementById('dollar_kelish_narx_plus').textContent = jami_dollar_kelish_narx_plus.toFixed(2);
 
-                        document.getElementById('total_miqdor').textContent = jami_miqdor.toFixed(2);
-                        document.getElementById('total_kelish_itog').textContent = jami_kelish_itog.toFixed(2);
-                        document.getElementById('total_sotish_itog').textContent = jami_sotish_itog.toFixed(2);
-                    }
+                        document.getElementById('som_kelish_narx_minus').textContent = jami_som_kelish_narx_minus.toFixed(2);
+                        document.getElementById('dollar_kelish_narx_minus').textContent = jami_dollar_kelish_narx_minus.toFixed(2);
+
+                        document.getElementById('total_plus_miqdor').textContent = jami_plus_miqdor.toFixed(2);
+                        document.getElementById('total_minus_miqdor').textContent = jami_minus_miqdor.toFixed(2);
 
 
+                        document.getElementById('sum_miqdor').textContent = sum_miqdori.toFixed(2);
+                        document.getElementById('som_kelish_narx_sum').textContent = som_kelish_narx_sum.toFixed(2);
+                        document.getElementById('dollar_kelish_narx_sum').textContent = dollar_kelish_narx_sum.toFixed(2);
+                }
                 function pushData(item) {
+                    updateTotals()
                     const item_tr = item.closest('tr');
+
                     const item_product_id = item_tr.querySelector('.product_name').dataset.product_id;
                     const item_input_quantity = parseFloat(item.value) || 0;
-                    const item_quantity_td = parseFloat(item_tr.querySelector('.quantity_td').textContent);
+                    const item_quantity_td = parseFloat(item_tr.querySelector('.quantity_td').textContent) || 0;
                     const item_status_td = item_tr.querySelector('.status_td');
 
-                    const kelish_narx_td = item_tr.querySelector('.kelish_narx_td');
-                    const kelish_itog_td = item_tr.querySelector('.kelish_itog_td');
-                    const sotish_narx_td = item_tr.querySelector('.sotish_narx_td');
-                    const sotish_itog_td = item_tr.querySelector('.sotish_itog_td');
+                    const som_kelish_narx_td = item_tr.querySelector('.som_kelish_narx_td');
+                    const dollar_kelish_narx_td = item_tr.querySelector('.dollar_kelish_narx_td');
+                    const farq_td = item_tr.querySelector('.farq_td');
 
-                    const kelish_narx = parseFloat(kelish_narx_td.textContent);
-                    const sotish_narx = parseFloat(sotish_narx_td.textContent);
+                    const som_kelish_narx = parseFloat(som_kelish_narx_td.textContent);
+                    const dollar_kelish_narx = parseFloat(dollar_kelish_narx_td.textContent);
+
+                    if (item_input_quantity > 0) {
+                        let farq;
+                        if (item_quantity_td < 0) {
+                            farq = item_input_quantity + item_quantity_td;
+                        } else {
+                            farq = item_input_quantity - item_quantity_td;
+                        }
+                        farq_td.textContent = farq.toFixed(2);
+                    } else {
+                        farq_td.textContent = '';
+                    }
 
                     let productExists = data.find(el => el.id == item_product_id);
 
                     if (productExists) {
                         productExists.quantity = item_input_quantity;
                     } else {
-                        data.push({ id: item_product_id, quantity: item_input_quantity, kelish_narx: kelish_narx, sotish_narx: sotish_narx });
+                        data.push({ id: item_product_id, quantity: item_input_quantity , 
+                            old_quantity:item_quantity_td, som_arrival_price:som_kelish_narx, dollar_arrival_price:dollar_kelish_narx});
                     }
 
                     if (item_input_quantity === 0) {
                         item_status_td.innerHTML = '';
                     } else if (item_input_quantity === item_quantity_td) {
-                        item_status_td.innerHTML = '<button class="btn btn-warning"></button>';
-                    } else if (item_input_quantity < item_quantity_td && item_input_quantity != 0) {
                         item_status_td.innerHTML = '<button class="btn btn-success"></button>';
-                    } else if (item_input_quantity > item_quantity_td) {
+                    } else if (item_input_quantity < item_quantity_td && item_input_quantity != 0) {
                         item_status_td.innerHTML = '<button class="btn btn-danger"></button>';
+                    } else if (item_input_quantity > item_quantity_td) {
+                        item_status_td.innerHTML = '<button class="btn btn-primary"></button>';
                     }
 
-                    if (!isNaN(kelish_narx) && item_input_quantity > 0) {
-                        kelish_itog_td.textContent = (kelish_narx * item_input_quantity).toFixed(2);
-                    }
-
-                    if (!isNaN(sotish_narx) && item_input_quantity > 0) {
-                        sotish_itog_td.textContent = (sotish_narx * item_input_quantity).toFixed(2);
-                    }
-
-                    let jami_miqdor = 0;
-                    let jami_kelish_itog = 0;
-                    let jami_sotish_itog = 0;
-                    let jami_ombor_qoldik = 0;
+                    let jami_plus_miqdor = 0;
+                    let jami_minus_miqdor = 0;
+                    let jami_miqdori = 0;
                     const allRows = document.querySelectorAll('#zero-config tbody tr');
                     allRows.forEach(row => {
                         const qty_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
-                        const kelish_narx = parseFloat(row.querySelector('.kelish_narx_td').textContent) || 0;
-                        const sotish_narx = parseFloat(row.querySelector('.sotish_narx_td').textContent) || 0;
-
-                        const ombor_qoldik = parseFloat(row.querySelector('.quantity_td').textContent) || 0;
-                        jami_ombor_qoldik+=ombor_qoldik
-                        jami_miqdor += qty_input;
-                        jami_kelish_itog += qty_input * kelish_narx;
-                        jami_sotish_itog += qty_input * sotish_narx;
+                        const ombor_qoldik = parseFloat(row.querySelector('.farq_td').textContent) || 0;
+                        
+                        if ( ombor_qoldik > 0 ) {
+                            jami_plus_miqdor += ombor_qoldik;
+                        } else{
+                            jami_minus_miqdor += Math.abs(ombor_qoldik); 
+                        }
+                        jami_miqdori+=qty_input
                     });
-
-                    document.getElementById('total_rows').innerHTML = '';
-                    let rows = `
-                                <div class="col-md-4">
-                                    Miqdor : <p id="total_miqdor" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
-                                </div>
-                                <div class="col-md-4">
-                                    Kelish itog: <p  id="total_kelish_itog" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
-                                </div>
-                                <div class="col-md-4">
-                                    Sotish itog : <p id="total_sotish_itog" style="color: ${jami_ombor_qoldik >= jami_miqdor ? 'green' : 'red'} !important;"></p>
-                                </div>
-                            `;
-                    document.getElementById('total_rows').insertAdjacentHTML('beforeend', rows);
-      
-                    document.getElementById('total_miqdor').textContent = jami_miqdor.toFixed(2);
-                    document.getElementById('total_kelish_itog').textContent = jami_kelish_itog.toFixed(2);
-                    document.getElementById('total_sotish_itog').textContent = jami_sotish_itog.toFixed(2);
-
-                    console.log(data);
+                    document.getElementById('total_plus_miqdor').textContent = jami_plus_miqdor.toFixed(2);
+                    document.getElementById('total_minus_miqdor').textContent = jami_minus_miqdor.toFixed(2);
+                    document.getElementById('sum_miqdor').textContent = jami_miqdori.toFixed(2);
+                    
+                    updateTotals()
+                    console.log(data)
                 }
-
-
                 function saveBack() {
                     if (data.length > 0) {
                         $.ajax({
@@ -209,8 +252,6 @@
                         });
                     }
                 }
-            </script>
-            <script>
                 const showAlert = (message, type) => {
                     const alertElement = $(`
                         <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -222,8 +263,10 @@
                         alertElement.fadeOut(500, function () { $(this).remove(); });
                     }, 3000);
                 };
+                 document.addEventListener('DOMContentLoaded', function() {
+                        updateTotals();
+                    });
             </script>
-
                 
                 <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
                     <div class="widget-content widget-content-area br-8">
@@ -236,26 +279,32 @@
                                             <th>Miqdor</th>
                                             <th>Ombor qoldigi</th>
                                             <th>Status</th>
-                                            <th>Kelish narxi</th>
-                                            <th>Kelish itog</th>
-                                            <th>Sotish narxi</th>
-                                            <th>Sotish itog</th>
+                                            <th>Som Kelish narxi</th>
+                                            <th>Dollar Kelish narxi</th>
+                                            <th>Farqi</th>
                                             <th>Ochirish</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for i in item %}
                                         <tr>
-                                                <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
-                                                <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" value="{{i.quantity}}" oninput="pushData(this)"></td>
-                                                <td class="quantity_td">{{ i.product.quantity }}</td>
-                                                <td class="status_td"></td>
-                                                <td class="kelish_narx_td">{{i.arrival_price }}</td>
-                                                <td class="kelish_itog_td">{{i.total_arrival_price}}</td>
-                                                <td class="sotish_narx_td">{{ i.selling_price }}</td>
-                                                <td class="sotish_itog_td">{{i.total_selling_price}}</td>
-                                                <td></td>
-                                            </tr>
+                                            <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
+                                            <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" step="any" value="{{i.quantity|comma_to_dot }}" oninput="pushData(this)"></td>
+                                            <td class="quantity_td">{{ i.product.quantity }} </td>
+                                            <td class="status_td">
+                                                {% if i.farqi > 0 %}
+                                                <button class="btn btn-primary" ></button>
+                                                {% elif 0 > i.farqi %}
+                                                <button class="btn btn-danger" ></button>
+                                                {% elif i.farqi == 0 %}
+                                                <button class="btn btn-success" ></button>
+                                                {% endif %}
+                                            </td>
+                                            <td class="som_kelish_narx_td">{{i.som_arrival_price }}</td>
+                                            <td class="dollar_kelish_narx_td">{{i.dollar_arrival_price }}</td>
+                                            <td class="farq_td">{{i.farqi}}</td>
+                                            <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
+                                        </tr>
                                         {% endfor %}
                                     </tbody>
                                         <tfoot>
@@ -264,8 +313,7 @@
                                                 <th ></th>
                                                 <th></th>
                                                 <th></th>
-                                                <th> </th>
-                                                <th ></th>
+                                                <th></th>
                                                 <th></th>
                                                 <th ></th>
                                                 <th></th>
@@ -276,22 +324,49 @@
                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
                                         <option value="">Mahsulotni tanlang</option>
                                         {% for i in product %}
-                                            <option value="{{ i.id }}|{{i.quantity}}|{{i.kelish_narx}}|{{i.sotish_narx}}" >{{ i.name }}</option>
+                                            <option value="{{ i.id }}|{{i.quantity}}|{{i.som_kelish_narx}}|{{i.dollar_kelish_narx}}" >{{ i.name }}</option>
                                         {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-7">
+                            <div class="col-md-12"><br></div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Jami Miqdor: <p style="color: green !important;" id="sum_miqdor"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_sum"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_sum"></p>
+                                    </div>
+
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Ortiqcha Miqdor: <p style="color: green !important;" id="total_plus_miqdor">
+                                    </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_plus"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_plus"></p>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="col-md-5">
-                                <div class="row" id="total_rows">
-                                    <div class="col-md-3">
-                                        Miqdor: <p id="total_miqdor"></p>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6"></div>
+
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Kamomat Miqdor: <p style="color:red !important;" id="total_minus_miqdor">
+                                       </p>
                                     </div>
-                                    <div class="col-md-3">
-                                        Kelish itog: <p id="total_kelish_itog"></p>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: red !important;" id="som_kelish_narx_minus"> </p>
                                     </div>
-                                    <div class="col-md-3">
-                                        Sotish itog: <p id="total_sotish_itog"></p>
+                                    <div class="col-md-2" >
+                                        Dollar: <p style="color: red !important;" id="dollar_kelish_narx_minus"> </p>
                                     </div>
                                 </div>
                             </div>
@@ -299,7 +374,7 @@
                     </div>
                 </div>
                 <div class="col-md-11"></div>
-                <div class="col-md-1"><button class="btn btn-success" onclick="saveBack()">Saqlash</button></div>
+                <div class="col-md-2"><button class="btn btn-success" onclick="saveBack()">Yakunlash</button></div>
             </div>
         </div>
     </div>

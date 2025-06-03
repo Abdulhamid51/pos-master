@@ -276,8 +276,11 @@ urlpatterns = [
 
     path('reviziya', reviziya, name='reviziya'),
     path('revision_add', revision_add, name='revision_add'),
+    path('list_product_price_revision', list_product_price_revision, name='list_product_price_revision'),
     path('revision_detail/<int:id>', revision_detail, name='revision_detail'),
     path('revision_item_add/<int:id>', revision_item_add, name='revision_item_add'),
+    path('revision_one_item_add/<int:id>', revision_one_item_add, name='revision_one_item_add'),
+    path('revision_one_item_del/<int:id>', revision_one_item_del, name='revision_one_item_del'),
     path('revison_complate/<int:id>', revison_complate, name='revison_complate'),
 
     path('revision_complate', revision_complate, name='revision_complate'),

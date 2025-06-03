@@ -17,3 +17,13 @@ def is_instance_of(obj, class_name):
 @register.filter
 def comma_to_dot(value):
     return str(value).replace(',', '.')
+
+
+@register.filter
+def replace(value, arg):
+    """ {{ value|replace:"old,new" }} """
+    try:
+        old, new = arg.split(',')
+        return str(value).replace(old, new)
+    except ValueError:
+        return value
