@@ -738,6 +738,52 @@
     }, 3000);
     // Timeout is 1 sec, you can change it
 </script>
+
+<script>
+    console.log('aaaaaaa')
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.querySelector("table");
+    if (!table) return;
+    console.log(table)
+    const headers = table.querySelectorAll("thead th");
+    const tfootCells = table.querySelectorAll("tfoot th");
+    const calculateIndexes = [];
+
+    // calculate_total bo'lgan ustun indekslarini topamiz
+    headers.forEach((th, idx) => {
+        if (th.classList.contains("calculate_total")) {
+            calculateIndexes.push(idx);
+        }
+    });
+
+    calculateIndexes.forEach((colIndex) => {
+        let sum = 0;
+        const rows = table.querySelectorAll("tbody tr");
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll("td");
+            const cell = cells[colIndex];
+            if (cell) {
+                const val = parseFloat(cell.dataset.value) || 0;
+                sum += val;
+            }
+        });
+
+        console.log(calculateIndexes)
+
+        // intcomma formatlash (minglik ajratgich bilan)
+        const formatted = sum.toLocaleString('en-US');
+
+        // Tfoot ustuniga natijani yozamiz
+        console.log(tfootCells, 'uuuuuu')
+        if (tfootCells[colIndex]) {
+            console.log(tfootCells[colIndex].textContent, 'o')
+            tfootCells[colIndex].textContent = formatted;
+        }
+    });
+});
+</script>
+
 <script src="{% static 'assets/js/custom.js' %}"></script>
 <!-- END GLOBAL MANDATORY SCRIPTS -->
 {% block js %}

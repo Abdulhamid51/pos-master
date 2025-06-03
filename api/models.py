@@ -325,11 +325,91 @@ class Deliver(models.Model):
         return self.name
 
 
+    # def refresh_debt(self):
+    #     deliver = self
+    #     valyutalar = Valyuta.objects.all()
+
+    #     # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+    #     pay_history_qs = list(
+    #         PayHistory.objects.filter(deliver=deliver)
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+
+    #     bonus_qs = list(
+    #         Bonus.objects.filter(deliver=deliver)
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+        
+
+    #     recieve_qs = list(
+    #         Recieve.objects.filter(deliver=deliver)
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+
+    #     return_qs = list(
+    #         ReturnProductToDeliver.objects.filter(deliver=deliver)
+    #         .order_by('date')
+    #     )
+
+    #     # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+    #     valyuta_events = defaultdict(list)
+    #     for event in chain(pay_history_qs, recieve_qs, bonus_qs):
+    #         valyuta_events[event.valyuta_id].append(event)
+
+    #     wallets_to_update = []
+    #     payhistory_to_update = []
+    #     shop_to_update = []
+    #     bonus_to_update = []
+
+    #     for valyuta in valyutalar:
+    #         events = valyuta_events.get(valyuta.id, [])
+
+    #         # So'nggi Wallet yoki yangisini topamiz
+    #         wallet, _ = Wallet.objects.get_or_create(deliver=deliver, valyuta=valyuta)
+    #         summa = wallet.start_summa
+
+    #         for event in events:
+    #             if isinstance(event, PayHistory):
+    #                 event.debt_old = summa
+    #                 summa += event.summa if event.type_pay == 1 else -event.summa
+    #                 event.debt_new = summa
+    #                 payhistory_to_update.append(event)
+
+    #             elif isinstance(event, Recieve):
+    #                 event.debt_old = summa
+    #                 summa += event.total_bring_price
+    #                 event.debt_new = summa
+    #                 shop_to_update.append(event)
+                
+    #             elif isinstance(event, Bonus):
+    #                 event.debt_old = summa
+    #                 summa += event.summa
+    #                 event.debt_new = summa
+    #                 bonus_to_update.append(event)
+
+    #         wallet.summa = summa
+    #         wallets_to_update.append(wallet)
+
+    #     # Hammasini bir marta yangilaymiz
+    #     if wallets_to_update:
+    #         Wallet.objects.bulk_update(wallets_to_update, ['summa'])
+
+    #     if payhistory_to_update:
+    #         PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+
+    #     if shop_to_update:
+    #         Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+
+    #     if bonus_to_update:
+    #                 Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
+
     def refresh_debt(self):
         deliver = self
         valyutalar = Valyuta.objects.all()
 
-        # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
         pay_history_qs = list(
             PayHistory.objects.filter(deliver=deliver)
             .select_related('valyuta')
@@ -341,7 +421,6 @@ class Deliver(models.Model):
             .select_related('valyuta')
             .order_by('date')
         )
-        
 
         recieve_qs = list(
             Recieve.objects.filter(deliver=deliver)
@@ -349,20 +428,44 @@ class Deliver(models.Model):
             .order_by('date')
         )
 
-        # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+        return_qs = list(
+            ReturnProductToDeliver.objects.filter(deliver=deliver, is_activate=False)
+            .prefetch_related('returnproducttodeliver__valyuta')
+            .order_by('date')
+        )
+
         valyuta_events = defaultdict(list)
         for event in chain(pay_history_qs, recieve_qs, bonus_qs):
             valyuta_events[event.valyuta_id].append(event)
+
+        # ReturnProductToDeliver hodisalarini valyuta bo‘yicha ajratamiz
+        for return_event in return_qs:
+            items = return_event.returnproducttodeliver.all()
+            # Har bir valyutaga to‘plangan summalarni hisoblab chiqamiz
+            valyuta_summalari = defaultdict(float)
+            for item in items:
+                if item.valyuta_id:
+                    valyuta_summalari[item.valyuta_id] += item.summa * item.quantity
+            # Har bir valyuta uchun bitta "event" sifatida kiritamiz
+            for valyuta_id, total_summa in valyuta_summalari.items():
+                return_event_copy = ReturnProductToDeliver(
+                    id=return_event.id,
+                    date=return_event.date
+                )
+                return_event_copy.valyuta_id = valyuta_id
+                return_event_copy.total_summa = total_summa
+                valyuta_events[valyuta_id].append(return_event_copy)
 
         wallets_to_update = []
         payhistory_to_update = []
         shop_to_update = []
         bonus_to_update = []
+        return_to_update = []
 
         for valyuta in valyutalar:
             events = valyuta_events.get(valyuta.id, [])
+            events.sort(key=lambda e: e.date)
 
-            # So'nggi Wallet yoki yangisini topamiz
             wallet, _ = Wallet.objects.get_or_create(deliver=deliver, valyuta=valyuta)
             summa = wallet.start_summa
 
@@ -378,28 +481,35 @@ class Deliver(models.Model):
                     summa += event.total_bring_price
                     event.debt_new = summa
                     shop_to_update.append(event)
-                
+
                 elif isinstance(event, Bonus):
                     event.debt_old = summa
                     summa += event.summa
                     event.debt_new = summa
                     bonus_to_update.append(event)
 
+                elif isinstance(event, ReturnProductToDeliver):
+                    # Biz qo‘shgan return_event_copy
+                    event.debt_old = summa
+                    summa -= event.total_summa
+                    event.debt_new = summa
+                    return_to_update.append(event)
+
             wallet.summa = summa
             wallets_to_update.append(wallet)
 
-        # Hammasini bir marta yangilaymiz
+        # Bulk update
         if wallets_to_update:
             Wallet.objects.bulk_update(wallets_to_update, ['summa'])
-
         if payhistory_to_update:
             PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
-
         if shop_to_update:
             Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
-
         if bonus_to_update:
-                    Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
+            Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
+        if return_to_update:
+            # Faqat id mavjud bo‘lganlarni bulk update qilamiz
+            ReturnProductToDeliver.objects.filter(id__in=[r.id for r in return_to_update]).update()
     
     @property
     def debts(self):
@@ -1739,7 +1849,7 @@ class ReturnProductToDeliver(models.Model):
     dollar = models.IntegerField(default=0)
     kurs = models.IntegerField(null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    # valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     is_activate = models.BooleanField(default=True)
 
     def __str__(self):
@@ -1755,6 +1865,7 @@ class ReturnProductToDeliverItem(models.Model):
     som = models.IntegerField(default=0)
     dollar = models.IntegerField(default=0)
     quantity = models.FloatField(default=0)
+    summa = models.FloatField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
 
     @property
@@ -1770,7 +1881,25 @@ class ReturnProductToDeliverItem(models.Model):
 
     class Meta:
         verbose_name_plural = 'Return Product To Deliver Item'
-    
+    @property
+    def summa_str(self):
+        return str(self.summa).replace(',', '.')
+    @property
+    def price_for_valyutas(self):
+        data = []
+        for v  in Valyuta.objects.all():
+            if v == self.valyuta:
+                data.append(self.summa)
+            else:
+                data.append(0)
+        return data
+
+    @property
+    def total_price_for_valyutas(self):
+        data = []
+        for i in self.price_for_valyutas:
+            data.append(self.quantity * i)
+        return data
 
 @receiver(post_save, sender=ReturnProductToDeliverItem)
 def return_product_history(sender, instance, **kwargs):
@@ -2377,7 +2506,40 @@ class WriteOff(models.Model):
 class WriteOffItem(models.Model):
     write_off = models.ForeignKey(WriteOff, on_delete=models.CASCADE, related_name='writeoffitem')
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    prices = models.ManyToManyField(ProductBringPrice, blank=True)
     quantity = models.FloatField(default=0)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new:
+            for valyuta in Valyuta.objects.all():
+                last_price = ProductBringPrice.objects.filter(
+                    product=self.product,
+                    valyuta=valyuta
+                ).order_by('-recieveitem__recieve__date').first()
+                if last_price:
+                    self.prices.add(last_price)
+    
+    @property
+    def price_for_valyutas(self):
+        data = []
+        for v  in Valyuta.objects.all():
+            last = self.prices.filter(valyuta=v).last()
+            if last:
+                data.append(last.price)
+            else:
+                data.append(0)
+        return data
+
+    @property
+    def total_price_for_valyutas(self):
+        data = []
+        for i in self.price_for_valyutas:
+            data.append(self.quantity * i)
+        return data
+
 
     @property
     def summa_total_dollar(self):

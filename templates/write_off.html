@@ -190,9 +190,15 @@
                                                                             <th scope="col"></th>
                                                                             <th scope="col"></th>
                                                                             <th scope="col">Mahsulot {{recieve.write_off_item}}</th>
-                                                                            <th class="text-right" scope="col">Narx</th>
+                                                                            
+                                                                            {% for v in valyutas %}
+                                                                                <th class="text-right" scope="col">{{v}}</th>
+                                                                            {% endfor %}
+                                                                                
                                                                             <th class="text-right" scope="col">Soni</th>
-                                                                            <th class="text-right" scope="col">Jami</th>
+                                                                            {% for v in valyutas %}
+                                                                                <th class="text-right calculate_total" scope="col">Jami {{v}}</th>
+                                                                            {% endfor %}
                                                                             <th class="text-right" scope="col"></th>
                                                                             <th class="text-right" scope="col"></th>
                                                                         </tr>
@@ -206,9 +212,13 @@
                                                                                     </td>
                                                                                     <td>{{ forloop.counter }}</td>
                                                                                     <td>{{ item.product }}</td>
-                                                                                    <td class="text-right">{{ item.product.som|intcomma }} {{ item.valyuta.name }}</td>
-                                                                                    <td class="text-right">{{ item.quantity|floatformat:1|intcomma }}</td>
-                                                                                    <td class="text-right">{{  item.summa_total_som|floatformat:1|intcomma  }}</td>
+                                                                                    {% for pr in item.price_for_valyutas %}
+                                                                                        <td class="text-right" data-value="{{pr}}">{{ pr|intcomma }}</td>
+                                                                                    {% endfor %}
+                                                                                    <td class="text-right">{{ item.quantity|floatformat:0|intcomma }}</td>
+                                                                                    {% for pr in item.total_price_for_valyutas %}
+                                                                                        <td class="text-right" data-value="{{pr}}">{{ pr|intcomma }}</td>
+                                                                                    {% endfor %}
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
                                                                                     <td class="text-right"><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
                                                                                 </tr>
@@ -219,11 +229,22 @@
                                                                             <th></th>
                                                                             <th></th>
                                                                             <th scope="col">Jami</th>
+
+                                                                            {% for v in valyutas %}
+                                                                                <th class="text-right" scope="col">
+                                                                                </th>
+                                                                            {% endfor %}
+
+                                                                            <th class="text-right" scope="col">
+                                                                                {{ recieve.summa_quantity|intcomma }}
+                                                                            </th>
+
+                                                                            {% for v in valyutas %}
+                                                                                <th class="text-right" scope="col">
+                                                                                </th>
+                                                                            {% endfor %}
                                                                             <th class="text-right" scope="col"></th>
-                                                                            <th class="text-right" scope="col">{{ recieve.summa_quantity|intcomma }}</th>
-                                                                            <th class="text-right" scope="col">{{ recieve.summa_product_som|intcomma }}</th>
                                                                             <th class="text-right" scope="col"></th>
-                                                                            <th class="text-right" scope="col">{{ recieve.summa_product|intcomma }}</th>
                                                                         </tr>
                                                                     </tfoot>
                                                                 </table>
@@ -244,35 +265,7 @@
                     </div>
                 </div>
                 </div>
-                <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
-                    Yangi
-                </button>
-                  <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                      <form class="modal-content" method="post" action="{% url 'write_off_item_add' %}">
-                        {% csrf_token %}
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
-                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body" >
-                            <div class="form-group" id="recieve_item_add_product_div">
-                              <input type="hidden" name="write_off_id" class="form-control" value="{{ active_id }}">
-                              <input type="hidden" name="product_filial" id="recieve_item_add_product_id" class="form-control">
-
-                              <label for="">Miqdori</label>
-                              <input type="number" step="any" name="quantity" class="form-control">
-                            </div>
-                            <div class="modal-footer d-flex justify-content-between">
-                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                              <button type="submit" class="btn btn-primary">Saqlash</button>
-                            </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
+                
                   <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered" role="document">
                         <form action="{% url 'new_product_add' %}" class="modal-content" method="post">
@@ -332,6 +325,37 @@
 
 
                 {% for recieve in write_off %}
+
+                <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal{{recieve.id}}">
+                    Yangi
+                </button>
+                  <div class="modal fade" id="recieve_item_add_modal{{recieve.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'write_off_item_add' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <div class="form-group" id="recieve_item_add_product_div">
+                              <input type="hidden" name="write_off_id" class="form-control" value="{{ recieve.id }}">
+                              <input type="hidden" name="product_filial" id="recieve_item_add_product_id" class="form-control">
+
+                              <label for="">Miqdori</label>
+                              <input type="number" name="quantity" class="form-control">
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                              <button type="submit" class="btn btn-primary">Saqlash</button>
+                            </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
                 {% for item in recieve.writeoffitem.all %}
 
 
@@ -432,5 +456,7 @@
     }, 100);
 }
 </script>
+
+
 
 {% endblock js %}
