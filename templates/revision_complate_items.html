@@ -36,8 +36,9 @@
                             <thead>
                                 <tr>
                                     <th>Maxsulot</th>
-                                    <th>Miqdor</th>
+                                    <th>Miqdori</th>
                                     <th>Ombor qoldigi</th>
+                                    <th>Farqi</th>
                                     <th>Status</th>
                                     <th>Som Kelish narxi</th>
                                     <th>Dollar Kelish narxi</th>
@@ -49,6 +50,7 @@
                                         <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
                                         <td>{{ i.quantity|intcomma }}</td>
                                         <td class="quantity_td">{{ i.old_quantity|intcomma }}</td>
+                                        <td class="quantity_td">{{ i.farqi|intcomma }}</td>
                                         <td class="status_td">
                                                 {% if i.farqi > 0 %}
                                                 <button class="btn btn-primary" ></button>
@@ -63,17 +65,71 @@
                                     </tr>
                                    {% endfor %}
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>Jami</th>
-                                    <th id="total_miqdor">{{ totals.quantity|intcomma}}</th>
-                                    <th id="total_ombor_qoldik">{{ totals.old_quantity|intcomma}}</th>
-                                    <th></th>
-                                    <th id="total_kelish_itog">{{totals.som_arrival_price|intcomma }}</th>
-                                    <th >{{totals.dollar_arrival_price|intcomma }}</th>
-                                </tr>
-                            </tfoot>
                         </table>
+                        <div class="col-md-2">
+                            <br>
+                        </div>
+                        <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Jami Miqdor: <p style="color: green !important;" id="sum_miqdor">{{totals.quantity|intcomma}}</p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_sum">{{totals.som_arrival_price|intcomma}}</p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_sum">{{totals.dollar_arrival_price|intcomma}}</p>
+                                    </div>
+
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Ortiqcha Miqdor: <p style="color: green !important;" id="total_plus_miqdor">
+                                            {% if totals.farqi > 0 %}
+                                            {{ totals.farqi|intcomma }}
+                                            {% endif  %}
+                                    </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_plus">
+                                             {% if totals.farqi > 0 %}
+                                            {{ totals.farqi_som_arrival_price|intcomma }}
+                                            {% endif  %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_plus">
+                                            {% if totals.farqi > 0 %}
+                                            {{ totals.farqi_dollar_arrival_price|intcomma }}
+                                            {% endif  %}
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6"></div>
+
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Kamomat Miqdor: <p style="color:red !important;" id="total_minus_miqdor">
+                                            {% if totals.farqi < 0 %}
+                                            {{ totals.farqi|intcomma }}
+                                            {% endif  %}
+                                       </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: red !important;" id="som_kelish_narx_minus">
+                                              {% if totals.farqi < 0 %}
+                                            {{ totals.farqi_som_arrival_price|intcomma }}
+                                            {% endif  %} </p>
+                                    </div>
+                                    <div class="col-md-2" >
+                                        Dollar: <p style="color: red !important;" id="dollar_kelish_narx_minus">
+                                              {% if totals.farqi < 0 %}
+                                            {{ totals.farqi_dollar_arrival_price|intcomma }}
+                                            {% endif  %} </p>
+                                    </div>
+                                </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -100,26 +156,17 @@
     <script src="{% static 'assets/js/dashboard/dash_2.js'%}"></script>
    
         <script>
-        $('#zero-config').DataTable( {
+         $('#zero-config').DataTable({
+            paging: false,
+            info: false,
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-            buttons: {
-                buttons: [
-                    { extend: 'copy', className: 'btn' },
-                    { extend: 'csv', className: 'btn' },
-                    { extend: 'excel', className: 'btn' },
-                    { extend: 'print', className: 'btn' }
-                ]
+            buttons: [
+                { extend: 'excel', className: 'btn' },
+            ],
+            oLanguage: {
+                sInfo: "",
+                sSearchPlaceholder: "Izlash",
             },
-            "oLanguage": {
-                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
-                "sInfo": " _PAGE_ / _PAGES_",
-                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-                "sSearchPlaceholder": "Izlash",
-               "sLengthMenu": "Results :  _MENU_",
-            },
-            "stripeClasses": [],
-            "lengthMenu": [10, 20, 50, 100],
-            "pageLength": 15
-        } );
+        });
     </script>
 {% endblock js %}

@@ -9772,11 +9772,15 @@ def revision_complate_items(request ,id):
     revision = Revision.objects.get(id=id)
     item = RevisionItems.objects.filter(revision=revision)
     totals = {
-        'quantity':item.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
-        'old_quantity':item.aggregate(all=Coalesce(Sum('old_quantity'), 0, output_field=IntegerField()))['all'],
-        'som_arrival_price':item.aggregate(all=Coalesce(Sum(F('som_arrival_price')*F('quantity')), 0, output_field=IntegerField()))['all'],
-        'dollar_arrival_price':item.aggregate(all=Coalesce(Sum(F('dollar_arrival_price')*F('quantity')), 0, output_field=IntegerField()))['all'],
+        'quantity':item.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all'],
+        'old_quantity':item.aggregate(all=Coalesce(Sum('old_quantity'), 0, output_field=FloatField()))['all'],
+        'som_arrival_price':item.aggregate(all=Coalesce(Sum(F('som_arrival_price')*F('quantity')), 0, output_field=FloatField()))['all'],
+        'dollar_arrival_price':item.aggregate(all=Coalesce(Sum(F('dollar_arrival_price')*F('quantity')), 0, output_field=FloatField()))['all'],
+        'farqi':item.aggregate(all=Coalesce(Sum(F('quantity')-F('old_quantity')), 0, output_field=FloatField()))['all'],
+        'farqi_som_arrival_price':item.aggregate(all=Coalesce(Sum((F('quantity')-F('old_quantity'))*F('som_arrival_price')), 0, output_field=FloatField()))['all'],
+        'farqi_dollar_arrival_price':item.aggregate(all=Coalesce(Sum((F('quantity')-F('old_quantity'))*F('dollar_arrival_price')), 0, output_field=FloatField()))['all'],
     }
+    
     context = {
         'item': item,
         'totals':totals,

@@ -36,9 +36,125 @@
         <div class="middle-content container-xxl p-0">
             <div class="row layout-top-spacing">
                 <div id="alert-container"></div>
-              <script>
+             
+                
+                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                    <div class="widget-content widget-content-area br-8">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Maxsulot</th>
+                                            <th>Miqdor</th>
+                                            <th>Ombor qoldigi</th>
+                                            <th>Status</th>
+                                            <th>Som Kelish narxi</th>
+                                            <th>Dollar Kelish narxi</th>
+                                            <th>Farqi</th>
+                                            <th>Ochirish</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in item %}
+                                        <tr>
+                                            <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
+                                            <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" step="any" value="{{i.quantity|comma_to_dot }}" oninput="pushData(this)"></td>
+                                            <td class="quantity_td">{{ i.product.quantity|intcomma }} </td>
+                                            <td class="status_td">
+                                                {% if i.farqi > 0 %}
+                                                <button class="btn btn-primary" ></button>
+                                                {% elif 0 > i.farqi %}
+                                                <button class="btn btn-danger" ></button>
+                                                {% elif i.farqi == 0 %}
+                                                <button class="btn btn-success" ></button>
+                                                {% endif %}
+                                            </td>
+                                            <td class="som_kelish_narx_td">{{i.som_arrival_price|intcomma }}</td>
+                                            <td class="dollar_kelish_narx_td">{{i.dollar_arrival_price|intcomma }}</td>
+                                            <td class="farq_td">{{i.farqi}}</td>
+                                            <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th></th>
+                                                <th ></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th></th>
+                                                <th ></th>
+                                                <th></th>
+                                            </tr>
+                                            
+                                        </tfoot>
+                                </table>
+                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
+                                        <option value="">Mahsulotni tanlang</option>
+                                        {% for i in product %}
+                                            <option value="{{ i.id }}|{{i.quantity}}|{{i.som_kelish_narx}}|{{i.dollar_kelish_narx}}" >{{ i.name }}</option>
+                                        {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-12"><br></div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        Jami Miqdor: <p style="color: green !important;" id="sum_miqdor"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_sum"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_sum"></p>
+                                    </div>
 
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Ortiqcha Miqdor: <p style="color: green !important;" id="total_plus_miqdor">
+                                    </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: green !important;" id="som_kelish_narx_plus"></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_plus"></p>
+                                    </div>
+                                </div>
 
+                            </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6"></div>
+
+                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
+                                        Kamomat Miqdor: <p style="color:red !important;" id="total_minus_miqdor">
+                                       </p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        Som: <p style="color: red !important;" id="som_kelish_narx_minus"> </p>
+                                    </div>
+                                    <div class="col-md-2" >
+                                        Dollar: <p style="color: red !important;" id="dollar_kelish_narx_minus"> </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-11"></div>
+                <div class="col-md-2"><button class="btn btn-success" onclick="saveBack()">Yakunlash</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+            <script>
+                function formatNumber(num) {
+                    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                }
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -82,8 +198,8 @@
                             <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" oninput="pushData(this)"></td>
                             <td class="quantity_td">${quantity}</td>
                             <td class="status_td"></td>
-                            <td class="som_kelish_narx_td">${som_kelish_narx}</td>
-                            <td class="dollar_kelish_narx_td">${dollar_kelish_narx}</td>
+                            <td class="som_kelish_narx_td">${formatNumber(som_kelish_narx)}</td>
+                            <td class="dollar_kelish_narx_td">${formatNumber(dollar_kelish_narx)}</td>
                             <td class="farq_td"></td>
                             <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
@@ -116,54 +232,56 @@
                     });
                     updateTotals()
                 }
-                 function updateTotals() {
-                        let jami_som_kelish_narx_plus = 0;
-                        let jami_dollar_kelish_narx_plus = 0;
+                function updateTotals() {
+                    let jami_som_kelish_narx_plus = 0;
+                    let jami_dollar_kelish_narx_plus = 0;
 
-                        let jami_som_kelish_narx_minus = 0;
-                        let jami_dollar_kelish_narx_minus = 0;
+                    let jami_som_kelish_narx_minus = 0;
+                    let jami_dollar_kelish_narx_minus = 0;
 
-                        let jami_plus_miqdor = 0;
-                        let jami_minus_miqdor = 0;
+                    let jami_plus_miqdor = 0;
+                    let jami_minus_miqdor = 0;
 
-                        let sum_miqdori = 0;
-                        let som_kelish_narx_sum = 0;
-                        let dollar_kelish_narx_sum = 0;
-                        const allRows = document.querySelectorAll('#zero-config tbody tr');
+                    let sum_miqdori = 0;
+                    let som_kelish_narx_sum = 0;
+                    let dollar_kelish_narx_sum = 0;
+                    const allRows = document.querySelectorAll('#zero-config tbody tr');
 
-                        allRows.forEach(row => {
-                            const qty_miqor_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
-                            const kelish_narx_som = parseFloat(row.querySelector('.som_kelish_narx_td').textContent) || 0;
-                            const kelish_narx_dollar = parseFloat(row.querySelector('.dollar_kelish_narx_td').textContent) || 0;
-                            const td_farq = parseFloat(row.querySelector('.farq_td').textContent) || 0;
-                            if (td_farq > 0) {
-                                jami_som_kelish_narx_plus += kelish_narx_som * td_farq
-                                jami_dollar_kelish_narx_plus += kelish_narx_dollar * td_farq
-                                jami_plus_miqdor+= td_farq
-                            }else if ( td_farq < 0) {
-                                jami_som_kelish_narx_minus += kelish_narx_som * td_farq
-                                jami_dollar_kelish_narx_minus += kelish_narx_dollar * td_farq
-                                jami_minus_miqdor+= td_farq
-                            }
-                            sum_miqdori+=qty_miqor_input
-                            som_kelish_narx_sum += kelish_narx_som * qty_miqor_input
-                            dollar_kelish_narx_sum += kelish_narx_dollar * qty_miqor_input
+                    allRows.forEach(row => {
+                        const qty_miqor_input = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                        const kelish_narx_som = parseFloat(row.querySelector('.som_kelish_narx_td').textContent.replace(/\s/g, '')) || 0;
+                        const kelish_narx_dollar = parseFloat(row.querySelector('.dollar_kelish_narx_td').textContent.replace(/\s/g, '')) || 0;
+                        const td_farq = parseFloat(row.querySelector('.farq_td').textContent.replace(/\s/g, '')) || 0;
 
-                        });
-                        document.getElementById('som_kelish_narx_plus').textContent = jami_som_kelish_narx_plus.toFixed(2);
-                        document.getElementById('dollar_kelish_narx_plus').textContent = jami_dollar_kelish_narx_plus.toFixed(2);
+                        if (td_farq > 0) {
+                            jami_som_kelish_narx_plus += kelish_narx_som * td_farq;
+                            jami_dollar_kelish_narx_plus += kelish_narx_dollar * td_farq;
+                            jami_plus_miqdor += td_farq;
+                        } else if (td_farq < 0) {
+                            jami_som_kelish_narx_minus += kelish_narx_som * td_farq;
+                            jami_dollar_kelish_narx_minus += kelish_narx_dollar * td_farq;
+                            jami_minus_miqdor += td_farq;
+                        }
 
-                        document.getElementById('som_kelish_narx_minus').textContent = jami_som_kelish_narx_minus.toFixed(2);
-                        document.getElementById('dollar_kelish_narx_minus').textContent = jami_dollar_kelish_narx_minus.toFixed(2);
+                        sum_miqdori += qty_miqor_input;
+                        som_kelish_narx_sum += kelish_narx_som * qty_miqor_input;
+                        dollar_kelish_narx_sum += kelish_narx_dollar * qty_miqor_input;
+                    });
 
-                        document.getElementById('total_plus_miqdor').textContent = jami_plus_miqdor.toFixed(2);
-                        document.getElementById('total_minus_miqdor').textContent = jami_minus_miqdor.toFixed(2);
+                    document.getElementById('som_kelish_narx_plus').textContent = formatNumber(jami_som_kelish_narx_plus.toFixed(2));
+                    document.getElementById('dollar_kelish_narx_plus').textContent = formatNumber(jami_dollar_kelish_narx_plus.toFixed(2));
 
+                    document.getElementById('som_kelish_narx_minus').textContent = formatNumber(jami_som_kelish_narx_minus.toFixed(2));
+                    document.getElementById('dollar_kelish_narx_minus').textContent = formatNumber(jami_dollar_kelish_narx_minus.toFixed(2));
 
-                        document.getElementById('sum_miqdor').textContent = sum_miqdori.toFixed(2);
-                        document.getElementById('som_kelish_narx_sum').textContent = som_kelish_narx_sum.toFixed(2);
-                        document.getElementById('dollar_kelish_narx_sum').textContent = dollar_kelish_narx_sum.toFixed(2);
+                    document.getElementById('total_plus_miqdor').textContent = jami_plus_miqdor.toFixed(2);
+                    document.getElementById('total_minus_miqdor').textContent = jami_minus_miqdor.toFixed(2);
+
+                    document.getElementById('sum_miqdor').textContent = sum_miqdori.toFixed(2);
+                    document.getElementById('som_kelish_narx_sum').textContent = formatNumber(som_kelish_narx_sum.toFixed(2));
+                    document.getElementById('dollar_kelish_narx_sum').textContent = formatNumber(dollar_kelish_narx_sum.toFixed(2));
                 }
+
                 function pushData(item) {
                     updateTotals()
                     const item_tr = item.closest('tr');
@@ -261,125 +379,10 @@
                         alertElement.fadeOut(500, function () { $(this).remove(); });
                     }, 3000);
                 };
-                 document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('DOMContentLoaded', function() {
                         updateTotals();
-                    });
-            </script>
-                
-                <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                    <div class="widget-content widget-content-area br-8">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table id="zero-config" class="table table-striped dt-table-hover" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th>Maxsulot</th>
-                                            <th>Miqdor</th>
-                                            <th>Ombor qoldigi</th>
-                                            <th>Status</th>
-                                            <th>Som Kelish narxi</th>
-                                            <th>Dollar Kelish narxi</th>
-                                            <th>Farqi</th>
-                                            <th>Ochirish</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for i in item %}
-                                        <tr>
-                                            <td class="product_name" data-product_id="{{i.product.id}}">{{i.product.name}}</td>
-                                            <td><input type="number" class="form-control" min="0" placeholder="Miqdor kiriting" step="any" value="{{i.quantity|comma_to_dot }}" oninput="pushData(this)"></td>
-                                            <td class="quantity_td">{{ i.product.quantity }} </td>
-                                            <td class="status_td">
-                                                {% if i.farqi > 0 %}
-                                                <button class="btn btn-primary" ></button>
-                                                {% elif 0 > i.farqi %}
-                                                <button class="btn btn-danger" ></button>
-                                                {% elif i.farqi == 0 %}
-                                                <button class="btn btn-success" ></button>
-                                                {% endif %}
-                                            </td>
-                                            <td class="som_kelish_narx_td">{{i.som_arrival_price }}</td>
-                                            <td class="dollar_kelish_narx_td">{{i.dollar_arrival_price }}</td>
-                                            <td class="farq_td">{{i.farqi}}</td>
-                                            <td><button class="btn btn-danger" onclick="DelTbody(this)"><i class="fa-solid fa-trash"></i></button></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th></th>
-                                                <th ></th>
-                                                <th></th>
-                                                <th></th>
-                                                <th></th>
-                                                <th></th>
-                                                <th ></th>
-                                                <th></th>
-                                            </tr>
-                                            
-                                        </tfoot>
-                                </table>
-                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" onchange="SelectProduct(this)">
-                                        <option value="">Mahsulotni tanlang</option>
-                                        {% for i in product %}
-                                            <option value="{{ i.id }}|{{i.quantity}}|{{i.som_kelish_narx}}|{{i.dollar_kelish_narx}}" >{{ i.name }}</option>
-                                        {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-12"><br></div>
-                            <div class="col-md-12">
-                                <div class="row">
-                                    <div class="col-md-2">
-                                        Jami Miqdor: <p style="color: green !important;" id="sum_miqdor"></p>
-                                    </div>
-                                    <div class="col-md-2">
-                                        Som: <p style="color: green !important;" id="som_kelish_narx_sum"></p>
-                                    </div>
-                                    <div class="col-md-2">
-                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_sum"></p>
-                                    </div>
-
-                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
-                                        Ortiqcha Miqdor: <p style="color: green !important;" id="total_plus_miqdor">
-                                    </p>
-                                    </div>
-                                    <div class="col-md-2">
-                                        Som: <p style="color: green !important;" id="som_kelish_narx_plus"></p>
-                                    </div>
-                                    <div class="col-md-2">
-                                        Dollar: <p style="color: green !important;" id="dollar_kelish_narx_plus"></p>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="col-md-12">
-                                <div class="row">
-                                    <div class="col-md-6"></div>
-
-                                    <div class="col-md-2" style="border-left: 2px solid #0011ff;">
-                                        Kamomat Miqdor: <p style="color:red !important;" id="total_minus_miqdor">
-                                       </p>
-                                    </div>
-                                    <div class="col-md-2">
-                                        Som: <p style="color: red !important;" id="som_kelish_narx_minus"> </p>
-                                    </div>
-                                    <div class="col-md-2" >
-                                        Dollar: <p style="color: red !important;" id="dollar_kelish_narx_minus"> </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-11"></div>
-                <div class="col-md-2"><button class="btn btn-success" onclick="saveBack()">Yakunlash</button></div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock content %}
-{% block js %}
-    
+                });
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
     <script>
@@ -396,5 +399,18 @@
     <script src="{% static 'assets/js/custom.js' %}"></script>
     <script src="{% static 'assets/js/dashboard/dash_2.js'%}"></script>
    
-    
+    <script>
+        $('#zero-config').DataTable({
+            paging: false,
+            info: false,
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: [
+                { extend: 'excel', className: 'btn' },
+            ],
+            oLanguage: {
+                sInfo: "",
+                sSearchPlaceholder: "Izlash",
+            },
+        });
+    </script>
 {% endblock js %}
