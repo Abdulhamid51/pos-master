@@ -234,7 +234,6 @@
                     console.log(data)
                 }
                 function saveBack() {
-                    if (data.length > 0) {
                         $.ajax({
                             url: `/revision_item_add/{{revision.id}}`,
                             type: "POST",
@@ -250,7 +249,6 @@
                                 showAlert("Server bilan bog'lanishda xatolik", "danger");
                             }
                         });
-                    }
                 }
                 const showAlert = (message, type) => {
                     const alertElement = $(`

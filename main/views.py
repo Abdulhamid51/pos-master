@@ -9773,8 +9773,9 @@ def revision_complate_items(request ,id):
     item = RevisionItems.objects.filter(revision=revision)
     totals = {
         'quantity':item.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
-        'arrival_price':item.aggregate(all=Coalesce(Sum(F('quantity') * F('arrival_price')), 0, output_field=IntegerField()))['all'],
-        'selling_price':item.aggregate(all=Coalesce(Sum(F('quantity') * F('selling_price')), 0, output_field=IntegerField()))['all'],
+        'old_quantity':item.aggregate(all=Coalesce(Sum('old_quantity'), 0, output_field=IntegerField()))['all'],
+        'som_arrival_price':item.aggregate(all=Coalesce(Sum(F('som_arrival_price')*F('quantity')), 0, output_field=IntegerField()))['all'],
+        'dollar_arrival_price':item.aggregate(all=Coalesce(Sum(F('dollar_arrival_price')*F('quantity')), 0, output_field=IntegerField()))['all'],
     }
     context = {
         'item': item,
