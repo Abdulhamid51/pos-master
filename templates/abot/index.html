@@ -304,21 +304,20 @@
       color: white;
     }
 
-  .fixed-cart {
-    display: none; 
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: #4CAF50;
-    color: white;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    z-index: 100;
-  }
+    .fixed-cart {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
 
     .cart-total {
       font-size: 1.2rem;
@@ -400,145 +399,154 @@
     }
 
     /* Simple Cart Modal Styles */
-.simple-cart-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  z-index: 1002;
-  display: none;
-  flex-direction: column;
-}
+    .simple-cart-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 1002;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
 
-.simple-cart-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
+    .simple-cart-modal.active {
+      display: flex;
+      opacity: 1;
+      visibility: visible;
+    }
 
-.simple-cart-header {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 1;
-}
+    .simple-cart-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
 
-.simple-cart-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #001f3f;
-}
+    .simple-cart-header {
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 1;
+    }
 
-.close-simple-cart {
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-}
+    .simple-cart-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #001f3f;
+    }
 
-.simple-cart-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-}
+    .close-simple-cart {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
 
-.empty-cart-message {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  display: none;
-}
+    .simple-cart-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
 
-.simple-cart-footer {
-  padding: 1rem;
-  border-top: 1px solid #eee;
-  background: #f9f9f9;
-  position: sticky;
-  bottom: 0;
-}
+    .empty-cart-message {
+      text-align: center;
+      padding: 2rem;
+      color: #666;
+      display: none;
+    }
 
-.simple-cart-total {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-}
+    .simple-cart-footer {
+      padding: 1rem;
+      border-top: 1px solid #eee;
+      background: #f9f9f9;
+      position: sticky;
+      bottom: 0;
+    }
 
-.checkout-btn {
-  width: 100%;
-  padding: 1rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 1rem;
-}
+    .simple-cart-total {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
 
-.simple-cart-item {
-  display: flex;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #eee;
-  gap: 1rem;
-}
+    .checkout-btn {
+      width: 100%;
+      padding: 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
 
-.simple-cart-item-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
+    .simple-cart-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #eee;
+      gap: 1rem;
+    }
 
-.simple-cart-item-info {
-  flex: 1;
-  min-width: 0;
-}
+    .simple-cart-item-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
 
-.simple-cart-item-name {
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .simple-cart-item-info {
+      flex: 1;
+      min-width: 0;
+    }
 
-.simple-cart-item-price {
-  color: #2b4eff;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
+    .simple-cart-item-name {
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-.simple-cart-item-quantity {
-  font-size: 0.9rem;
-  color: #666;
-}
+    .simple-cart-item-price {
+      color: #2b4eff;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
 
-@media (max-width: 600px) {
-  .simple-cart-item {
-    padding: 0.75rem 0;
-    gap: 0.75rem;
-  }
-  
-  .simple-cart-item-image {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .checkout-btn {
-    padding: 0.8rem;
-    font-size: 0.9rem;
-  }
-}
+    .simple-cart-item-quantity {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    @media (max-width: 600px) {
+      .simple-cart-item {
+        padding: 0.75rem 0;
+        gap: 0.75rem;
+      }
+      
+      .simple-cart-item-image {
+        width: 70px;
+        height: 70px;
+      }
+      
+      .checkout-btn {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -618,26 +626,26 @@
     </div>
   </div>
 
-<div class="simple-cart-modal" id="simpleCartModal">
-  <div class="simple-cart-content">
-    <div class="simple-cart-header">
-      <div class="simple-cart-title">Savatcha</div>
-      <span class="close-simple-cart" onclick="closeSimpleCart()">✕</span>
-    </div>
-    <div class="simple-cart-body" id="simpleCartBody">
-      <div class="empty-cart-message">
-        Savatchangiz bo'sh
+  <div class="simple-cart-modal" id="simpleCartModal">
+    <div class="simple-cart-content">
+      <div class="simple-cart-header">
+        <div class="simple-cart-title">Savatcha</div>
+        <span class="close-simple-cart" onclick="closeSimpleCart()">✕</span>
       </div>
-    </div>
-    <div class="simple-cart-footer">
-      <div class="simple-cart-total">
-        <span>Jami:</span>
-        <span id="simpleCartTotalPrice">0 sum</span>
+      <div class="simple-cart-body" id="simpleCartBody">
+        <div class="empty-cart-message">
+          Savatchangiz bo'sh
+        </div>
       </div>
-      <button class="checkout-btn" onclick="checkout()">Buyurtma berish</button>
+      <div class="simple-cart-footer">
+        <div class="simple-cart-total">
+          <span>Jami:</span>
+          <span id="simpleCartTotalPrice">0 sum</span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">Buyurtma berish</button>
+      </div>
     </div>
   </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -795,6 +803,8 @@
 
     function openSimpleCart() {
       const simpleCartModal = document.getElementById('simpleCartModal');
+      simpleCartModal.classList.add('active');
+      
       const simpleCartBody = document.getElementById('simpleCartBody');
       const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
       
@@ -805,7 +815,6 @@
         document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
       } else {
         emptyCartMessage.style.display = 'none';
-        
         simpleCartBody.innerHTML = '';
         
         let totalPrice = 0;
@@ -844,13 +853,11 @@
         
         document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
       }
-      
-      simpleCartModal.style.display = 'flex';
     }
 
     function closeSimpleCart() {
       const simpleCartModal = document.getElementById('simpleCartModal');
-      simpleCartModal.style.display = 'none';
+      simpleCartModal.classList.remove('active');
     }
 
     function checkout() {
@@ -904,7 +911,7 @@
       }
     }
 
-    
+    // Initialize cart
     updateCartTotal();
 
     document.addEventListener('keydown', function(event) {
