@@ -8341,17 +8341,23 @@ def pl_fin(request):
 def balans_fin(request):
     today = datetime.now()
     year = request.GET.get('year', today.year)
-    valyuta = request.GET.get('valyuta')
-    fields = {
-        'som': 'som',
-        'dollar': 'dollar',
+    filter_valyuta = request.GET.get('valyuta')
+
+    valyuta = Valyuta.objects.all()
+
+    filters = {
+        'valyuta':filter_valyuta,
+        'year':year,
     }
-    selected_field = fields.get(valyuta, 'som')
     months_dict = {
         1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
         5: "May", 6: "Iyun", 7: "Iyul", 8: "Avgust",
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
+
+    pay_history = PayHistory.objects.filter(date__year=year)
+    if filter_valyuta:
+        pay_history = pay_history.filter(valyuta_id=filter_valyuta)
     main_tool = (
         MainTool.objects.filter(is_active=True, date__year=year)
         .values('date__month')
@@ -8368,10 +8374,11 @@ def balans_fin(request):
     ]
 
     bebt_deliver = (
-        DebtDeliver.objects.filter(date__year=year)
+        pay_history.filter(deliver__isnull=False)
         .values('date__month')
-        .annotate(sum=Coalesce(Sum(selected_field), 0, output_field=FloatField()))
+        .annotate(sum=Sum('summa'))
     )
+
     bebt_deliver_dict = {item['date__month'] : { 'sum':item['sum']} for item in bebt_deliver}
 
     bebt_deliver_data = [
@@ -8420,10 +8427,11 @@ def balans_fin(request):
         for num , month in months_dict.items():
             mon_dt = {
                 'month':num,
-                'summa':kassa_daily.filter(date__month=num, valyuta=i).aggregate(all=Coalesce(Sum(selected_field), 0, output_field=IntegerField()))['all']
+                'summa':kassa_daily.filter(date__month=num, valyuta=i).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
             }
             dt['month'].append(mon_dt)
         kassa_daily_data.append(dt)
+
     product = (
         ProductFilialDaily.objects.filter(date__year=year)
         .values('date__month')
@@ -8440,14 +8448,48 @@ def balans_fin(request):
 
         for num , month in months_dict.items()
     ]
+    pay_history_income = (
+        pay_history.filter(external_income_user__isnull=False)
+        .values('date__month')
+        .annotate(sum=Sum('summa'))
+    )
 
+    pay_history_income_dict = {
+        pay_loop['date__month'] : {'sum':pay_loop['sum']}
+        for pay_loop in pay_history_income
+    }
+    pay_history_income_data = [
+        {'sum':pay_history_income_dict.get(num, {}).get('sum', 0)}
+
+        for num , month in months_dict.items()
+    ]
+
+    pay_history_debtor = (
+        pay_history.filter(debtor__isnull=False)
+        .values('date__month')
+        .annotate(sum=Sum('summa'))
+    )
+
+    pay_history_debtor_dict = {
+        pay_loop['date__month'] : {'sum':pay_loop['sum']}
+        for pay_loop in pay_history_debtor
+    }
+    pay_history_debtor_data = [
+        {'sum':pay_history_debtor_dict.get(num, {}).get('sum', 0)}
+
+        for num , month in months_dict.items()
+    ]
     context = {
+        'pay_history_income_data':pay_history_income_data,
         'months': list(months_dict.values()),
         'bebt_deliver_data':bebt_deliver_data,
         'kassa_daily_data':kassa_daily_data,
         'product_data':product_data,
         'main_tool_data':main_tool_data,
         'reja_chiqim_data':reja_chiqim_data,
+        'valyuta':valyuta,
+        'pay_history_debtor_data':pay_history_debtor_data,
+        'filters':filters,
     }
     return render(request, 'fin/balans_fin.html', context)
 

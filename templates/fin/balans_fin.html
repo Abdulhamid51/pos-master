@@ -111,7 +111,33 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 layout-spacing">
+                         <div class="col-12 layout-spacing">
+                            <form method="get">
+                                <div class="row">
+                                    <div class="col-md-3"></div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important; font-weight: bold;">Valyuta</label>
+                                        <select name="valyuta" class="form-control"> 
+                                            <option value="" selected>  ----------------------   </option>
+                                            {% for valyuta in valyuta %}
+                                                <option value="{{ valyuta.id }}" {% if filters.valyuta == valyuta.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ valyuta.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="" style="color: black !important; font-weight: bold;">Yil</label>
+                                        <input type="number" value="{{filters.year}}" class="form-control">
+                                        
+                                    </div>
+                                    <div class="col-md-2" style="margin: 0px;">
+                                        <br>
+                                        <p></p>
+                                        <button class="btn btn-primary" type="submit" style="height: 40px;">Filter</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                         <div class="col-lg-12">
                             <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
@@ -139,21 +165,21 @@
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="background-color: rgb(149, 148, 148); ">
-                                                        <td style="color: white !important;">Оборот</td>
+                                                        <td style="color: white !important;">Aylanma</td>
                                                         {% for months in months %}
                                                             <td style="color: white !important;">0</td>
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="background-color: rgb(60, 173, 221); ">
-                                                        <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Дебетерка</td>
+                                                        <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Debeterka</td>
                                                         {% for months in months %}
                                                             <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">0</td>
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="text-align: right;">
                                                         <td >Mijozlar</td>
-                                                        {% for months in months %}
-                                                            <td>0</td>
+                                                        {% for pay_history_debtor_data in pay_history_debtor_data %}
+                                                            <td>{{ pay_history_debtor_data.sum|intcomma }}</td>
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="text-align: right;">
@@ -163,14 +189,14 @@
                                                         {% endfor %}
                                                     </tr>
                                                     <tr style="text-align: right;">
-                                                        <td>Qarzdorliklar</td>
-                                                        {% for months in months %}
-                                                            <td>0</td>
+                                                        <td>Turli shaxs</td>
+                                                        {% for pay_history_income_data in pay_history_income_data %}
+                                                            <td>{{ pay_history_income_data.sum|intcomma }}</td>
                                                         {% endfor %}
                                                     </tr>
                                                   
                                                     <tr style="background-color: rgb(60, 173, 221); ">
-                                                        <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Деньги</td>
+                                                        <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">Pullar</td>
                                                         {% for months in months %}
                                                             <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">0</td>
                                                         {% endfor %}
@@ -179,7 +205,7 @@
                                                         <tr style="text-align: right;">
                                                             <td>{{ kassa_daily_data.valyuta_name }}</td>
                                                             {% for x in kassa_daily_data.month %}
-                                                                <td>{{ x.summa }}</td>
+                                                                <td>{{ x.summa|intcomma }}</td>
                                                             {% endfor %}
                                                         </tr>
                                                     {% endfor %}
@@ -193,14 +219,38 @@
                                                         <tr style="text-align: right;">
                                                             <td>{{ reja_chiqim_data.valyuta_name }}</td>
                                                             {% for x in reja_chiqim_data.month %}
-                                                                <td>{{ x.summa }}</td>
+                                                                <td>{{ x.summa|intcomma }}</td>
                                                             {% endfor %}
                                                         </tr>
                                                     {% endfor %}
+                                                    <tr style="background-color: rgb(119, 118, 118); ">
+                                                        <td style="color: rgb(255, 255, 255) !important; font-weight: bold;">Jami aktivlar</td>
+                                                        {% for months in months %}
+                                                            <td style="color: rgb(0, 0, 0) !important; font-weight: bold;">0</td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td></td>
+                                                        {% for months in months %}
+                                                            <td></td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Уставный Капитал</td>
+                                                        {% for months in months %}
+                                                            <td></td>
+                                                        {% endfor %}
+                                                    </tr>
                                                     <tr style="text-align: right;">
-                                                        <td>Нераспределенная Прибыль</td>
+                                                        <td>Taqqoslanmagan foyda</td>
                                                         {% for product_data in product_data %}
                                                             <td>{{ product_data.sum|intcomma }}</td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Собственный Капитал</td>
+                                                        {% for months in months %}
+                                                            <td></td>
                                                         {% endfor %}
                                                     </tr>
                                                 </tbody>
