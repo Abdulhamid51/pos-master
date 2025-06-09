@@ -212,9 +212,29 @@ def send_order_url_only(order_id):
 def mobile_cart_send(request, chat_id): 
     customer = Debtor.objects.filter(tg_id=chat_id).first()
     if not customer:
-        return "Mijoz topilmadi."
+        send_message(chat_id, "❌ Mijoz topilmadi.")
+        return
+
     m_order = MOrder.objects.create(debtor=customer)
-    send_order_url_only(m_order.id)
+    order_url = send_order_url_only(m_order.id)
+
+    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': "🛒 Buyurtma berish uchun tugmani bosing:",
+        'reply_markup': {
+            "inline_keyboard": [
+                [
+                    {
+                        "text": "🛒 Buyurtma berish",
+                        "url": order_url
+                    }
+                ]
+            ]
+        }
+    }
+    requests.post(url, json=payload)
+
 
     
     
