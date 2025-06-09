@@ -16,9 +16,9 @@ def abot_index(request, order_id):
 
 
 @csrf_exempt
-def mobile_done_cart(request, oder_id):
-    data = json.dumps(request.body)
-    order = MOrder.objects.get(id=oder_id)
+def mobile_done_cart(request, order_id):
+    data = json.loads(request.body)
+    order = MOrder.objects.get(id=order_id)
     back = []
 
     for item in data:
