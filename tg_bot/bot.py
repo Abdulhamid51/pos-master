@@ -204,7 +204,7 @@ def get_order(period, chat_id):
 
 def send_order_url_only(order_id):
     path = reverse('abot_index', args=[order_id])
-    full_url = f"https://ecomaruf.kabinett.uz/{path}"
+    full_url = f"https://ecomaruf.kabinett.uz{path}"
     return full_url
 
 
