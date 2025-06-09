@@ -4,15 +4,15 @@ from django.http.response import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 
-def abot_index(request, chat_id, order_id):
-    customer = Debtor.objects.filter(tg_id=chat_id).first()
+def abot_index(request, order_id):
+    order = MOrder.objects.get(id=order_id)
+    customer = Debtor.objects.filter(id=order.debtor.id).first()
     context = {
-            'product' :ProductFilial.objects.order_by('-id').values('id', 'name', 'quantity', 'image', 'som', 'measurement_type__name')[:5],
+            'product' :ProductFilial.objects.order_by('-id').values('id', 'name', 'quantity', 'image', 'som', 'measurement_type__name'),
             'customer':customer,
             'order_id':order_id,
     }
     return render(request, 'abot/index.html', context)
-
 
 
 @csrf_exempt
