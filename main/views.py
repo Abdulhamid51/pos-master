@@ -4876,7 +4876,7 @@ def one_day_price(request):
         dt = {
             "employee": i,
             "days": [],
-            "all": OneDayPice.objects.filter(user_profile=i, is_status=True, sana__year=today.year, sana__month=today.month).aggregate(all=Coalesce(Sum('one_day_price'), 0))['all'],
+            "all": OneDayPice.objects.filter(user_profile=i, is_status=True, sana__year=today.year, sana__month=today.month).aggregate(all=Coalesce(Sum('one_day_price'), 0, output_field=FloatField()))['all'],
         }
         for day in dates:
             obj, created = query.get_or_create(sana=today.replace(day=day), user_profile=i, one_day_price=i.one_day_price)
@@ -5182,19 +5182,19 @@ def detail_employee(request, id):
     context = {
         'chiqim':data,
         "monthly": sum(total_sum) * user.flex_price + user.fix_price -total ,
-        "fix_price":chiqim.aggregate(all=Coalesce(Sum('fix'), 0))['all'],
-        "flex_price":chiqim.aggregate(all=Coalesce(Sum('flex'), 0))['all'],
-        "pay":chiqim.aggregate(all=Coalesce(Sum('pay'), 0))['all'],
-        "rest":chiqim.aggregate(all=Coalesce(Sum('rest'), 0))['all'],
-        "summa":chiqim.aggregate(all=Coalesce(Sum('summa'), 0))['all'],
-        "quantity":chiqim.aggregate(all=Coalesce(Sum('quantity'), 0))['all'],
+        "fix_price":chiqim.aggregate(all=Coalesce(Sum('fix'), 0, output_field=FloatField()))['all'],
+        "flex_price":chiqim.aggregate(all=Coalesce(Sum('flex'), 0, output_field=FloatField()))['all'],
+        "pay":chiqim.aggregate(all=Coalesce(Sum('pay'), 0, output_field=FloatField()))['all'],
+        "rest":chiqim.aggregate(all=Coalesce(Sum('rest'), 0, output_field=FloatField()))['all'],
+        "summa":chiqim.aggregate(all=Coalesce(Sum('summa'), 0, output_field=FloatField()))['all'],
+        "quantity":chiqim.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all'],
         "ishladi":sum([i.ishladi for i in chiqim]),
 
         'count_work':count_work.count(),
         'count_not_work':count_not_work.count(),
-        'bonus_summa':bonus_summa.aggregate(all=Coalesce(Sum('total'), 0))['all'],
+        'bonus_summa':bonus_summa.aggregate(all=Coalesce(Sum('total'), 0, output_field=FloatField()))['all'],
         'fix':user.fix_price,
-        'fix_summa': round(bonus_summa.aggregate(all=Coalesce(Sum('total'), 0))['all'] + user.fix_price, 2)
+        'fix_summa': round(bonus_summa.aggregate(all=Coalesce(Sum('total'), Decimal('0.00')))['all'] + user.fix_price, 2)
     }
     if user.staff == 3:
         return render(request, 'detail_employee.html', context)
@@ -5213,7 +5213,7 @@ def detail_mobil(request, id):
     chiqim = Chiqim.objects.filter(mobil_user=user)
     context = {
         'chiqim':chiqim,
-        "monthly": MobilPayment.objects.filter(m_user=user, sana__year=today.year, sana__month=today.month).aggregate(all=Coalesce(Sum('total_price'), 0))['all'] * user.flex_price + user.fix_price, 
+        "monthly": MobilPayment.objects.filter(m_user=user, sana__year=today.year, sana__month=today.month).aggregate(all=Coalesce(Sum('total_price'), Decimal('0.00')))['all'] * user.flex_price + user.fix_price, 
         "summa":chiqim.aggregate(all=Coalesce(Sum('qancha_som'), 0))['all'],
         "qancha_dol":chiqim.aggregate(all=Coalesce(Sum('qancha_dol'), 0))['all'],
         "plastik":chiqim.aggregate(all=Coalesce(Sum('plastik'), 0))['all'],

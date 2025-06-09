@@ -377,8 +377,8 @@
                   
                     
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}active{% endif %}">
-                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}true{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  kassa_is_approved filial_kassalar' %}active{% endif %}">
+                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  kassa_is_approved filial_kassalar' %}true{% endif %}" class="dropdown-toggle">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-money-bill-trend-up" style="font-size: 17px;"></i>
                                     <span style="margin-left: 10px;">Moliya</span>
@@ -391,7 +391,7 @@
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin  one_day_price employee mobile_order call_center_payment kassa_is_approved filial_kassalar' %}show{% endif %}"
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'analysis_costs kassa desktop_kassa allFilter fin_report kassa_fin data_fin debet_kredit_fin cf_fin  daily_cf_fin xarid_fin sotuv_fin pl_fin balans_fin majburiyat_fin tolov_kalendar_fin reja_tushum_fin reja_chiqim_fin asosiy_vosita_fin ombor_fin kassa_is_approved filial_kassalar' %}show{% endif %}"
                                 id="filial-moliya" data-parent="#accordionExample">
                                     {% if custom_user_profile.is_kassa %} 
                                         <li class="menu {% if request.resolver_match.url_name == 'kassa' %}active{% endif %}">
@@ -424,26 +424,7 @@
                                                 <a href="{% url 'fin_report' %}"> Fin hisobiti </a>
                                             </li>
                                     {% endif %}
-                                    {% if custom_user_profile.is_xodim_kunlik %} 
-                                    <li class="menu {% if request.resolver_match.url_name == 'one_day_price' %}active{% endif %}">
-                                        <a href="{% url 'one_day_price' %}"> Kunlik Ishchi </a>
-                                    </li>
-                                    {% endif %}
-                                    {% if custom_user_profile.is_xodim_oylik %} 
-                                        <li class="menu {% if request.resolver_match.url_name == 'employee' %}active{% endif %}">
-                                            <a href="{% url 'employee' %}"> Oylik ishchi </a>
-                                        </li>
-                                    {% endif %}
-                                    {% if custom_user_profile.is_xodim_mobile %} 
-                                        <li class="menu {% if request.resolver_match.url_name == 'mobile_order' %}active{% endif %}">
-                                            <a href="{% url 'mobile_order' %}">Mobile Ishchi </a>
-                                        </li>
-                                    {% endif %}
-                                    {% if custom_user_profile.is_xodim_call_center %} 
-                                        <li class="menu {% if request.resolver_match.url_name == 'call_center_payment' %}active{% endif %}">
-                                            <a href="{% url 'call_center_payment' %}">Call center </a>
-                                        </li>
-                                    {% endif %}
+                                   
                                     {% if custom_user_profile.is_kassa_tasdiklanmagan %} 
 
                                         <li class="menu {% if request.resolver_match.url_name == 'kassa_is_approved' %}active{% endif %}">
@@ -455,19 +436,46 @@
                     {% endwith %}
 
                    
-                    {% comment %} <li class="menu {{ ltv }}">
-                        <a href="{% url 'ltv' %}" aria-expanded="{{ ltv_t }}" class="dropdown-toggle">
-                            <div class="">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" class="feather feather-pie-chart">
-                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-                                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-                                </svg>
-                                <span>LTV mijoz tahlili</span>
-                            </div>
-                        </a>
-                    </li> {% endcomment %}
+                    {% with url_name=request.resolver_match.url_name %}
+                        <li class="menu {% if url_name in 'one_day_price employee mobile_order call_center_payment user_detail_chiqim' %}active{% endif %}">
+                            <a href="#narx-hrm" data-toggle="collapse" aria-expanded="{% if url_name in 'one_day_price employee mobile_order call_center_payment user_detail_chiqim'  %}true{% endif %}" class="dropdown-toggle">
+                                <div style="display: flex; align-items: center;">
+                                    <i class="fa-solid fa-user-tie" style="font-size: 17px;"></i>
+                                    <span style="margin-left: 10px;">HRM</span>
+                                </div>
+                                <div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-chevron-right">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </div>
+                            </a>
+                            <ul class="collapse submenu list-unstyled {% if url_name in 'one_day_price employee mobile_order call_center_payment user_detail_chiqim'  %}show{% endif %}" 
+                            id="narx-hrm" data-parent="#accordionExample">
+                                {% if custom_user_profile.is_xodim_kunlik %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'one_day_price' or  request.resolver_match.url_name == 'user_detail_chiqim'%}active{% endif %}">
+                                        <a href="{% url 'one_day_price' %}"> Kunlik Ishchi </a>
+                                    </li>
+                                {% endif %}
+                                {% if custom_user_profile.is_xodim_oylik %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'employee' %}active{% endif %}">
+                                        <a href="{% url 'employee' %}"> Oylik ishchi </a>
+                                    </li>
+                                {% endif %}
+                                <!-- {% if custom_user_profile.is_xodim_mobile %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'mobile_order' %}active{% endif %}">
+                                        <a href="{% url 'mobile_order' %}">Mobile Ishchi </a>
+                                    </li>
+                                {% endif %} -->
+                                {% if custom_user_profile.is_xodim_call_center %} 
+                                    <li class="menu {% if request.resolver_match.url_name == 'call_center_payment' %}active{% endif %}">
+                                        <a href="{% url 'call_center_payment' %}">Call center </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endwith %}
                     {% if custom_user_profile.is_filial_boshkaruvi %} 
                     <li class="menu {{ filial }}" style="display: none;">
                         <a href="{% url 'filial' %}" aria-expanded="{{ filial_t }}" class="dropdown-toggle">

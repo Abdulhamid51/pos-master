@@ -1,0 +1,923 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mahsulotlar</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-color: #f4f4f4;
+      padding-bottom: 80px;
+    }
+
+    .navbar {
+      display: flex;
+      align-items: center;
+      background-color: #001f3f;
+      color: white;
+      padding: 1rem;
+    }
+
+    .hamburger {
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+    
+    .navbar input {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 10px;
+      border: none;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -260px;
+      width: 250px;
+      height: 100%;
+      background-color: #ffffff;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar-header {
+      background-color: #001f3f;
+      color: white;
+      padding: 1.5rem 1rem;
+      position: relative;
+    }
+
+    .sidebar-header .username {
+      font-weight: bold;
+    }
+
+    .sidebar-header .email {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: white;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar li {
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar li:hover {
+      background-color: #f5f5f5;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.3);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .content {
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .product {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      border-radius: 10px;
+      padding: 1rem;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .product img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .price-quantity {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    .product-price {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .product-quantity {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .add-btn {
+      background-color: #2b4eff;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: normal;
+      max-width: 130px;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #001f3f;
+    }
+
+    .close-modal {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .modal-body {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-product {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-product img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .modal-product-info {
+      flex: 1;
+    }
+
+    .modal-product-name {
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .modal-product-price {
+      color: #2b4eff;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .quantity-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid #ddd;
+      background: white;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quantity-input {
+      width: 50px;
+      text-align: center;
+      padding: 0.25rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background: #ff0000;
+      color: #ffffff;
+    }
+
+    .add-to-cart-btn {
+      background: #2b4eff;
+      color: white;
+    }
+
+  .fixed-cart {
+    display: none; 
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+  }
+
+    .cart-total {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .cart-button {
+      background-color: white;
+      color: #4CAF50;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .product {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .product img {
+        width: 50px;
+        height: 50px;
+      }
+
+      .product-title {
+        font-size: 0.8rem;
+      }
+
+      .product-price, .product-quantity {
+        font-size: 0.8rem;
+      }
+
+      .price-quantity {
+        flex-direction: row;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+      }
+
+      .add-btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        max-width: 100px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 1rem;
+      }
+      
+      .modal-product img {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .modal-btn {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+      }
+
+      .fixed-cart {
+        padding: 10px 15px;
+      }
+      
+      .cart-total {
+        font-size: 1rem;
+      }
+      
+      .cart-button {
+        padding: 6px 15px;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Simple Cart Modal Styles */
+.simple-cart-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  z-index: 1002;
+  display: none;
+  flex-direction: column;
+}
+
+.simple-cart-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.simple-cart-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.simple-cart-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #001f3f;
+}
+
+.close-simple-cart {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.simple-cart-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.empty-cart-message {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  display: none;
+}
+
+.simple-cart-footer {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  background: #f9f9f9;
+  position: sticky;
+  bottom: 0;
+}
+
+.simple-cart-total {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.simple-cart-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+  gap: 1rem;
+}
+
+.simple-cart-item-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.simple-cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.simple-cart-item-name {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.simple-cart-item-price {
+  color: #2b4eff;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.simple-cart-item-quantity {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .simple-cart-item {
+    padding: 0.75rem 0;
+    gap: 0.75rem;
+  }
+  
+  .simple-cart-item-image {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .checkout-btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <input type="text" placeholder="Mahsulot qidirish . . ." />
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="close-btn" onclick="closeSidebar()">✕</span>
+      <div class="username">{{customer.fio}}</div>
+      <div class="email">{{customer.phone1}}</div>
+    </div>
+    <ul>
+      <li><a href="#" onclick="handlePlaceOrder()">➕ Buyurtma berish</a></li>
+      <li><a href="#" onclick="handleLogout()">🔓 Chiqish</a></li>
+    </ul>
+  </div>
+
+  <div class="content">
+    {% for product in product %}
+      <div class="product">
+        {% if product.image %}
+        <img src="/media/{{ product.image }}" alt="product" class="product-image" />
+        {% else %}
+        <img src="/static/default.png" alt="no image" class="product-image" />
+        {% endif %}
+        <div class="product-info">
+          <div class="product-title">{{ product.name }}</div>
+          <div class="price-quantity">
+            <div class="product-price">{{ product.som|intcomma }} Som</div>
+            <div class="product-quantity">{{ product.quantity }} {{product.measurement_type__name}}</div>
+            <div class="product-id" style="display: none;">{{ product.id }}</div>
+          </div>
+        </div>
+        <button class="add-btn" onclick="openModal(this)">Savatchaga<br>qo'shish</button>
+      </div>
+    {% endfor %}
+  </div>
+  
+  <div class="fixed-cart" id="fixedCart">
+    <div class="cart-total">Jami: 0 Som</div>
+    <button class="cart-button" onclick="openSimpleCart()">Savatcha ></button>
+  </div>
+  
+  <div class="modal" id="addToCartModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Savatchaga qo'shish</div>
+        <span class="close-modal" onclick="closeModal()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="modal-product">
+          <img id="modalProductImage" src="/static/default.png" alt="product">
+          <div class="modal-product-info">
+            <div class="modal-product-name" id="modalProductName">Mahsulot nomi</div>
+            <div class="modal-product-price" id="modalProductPrice">0 SUM</div>
+            <div class="modal-product-quantity" id="modalProductQuantity">0 dona mavjud</div>
+            <div class="modal-product-id" id="modalProductID" style="display: none;">0</div>
+          </div>
+        </div>
+        
+        <div class="quantity-control">
+          <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+          <input type="number" class="quantity-input" id="quantityInput" value="0" min="0">
+          <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel-btn" onclick="DelModal()">Ochirish</button>
+        <button class="modal-btn add-to-cart-btn" onclick="addToCart()">Qo'shish</button>
+      </div>
+    </div>
+  </div>
+
+<div class="simple-cart-modal" id="simpleCartModal">
+  <div class="simple-cart-content">
+    <div class="simple-cart-header">
+      <div class="simple-cart-title">Savatcha</div>
+      <span class="close-simple-cart" onclick="closeSimpleCart()">✕</span>
+    </div>
+    <div class="simple-cart-body" id="simpleCartBody">
+      <div class="empty-cart-message">
+        Savatchangiz bo'sh
+      </div>
+    </div>
+    <div class="simple-cart-footer">
+      <div class="simple-cart-total">
+        <span>Jami:</span>
+        <span id="simpleCartTotalPrice">0 sum</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()">Buyurtma berish</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Global cart data
+    const data = [];
+    let currentProductPrice = 0;
+    let isPlacingOrder = false;
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.add("active");
+      document.getElementById("overlay").classList.add("active");
+    }
+
+    function closeSidebar() {
+      document.getElementById("sidebar").classList.remove("active");
+      document.getElementById("overlay").classList.remove("active");
+    }
+    
+    const searchInput = document.querySelector('.navbar input');
+    const productCards = document.querySelectorAll('.product');
+
+    searchInput.addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      
+      productCards.forEach(card => {
+        const productName = card.querySelector('.product-title').textContent.toLowerCase();
+        if (productName.includes(searchTerm)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+    
+    function openModal(button) {
+      const product = button.closest('.product');
+      const name = product.querySelector('.product-title').textContent;
+      const priceText = product.querySelector('.product-price').textContent;
+      const price = parseInt(priceText.replace(' Som', '').replace(/\s/g, ''));
+      const quantity = product.querySelector('.product-quantity').textContent.replace(' dona', '');
+      const image = product.querySelector('.product-image').src;
+      const id = product.querySelector('.product-id').textContent;
+      
+      const existingItem = data.find(el => el.product_id == id);
+      const initialQuantity = existingItem ? existingItem.quantity : 0;
+      
+      document.getElementById('modalProductName').textContent = name;
+      document.getElementById('modalProductID').textContent = id;
+      document.getElementById('modalProductPrice').textContent = priceText;
+      document.getElementById('modalProductQuantity').textContent = quantity;
+      document.getElementById('modalProductImage').src = image;
+      document.getElementById('quantityInput').max = quantity;
+      document.getElementById('quantityInput').value = initialQuantity; 
+      document.getElementById('addToCartModal').style.display = 'flex';
+      
+      currentProductPrice = price;
+    }
+    
+    function closeModal() {
+      document.getElementById('addToCartModal').style.display = 'none';
+    }
+    
+    function changeQuantity(change) {
+      const input = document.getElementById('quantityInput');
+      let newValue = parseInt(input.value) + change;
+      const max = parseInt(input.max);
+      
+      if (newValue < 0) newValue = 0;
+      if (newValue > max) newValue = max;
+      
+      input.value = newValue;
+    }
+
+    function addToCart() {
+      const quantity = parseInt(document.getElementById('quantityInput').value);
+      const productId = document.getElementById('modalProductID').textContent;
+      const productName = document.getElementById('modalProductName').textContent;
+      
+      if (quantity <= 0) {
+          const index = data.findIndex(el => el.product_id == productId);
+          if (index !== -1) {
+              data.splice(index, 1);
+          }
+      } else {
+          let productExists = data.find(el => el.product_id == productId);
+          if (productExists) {
+              productExists.quantity = quantity;
+          } else {
+              data.push({
+                product_id: productId,
+                name: productName,
+                quantity: quantity,
+                price: currentProductPrice
+              });
+          }
+      }
+      updateCartTotal();
+      closeModal();
+    }
+
+    function DelModal() {
+      const productId = document.getElementById('modalProductID').textContent;
+      const index = data.findIndex(el => el.product_id == productId);
+      
+      if (index !== -1) {
+          data.splice(index, 1);
+          
+          const productCards = document.querySelectorAll('.product');
+          
+          productCards.forEach(card => {
+              const cardProductId = card.querySelector('.product-id').textContent;
+              if (cardProductId === productId) {
+                  const addButton = card.querySelector('.add-btn');
+                  if (addButton) {
+                      addButton.textContent = "Savatchaga\nqo'shish";
+                  }
+              }
+          });
+          updateCartTotal();
+      }
+      
+      closeModal();
+    }
+      
+    function updateCartTotal() {
+      let total = 0;
+      data.forEach(item => {
+        total += item.quantity * item.price;
+      });
+      
+      const fixedCart = document.getElementById('fixedCart');
+      
+      if (data.length > 0 && total > 0) {
+        fixedCart.style.display = 'flex';
+        document.querySelector('.cart-total').textContent = `Jami: ${total.toLocaleString('ru-RU')} Som`;
+      } else {
+        fixedCart.style.display = 'none';
+      }
+      
+      const productCards = document.querySelectorAll('.product');
+      productCards.forEach(card => {
+          const cardProductId = card.querySelector('.product-id').textContent;
+          const cartItem = data.find(el => el.product_id == cardProductId);
+          const addButton = card.querySelector('.add-btn');
+          
+          if (addButton) {
+              if (cartItem && cartItem.quantity > 0) {
+                  addButton.textContent = `${cartItem.quantity} dona\nsavatchada`;
+              } else {
+                  addButton.textContent = "Savatchaga\nqo'shish";
+              }
+          }
+      });
+    }
+
+    function openSimpleCart() {
+      const simpleCartModal = document.getElementById('simpleCartModal');
+      const simpleCartBody = document.getElementById('simpleCartBody');
+      const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+      
+      if (data.length === 0) {
+        emptyCartMessage.style.display = 'block';
+        simpleCartBody.innerHTML = '';
+        simpleCartBody.appendChild(emptyCartMessage);
+        document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+      } else {
+        emptyCartMessage.style.display = 'none';
+        
+        simpleCartBody.innerHTML = '';
+        
+        let totalPrice = 0;
+        
+        data.forEach(item => {
+          const itemTotal = item.quantity * item.price;
+          totalPrice += itemTotal;
+          
+          const cartItem = document.createElement('div');
+          cartItem.className = 'simple-cart-item';
+          
+          let productImage = '/static/default.png';
+          
+          const productCards = document.querySelectorAll('.product');
+          productCards.forEach(card => {
+            const cardProductId = card.querySelector('.product-id').textContent;
+            if (cardProductId === item.product_id) {
+              const img = card.querySelector('.product-image');
+              if (img) {
+                productImage = img.src;
+              }
+            }
+          });
+          
+          cartItem.innerHTML = `
+            <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
+            <div class="simple-cart-item-info">
+              <div class="simple-cart-item-name">${item.name}</div>
+              <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
+              <div class="simple-cart-item-quantity">${item.quantity} ta</div>
+            </div>
+          `;
+          
+          simpleCartBody.appendChild(cartItem);
+        });
+        
+        document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+      }
+      
+      simpleCartModal.style.display = 'flex';
+    }
+
+    function closeSimpleCart() {
+      const simpleCartModal = document.getElementById('simpleCartModal');
+      simpleCartModal.style.display = 'none';
+    }
+
+    function checkout() {
+      if (data.length === 0) {
+        alert("Savatchangiz bo'sh!");
+        return;
+      }
+      
+      isPlacingOrder = true;
+      
+      $.ajax({
+          url: `{% url 'mobile_done_cart' order_id %}`,
+          type: "POST",
+          data: JSON.stringify(data),
+          success: function (response) {
+              window.location.replace('/login');
+          },
+          error: function () {
+              console.log('Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring');
+              isPlacingOrder = false;
+          },
+      });
+      closeSimpleCart();
+    }
+
+    window.addEventListener('beforeunload', function(e) {
+      if (isPlacingOrder || data.length === 0) {
+        return;
+      }
+      
+      e.preventDefault();
+      e.returnValue = 'Savatchada mahsulotlar bor. Sahifani tark etishni istaysizmi?';
+      return e.returnValue;
+    });
+
+    function handleLogout() {
+      if (data.length > 0) {
+        if (confirm('Savatchada mahsulotlar bor. Sahifani tark etishni istaysizmi?')) {
+          window.location.href = "{% url 'home' %}";
+        }
+      } else {
+        window.location.href = "{% url 'home' %}";
+      }
+    }
+
+    function handlePlaceOrder() {
+      if (data.length > 0) {
+        openSimpleCart();
+      } else {
+        alert("Savatchangiz bo'sh! Iltimos, avval mahsulot qo'shing.");
+      }
+    }
+
+    
+    updateCartTotal();
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeSimpleCart();
+      }
+    });
+
+    document.getElementById('simpleCartModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeSimpleCart();
+      }
+    });
+</script>
+</body>
+</html>

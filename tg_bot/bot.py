@@ -3,9 +3,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
 import requests
-from api.models import Wallet, Debtor, Cart, Shop, Kirim
+from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder
 import datetime
 from django.contrib.humanize.templatetags.humanize import intcomma
+from .views import abot_index
 
 @csrf_exempt
 def webhook(request):
@@ -42,6 +43,8 @@ def webhook(request):
             send_message(chat_id, f"📊 Sizning balansingiz:\n{balance_data}")
         elif text in ['buyurtma', '📝 buyurtma', '📝 buyurtma'.lower()]:
             send_order_period_menu(chat_id)
+        elif text in ['buyurtma berish', '🛒 buyurtma berish', '🛒 buyurtma berish'.lower()]:
+            mobile_cart_send(request, chat_id)  
         elif text == '30 kun':
             messages = get_order('bir oy', chat_id)
             for msg in messages:
@@ -111,7 +114,7 @@ def send_menu(chat_id):
         'text': "Asosiy menyu:",
         'reply_markup': {
             'keyboard': [
-                [{'text': '💰 Balans'}, {'text': '📝 Buyurtma'}]
+                [{'text': '💰 Balans'}, {'text': '📝 Buyurtma'}, {'text':'🛒 Buyurtma berish'}]
             ],
             'resize_keyboard': True,
             'one_time_keyboard': False
@@ -196,3 +199,15 @@ def get_order(period, chat_id):
     except Exception as ex:
         logger.error(f"Error fetching orders: {ex}")
         return [f"❌ Xatolik yuz berdi, keyinroq urinib ko'ring.\n{ex}"]
+
+
+def mobile_cart_send(request, chat_id): 
+    customer = Debtor.objects.filter(tg_id=chat_id).first()
+    if not customer:
+        return "Mijoz topilmadi."
+    m_order = MOrder.objects.create(debtor=customer)
+    return abot_index(request, chat_id, m_order.id)
+    
+    
+
+    

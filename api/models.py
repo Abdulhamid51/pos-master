@@ -1364,7 +1364,7 @@ class DebtorType(models.Model):
         return self.name
 
 class Debtor(models.Model):
-    tg_id = models.CharField(max_length=255, null=True, blank=True)
+    tg_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     type = models.ForeignKey(DebtorType, on_delete=models.PROTECT, blank=True, null=True)
     teritory = models.ForeignKey('Teritory', on_delete=models.PROTECT, blank=True, null=True)
@@ -2175,16 +2175,16 @@ def generate_key():
 
 
 class MCart(models.Model):
-    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    price = models.IntegerField()
+    quantity = models.FloatField()
+    price = models.FloatField()
     status = models.CharField(choices=(
         ('1', 'Maxsulot Savatchada'),
         ('2', 'Sotib olingan')
     ), max_length=255, default=1)
-    total = models.IntegerField(blank=True, null=True)
+    total = models.FloatField(blank=True, null=True)
     applied = models.BooleanField(default=False)
     comment = models.TextField(blank=True, null=True)
     
@@ -2195,16 +2195,14 @@ class MCart(models.Model):
             return morder.date
         return None
         
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
         
-        employes = MobilUser.objects.all()
-        for i in employes:
-            obj, created = MobilPayment.objects.get_or_create(m_user=i, sana=self.get_date)
-            obj.total_price = MCart.objects.filter(morders__sold=True, morders__date__date=self.get_date).distinct().aggregate(all=Coalesce(Sum('quantity'), 0))['all']
-            obj.save()        
-           
-    
+    #     employes = MobilUser.objects.all()
+    #     for i in employes:
+    #         obj, created = MobilPayment.objects.get_or_create(m_user=i, sana=self.get_date)
+    #         obj.total_price = MCart.objects.filter(morders__sold=True, morders__date__date=self.get_date).distinct().aggregate(all=Coalesce(Sum('quantity'), 0))['all']
+    #         obj.save()        
     
     class Meta:
         verbose_name_plural = 'Mobile Cart'
@@ -2220,7 +2218,7 @@ class Banner(models.Model):
         verbose_name_plural = "Mobile Banner"
 
 class MOrder(models.Model):
-    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
     products = models.ManyToManyField(MCart, related_name='morders')
     date = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
