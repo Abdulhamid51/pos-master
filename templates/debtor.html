@@ -16,7 +16,13 @@
         i {
             color:black !important
         }
-      
+         #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 30rem;
+        }
     </style>
 {% endblock css %}
 {% block content %}
@@ -24,6 +30,8 @@
             <div class="layout-px-spacing">
                 <div class="row layout-top-spacing" id="cancel-row">
                     <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div id="alert-container"></div>
+
                         <div class="widget-content widget-content-area br-6">
                                 <div class="row">
                                     <div class="col-md-10">
@@ -54,6 +62,15 @@
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
+                                                              <div class="form-group">
+                                                                <label  class="col-form-label">Narx Turi</label>
+                                                                <select name="price_type"  class="form-control" >
+                                                                    <option value="">---------</option>
+                                                                    {% for price_type in price_type %}
+                                                                        <option value="{{ price_type.id }}">{{ price_type.name }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
                                                             <div class="form-group">
                                                                 <label for="recipient-image" class="col-form-label">Rasm</label>
                                                                 <input type="file" class="form-control" id="recipient-image" name="image" >
@@ -61,6 +78,10 @@
                                                             <div class="form-group">
                                                                 <label for="recipient-fio" class="col-form-label">F.I.O</label>
                                                                 <input type="text" class="form-control" id="recipient-fio" name="fio" required>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="col-form-label">Telegram ID</label>
+                                                                <input type="text" class="form-control"  name="tg_id" oninput="filterTgID(this)" placeholder="ID bir xil bo‘lib qolmasin" required>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="recipient-phone1" class="col-form-label">Telefon</label>
@@ -81,6 +102,44 @@
                                         </div>
                                     </div>
                                 </div>
+                                <script>
+
+                                    function filterTgID(input) {
+                                        const tg_id = input.value;
+                                        $.ajax({
+                                            url: "{% url 'tg_id_filter' %}",
+                                            type: "POST",
+                                            data: { 'tg_id': tg_id },
+                                            success: function(response) {
+                                                if (response.data === true) {
+                                                    console.log(111)
+                                                    showAlert("Bu Telegram ID allaqachon mavjud!", "danger");
+                                                    $(input).addClass('is-invalid');
+                                                } else {
+                                                    console.log(2222)
+                                                    $(input).removeClass('is-invalid');
+                                                }
+                                            },
+                                            error: function () {
+                                                showAlert("Serverda xatolik yuz berdi", "danger");
+                                            }
+                                        });
+                                    }
+
+                                    const showAlert = (message, type) => {
+                                        const alertElement = $(`
+                                            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                                ${message}
+                                            </div>
+                                        `);
+
+                                        $("#alert-container").append(alertElement);
+                                        setTimeout(() => {
+                                            alertElement.fadeOut(500, function () { $(this).remove(); });
+                                        }, 6000);
+                                    };
+                                </script>
+
                             <div class="table-responsive mb-4 mt-4">
                                 <table class="table table-hover non-hover" id="html5-extension" style="width:100%">
                                     <thead>
@@ -178,12 +237,25 @@
                                                                     </select>
                                                                 </div>
                                                                 <div class="form-group">
+                                                                    <label for="recipient-price_type" class="col-form-label">Narx Turi</label>
+                                                                    <select name="price_type" id="recipient-price_type" class="form-control" >
+                                                                        <option value="">---------</option>
+                                                                        {% for price_type in price_type %}
+                                                                            <option value="{{ price_type.id }}" {% if price_type ==  debtors.price_type %} selected {% endif %}>{{ price_type.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
                                                                     <label for="recipient-image" class="col-form-label">Rasm</label>
                                                                     <input type="file" class="form-control" id="recipient-image" name="image" >
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="recipient-fio" class="col-form-label">F.I.O</label>
                                                                     <input type="text" class="form-control" id="recipient-fio" value="{{ debtors.fio }}"  name="fio" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="col-form-label">Telegram ID</label>
+                                                                    <input type="text" class="form-control"  name="tg_id" value="{{debtors.tg_id|default_if_none:''}}" placeholder="ID bir xil bo‘lib qolmasin" required>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="recipient-phone1" class="col-form-label">Telefon</label>

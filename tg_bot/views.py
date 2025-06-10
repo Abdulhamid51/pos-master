@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from api.models import ProductFilial, Debtor, MCart, MOrder
+from api.models import ProductFilial, Debtor, MCart, MOrder, ProductPriceType, Sum
 from django.http.response import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -7,8 +7,24 @@ from django.views.decorators.csrf import csrf_exempt
 def abot_index(request, order_id):
     order = MOrder.objects.get(id=order_id)
     customer = Debtor.objects.filter(id=order.debtor.id).first()
+    product = ProductFilial.objects.order_by('-id').values('id', 'name', 'quantity', 'image', 'som', 'measurement_type__name')
+    price_type =  customer.price_type 
+    product_price = ProductPriceType.objects.filter(type=price_type, valyuta__is_som=True).values('product_id').annotate(sum=Sum('price'))
+    product_dict = {item['product_id']:item for item in product_price}
+    print(product_dict)
+    data = []
+    for i in product:
+        dt = {
+            'id':i['id'],
+            'name':i['name'],
+            'quantity':i['quantity'],
+            'image':i['image'],
+            'som':product_dict.get(i['id'], {}).get('sum',0),
+            'measurement_type__name':i['measurement_type__name'],
+        }
+        data.append(dt)
     context = {
-            'product' :ProductFilial.objects.order_by('-id').values('id', 'name', 'quantity', 'image', 'som', 'measurement_type__name'),
+            'product' :data,
             'customer':customer,
             'order_id':order_id,
     }

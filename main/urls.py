@@ -37,6 +37,7 @@ urlpatterns = [
     path('hodim_delete/<int:id>/', delete_hodim, name='hodim_delete'),
     path('debtor/', Debtors.as_view(), name='debtor'),
     path('debtor_add/', debtor_add, name='debtor_add'),
+    path('tg_id_filter/', tg_id_filter, name='tg_id_filter'),
     path('debtor_edit/<int:id>', debtor_edit, name='debtor_edit'),
     path('debtor_pay/<int:id>', debtor_pay, name='debtor_pay'),
     path('debtor_give/<int:id>', debtor_give, name='debtor_give'),

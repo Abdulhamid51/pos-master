@@ -18,6 +18,7 @@ import calendar
 from django.utils import timezone
 from itertools import groupby
 from operator import itemgetter
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -3001,6 +3002,7 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['teritory'] = Teritory.objects.all()
         context['agent'] = MobilUser.objects.all()
         context['valyuta'] = Valyuta.objects.all()
+        context['price_type'] = PriceType.objects.filter(is_activate=True)
         context['dollar_kurs'] = dollar_kurs
         context['cashes'] = KassaNew.objects.filter(is_active=True)
         return context
@@ -3013,6 +3015,9 @@ def debtor_add(request):
     fio = request.POST.get('fio')
     phone1 = request.POST.get('phone1')
     phone2 = request.POST.get('phone2')
+    tg_id = request.POST.get('tg_id')
+    price_type = request.POST.get('price_type')
+
     Debtor.objects.create(
         type_id=type,
         teritory_id=teritory,
@@ -3021,8 +3026,20 @@ def debtor_add(request):
         fio=fio,
         phone1=phone1,
         phone2=phone2,
+        tg_id=tg_id,
+        price_type_id=price_type,
     )
     return redirect(request.META['HTTP_REFERER'])
+
+
+@csrf_exempt
+def tg_id_filter(request):
+    if request.method == "POST":
+        tg_id = request.POST.get('tg_id')
+        exists = Debtor.objects.filter(tg_id=tg_id).exists()
+        return JsonResponse({'data': exists})
+    return JsonResponse({'data': False})
+
 
 def debtor_edit(request, id):
     type = request.POST.get('type')
@@ -3032,8 +3049,11 @@ def debtor_edit(request, id):
     fio = request.POST.get('fio')
     phone1 = request.POST.get('phone1')
     phone2 = request.POST.get('phone2')
+    tg_id = request.POST.get('tg_id')
+    price_type = request.POST.get('price_type')
     deb = Debtor.objects.get(id=id)
     deb.type_id=type
+    deb.price_type_id=price_type
     deb.teritory_id=teritory
     deb.agent_id=agent
     if image is not None:
@@ -3041,6 +3061,7 @@ def debtor_edit(request, id):
     deb.fio=fio
     deb.phone1=phone1
     deb.phone2=phone2
+    deb.tg_id=tg_id
     deb.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -6700,7 +6721,6 @@ def refresh_debtor_debt(request, id):
     return redirect(request.META['HTTP_REFERER'])
 
 
-from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def create_order_ajax(request):
@@ -8376,7 +8396,7 @@ def balans_fin(request):
     bebt_deliver = (
         pay_history.filter(deliver__isnull=False)
         .values('date__month')
-        .annotate(sum=Sum('summa'))
+        .annotate(sum=Sum('debt_new'))
     )
 
     bebt_deliver_dict = {item['date__month'] : { 'sum':item['sum']} for item in bebt_deliver}
@@ -8451,7 +8471,7 @@ def balans_fin(request):
     pay_history_income = (
         pay_history.filter(external_income_user__isnull=False)
         .values('date__month')
-        .annotate(sum=Sum('summa'))
+        .annotate(sum=Sum('debt_new'))
     )
 
     pay_history_income_dict = {
@@ -8467,7 +8487,7 @@ def balans_fin(request):
     pay_history_debtor = (
         pay_history.filter(debtor__isnull=False)
         .values('date__month')
-        .annotate(sum=Sum('summa'))
+        .annotate(sum=Sum('debt_new'))
     )
 
     pay_history_debtor_dict = {
