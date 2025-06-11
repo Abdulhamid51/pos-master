@@ -582,7 +582,7 @@
           <div class="product-title">{{ product.name }}</div>
           <div class="price-quantity">
             <div class="product-price">{{ product.som|intcomma }} Som</div>
-            <div class="product-quantity">{{ product.quantity }} {{product.measurement_type__name}}</div>
+            <div class="product-quantity">{{ product.quantity }} {{product.measurement_type__name|default_if_none:'-'}}</div>
             <div class="product-id" style="display: none;">{{ product.id }}</div>
           </div>
         </div>
