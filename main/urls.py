@@ -290,5 +290,7 @@ urlpatterns = [
     path('measurement_type_list', measurement_type_list, name='measurement_type_list'),
     path('measurement_type_add', measurement_type_add, name='measurement_type_add'),
     path('measurement_type_edit/<int:id>', measurement_type_edit, name='measurement_type_edit'),
+    path('b2c_naqd_add', b2c_naqd_add, name='b2c_naqd_add'),
+    path('upload_excel', upload_excel, name='upload_excel'),
 
 ]
