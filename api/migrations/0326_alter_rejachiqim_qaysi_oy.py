@@ -10,9 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='rejachiqim',
-            name='qaysi_oy',
-            field=models.DateField(blank=True, null=True),
-        ),
+      
     ]
