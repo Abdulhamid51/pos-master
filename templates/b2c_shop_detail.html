@@ -50,7 +50,7 @@
                         <div class="col-xl-8 col-lg-8 col-sm-12  layout-spacing">
                             <div class="row">
                                 <div class="col-md-2">
-                                    <select name="valyuta" class="form-control" required>
+                                    <select name="valyuta" class="form-control" required disabled>
                                     {% for i in valyuta %}
                                         <option value="{{i.id}}" {% if shop.valyuta == i %} selected {% endif %}>{{i.name}}</option>
                                     {% endfor %}
@@ -65,14 +65,12 @@
                                     </select>
                                 </div>
                                 <div class="btn-group col-md-5" role="group" aria-label="Price Types">
-                                    {% if shop.type_price %}  
-                                    <input type="radio" class="btn-check price_type_input" name="type_price" id="{{shop.type_price.name}}{{shop.type_price.id}}"  value="{{shop.type_price.id}}" autocomplete="off" checked >
-                                    <label class="btn btn-outline-primary" for="{{shop.type_price.name}}{{shop.type_price.id}}">{{shop.type_price.name}}</label>
-                                    {% else %}
-                                    <input type="radio" class="btn-check price_type_input" autocomplete="off"  id="oddiy" name="type_price" checked>
+                                    <input type="radio" class="btn-check price_type_input" name="type_price" id="oddiy" value="" autocomplete="off" checked>
                                     <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
-                                    {% endif %}
-
+                                    {% for i in price_types %}
+                                        <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="widget-content widget-content-area br-6">
@@ -138,7 +136,8 @@
                                                 <option value="{{i.id}}" {% if shop.debtor == i %} selected {% endif %}>{{ i.fio }}</option>
                                             {% endfor %}
                                         </select>
-
+                                        
+                                        {% if shop.debtor.fio != "Naqd" %}
                                         <label for="">To'lov sanasi</label>
                                         <input type="date" class="form-control" value="{{ shop.debt_return|date:'Y-m-d' }}"  name="debt_return" required>
 
@@ -149,6 +148,9 @@
                                                 <option value="{{i.id}}" {% if shop.saler == i %} selected {% endif %}>{{ i }}</option>
                                             {% endfor %}
                                         </select>
+                                        {% endif %}
+                                            
+
 
                                         <label for="">Filial</label>
                                         <select class="form-control searchable" name="filial" required>
@@ -164,9 +166,11 @@
                                         <label for="">Summa</label>
                                         <input  type="number" class="form-control" id="naqd_summa" value="0" name="naqd_summa">
                                         
+                                        {% if shop.debtor.fio != "Naqd" %}
                                         <br><hr>
                                         <label for="">Nasiya {{ shop.valyuta.name }}</label>
                                         <input value="{{shop.total_price}}" type="number" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
+                                        {% endif %}
 
                                     </div>
                                 </div>

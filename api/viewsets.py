@@ -2216,3 +2216,7 @@ def chiqim_add(request):
     chiqim.save()
     # kassa_var.save()
     return Response({'messages': 'succes'})
+
+
+
+

@@ -727,6 +727,19 @@ class MeasurementType(models.Model):
     is_active = models.BooleanField(default=True)
 
 class ProductFilial(models.Model):
+    name = models.CharField(max_length=255)
+    measurement_type = models.ForeignKey(MeasurementType, on_delete=models.CASCADE, null=True, blank=True)
+    preparer = models.CharField(max_length=255, default="")
+    barcode = models.CharField(max_length=255)
+    group = models.ForeignKey(Groups, on_delete=models.CASCADE)
+    min_count = models.IntegerField(default=0)
+    quantity = models.FloatField(default=0)
+    start_quantity = models.FloatField(default=0)
+    start_date = models.DateTimeField(default=timezone.now)
+    category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, blank=True, null=True)
+    image = models.ImageField(upload_to="products/", null=True, blank=True)
+
+
     deliver = models.ManyToManyField(Deliver, related_name='products1', blank=True)
     measure = [
         ('dona', 'dona'),
@@ -734,30 +747,18 @@ class ProductFilial(models.Model):
         ('litr', 'litr'),
         ('metr', 'metr')
     ]
-    name = models.CharField(max_length=255)
-    measurement_type = models.ForeignKey(MeasurementType, on_delete=models.CASCADE, null=True, blank=True)
-    preparer = models.CharField(max_length=255, default="")
+    filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
+    distributsiya = models.IntegerField(default=0)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+    deliver1 = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
+    barcode_image = models.ImageField(upload_to="barcode_product/", null=True, blank=True)
+    measurement = models.CharField(choices=measure, default='dona', max_length=4)
     som = models.IntegerField(default=0) #kelish narxi
     sotish_som = models.IntegerField(default=0) #sotish narxi
     dollar = models.IntegerField(default=0)
     sotish_dollar = models.IntegerField(default=0)
+
     kurs = models.IntegerField(default=0)
-    barcode = models.CharField(max_length=255)
-    barcode_image = models.ImageField(upload_to="barcode_product/", null=True, blank=True)
-    group = models.ForeignKey(Groups, on_delete=models.CASCADE)
-    deliver1 = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
-    measurement = models.CharField(choices=measure, default='dona', max_length=4)
-    min_count = models.IntegerField(default=0)
-    filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
-    # filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
-    quantity = models.FloatField(default=0)
-    start_quantity = models.FloatField(default=0)
-    start_date = models.DateTimeField(default=timezone.now)
-    image = models.ImageField(upload_to="products/", null=True, blank=True)
-    distributsiya = models.IntegerField(default=0)
-    category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, blank=True, null=True)
-    # date = models.DateField(auto_now_add=True, null=True, blank=True)
-    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.name + " - " + self.barcode
     
@@ -1371,7 +1372,7 @@ class Debtor(models.Model):
     agent = models.ForeignKey('MobilUser', on_delete=models.PROTECT, blank=True, null=True, related_name='debtors')
     image = models.FileField(upload_to='debtor_images/', blank=True, null=True)
     fio = models.CharField(max_length=255)
-    phone1 = models.CharField(max_length=13)
+    phone1 = models.CharField(max_length=13, blank=True, null=True)
     phone2 = models.CharField(max_length=13, blank=True, null=True)
     som = models.IntegerField(default=0)
     dollar = models.IntegerField(default=0)
@@ -1394,6 +1395,7 @@ class Debtor(models.Model):
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, blank=True)
     price_type = models.ForeignKey('PriceType', on_delete=models.CASCADE, null=True, blank=True)
+    naqd = models.BooleanField(default=False)
     
     
     def __str__(self):
