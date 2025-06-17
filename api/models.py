@@ -737,8 +737,8 @@ class ProductFilial(models.Model):
     name = models.CharField(max_length=255)
     measurement_type = models.ForeignKey(MeasurementType, on_delete=models.CASCADE, null=True, blank=True)
     preparer = models.CharField(max_length=255, default="")
-    som = models.IntegerField(default=0) #kelish narxi
-    sotish_som = models.IntegerField(default=0) #sotish narxi
+    som = models.IntegerField(default=0) 
+    sotish_som = models.IntegerField(default=0) 
     dollar = models.IntegerField(default=0)
     sotish_dollar = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
@@ -749,15 +749,21 @@ class ProductFilial(models.Model):
     measurement = models.CharField(choices=measure, default='dona', max_length=4)
     min_count = models.IntegerField(default=0)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
-    # filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
     quantity = models.FloatField(default=0)
     start_quantity = models.FloatField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     distributsiya = models.IntegerField(default=0)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, blank=True, null=True)
-    # date = models.DateField(auto_now_add=True, null=True, blank=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
+
+    status_ready = [
+        (1, 'xom ashyo'),
+        (2, 'yarim tayyor'),
+        (3, 'tayyor'),
+    ]
+    ready = models.IntegerField(choices=status_ready, default='1')
+
     def __str__(self):
         return self.name + " - " + self.barcode
     
@@ -2195,7 +2201,10 @@ class MCart(models.Model):
         if morder:
             return morder.date
         return None
-        
+    
+    @property
+    def total_summa(self):
+        return self.price * self.quantity
     # def save(self, *args, **kwargs):
     #     super().save(*args, **kwargs)
         
@@ -2218,6 +2227,10 @@ class Banner(models.Model):
     class Meta:
         verbose_name_plural = "Mobile Banner"
 
+
+from django.db.models import ExpressionWrapper
+
+
 class MOrder(models.Model):
     user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
     products = models.ManyToManyField(MCart, related_name='morders')
@@ -2225,8 +2238,23 @@ class MOrder(models.Model):
     total = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
     sold = models.BooleanField(default=False)
+    status = models.IntegerField(choices=((1, 'new'),(2, 'done'), (3,'rejected')), default=1)
 
-    
+
+    @property
+    def total_basket(self):
+        return self.products.aggregate(
+            all=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('price') * F('quantity'),
+                        output_field=FloatField()
+                    )
+                ),
+                0.0
+            )
+        )['all']
+        
     class Meta:
         verbose_name_plural = "Mobile order"
 

@@ -51,7 +51,7 @@
                                                 <td>{{ ombor.name }}</td>
                                                 <td>{{ ombor.preparer }}</td>
                                                 {% for x in ombor.valyuta %}
-                                                <td>{{ x.summa.price }}</td>
+                                                <td>{{ x.summa|default_if_none:'0' }}</td>
                                                 {% endfor %}
                                                 <td>{{ ombor.kurs }}</td>
                                                 <td>{{ ombor.quantity|floatformat:0|intcomma }}</td>

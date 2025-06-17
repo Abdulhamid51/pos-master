@@ -376,14 +376,24 @@
                             </select>
 
                             <label for="">Ulchov</label>
-                            <select class="form-control searchable" required name="measurement" id="">
-                                <option value="">- - - - - - - - </option>
-                                {% for a in measurements %}
+                            <select class="form-control searchable" required name="measurement_type">
+                                {% for a in measurement_type %}
                                     <option value="{{a.id}}">{{ a.name }}</option>
                                 {% endfor %}
                             </select>
 
-
+                            <label for="">Status</label>
+                            <select class="form-control" required name="ready">
+                                    <option value="1">Xom ashyo</option>
+                                    <option value="2">Yarim tayyor</option>
+                                    <option value="3">Tayyor</option>
+                            </select>
+                            <label for="">Valyuta</label>
+                            <select class="form-control searchable" required name="valyuta">
+                                {% for a in valyutas %}
+                                    <option value="{{a.id}}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
                             <label for="">Min miqdor</label>
                             <input type="number" class="form-control" name="min_count" required>
 

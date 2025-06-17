@@ -11,7 +11,6 @@ def abot_index(request, order_id):
     price_type =  customer.price_type 
     product_price = ProductPriceType.objects.filter(type=price_type, valyuta__is_som=True).values('product_id').annotate(sum=Sum('price'))
     product_dict = {item['product_id']:item for item in product_price}
-    print(product_dict)
     data = []
     for i in product:
         dt = {
@@ -45,6 +44,9 @@ def mobile_done_cart(request, order_id):
             quantity=item['quantity'],
             status=2
         )
+        product = ProductFilial.objects.get(id=item['product_id'])
+        product.quantity -= item['quantity']
+        product.save()
         back.append(cart_item)
     order.products.set(back)
     order.save()
