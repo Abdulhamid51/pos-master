@@ -22,13 +22,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-# from django.contrib.auth import authenticate
-# user = User.objects.filter(username='max1').last()
-# user.set_password(user.password)
-# user.save()
-# print(user.password)
-# u = authenticate(username="max1", password="admin123")
-# print(u)
 
 def monthly():
     date = timezone.now()
@@ -1859,6 +1852,17 @@ class Products(LoginRequiredMixin, TemplateView):
         context['product_t'] = 'true'
         context['delivers'] = delivers
         context['dollar_kurs'] = Course.objects.last().som
+
+        context['groups'] = Groups.objects.all()
+        context['price_types'] = PriceType.objects.all()
+        context['delivers'] = Deliver.objects.all()
+
+
+        # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
+        context['measurements'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.measure
+        ]
 
         return context
 
@@ -4417,11 +4421,6 @@ def sms_text_replaces(sms_text, customer):
     return sms_texts
 
 
-# vaqt = datetime.now().date()
-# debtors = Debtor.objects.filter(debt_return__day=vaqt.day, debt_return__month=vaqt.month, debt_return__year=vaqt.year)
-# print(debtors)
-# print('aaa')
-
 # from django.conf import settings
 #sms sender  if date today  
 def schedular_sms_send():
@@ -4870,12 +4869,7 @@ def payment_employee(request, id):
 
         return redirect(request.META['HTTP_REFERER'])
 
-# for i in UserProfile.objects.filter(staff=3):
-#     i.refresh_total(datetime.now().date())
-# print(Cart.objects.filter(shop__date__date=datetime.now().date()))
-# for i in Cart.objects.filter(shop__date__date=datetime.now().date()):
-#     print(i)
-#     i.save()
+
 def one_day_price(request): 
     employe = request.GET.get('employe')
     month = request.GET.get('month')
@@ -5450,6 +5444,25 @@ def add_recieve_item_view(request):
 #     # s = self.get_serializer_class()(r)
 #     return redirect(request.META['HTTP_REFERER'])
 
+
+def edit_product_prices(request):
+
+    for key, value in request.POST.items():
+        if key.startswith("br_"):
+            _, valuta_id, id = key.split("_")
+            valyuta = Valyuta.objects.get(id=valuta_id)
+            if id:
+                bring_price_obj = ProductBringPrice.objects.get(id=id)
+            else:
+                bring_price_obj, _ = ProductBringPrice.objects.get_or_create(
+                valyuta=valyuta,
+                product=item.product,
+                recieveitem=item
+            )
+            bring_price_obj.price = float(value)
+            bring_price_obj.save()
+    messages.success(request, "Muvaffaqiyatli saqlandi")
+    return redirect(request.META.get('HTTP_REFERER'))
 
 @require_POST
 def edit_recieve_item_view(request):
@@ -7180,39 +7193,91 @@ def analysis_costs(request):
 
 
 
-def tovar_prixod(request):
+# def tovar_prixod(request):
     
-    context = {
+#     context = {
 
-    }
+#     }
+#     context['ombor'] = 'active'
+#     context['ombor_t'] = 'true'
+#     context['recieves'] = Recieve.objects.filter(status__in=[0, 1], is_prexoded=True).order_by('-id')
+#     context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=True).order_by('-id')[:1000]
+#     context['dollar_kurs'] = Course.objects.last().som
+#     context['products'] = ProductFilial.objects.all()
+#     context['groups'] = Groups.objects.all()
+#     context['delivers'] = Deliver.objects.all()
+
+#     context['measurements'] = [{
+#         "id": i[0],
+#         "name": i[1],
+#     } for i in ProductFilial.measure]
+#     max_barcode = (
+#         ProductFilial.objects
+#         .annotate(barcode_int=Cast('barcode', IntegerField()))
+#         .aggregate(Max('barcode_int'))['barcode_int__max']
+#     )
+
+#     new_barcode = max_barcode+1 if max_barcode else 1
+
+#     context['new_barcode'] = new_barcode
+
+
+#     active_id = request.GET.get('active')
+#     if active_id and Recieve.objects.filter(id=active_id):
+#         context['active_one'] = Recieve.objects.get(id=active_id)
+
+#     return render(request, 'tovar_prixod.html', context)
+
+
+def tovar_prixod(request):
+    context = {}
+
+    # Sahifada ombor qismi aktivligini belgilash
     context['ombor'] = 'active'
     context['ombor_t'] = 'true'
-    context['recieves'] = Recieve.objects.filter(status__in=[0, 1], is_prexoded=True).order_by('-id')
-    context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=True).order_by('-id')[:1000]
-    context['dollar_kurs'] = Course.objects.last().som
+
+    # Qabul qilingan, lekin hali to‘liq yakunlanmagan Recieve lar
+    context['recieves'] = Recieve.objects.filter(
+        status__in=[0, 1],
+        is_prexoded=True
+    ).order_by('-id')
+
+    # Oxirgi 1000 ta RecieveItem (prexodlangan)
+    context['recieveitems'] = RecieveItem.objects.filter(
+        recieve__is_prexoded=True
+    ).order_by('-id')[:1000]
+
+    # Oxirgi dollar kursi (so‘mda)
+    course = Course.objects.last()
+    context['dollar_kurs'] = course.som if course else 0
+
+    # Mahsulotlar, guruhlar, etkazib beruvchilar
     context['products'] = ProductFilial.objects.all()
     context['groups'] = Groups.objects.all()
     context['delivers'] = Deliver.objects.all()
 
-    context['measurements'] = [{
-        "id": i[0],
-        "name": i[1],
-    } for i in ProductFilial.measure]
+    # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
+    context['measurements'] = [
+        {"id": i[0], "name": i[1]}
+        for i in ProductFilial.measure
+    ]
+
+    # Barcode'ning maksimal qiymatini topish va yangisini generatsiya qilish
     max_barcode = (
         ProductFilial.objects
         .annotate(barcode_int=Cast('barcode', IntegerField()))
         .aggregate(Max('barcode_int'))['barcode_int__max']
     )
-    new_barcode = max_barcode+1 if max_barcode else 1
-
+    new_barcode = max_barcode + 1 if max_barcode else 1
     context['new_barcode'] = new_barcode
 
-
+    # URL orqali active bo‘lishi kerak bo‘lgan Recieve ni olish
     active_id = request.GET.get('active')
-    if active_id and Recieve.objects.filter(id=active_id):
+    if active_id and Recieve.objects.filter(id=active_id).exists():
         context['active_one'] = Recieve.objects.get(id=active_id)
 
     return render(request, 'tovar_prixod.html', context)
+
 
 
 def add_recieve_perexoded(request):

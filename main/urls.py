@@ -292,5 +292,6 @@ urlpatterns = [
     path('measurement_type_edit/<int:id>', measurement_type_edit, name='measurement_type_edit'),
     path('b2c_naqd_add', b2c_naqd_add, name='b2c_naqd_add'),
     path('upload_excel', upload_excel, name='upload_excel'),
+    path('edit_product_prices', edit_product_prices, name='edit_product_prices'),
 
 ]

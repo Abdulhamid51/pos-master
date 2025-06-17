@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='rejachiqim',
             name='qaysi_oy',
-            field=models.IntegerField(default=0),
+            field=models.DateField(blank=True, null=True),
         ),
         migrations.AlterField(
             model_name='rejachiqim',
