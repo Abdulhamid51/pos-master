@@ -2862,6 +2862,7 @@ class Recieves(LoginRequiredMixin, TemplateView):
         context['price_types'] = PriceType.objects.filter(is_activate=True)
         context['valyutas'] = Valyuta.objects.filter()
         context['today'] = datetime.now()
+        context['measurement_type'] = MeasurementType.objects.filter(is_active=True)
         context['measurements'] = [{
             "id": i[0],
             "name": i[1],
@@ -5579,24 +5580,21 @@ def add_expanse_type(request):
 def new_product_add(request):
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
-    # som = request.POST.get('som')
-    # sotish_som = request.POST.get('sotish_som')
     barcode = request.POST.get('barcode')
     group = request.POST.get('group')
-    measurement = request.POST.get('measurement')
+    measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
-    # quantity = request.POST.get('quantity')
     filial_id = request.POST.get('filial_id')
+    ready = request.POST.get('ready')
+    valyuta = request.POST.get('valyuta')
     pr = ProductFilial.objects.create(
         name=name,
-        # preparer=preparer,
-        # som=som,
-        # sotish_som=sotish_som,
+        valyuta_id=valyuta,
+        ready=ready,
         barcode=barcode,
         group_id=group,
-        measurement=measurement,
+        measurement_type_id=measurement_type,
         min_count=min_count,
-        # quantity=quantity,
         filial_id=filial_id if filial_id else 4
     )
     if deliver:
@@ -7255,6 +7253,8 @@ def tovar_prixod(request):
     context['products'] = ProductFilial.objects.all()
     context['groups'] = Groups.objects.all()
     context['delivers'] = Deliver.objects.all()
+    context['measurement_type'] = MeasurementType.objects.filter(is_active=True)
+    context['valyutas'] = Valyuta.objects.filter()
 
     # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
     context['measurements'] = [
@@ -8966,16 +8966,28 @@ def ajax_list_main_tool_type(request):
     return JsonResponse({"data": list(main_tool_types)})
 
 
+def get_bring_price_product(product_id, valyuta_id):
+    bring_price = ProductBringPrice.objects.filter(product_id=product_id, valyuta_id=valyuta_id).last()
+    if not bring_price:
+        return 0
+
+    price = bring_price.price
+    if bring_price.valyuta.is_som:
+        currency = Course.objects.last()
+        kurs = currency.som if currency else 0
+        return price / kurs if kurs > 0 else 0
+    return price
+
+
 
 def ombor_fin(request):
     today = datetime.now()
-    type_valyuta = request.GET.get('type_valyuta')
-    year = int(request.GET.get('year_filter', today.year))
-    type_valyuta = request.GET.get('type_valyuta', '0')
+    filter_valyuta = request.GET.get('valyuta')
+    year = int(request.GET.get('year', today.year))
 
     filters = {
-        'year_filter': str(year),
-        'type_valyuta': type_valyuta,
+        'year': str(year),
+        'valyuta': filter_valyuta,
     }
 
     months_dict = {
@@ -8984,24 +8996,25 @@ def ombor_fin(request):
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
 
-    product_data = ProductFilialDaily.objects.filter(date__year=year).values('date__month').annotate(
-        ostatka_dollar=Coalesce(Sum(F('rest') * F('obyekt__sotish_dollar')), 0, output_field=FloatField()),
-        ostatka_som=Coalesce(Sum(F('rest') * F('obyekt__sotish_som')), 0, output_field=FloatField())
-    )
+    product_filial = ProductFilial.objects.filter(start_date__year=year).values(
+        'start_date__month', 'ready', 'id', 'valyuta_id'
+    ).annotate(quantity=Sum('quantity'))
 
-    shop_data = Shop.objects.filter(date__year=year).values('date__month').annotate(
-        pr_dollar=Coalesce(Sum(F('naqd_dollar')), 0, output_field=FloatField()),
-        pr_som=Coalesce(Sum(F('naqd_som')), 0, output_field=FloatField())
-    )
+    product_filial_dict = {}
+    for item in product_filial:
+        key = (item['start_date__month'], item['ready'])
+        val = product_filial_dict.get(key, 0)
 
-    product_dict = {item['date__month']: item for item in product_data}
-    shop_dict = {item['date__month']: item for item in shop_data}
+        bring_price = get_bring_price_product(item['id'], item['valyuta_id'])
+        summa = item['quantity'] * bring_price
+        product_filial_dict[key] = val + summa  
 
     data = []
-    for num, month in months_dict.items():
+    for num in range(1, 13):
         dt = {
-            'ostatka': product_dict.get(num, {}).get('ostatka_dollar' if type_valyuta == '1' else 'ostatka_som', 0),
-            'pr': shop_dict.get(num, {}).get('pr_dollar' if type_valyuta == '1' else 'pr_som', 0),
+            'xom_ashyo': round(product_filial_dict.get((num, 1), 0), 2),  
+            'yarim_tayyor': round(product_filial_dict.get((num, 2), 0), 2),  
+            'tayyor': round(product_filial_dict.get((num, 3), 0), 2),  
         }
         data.append(dt)
 
@@ -9012,6 +9025,7 @@ def ombor_fin(request):
     }
 
     return render(request, 'fin/ombor_fin.html', context)
+
 
 
 def b2b_shop_view(request):
@@ -9100,37 +9114,16 @@ def payment_shop_ajax(request, id):
     return JsonResponse({'success': True})
 
 def product_remove_quantity(request, shop_id):
-    data = json.loads(request.body)
     shop = Shop.objects.get(id=shop_id)
-    debtor = Debtor.objects.get(id=shop.debtor.id)
-    total = 0
-
-    with transaction.atomic():
-        for i in data:
-            pr = ProductFilial.objects.get(id=i['product_id'])
-            if shop.is_savdo:
-                pr.quantity -= i['quantity']
-            else:
-                pr.quantity += i['quantity']
-            total += i['total']
-            pr.save()
-
-        total_nasiya = 0
-        if shop.nasiya_dollar and shop.kurs:
-            total_nasiya += shop.nasiya_dollar * shop.kurs
-        if shop.naqd_som:
-            total_nasiya += shop.naqd_som
-
-        obj, created = RejaTushum.objects.get_or_create(shop=shop)
-        obj.plan_total = shop.baskets_total_price or 0
-        obj.total = total_nasiya
-        obj.debtor = shop.debtor
-        obj.valyuta = shop.valyuta
-        obj.comment = shop.comment or ""
-        obj.kurs = shop.kurs or 0
-        obj.payment_date = shop.debt_return
-        obj.from_shop = True
-        obj.save()
+    obj, created = RejaTushum.objects.get_or_create(shop=shop)
+    obj.plan_total = shop.baskets_total_price or 0
+    obj.debtor = shop.debtor
+    obj.valyuta = shop.valyuta
+    obj.comment = shop.comment or ""
+    obj.kurs = shop.kurs or 0
+    obj.payment_date = shop.debt_return
+    obj.from_shop = True
+    obj.save()
     return JsonResponse({'success': True})
     
 
@@ -9196,6 +9189,13 @@ def b2b_shop_ajax_add_one(request, product_id):
     sh = Shop.objects.get(id=product_id)
     if data['quantity']:
         obj, created = Cart.objects.get_or_create(shop_id=product_id,product_id=int(data['product_id']))
+
+        quantity_old = obj.quantity or 0
+        obj.product.quantity += quantity_old
+
+        obj.product.quantity -= data['quantity']
+        obj.product.save()
+
         obj.quantity=data['quantity']
         obj.total=data['total']
         obj.price=data['price']
@@ -9256,7 +9256,6 @@ def nds_ajax(request):
 
 def add_product_list(request, id):
     sh = Shop.objects.get(id=id)
-
     name = request.POST.get('name')
     som = request.POST.get('som')
     quantity = request.POST.get('quantity')
@@ -10197,3 +10196,51 @@ def upload_excel(request):
 
 
     return redirect(request.META['HTTP_REFERER'])
+
+
+
+
+def for_pro(request):
+    for i in ProductFilial.objects.all():
+       ProductBringPrice.objects.create(product=i, valyuta_id=2, price=10000)
+    return JsonResponse({'ok':'yr'})
+
+
+
+def mobile_order_list(request):
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    filters = {
+        'start_date':start_date,
+        'end_date':end_date,
+    }
+    order = MOrder.objects.filter(debtor__isnull=False)
+    if start_date and end_date:
+        order = order.filter(date__date__range=(start_date, end_date))
+    summa = sum(
+        i.total_summa for order in order for i in order.products.all()
+    )
+    context = {
+        'order':order,
+        'summa':summa,
+        'filters':filters
+    }
+    return render(request, 'mobile_order_list.html', context)
+
+def morder_change_status(request, id):
+    MOrder.objects.filter(id=id).update(status=request.POST.get('status'))
+    return redirect(request.META['HTTP_REFERER'])
+
+
+def mobile_order_detail(request, id):
+    order = MOrder.objects.get(id=id)
+    cart = order.products.all()
+    totals = {
+        'summa':cart.aggregate(all=Coalesce(Sum(F('price')*F('quantity')), 0, output_field=FloatField()))['all'],
+        'quantity':cart.aggregate(all=Coalesce(Sum(F('quantity')), 0, output_field=FloatField()))['all']
+    }
+    context = {
+        'cart':cart,
+        'totals':totals,
+    }
+    return render(request, 'mobile_order_detail.html', context)

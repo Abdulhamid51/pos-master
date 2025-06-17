@@ -632,6 +632,7 @@
                     totalElement.textContent = total.toLocaleString('fr-FR');
 
                     const existingItem = data.find(item => item.product_id === id_product);
+                    
                     if (existingItem) {
                         existingItem.quantity = quantity;
                         existingItem.total = total;
@@ -888,8 +889,6 @@
                 alertElement.fadeOut(500, function () { $(this).remove(); });
             }, 3000);
         };
-
-       
     </script>
 
     <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
