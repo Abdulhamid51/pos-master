@@ -290,6 +290,7 @@ urlpatterns = [
     path('measurement_type_list', measurement_type_list, name='measurement_type_list'),
     path('measurement_type_add', measurement_type_add, name='measurement_type_add'),
     path('measurement_type_edit/<int:id>', measurement_type_edit, name='measurement_type_edit'),
+    path('for_pro', for_pro, name='for_pro'),
     path('mobile_order_list', mobile_order_list, name='mobile_order_list'),
     path('mobile_order_detail/<int:id>', mobile_order_detail, name='mobile_order_detail'),
     path('morder_change_status/<int:id>', morder_change_status, name='morder_change_status'),
