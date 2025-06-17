@@ -1377,7 +1377,7 @@ class Debtor(models.Model):
     agent = models.ForeignKey('MobilUser', on_delete=models.PROTECT, blank=True, null=True, related_name='debtors')
     image = models.FileField(upload_to='debtor_images/', blank=True, null=True)
     fio = models.CharField(max_length=255)
-    phone1 = models.CharField(max_length=13)
+    phone1 = models.CharField(max_length=13, blank=True, null=True)
     phone2 = models.CharField(max_length=13, blank=True, null=True)
     som = models.IntegerField(default=0)
     dollar = models.IntegerField(default=0)
@@ -1400,6 +1400,7 @@ class Debtor(models.Model):
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, blank=True)
     price_type = models.ForeignKey('PriceType', on_delete=models.CASCADE, null=True, blank=True)
+    naqd = models.BooleanField(default=False)
     
     
     def __str__(self):

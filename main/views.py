@@ -6938,6 +6938,19 @@ def b2c_shop_view(request):
     }
     return render(request, 'b2c_shop.html', context)
 
+def b2c_naqd_add(request):
+    debtor = Debtor.objects.filter(fio="Naqd").first() or Debtor.objects.create(fio="Naqd")
+    user = UserProfile.objects.filter(user=request.user).last()
+    shop = Shop.objects.create(
+        valyuta_id=request.POST.get('valyuta'),
+        # type_price_id=request.POST.get('type_price'),
+        debtor=debtor,
+        saler=user,
+        # debt_return=request.POST.get('debt_return'),
+        filial=user.filial if user else None,
+    )
+    return redirect('b2c_shop_detail', shop.id)
+
 def b2c_shop_add(request):
     shop = Shop.objects.create(
         valyuta_id=request.POST.get('valyuta'),
@@ -10021,6 +10034,102 @@ def measurement_type_edit(request,id):
     valyuta.name=name
     valyuta.code=code
     valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+
+from django.utils.dateparse import parse_datetime
+from openpyxl import load_workbook
+from django.core.files.storage import FileSystemStorage
+from django.core.files import File
+
+
+
+def import_product_filial_from_excel(file_path, request):
+    wb = load_workbook(filename=file_path)
+    ws = wb.active
+
+    # 1-qatorni o'qib, mos kalitlarga mapping qilamiz
+    raw_headers = [cell.value for cell in ws[1]]
+    header_mapping = {
+        "NOMI": "name",
+        "O'LCHOV BIRLIGI": "measurement_type",
+        "TAYYORLOVCHI": "preparer",
+        "SHTRIX-KOD": "barcode",
+        "GURUHI": "group",
+        "MINIMAL MIQDOR": "min_count",
+        "MIQDOR": "quantity",
+        "BOSHLANG'ICH MIQDOR": "start_quantity",
+        "BOSHLANG'ICH SANA": "start_date",
+        "KATEGORIYA": "category",
+        "RASMI": "image"
+    }
+
+    headers = [header_mapping.get(h, h) for h in raw_headers]
+
+    for row_index, row in enumerate(ws.iter_rows(min_row=2), start=2):
+        data = {headers[i]: cell.value for i, cell in enumerate(row)}
+
+        # ForeignKey: measurement_type
+        measurement_type = None
+        if data.get("measurement_type"):
+            measurement_type, _ = MeasurementType.objects.get_or_create(name=str(data["measurement_type"]))
+
+        # ForeignKey: group
+        group = None
+        if data.get("group"):
+            group, _ = Groups.objects.get_or_create(name=str(data["group"]))
+
+        # ForeignKey: category
+        category = None
+        if data.get("category"):
+            category, _ = ProductCategory.objects.get_or_create(name=str(data["category"]))
+
+        # Model obyektini yaratish
+        user = UserProfile.objects.filter(user=request.user).last()
+        product = ProductFilial(
+            name=str(data.get("name", "")),
+            measurement_type=measurement_type,
+            preparer=data.get("preparer") or "",
+            barcode=str(data.get("barcode", "")),
+            group=group,
+            min_count=int(data.get("min_count") or 0),
+            quantity=float(data.get("quantity") or 0),
+            start_quantity=float(data.get("start_quantity") or 0),
+            start_date=parse_datetime(str(data.get("start_date"))) if data.get("start_date") else timezone.now(),
+            category=category,
+            filial=user.filial if user else None
+        )
+
+        # Rasm mavjud bo‘lsa — o‘qib saqlash
+        image_path = data.get("image")
+        if image_path and os.path.exists(f"media/{image_path}"):
+            with open(f"media/{image_path}", "rb") as f:
+                product.image.save(os.path.basename(image_path), File(f), save=False)
+        elif image_path:
+            print(f"⚠️ Rasm topilmadi: media/{image_path}")
+
+        product.save()
+        print(f"✅ Yaratildi: {product.name}")
+
+
+        # except Exception as e:
+        #     print(f"❌ {row_index}-qatorda xatolik: {e}")
+
+
+
+def upload_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        fs = FileSystemStorage()
+        filename = fs.save(excel_file.name, excel_file)
+        uploaded_file_path = fs.path(filename)
+
+        import_product_filial_from_excel(uploaded_file_path, request)
+        messages.success(request, 'Muvaffaqiyatli saqlandi')
+
+
     return redirect(request.META['HTTP_REFERER'])
 
 

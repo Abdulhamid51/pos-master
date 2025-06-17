@@ -28,32 +28,36 @@
 
                         <div class="widget-content widget-content-area br-6">
                             <form action="{% url 'product_filial' %}" method="get">
-                                    <div class="col-md-4 d-flex">
-                                    <select style="width:10rem" name="deliver" class="form-control">
-                                        <option value="" selected>- - - - - - - -</option>
-                                        {% for del in delivers %}
-                                            {% if del.id == deliver.id %}
-                                                <option value="{{ del.id }}" selected>{{ del.name }}</option>
-                                            {% endif %}
-                                            <option value="{{ del.id }}">{{ del.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <select style="width:10rem; margin-left: 1rem;" name="debtor" class="form-control">
-                                        <option value="">- - - - - - - -</option>
-                                        {% for del in debtors %}
-                                            
-                                            {% if filters.debtor == del.id %}
-                                                <option value="{{ del.id }}" selected>{{ del.fio }}</option>
-                                            {% else %}
-                                                 <option value="{{ del.id }}">{{ del.fio }}</option>
-                                            {% endif %}
+                                    <div class="d-flex">
+                                        <select style="width:10rem" name="deliver" class="form-control">
+                                            <option value="" selected>- - - - - - - -</option>
+                                            {% for del in delivers %}
+                                                {% if del.id == deliver.id %}
+                                                    <option value="{{ del.id }}" selected>{{ del.name }}</option>
+                                                {% endif %}
+                                                <option value="{{ del.id }}">{{ del.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select style="width:10rem; margin-left: 1rem;" name="debtor" class="form-control">
+                                            <option value="">- - - - - - - -</option>
+                                            {% for de in debtors %}
                                                 
-                                        {% endfor %}
-                                    </select>
+                                                {% if filters.debtor == del.id %}
+                                                    <option value="{{ del.id }}" selected>{{ del.fio }}</option>
+                                                {% else %}
+                                                    <option value="{{ del.id }}">{{ del.fio }}</option>
+                                                {% endif %}
+                                                    
+                                            {% endfor %}
+                                        </select>
                                     <input style="margin-left: 1rem;" value="{{filters.start_date}}" type="date" class="form-control" name="start_date">
                                     <input style="margin-left: 1rem;" value="{{filters.end_date}}" type="date" class="form-control" name="end_date">
 
                                     <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
+                                    <button style="margin-left: 1rem;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#excel_import">
+                                        Excel import 
+                                    </button>
+
                                 </div>
                         </form>
                             <div class="table-responsive mb-4 mt-4">
@@ -122,6 +126,38 @@
 
                     </div>
                 </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="excel_import" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <form  class="modal-content" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="recieve_item_add_product_name">Excel import</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" >
+
+                        <div class="form-group mb-3">
+                            <label for="excel_file" class="form-label">Excel faylni tanlang:</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" name="excel_file" id="excel_file" accept=".xlsx" required>
+                                <button class="btn" type="button" onclick="downloadTemplate()">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                    </div>
+                </div>
+            </form>
             </div>
         </div>
 {% endblock content %}
@@ -233,4 +269,11 @@
         //     $('#dollar1').text(dollar)
         // })
     </script>
+
+
+<script>
+    function downloadTemplate() {
+        window.location.href = "{% static 'mahsulot_filial_shablon.xlsx' %}";
+    }
+</script>
 {% endblock js %}
