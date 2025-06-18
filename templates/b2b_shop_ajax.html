@@ -223,6 +223,9 @@
                                                         </div>
                                                         <div class="col-md-1"></div>
                                                         <div class="col-md-2">
+                                                            <h6>Пакет</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
                                                             <h6>Kол-ва</h6>
                                                         </div>
                                                         <div class="col-md-1">
@@ -254,6 +257,7 @@
                                                         <div class="col-md-1"><input type="checkbox"></div>
                                                         <div class="col-md-2"><p class="product_name">{{ i.product.name }}</p></div>
                                                         <div class="col-md-1"><p style='display:none;' class="id_product" data-un="ok">{{i.product.id}}</p></div>
+                                                        <div class="col-md-2">{{ i.total_pack }}</div>
                                                         <div class="col-md-2">{{ i.quantity }}</div>
                                                         <div class="col-md-1"><h6>{{i.product.quantity}}</h6></div>
                                                         <div class="col-md-1"><p class="price_product_list">{{i.price}}</p></div>
@@ -274,7 +278,7 @@
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_product">
                                                                     <option value="">Добавить позицию — введите наименование, код, штрихкод или артикул</option>
                                                                     {% for i in product %}
-                                                                        <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}">{{ i.name }}</option>
+                                                                        <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}|{{i.pack}}">{{ i.name }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                                 <br>
@@ -545,7 +549,7 @@
             if (e.target.classList.contains('delete-btn')) {
                 const row = e.target.closest('.row');
                 if (row) {
-                    const row_quantity = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+                    const row_quantity = parseFloat(row.querySelector('input[name="quantity"]').value) || 0;
                     const total_row = parseNumber(row.querySelector('.summa_product_list').textContent.trim());
                     const product_id = row.querySelector('.id_product').textContent.trim();
                     
@@ -594,7 +598,7 @@
             let summa_col = 0;  
             const productList = document.getElementById('product_list');
             const pr_summa_product_list = productList.querySelectorAll('.summa_product_list');
-            const pr_summa_product_input = productList.querySelectorAll('input[type="number"]');
+            const pr_summa_product_input = productList.querySelectorAll('input[name="quantity"]');
             
             pr_summa_product_list.forEach(sim => {
                 let rawText = sim.textContent.replace(/\s/g, '').replace(',', '.');
@@ -612,7 +616,8 @@
 
         function pushData(item) {
             const row = item.closest('.row');
-            const quantity = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+            const quantity = parseFloat(row.querySelector('input[name="quantity"]').value) || 0;
+            const pack = parseFloat(row.querySelector('input[name="pack"]').value) || 0;
             const priceElement = row.querySelector('.price_product_list');
             const totalElement = row.querySelector('.summa_product_list');
             const id_product = row.querySelector('.id_product').textContent;
@@ -634,6 +639,7 @@
                     const existingItem = data.find(item => item.product_id === id_product);
                     
                     if (existingItem) {
+                        existingItem.pack = pack;
                         existingItem.quantity = quantity;
                         existingItem.total = total;
                         existingItem.skidka = skidka_input;
@@ -641,6 +647,7 @@
                     } else {
                         data.push({
                             quantity: quantity,
+                            total_pack: pack,
                             total: total,
                             product_id: id_product,
                             skidka: skidka_input,
@@ -650,6 +657,7 @@
                     console.log(data)
                     const one_data = {
                         quantity: quantity,
+                        total_pack: pack,
                         total: total,
                         product_id: id_product,
                         skidka: skidka_input,
@@ -736,7 +744,7 @@
                     return;
                 }
 
-                const [id, price, select_quantity] = value.split('|');
+                const [id, price, select_quantity, pack] = value.split('|');
                 const selectedProduct = selectizeControl.getItem(value).text().trim();
                 console.log(selectedProduct)
                 const existingProducts = productList.querySelectorAll('.product_name');
@@ -753,7 +761,8 @@
                         <div class="col-md-1"><input type="checkbox"></div>
                         <div class="col-md-2"><p class="product_name">${selectedProduct}</p></div>
                         <div class="col-md-1"><p style='display:none;' class="id_product">${id}</p></div>
-                        <div class="col-md-2"><input type="number"  oninput="pushData(this)"></div>
+                        <div class="col-md-2"><input type="number" data-pack="${pack}" onkeyup="calculate_pack(this)" name="pack" onchange="pushData(this)"></div>
+                        <div class="col-md-2"><input type="number" onkeyup="calculate_pack(this)" name="quantity"  onchange="pushData(this)"></div>
                         <div class="col-md-1"><h6 class="ostatok" data-original="${select_quantity}">${select_quantity}</h6></div>
                         <div class="col-md-1"><p class="price_product_list">${price}</p></div>
                         <div class="col-md-2" style="display: flex; gap: 7px;">
@@ -910,4 +919,27 @@
            document.querySelector('.document').style.display = isRelatedDocs ? 'block' : 'none';
        }
     </script>
+
+
+<script>
+function calculate_pack(input) {
+    // Ota konteyner divni topish (bir qator ichida ikkala input bor deb hisoblaymiz)
+    const parent = input.closest('.row') || document;
+
+    // Ikkala inputni topamiz
+    const packInput = parent.querySelector('input[name="pack"]');
+    const quantityInput = parent.querySelector('input[name="quantity"]');
+
+    // Pack 1 dona nechta quantityga tengligini olamiz (data-pack)
+    const unit = parseFloat(packInput.getAttribute('data-pack')) || 1;
+
+    if (input.name === 'quantity') {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        packInput.value = quantity / unit;
+    } else if (input.name === 'pack') {
+        const pack = parseFloat(packInput.value) || 0;
+        quantityInput.value = pack * unit;
+    }
+}
+</script>
 {% endblock js %}

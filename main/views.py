@@ -1856,15 +1856,52 @@ class Products(LoginRequiredMixin, TemplateView):
         context['groups'] = Groups.objects.all()
         context['price_types'] = PriceType.objects.all()
         context['delivers'] = Deliver.objects.all()
+        # context['viloyatlar'] = Viloyat.objects.all()
+
 
 
         # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
-        context['measurements'] = [
+        # context['measurements'] = [
+        #     {"id": i[0], "name": i[1]}
+        #     for i in ProductFilial.measure
+        # ]
+
+        context['ready_types'] = [
             {"id": i[0], "name": i[1]}
-            for i in ProductFilial.measure
+            for i in ProductFilial.status_ready
         ]
 
+        context['measurements'] = MeasurementType.objects.filter(is_active=True)
+
         return context
+
+
+
+@csrf_exempt
+def create_deliver_new(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        phone1 = request.POST.get('phone1')
+        phone2 = request.POST.get('phone2')
+        # viloyat_id = request.POST.get('viloyat_id')
+        print(name, 'pppp')
+        obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
+        print(obj)
+    return JsonResponse({'id': obj.id, 'name': obj.name})
+
+@csrf_exempt
+def create_measurement(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        obj = MeasurementType.objects.create(name=name)
+        return JsonResponse({'id': obj.id, 'name': obj.name})
+
+@csrf_exempt
+def create_group(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        obj = Groups.objects.create(name=name)
+        return JsonResponse({'id': obj.id, 'name': obj.name})
 
 
 from PIL import Image, ImageDraw, ImageFont
@@ -3004,6 +3041,7 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['debtor_t'] = 'true'
         context['debtors'] = page_debtor
         context['debtor_type'] = DebtorType.objects.all()
+        context['regions'] = Region.objects.all()
         context['teritory'] = Teritory.objects.all()
         context['agent'] = MobilUser.objects.all()
         context['valyuta'] = Valyuta.objects.all()
@@ -3035,6 +3073,38 @@ def debtor_add(request):
         price_type_id=price_type,
     )
     return redirect(request.META['HTTP_REFERER'])
+
+
+@csrf_exempt
+def create_debtor_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        obj = DebtorType.objects.create(name=name)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+@csrf_exempt
+def create_price_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        obj = PriceType.objects.create(name=name)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+@csrf_exempt
+def create_teritory(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        region_id = request.POST.get("region_id")
+        obj = Teritory.objects.create(name=name, region_id=region_id)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+
+@csrf_exempt
+def create_region(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        number = request.POST.get("number")
+        region = Region.objects.create(name=name, number=number)
+        return JsonResponse({"id": region.id, "name": region.name})
 
 
 @csrf_exempt
@@ -5447,21 +5517,23 @@ def add_recieve_item_view(request):
 
 
 def edit_product_prices(request):
-
+    item_id = request.POST.get("item")
+    item = ProductFilial.objects.get(id=item_id)
     for key, value in request.POST.items():
-        if key.startswith("br_"):
-            _, valuta_id, id = key.split("_")
+        print(key, value)
+        if key.startswith("price_"):
+            _, id, valuta_id = key.split("_")
             valyuta = Valyuta.objects.get(id=valuta_id)
             if id:
-                bring_price_obj = ProductBringPrice.objects.get(id=id)
+                price_type_obj = ProductPriceType.objects.get(id=id)
             else:
-                bring_price_obj, _ = ProductBringPrice.objects.get_or_create(
+                price_type_obj, _ = ProductPriceType.objects.get_or_create(
                 valyuta=valyuta,
-                product=item.product,
-                recieveitem=item
+                product=item,
+                # recieveitem=item
             )
-            bring_price_obj.price = float(value)
-            bring_price_obj.save()
+            price_type_obj.price = float(value)
+            price_type_obj.save()
     messages.success(request, "Muvaffaqiyatli saqlandi")
     return redirect(request.META.get('HTTP_REFERER'))
 
@@ -5581,6 +5653,7 @@ def new_product_add(request):
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
+    pack = request.POST.get('pack')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
@@ -5589,6 +5662,7 @@ def new_product_add(request):
     valyuta = request.POST.get('valyuta')
     pr = ProductFilial.objects.create(
         name=name,
+        pack=pack,
         valyuta_id=valyuta,
         ready=ready,
         barcode=barcode,
@@ -5600,6 +5674,7 @@ def new_product_add(request):
     if deliver:
         pr.deliver.add(Deliver.objects.get(id=deliver))
     pr.save()
+    messages.success(request, "Muvaffaqiyatli saqlandi")
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -6975,6 +7050,27 @@ def b2c_shop_add(request):
     )
     return redirect('b2c_shop_detail', shop.id)
 
+def b2c_shop_edit(request):
+    id = request.POST.get('id')
+
+    call_center = request.POST.get('call_center')
+    debt_return = request.POST.get('debt_return')
+    filial_id = request.POST.get('filial')
+
+    shop = Shop.objects.get(id=id)
+    shop.debtor_id=request.POST.get('debtor')
+    if call_center:
+        shop.saler_id=call_center
+    
+    if debt_return:
+        shop.debt_return=debt_return
+
+    if filial_id:
+        shop.filial_id=filial_id
+    
+    shop.save()
+    return redirect(request.META['HTTP_REFERER'])
+
 def b2c_shop_detail(request, id):
     shop = Shop.objects.get(id=id)
     price_types = PriceType.objects.all()
@@ -6983,6 +7079,7 @@ def b2c_shop_detail(request, id):
     call_center = UserProfile.objects.filter(staff=6)
     cart = Cart.objects.filter(shop=shop)
     totals = {
+        'total_pack':cart.aggregate(all=Coalesce(Sum('total_pack'), 0, output_field=IntegerField()))['all'],
         'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
         'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
     }
@@ -7004,6 +7101,7 @@ def b2c_shop_detail(request, id):
 def b2c_shop_cart_add(request, id):
     product_id = request.POST.get('product_id')  
     quantity = float(request.POST.get('quantity'))  
+    total_pack = float(request.POST.get('total_pack'))  
     agreed_price = request.POST.get('agreed_price')  
     product_price = request.POST.get('product_price')  
     shop = Shop.objects.get(id=id)
@@ -7014,6 +7112,7 @@ def b2c_shop_cart_add(request, id):
         shop=shop,
         product=product,
         quantity=quantity,
+        total_pack=total_pack,
         price=float(agreed_price),
         price_without_skidka = product_price,
         total=float(quantity) * float(agreed_price)
@@ -7025,6 +7124,7 @@ def b2c_shop_cart_add(request, id):
 @csrf_exempt
 def b2c_shop_cart_edit(request, id):
     quantity = request.POST.get('quantity')  
+    total_pack = request.POST.get('total_pack')  
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
     product.quantity += cart_item.quantity
@@ -7032,6 +7132,7 @@ def b2c_shop_cart_edit(request, id):
     if product.quantity < 0:
         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
     cart_item.quantity = quantity
+    cart_item.total_pack = total_pack
     cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
@@ -9196,6 +9297,7 @@ def b2b_shop_ajax_add_one(request, product_id):
         obj.product.quantity -= data['quantity']
         obj.product.save()
 
+        obj.total_pack=data['total_pack']
         obj.quantity=data['quantity']
         obj.total=data['total']
         obj.price=data['price']
@@ -10244,3 +10346,71 @@ def mobile_order_detail(request, id):
         'totals':totals,
     }
     return render(request, 'mobile_order_detail.html', context)
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth.decorators import login_required
+
+import json
+
+@require_GET
+def check_video_tutorial(request):
+    url = request.GET.get('url')
+    tutorial = VideoTutorial.objects.filter(url=url).first()
+    
+    response = {
+        'exists': False,
+        'is_superuser': request.user.is_superuser
+    }
+    
+    if tutorial:
+        response.update({
+            'exists': True,
+            'video_url': tutorial.video_url,
+            'title': tutorial.title
+        })
+    
+    return JsonResponse(response)
+
+@require_POST
+@login_required
+def save_video_tutorial(request):
+    try:
+
+        # print(request.data, 'iiiiii')
+        # data = json.loads(request.body)
+        url = request.POST.get('url')
+        video_url = request.POST.get('video_url')
+        title = request.POST.get('title', '')
+        
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Ruxsat yo\'q'}, status=403)
+        
+        tutorial, created = VideoTutorial.objects.update_or_create(
+            url=url,
+            defaults={
+                'video_url': video_url,
+                'title': title,
+                'created_by': request.user
+            }
+        )
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_POST
+@login_required
+def delete_video_tutorial(request):
+    try:
+        data = json.loads(request.body)
+        url = data.get('url')
+        
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Ruxsat yo\'q'}, status=403)
+        
+        VideoTutorial.objects.filter(url=url).delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

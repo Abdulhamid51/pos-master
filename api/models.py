@@ -750,6 +750,7 @@ class ProductFilial(models.Model):
     measurement = models.CharField(choices=measure, default='dona', max_length=4)
     min_count = models.IntegerField(default=0)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
+    pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     start_quantity = models.FloatField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
@@ -1106,7 +1107,7 @@ class ProductBringPrice(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     price = models.FloatField(default=0)
-    sell_price = models.FloatField(default=0)
+
 
 
 
@@ -1292,6 +1293,7 @@ class Cart(models.Model):
     after_cart = models.FloatField(default=0)
     price_without_skidka = models.IntegerField(default=0)
     price = models.FloatField(default=0)
+    total_pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     total = models.FloatField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -2874,3 +2876,20 @@ class RevisionItems(models.Model):
     @property
     def farqi(self):
         return self.quantity - self.old_quantity
+
+
+# models.py
+class VideoTutorial(models.Model):
+    url = models.CharField(max_length=255, verbose_name="Sahifa URL manzili")
+    video_url = models.URLField(verbose_name="Video URL")
+    title = models.CharField(max_length=255, verbose_name="Video nomi", blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Video qo'llanma"
+        verbose_name_plural = "Video qo'llanmalar"
+        unique_together = ('url',)
+
+    def __str__(self):
+        return f"{self.url} - {self.title}"

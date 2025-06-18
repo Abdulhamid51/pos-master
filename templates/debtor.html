@@ -44,9 +44,9 @@
                                                     <div class="modal-body">
                                                         <form action="{% url 'debtor_add' %}" method="post" enctype="multipart/form-data">
                                                             {% csrf_token %}
-                                                            <div class="form-group">
+                                                            <!-- <div class="form-group">
                                                                 <label for="recipient-debtor_type" class="col-form-label">Turi</label>
-                                                                <select name="debtor_type" id="recipient-debtor_type" class="form-control" >
+                                                                <select name="type" id="recipient-debtor_type" class="form-control" >
                                                                     <option value="">---------</option>
                                                                     {% for debtor_type in debtor_type%}
                                                                         <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
@@ -70,6 +70,53 @@
                                                                         <option value="{{ price_type.id }}">{{ price_type.name }}</option>
                                                                     {% endfor %}
                                                                 </select>
+                                                            </div> -->
+                                                            <!-- Debtor Type -->
+                                                            <div class="form-group">
+                                                                <label for="recipient-debtor_type" class="col-form-label">Turi</label>
+                                                                <div class="input-group">
+                                                                    <select name="type" id="recipient-debtor_type" class="form-control">
+                                                                        <option value="">---------</option>
+                                                                        {% for debtor_type in debtor_type %}
+                                                                            <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                    <div class="input-group-append">
+                                                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorTypeModal">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Teritoriya -->
+                                                            <div class="form-group">
+                                                                <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
+                                                                <div class="input-group">
+                                                                    <select name="teritory" id="recipient-teritory" class="form-control">
+                                                                        <option value="">---------</option>
+                                                                        {% for teritory in teritory %}
+                                                                            <option value="{{ teritory.id }}">{{ teritory.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                    <div class="input-group-append">
+                                                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#teritoryModal">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Narx Turi -->
+                                                            <div class="form-group">
+                                                                <label class="col-form-label">Narx Turi</label>
+                                                                <div class="input-group">
+                                                                    <select name="price_type" class="form-control" id="recipient-price_type">
+                                                                        <option value="">---------</option>
+                                                                        {% for price_type in price_type %}
+                                                                            <option value="{{ price_type.id }}">{{ price_type.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                    <div class="input-group-append">
+                                                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#priceTypeModal">+</button>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="recipient-image" class="col-form-label">Rasm</label>
@@ -85,11 +132,11 @@
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="recipient-phone1" class="col-form-label">Telefon</label>
-                                                                <input type="text" class="form-control" id="recipient-phone1" name="phone1" required>
+                                                                <input value="998" type="text" class="form-control" id="recipient-phone1" name="phone1" required>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label for="recipient-phone2" class="col-form-label">Telefon 2</label>
-                                                                <input type="text" class="form-control" id="recipient-phone2"  name="phone2" >
+                                                                <input value="998" type="text" class="form-control" id="recipient-phone2"  name="phone2" >
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
@@ -496,6 +543,107 @@
                 </div>
             </div>
         </div>
+
+
+   <!-- DebtorType Modal -->
+<div class="modal fade" id="debtorTypeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="debtorTypeForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Turi Qo‘shish</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control" placeholder="Turi nomi" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Teritory Modal -->
+<div class="modal fade" id="teritoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="teritoryForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Teritoriya Qo‘shish</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control mb-2" placeholder="Teritoriya nomi" required>
+
+          <div class="input-group">
+            <select name="region_id" id="regionSelect" class="form-control" required>
+              <option value="">-- Region tanlang --</option>
+              {% for region in regions %}
+                <option value="{{ region.id }}">{{ region.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#regionModal">+</button>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="regionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="regionForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Region Qo‘shish</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control mb-2" placeholder="Region nomi" required>
+          <input type="number" name="number" class="form-control" placeholder="Region raqami" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PriceType Modal -->
+<div class="modal fade" id="priceTypeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="priceTypeForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Narx Turi Qo‘shish</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control" placeholder="Narx turi nomi" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
 {% endblock content %}
 {% block js %}
     <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
@@ -517,4 +665,40 @@
             paging: false  
         } );
     </script>
+
+
+
+<script>
+$(document).ready(function () {
+    function handleFormSubmit(formId, url, selectId, modalId) {
+        $(formId).submit(function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
+                success: function (data) {
+                    $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
+                    $(modalId).modal('hide');
+                    $(formId)[0].reset();
+                },
+                error: function () {
+                    alert('Xatolik yuz berdi!');
+                }
+            });
+        });
+    }
+
+    // Mavjud submitlar
+    handleFormSubmit('#debtorTypeForm', '{% url "create_debtor_type" %}', '#recipient-debtor_type', '#debtorTypeModal');
+    handleFormSubmit('#teritoryForm', '{% url "create_teritory" %}', '#recipient-teritory', '#teritoryModal');
+    handleFormSubmit('#priceTypeForm', '{% url "create_price_type" %}', '#recipient-price_type', '#priceTypeModal');
+
+    // Yangi: Region
+    handleFormSubmit('#regionForm', '{% url "create_region" %}', '#regionSelect', '#regionModal');
+});
+</script>
+
 {% endblock js %}
