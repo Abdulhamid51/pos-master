@@ -2636,32 +2636,32 @@ class RejaChiqim(models.Model):
     qaysi = models.DateField(null=True, blank=True)
 
     
-    # @property
-    # def is_chiqim(self):
-    #     return Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+    @property
+    def is_chiqim(self):
+        return Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
 
-    # @property
-    # def chiqim_sum(self):
-    #     return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+    @property
+    def chiqim_sum(self):
+        return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
 
-    # @property
-    # def get_month(self):
-    #     OY_CHOICES = {
-    #         1: 'Yanvar',
-    #         2: 'Fevral',
-    #         3: 'Mart',
-    #         4: 'Aprel',
-    #         5: 'May',
-    #         6: 'Iyun',
-    #         7: 'Iyul',
-    #         8: 'Avgust',
-    #         9: 'Sentabr',
-    #         10: 'Oktabr',
-    #         11: 'Noyabr',
-    #         12: 'Dekabr',
-    #     }
-    #     month = self.qaysi.month
-    #     return OY_CHOICES.get(month)
+    @property
+    def get_month(self):
+        OY_CHOICES = {
+            1: 'Yanvar',
+            2: 'Fevral',
+            3: 'Mart',
+            4: 'Aprel',
+            5: 'May',
+            6: 'Iyun',
+            7: 'Iyul',
+            8: 'Avgust',
+            9: 'Sentabr',
+            10: 'Oktabr',
+            11: 'Noyabr',
+            12: 'Dekabr',
+        }
+        month = self.qaysi.month
+        return OY_CHOICES.get(month)
 
     
 # class ProductFilialDaily(models.Model):

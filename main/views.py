@@ -8496,8 +8496,11 @@ def pl_fin(request):
 
     categories = ProductCategory.objects.all()
     valyutas = Valyuta.objects.all()
+    circulations = MoneyCirculation.objects.all()
 
+    reja_chiqims = RejaChiqim.objects.filter(is_confirmed=True, valyuta_id=valyuta_filter)
     allcart = Cart.objects.filter(shop__valyuta_id=valyuta_filter)
+    allshop = Shop.objects.filter(valyuta_id=valyuta_filter)
 
     months = list(range(1, 13))
 
@@ -8516,6 +8519,10 @@ def pl_fin(request):
     total_cost = allcart.filter(shop__date__year=year).aggregate(sum=Sum(F('bring_price')))['sum'] or 0
     cost_totals = [allcart.filter(shop__date__year=year, shop__date__month=m).aggregate(sum=Sum(F('bring_price')))['sum'] or 0 for m in months]
 
+
+    shop_totals = [sum([i.total_price for i in allshop.filter(date__year=year, date__month=m)]) for m in months]
+    shop_total = sum([i for i in shop_totals])
+
     for i in categories:
         products = ProductFilial.objects.filter(category=i)
         i.cost_months = []
@@ -8524,6 +8531,30 @@ def pl_fin(request):
             total = carts.aggregate(sum=Sum(F('bring_price')))['sum'] or 0
             i.cost_months.append(total)
         i.cost_percent = sum(i.cost_months) / (total_cost if total_cost else 1) * 100
+
+    
+    for i in circulations:
+        i.monthly_summa = []
+        i.total = 0 
+        for m in months:
+            chiqims = reja_chiqims.filter(qaysi__year=year, qaysi__month=m, money_circulation=i)
+            total = chiqims.aggregate(sum=Sum(F('total')))['sum'] or 0
+            i.total += total
+            i.monthly_summa.append(total)
+    
+    circulations_totals = [reja_chiqims.filter(qaysi__year=year, qaysi__month=m).aggregate(sum=Sum('total'))['sum'] or 0 for m in months]
+    circulations_total = sum(i for i in circulations_totals)
+
+
+
+    chart_data = []
+    for i in months:
+        dt = {
+            "kirim": 0,
+            "chiqim": reja_chiqims.filter(qaysi__year=year, qaysi__month=i).aggregate(sum=Sum(F('total')))['sum'] or 0,
+            "pribl": 0,
+        }
+        chart_data.append(dt)
 
 
     context = {
@@ -8535,6 +8566,12 @@ def pl_fin(request):
         'valyuta_filter': int(valyuta_filter),
         'marja_totals': marja_totals,
         'cost_totals': cost_totals,
+        'shop_totals': shop_totals,
+        'shop_total': shop_total,
+        'circulations': circulations,
+        'circulations_totals': circulations_totals,
+        'circulations_total': circulations_total,
+        'chart_data': chart_data
 
     }
     return render(request, 'fin/pl_fin.html', context)

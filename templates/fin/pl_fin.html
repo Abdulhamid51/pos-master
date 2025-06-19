@@ -181,10 +181,28 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody >
+
+                                                    
                                                         <tr>
-                                                            <td>Tan narx - {{total_cost|intcomma}}</td>
+                                                            <td>Продажи - {{shop_total|intcomma}}</td>
+                                                            {% for i in shop_totals %}
+                                                                <td><strong>{{i|intcomma}}</strong></td>
+                                                            {% endfor %}
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Себестоимость - {{total_cost|intcomma}}</td>
                                                             
                                                             {% for i in cost_totals %}
+                                                                <td><strong>{{i|intcomma}}</strong></td>
+                                                            {% endfor %}
+                                                                
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Валовая прибыль - {{total_cost|intcomma}}</td>
+                                                            
+                                                            {% for i in pribl_totals %}
                                                                 <td><strong>{{i|intcomma}}</strong></td>
                                                             {% endfor %}
                                                                 
@@ -209,6 +227,24 @@
                                                             {% endfor %}
                                                         </tr>
 
+                                                        <!-- <tr>
+                                                            <td>Rja chiqim - {{total_marja|intcomma}}</td>
+                                                            {% for i in marja_totals %}
+                                                                <td><strong>{{i|intcomma}}</strong></td>
+                                                            {% endfor %}
+                                                        </tr> -->
+
+                                                        {% for i in circulations %}
+                                                            <tr>
+                                                                <td class="text-center">{{i.name}} - {{i.total|intcomma}}</td>
+                                                                
+                                                                {% for m in i.monthly_summa %}
+                                                                    <td>{{ m|intcomma }}</td>
+                                                                {% endfor %}
+                                                            </tr>
+                                                        {% endfor %}
+                                                        
+
                                                         <!-- {% for i in categories %}
                                                             <tr>
                                                                 <td class="text-right">{{i}} ({{i.percent}}%)</td>
@@ -223,6 +259,9 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-lg-12 mt-4">
+                                    <canvas id="financeChart" height="100"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -231,6 +270,8 @@
         
 {% endblock content %}
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
 
@@ -240,6 +281,80 @@
         if (url === pathname) {
             btn.classList.add('active');
         }
+    });
+</script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('financeChart').getContext('2d');
+
+        // Backenddan kelgan chart_data
+        const chartData = {{ chart_data|safe }};
+
+        const labels = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+
+        const kirimData = chartData.map(item => item.kirim);
+        const chiqimData = chartData.map(item => item.chiqim);
+        const priblData = chartData.map(item => item.pribl);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Daromad',
+                        data: kirimData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Xarajat',
+                        data: chiqimData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Foyda',
+                        data: priblData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                // minglab ajratilgan format
+                                return value.toLocaleString('ru-RU');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Oylar bo‘icha Daromad, Xarajat va Foyda'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString('ru-RU');
+                            }
+                        }
+                    }
+                }
+            }
+        });
     });
 </script>
 {% endblock js %}
