@@ -272,3 +272,4 @@ env
 *.json
 *.sql
 jsons/
+settings.py

@@ -22,13 +22,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-# from django.contrib.auth import authenticate
-# user = User.objects.filter(username='max1').last()
-# user.set_password(user.password)
-# user.save()
-# print(user.password)
-# u = authenticate(username="max1", password="admin123")
-# print(u)
 
 def monthly():
     date = timezone.now()
@@ -1860,7 +1853,55 @@ class Products(LoginRequiredMixin, TemplateView):
         context['delivers'] = delivers
         context['dollar_kurs'] = Course.objects.last().som
 
+        context['groups'] = Groups.objects.all()
+        context['price_types'] = PriceType.objects.all()
+        context['delivers'] = Deliver.objects.all()
+        # context['viloyatlar'] = Viloyat.objects.all()
+
+
+
+        # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
+        # context['measurements'] = [
+        #     {"id": i[0], "name": i[1]}
+        #     for i in ProductFilial.measure
+        # ]
+
+        context['ready_types'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.status_ready
+        ]
+
+        context['measurements'] = MeasurementType.objects.filter(is_active=True)
+
         return context
+
+
+
+@csrf_exempt
+def create_deliver_new(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        phone1 = request.POST.get('phone1')
+        phone2 = request.POST.get('phone2')
+        # viloyat_id = request.POST.get('viloyat_id')
+        print(name, 'pppp')
+        obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
+        print(obj)
+    return JsonResponse({'id': obj.id, 'name': obj.name})
+
+@csrf_exempt
+def create_measurement(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        obj = MeasurementType.objects.create(name=name)
+        return JsonResponse({'id': obj.id, 'name': obj.name})
+
+@csrf_exempt
+def create_group(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        obj = Groups.objects.create(name=name)
+        return JsonResponse({'id': obj.id, 'name': obj.name})
 
 
 from PIL import Image, ImageDraw, ImageFont
@@ -3000,6 +3041,7 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['debtor_t'] = 'true'
         context['debtors'] = page_debtor
         context['debtor_type'] = DebtorType.objects.all()
+        context['regions'] = Region.objects.all()
         context['teritory'] = Teritory.objects.all()
         context['agent'] = MobilUser.objects.all()
         context['valyuta'] = Valyuta.objects.all()
@@ -3031,6 +3073,38 @@ def debtor_add(request):
         price_type_id=price_type,
     )
     return redirect(request.META['HTTP_REFERER'])
+
+
+@csrf_exempt
+def create_debtor_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        obj = DebtorType.objects.create(name=name)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+@csrf_exempt
+def create_price_type(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        obj = PriceType.objects.create(name=name)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+@csrf_exempt
+def create_teritory(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        region_id = request.POST.get("region_id")
+        obj = Teritory.objects.create(name=name, region_id=region_id)
+        return JsonResponse({"id": obj.id, "name": obj.name})
+
+
+@csrf_exempt
+def create_region(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        number = request.POST.get("number")
+        region = Region.objects.create(name=name, number=number)
+        return JsonResponse({"id": region.id, "name": region.name})
 
 
 @csrf_exempt
@@ -4418,11 +4492,6 @@ def sms_text_replaces(sms_text, customer):
     return sms_texts
 
 
-# vaqt = datetime.now().date()
-# debtors = Debtor.objects.filter(debt_return__day=vaqt.day, debt_return__month=vaqt.month, debt_return__year=vaqt.year)
-# print(debtors)
-# print('aaa')
-
 # from django.conf import settings
 #sms sender  if date today  
 def schedular_sms_send():
@@ -4871,12 +4940,7 @@ def payment_employee(request, id):
 
         return redirect(request.META['HTTP_REFERER'])
 
-# for i in UserProfile.objects.filter(staff=3):
-#     i.refresh_total(datetime.now().date())
-# print(Cart.objects.filter(shop__date__date=datetime.now().date()))
-# for i in Cart.objects.filter(shop__date__date=datetime.now().date()):
-#     print(i)
-#     i.save()
+
 def one_day_price(request): 
     employe = request.GET.get('employe')
     month = request.GET.get('month')
@@ -5452,6 +5516,27 @@ def add_recieve_item_view(request):
 #     return redirect(request.META['HTTP_REFERER'])
 
 
+def edit_product_prices(request):
+    item_id = request.POST.get("item")
+    item = ProductFilial.objects.get(id=item_id)
+    for key, value in request.POST.items():
+        print(key, value)
+        if key.startswith("price_"):
+            _, id, valuta_id = key.split("_")
+            valyuta = Valyuta.objects.get(id=valuta_id)
+            if id:
+                price_type_obj = ProductPriceType.objects.get(id=id)
+            else:
+                price_type_obj, _ = ProductPriceType.objects.get_or_create(
+                valyuta=valyuta,
+                product=item,
+                # recieveitem=item
+            )
+            price_type_obj.price = float(value)
+            price_type_obj.save()
+    messages.success(request, "Muvaffaqiyatli saqlandi")
+    return redirect(request.META.get('HTTP_REFERER'))
+
 @require_POST
 def edit_recieve_item_view(request):
     item_id = request.POST.get("item")
@@ -5568,6 +5653,7 @@ def new_product_add(request):
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
+    pack = request.POST.get('pack')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
@@ -5576,6 +5662,7 @@ def new_product_add(request):
     valyuta = request.POST.get('valyuta')
     pr = ProductFilial.objects.create(
         name=name,
+        pack=pack,
         valyuta_id=valyuta,
         ready=ready,
         barcode=barcode,
@@ -5587,6 +5674,7 @@ def new_product_add(request):
     if deliver:
         pr.deliver.add(Deliver.objects.get(id=deliver))
     pr.save()
+    messages.success(request, "Muvaffaqiyatli saqlandi")
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -6962,6 +7050,27 @@ def b2c_shop_add(request):
     )
     return redirect('b2c_shop_detail', shop.id)
 
+def b2c_shop_edit(request):
+    id = request.POST.get('id')
+
+    call_center = request.POST.get('call_center')
+    debt_return = request.POST.get('debt_return')
+    filial_id = request.POST.get('filial')
+
+    shop = Shop.objects.get(id=id)
+    shop.debtor_id=request.POST.get('debtor')
+    if call_center:
+        shop.saler_id=call_center
+    
+    if debt_return:
+        shop.debt_return=debt_return
+
+    if filial_id:
+        shop.filial_id=filial_id
+    
+    shop.save()
+    return redirect(request.META['HTTP_REFERER'])
+
 def b2c_shop_detail(request, id):
     shop = Shop.objects.get(id=id)
     price_types = PriceType.objects.all()
@@ -6970,6 +7079,7 @@ def b2c_shop_detail(request, id):
     call_center = UserProfile.objects.filter(staff=6)
     cart = Cart.objects.filter(shop=shop)
     totals = {
+        'total_pack':cart.aggregate(all=Coalesce(Sum('total_pack'), 0, output_field=IntegerField()))['all'],
         'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
         'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
     }
@@ -6991,6 +7101,7 @@ def b2c_shop_detail(request, id):
 def b2c_shop_cart_add(request, id):
     product_id = request.POST.get('product_id')  
     quantity = float(request.POST.get('quantity'))  
+    total_pack = float(request.POST.get('total_pack'))  
     agreed_price = request.POST.get('agreed_price')  
     product_price = request.POST.get('product_price')  
     shop = Shop.objects.get(id=id)
@@ -7001,6 +7112,7 @@ def b2c_shop_cart_add(request, id):
         shop=shop,
         product=product,
         quantity=quantity,
+        total_pack=total_pack,
         price=float(agreed_price),
         price_without_skidka = product_price,
         total=float(quantity) * float(agreed_price)
@@ -7012,6 +7124,7 @@ def b2c_shop_cart_add(request, id):
 @csrf_exempt
 def b2c_shop_cart_edit(request, id):
     quantity = request.POST.get('quantity')  
+    total_pack = request.POST.get('total_pack')  
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
     product.quantity += cart_item.quantity
@@ -7019,6 +7132,7 @@ def b2c_shop_cart_edit(request, id):
     if product.quantity < 0:
         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
     cart_item.quantity = quantity
+    cart_item.total_pack = total_pack
     cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
@@ -7178,41 +7292,93 @@ def analysis_costs(request):
 
 
 
-def tovar_prixod(request):
+# def tovar_prixod(request):
     
-    context = {
+#     context = {
 
-    }
+#     }
+#     context['ombor'] = 'active'
+#     context['ombor_t'] = 'true'
+#     context['recieves'] = Recieve.objects.filter(status__in=[0, 1], is_prexoded=True).order_by('-id')
+#     context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=True).order_by('-id')[:1000]
+#     context['dollar_kurs'] = Course.objects.last().som
+#     context['products'] = ProductFilial.objects.all()
+#     context['groups'] = Groups.objects.all()
+#     context['delivers'] = Deliver.objects.all()
+
+#     context['measurements'] = [{
+#         "id": i[0],
+#         "name": i[1],
+#     } for i in ProductFilial.measure]
+#     max_barcode = (
+#         ProductFilial.objects
+#         .annotate(barcode_int=Cast('barcode', IntegerField()))
+#         .aggregate(Max('barcode_int'))['barcode_int__max']
+#     )
+
+#     new_barcode = max_barcode+1 if max_barcode else 1
+
+#     context['new_barcode'] = new_barcode
+
+
+#     active_id = request.GET.get('active')
+#     if active_id and Recieve.objects.filter(id=active_id):
+#         context['active_one'] = Recieve.objects.get(id=active_id)
+
+#     return render(request, 'tovar_prixod.html', context)
+
+
+def tovar_prixod(request):
+    context = {}
+
+    # Sahifada ombor qismi aktivligini belgilash
     context['ombor'] = 'active'
     context['ombor_t'] = 'true'
-    context['recieves'] = Recieve.objects.filter(status__in=[0, 1], is_prexoded=True).order_by('-id')
-    context['recieveitems'] = RecieveItem.objects.filter(recieve__is_prexoded=True).order_by('-id')[:1000]
-    context['dollar_kurs'] = Course.objects.last().som
+
+    # Qabul qilingan, lekin hali to‘liq yakunlanmagan Recieve lar
+    context['recieves'] = Recieve.objects.filter(
+        status__in=[0, 1],
+        is_prexoded=True
+    ).order_by('-id')
+
+    # Oxirgi 1000 ta RecieveItem (prexodlangan)
+    context['recieveitems'] = RecieveItem.objects.filter(
+        recieve__is_prexoded=True
+    ).order_by('-id')[:1000]
+
+    # Oxirgi dollar kursi (so‘mda)
+    course = Course.objects.last()
+    context['dollar_kurs'] = course.som if course else 0
+
+    # Mahsulotlar, guruhlar, etkazib beruvchilar
     context['products'] = ProductFilial.objects.all()
     context['groups'] = Groups.objects.all()
     context['delivers'] = Deliver.objects.all()
     context['measurement_type'] = MeasurementType.objects.filter(is_active=True)
     context['valyutas'] = Valyuta.objects.filter()
 
-    context['measurements'] = [{
-        "id": i[0],
-        "name": i[1],
-    } for i in ProductFilial.measure]
+    # O‘lchov birliklari (ProductFilial.measure bu ENUM yoki CHOICES bo‘lsa)
+    context['measurements'] = [
+        {"id": i[0], "name": i[1]}
+        for i in ProductFilial.measure
+    ]
+
+    # Barcode'ning maksimal qiymatini topish va yangisini generatsiya qilish
     max_barcode = (
         ProductFilial.objects
         .annotate(barcode_int=Cast('barcode', IntegerField()))
         .aggregate(Max('barcode_int'))['barcode_int__max']
     )
-    new_barcode = max_barcode+1 if max_barcode else 1
-
+    new_barcode = max_barcode + 1 if max_barcode else 1
     context['new_barcode'] = new_barcode
 
-
+    # URL orqali active bo‘lishi kerak bo‘lgan Recieve ni olish
     active_id = request.GET.get('active')
-    if active_id and Recieve.objects.filter(id=active_id):
+    if active_id and Recieve.objects.filter(id=active_id).exists():
         context['active_one'] = Recieve.objects.get(id=active_id)
 
     return render(request, 'tovar_prixod.html', context)
+
 
 
 def add_recieve_perexoded(request):
@@ -9131,6 +9297,7 @@ def b2b_shop_ajax_add_one(request, product_id):
         obj.product.quantity -= data['quantity']
         obj.product.save()
 
+        obj.total_pack=data['total_pack']
         obj.quantity=data['quantity']
         obj.total=data['total']
         obj.price=data['price']
@@ -10179,3 +10346,71 @@ def mobile_order_detail(request, id):
         'totals':totals,
     }
     return render(request, 'mobile_order_detail.html', context)
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth.decorators import login_required
+
+import json
+
+@require_GET
+def check_video_tutorial(request):
+    url = request.GET.get('url')
+    tutorial = VideoTutorial.objects.filter(url=url).first()
+    
+    response = {
+        'exists': False,
+        'is_superuser': request.user.is_superuser
+    }
+    
+    if tutorial:
+        response.update({
+            'exists': True,
+            'video_url': tutorial.video_url,
+            'title': tutorial.title
+        })
+    
+    return JsonResponse(response)
+
+@require_POST
+@login_required
+def save_video_tutorial(request):
+    try:
+
+        # print(request.data, 'iiiiii')
+        # data = json.loads(request.body)
+        url = request.POST.get('url')
+        video_url = request.POST.get('video_url')
+        title = request.POST.get('title', '')
+        
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Ruxsat yo\'q'}, status=403)
+        
+        tutorial, created = VideoTutorial.objects.update_or_create(
+            url=url,
+            defaults={
+                'video_url': video_url,
+                'title': title,
+                'created_by': request.user
+            }
+        )
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_POST
+@login_required
+def delete_video_tutorial(request):
+    try:
+        data = json.loads(request.body)
+        url = data.get('url')
+        
+        if not request.user.is_superuser:
+            return JsonResponse({'success': False, 'error': 'Ruxsat yo\'q'}, status=403)
+        
+        VideoTutorial.objects.filter(url=url).delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

@@ -3,7 +3,7 @@
 {% load humanize %}
 {% load mathfilters %}
 {% block title %}
-    <title>Product | Bordo</title>
+    <title>Product </title>
 {% endblock title %}
 {% block css %}
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
@@ -46,6 +46,12 @@
                                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalLong">
                                             Nolga tushirish
                                         </button>
+
+                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_product_add" id="" onclick="">
+                                                                Yangi  qo'shish
+                                                            </button>
+
+                                    
                                     </div>
                                 </div>
                         </form>
@@ -56,6 +62,7 @@
                                             <th class="">№</th>
                                             <th>Mahsulot</th>
                                             <th>Ishlab chiqaruvchi</th>
+                                            <th>Paketdagi soni</th>
                                             <th>So`m</th>
                                             <th>Soni</th>
                                             <th>So`m * Soni</th>
@@ -64,6 +71,7 @@
                                             <th>Filial</th>
                                             <th>Guruh</th>
                                             <th>Barcode</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody> 
@@ -72,6 +80,7 @@
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ productfilial.name }}</td>
                                                 <td>{% if productfilial.preparer %}{{ productfilial.preparer }}{% else %}-{% endif %}</td>
+                                                <td>{{ productfilial.pack }}</td>
                                                 <td class="som" data-som="{{ productfilial.som }}">{{ productfilial.som|intcomma }}</td>
                                                 <td class="quantity" data-quantity="{{ productfilial.quantity|floatformat:0 }}">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
                                                 <td class="allprice" data-all="{{ productfilial.som|mul:productfilial.quantity|floatformat:0 }}">{{ productfilial.som|mul:productfilial.quantity|floatformat:0|intcomma }}</td>
@@ -82,6 +91,11 @@
                                                 <td>
                                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{ productfilial.id }}" onclick="SaveBarcode({{ productfilial.id }})">
                                                         Barcode
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button onclick="price_types('{{productfilial.id}}')" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal{{productfilial.id}}">
+                                                        Narx <i class="fa fa-edit"></i> 
                                                     </button>
                                                 </td>
                                             </tr>
@@ -114,6 +128,7 @@
                                     <tfoot>
                                         <tr>
                                             <th class="">Jami:</th>
+                                            <th></th>
                                             <th></th>
                                             <th></th>
                                             <th id="som1">{{ productfilials_total_som|intcomma }}|</th>
@@ -216,6 +231,250 @@
               </div>
             </div>
         </div>
+
+
+        <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <form action="{% url 'new_product_add' %}" class="modal-content" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                    <label for="">Nomi</label>
+                    <input type="text" class="form-control" name="name" required>
+
+                    <!-- <label for="">Ishlab chiqaruvchi</label>
+                    <input type="text" class="form-control" name="preparer" required> -->
+
+                    <!-- <label for="">Ishlab chiqaruvchi</label>
+                    <select class="form-control searchable" required name="deliver" id="">
+                        <option value="">- - - - - - - - </option>
+                        {% for a in delivers %}
+                            <option value="{{a.id}}">{{ a.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="">Ulchov</label>
+                    <select class="form-control searchable" required name="measurement" id="">
+                        <option value="">- - - - - - - - </option>
+                        {% for a in measurements %}
+                            <option value="{{a.id}}">{{ a.name }}</option>
+                        {% endfor %}
+                    </select> -->
+
+                    <label for="">Ishlab chiqaruvchi</label>
+                        <div class="input-group mb-2">
+                            <select class="form-control searchable" required name="deliver" id="deliverSelect">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in delivers %}
+                                    <option value="{{ a.id }}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#deliverModal">+</button>
+                            </div>
+                        </div>
+
+                        <!-- O‘lchov -->
+                        <label for="">O‘lchov</label>
+                        <div class="input-group mb-2">
+                            <select class="form-control searchable" required name="measurement" id="measurementSelect">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in measurements %}
+                                    <option value="{{ a.id }}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#measurementModal">+</button>
+                            </div>
+                        </div>
+
+
+                    <label for="">Min miqdor</label>
+                    <input type="number" class="form-control" name="min_count" required>
+
+                    <label for="">Paketdagi soni</label>
+                    <input type="number" class="form-control" name="pack" required>
+
+
+                    <!-- <label for="">Guruh</label>
+                    <select class="form-control searchable" required name="group" id="">
+                        <option value="">- - - - - - - - </option>
+                        {% for a in groups %}
+                            <option value="{{a.id}}">{{ a.name }}</option>
+                        {% endfor %}
+                    </select> -->
+
+                    <label for="">Guruh</label>
+                    <div class="input-group mb-2">
+                        <select class="form-control searchable" required name="group" id="groupSelect">
+                            <option value="">- - - - - - - - </option>
+                            {% for a in groups %}
+                                <option value="{{ a.id }}">{{ a.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#groupModal">+</button>
+                        </div>
+                    </div>
+
+                    <label for="">Turi</label>
+                    <select name="ready" class="form-control" id="" required>
+                        <option value="">- - - - - - - </option>
+                        
+                        {% for i in ready_types %}
+                            <option value="{{i.id}}">{{ i.name }}</option>
+                        {% endfor %}
+                            
+                    </select>
+
+                    <label for="">Shtrix kod</label>
+                    <input type="text" class="form-control" name="barcode" value="{{new_barcode}}" required>
+
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+                </form>
+            </div>
+        </div>
+
+        {% for productfilial in productfilials %}
+        <div class="modal fade" id="recieve_item_add_modal{{ productfilial.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form class="modal-content" method="post" action="{% url 'edit_product_prices' %}">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" >
+                    <div class="form-group" id="recieve_item_add_product_div{{productfilial.id}}">
+                        <!-- <input type="hidden" name="product" id="recieve_item_add_product_id">
+                        <input type="hidden" name="recieve" id="recieve_item_add_recieve_id"> -->
+                        <input type="hidden" name="item" value="{{productfilial.id}}">
+                        <label for="">Sotish narx </label>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>N</th>
+                                    <th>Valyuta</th>
+                                    {% for p in price_types %}
+                                        <th>{{ p.name }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in productfilial.pricetypevaluta_prices %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ row.valuta }}</td>
+                                        {% for s in row.summas %}
+                                            <td>
+                                                <input step="any"
+                                                    type="number" 
+                                                    class="form-control"
+                                                    name="price_{{ s.id }}_{{ row.valyuta_id }}" 
+                                                    value="{{ s.summa }}"
+                                                />
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+
+                        
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                    </div>
+
+            </div>
+            </form>
+        </div>
+        </div>
+        {% endfor %}
+
+
+
+        <div class="modal fade" id="deliverModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="deliverForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Ishlab chiqaruvchi</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control mb-2" placeholder="Nomi" required>
+          <input type="text" name="phone1" class="form-control mb-2" placeholder="Telefon 1" required>
+          <input type="text" name="phone2" class="form-control mb-2" placeholder="Telefon 2">
+          <!-- <select name="viloyat_id" class="form-control" required>
+            <option value="">-- Viloyat tanlang --</option>
+            {% for v in viloyatlar %}
+              <option value="{{ v.id }}">{{ v.name }}</option>
+            {% endfor %}
+          </select> -->
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Measurement Modal -->
+<div class="modal fade" id="measurementModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="measurementForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi O‘lchov</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control" placeholder="O‘lchov nomi" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Group Modal -->
+<div class="modal fade" id="groupModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="groupForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Yangi Guruh</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control" placeholder="Guruh nomi" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Saqlash</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock content %}
 {% block js %}
 
@@ -276,56 +535,52 @@
         })
     </script>
 
+    <!-- <script>
+        function price_types(id) {
+            $('#recieve_item_add_product_div .pr_type').remove();
+            let price_types = $.get('/api/productpricetype/', { product:  id}, function(data) {
+                console.log(data);
+                data.forEach(element => {
+                    $(`#recieve_item_add_product_div${id}`).append(
+                        `
+                        <label class="pr_type" for="">${element.name}</label>
+                        <input type="number" name="${element.id}" class="form-control pr_type" value="${element.price}">
+                        `
+                    )
+                });
+            });
+        }
+    </script> -->
+
+
+
+
     <script>
-        // let input = $('.form-control[type=search]')
-        // input.on('keyup', function() {
-        //     let som = 0
+$(document).ready(function () {
+    function handleFormSubmit(formId, url, selectId, modalId) {
+        $(formId).submit(function (e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
+                success: function (data) {
+                    $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
+                    $(modalId).modal('hide');
+                    $(formId)[0].reset();
+                },
+                error: function () {
+                    alert("Xatolik yuz berdi!");
+                }
+            });
+        });
+    }
 
-
-        //     var trs = $('#mainTable').dataTable();
-
-        //     //Get all rows from the trs table object.
-        //     var rows = trs.$("tr");
-
-
-        //     // console.log($('.som').length);
-        //     console.log($('tr[class="qwerty"]').length);
-        //     $('tr[class="qwerty"]').each(function(index, item) {
-        //         // console.log(index, item.textContent);
-        //         // let id = item.getAttribute('data-id')
-        //         som += parseInt(item.getAttribute('data-som'))
-        //     })
-        //     som = som.toLocaleString()
-        //     $('#som1').text(som)
-
-        //     let quantity = 0
-        //     Array.from(document.querySelectorAll('.quantity')).forEach(function(item) {
-        //         quantity += parseInt(item.getAttribute('data-quantity'))
-        //     })
-
-        //     quantity = quantity.toLocaleString()
-            
-        //     $('#quantity1').text(quantity)
-
-
-
-        //     let allprice = 0
-        //     Array.from(document.querySelectorAll('.allprice')).forEach(function(item) {
-        //         allprice += parseInt(item.getAttribute('data-all'))
-        //     })
-
-        //     allprice = allprice.toLocaleString()
-
-        //     $('#allprice1').text(allprice)
-
-            
-
-        //     let dollar = 0
-        //     Array.from(document.querySelectorAll('.dollar')).forEach(function(item) {
-        //         dollar += parseInt(item.getAttribute('data-dollar'))
-        //     })
-        //     dollar = dollar.toLocaleString()
-        //     $('#dollar1').text(dollar)
-        // })
-    </script>
+    // Yangi obyektlar uchun AJAX
+    handleFormSubmit('#deliverForm', '{% url "create_deliver_new" %}', '#deliverSelect', '#deliverModal');
+    handleFormSubmit('#measurementForm', '{% url "create_measurement" %}', '#measurementSelect', '#measurementModal');
+    handleFormSubmit('#groupForm', '{% url "create_group" %}', '#groupSelect', '#groupModal');
+});
+</script>
 {% endblock js %}

@@ -70,18 +70,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "domstroy.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-# DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'OPTIONS': {
-#            'read_default_file':'/var/www/Bordo/auth/mysql.cnf'
-#        }
-#    }
-# }
-
 
 DATABASES = {
     "default": {
@@ -90,36 +78,20 @@ DATABASES = {
     }
 }
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000000
-
-#DATABASES = {
+# DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'bordo_new1',
-#         'USER': 'bordo_new',
+#         'NAME': 'ecomaruf',
+#         'USER': 'ecomaruf',
 #         'PASSWORD': 'password',
 #         'HOST': 'localhost',
 #         'PORT': '',
 #     }
-#}
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'bordo',
-#         'USER': 'bordo_user',
-#         'PASSWORD': 'password',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#     }
 # }
 
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000000
 
-
-# Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -234,7 +206,7 @@ TIME_ZONE = "Asia/Tashkent"
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = False
 

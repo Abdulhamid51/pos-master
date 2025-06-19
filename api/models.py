@@ -112,12 +112,13 @@ class MobilUser(models.Model):
 
 
 class Filial(models.Model):
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
-    qarz_som = models.IntegerField(default=0)
-    qarz_dol = models.IntegerField(default=0)
-    savdo_puli_som = models.IntegerField(default=0)
-    savdo_puli_dol = models.IntegerField(default=0)
+    qarz_som = models.BigIntegerField(default=0)
+    qarz_dol = models.BigIntegerField(default=0)
+    savdo_puli_som = models.BigIntegerField(default=0)
+    savdo_puli_dol = models.BigIntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     is_activate = models.BooleanField(default=True)
     
@@ -749,6 +750,7 @@ class ProductFilial(models.Model):
     measurement = models.CharField(choices=measure, default='dona', max_length=4)
     min_count = models.IntegerField(default=0)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
+    pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     start_quantity = models.FloatField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
@@ -794,7 +796,8 @@ class ProductFilial(models.Model):
                 pr = ProductPriceType.objects.filter(valyuta=v, type=p, product=self).last() or ProductPriceType.objects.create(valyuta=v, type=p, product=self)
                 dt['summas'].append({
                     "id": pr.id,
-                    "summa": str(pr.price).replace(',', '.')
+                    "summa": str(pr.price).replace(',', '.'),
+                    # "sell_summa": str(pr.sell_price).replace(',', '.'),
                 })
 
             data.append(dt)
@@ -891,11 +894,14 @@ class Recieve(models.Model):
     
     @property
     def kelish_total(self):
-        return self.receiveitem.all().aggregate(foo=Sum(F('quantity') * F('som')))['foo']
+        return sum([i.quantity + i.som for i in self.receiveitem.all()])
+        # return self.receiveitem.all().aggregate(foo=Sum(F('quantity') * F('som')))['foo']
 
     @property
     def sotish_total(self):
-        return self.receiveitem.all().aggregate(foo=Sum(F('quantity') * F('sotish_som')))['foo']
+        return sum([i.quantity + i.sotish_som for i in self.receiveitem.all()])
+        # return self.receiveitem.all().aggregate(foo=Sum(F('quantity') * F('sotish_som')))['foo']
+
 
     @property
     def total_quantity(self):
@@ -1104,6 +1110,7 @@ class ProductBringPrice(models.Model):
 
 
 
+
 class Faktura(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     som = models.IntegerField(default=0)
@@ -1286,6 +1293,7 @@ class Cart(models.Model):
     after_cart = models.FloatField(default=0)
     price_without_skidka = models.IntegerField(default=0)
     price = models.FloatField(default=0)
+    total_pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     total = models.FloatField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -2628,32 +2636,32 @@ class RejaChiqim(models.Model):
     qaysi = models.DateField(null=True, blank=True)
 
     
-    @property
-    def is_chiqim(self):
-        return Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+    # @property
+    # def is_chiqim(self):
+    #     return Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
 
-    @property
-    def chiqim_sum(self):
-        return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
+    # @property
+    # def chiqim_sum(self):
+    #     return self.plan_total - Chiqim.objects.filter(reja_chiqim=self).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
 
-    @property
-    def get_month(self):
-        OY_CHOICES = {
-            1: 'Yanvar',
-            2: 'Fevral',
-            3: 'Mart',
-            4: 'Aprel',
-            5: 'May',
-            6: 'Iyun',
-            7: 'Iyul',
-            8: 'Avgust',
-            9: 'Sentabr',
-            10: 'Oktabr',
-            11: 'Noyabr',
-            12: 'Dekabr',
-        }
-        month = self.qaysi.month
-        return OY_CHOICES.get(month)
+    # @property
+    # def get_month(self):
+    #     OY_CHOICES = {
+    #         1: 'Yanvar',
+    #         2: 'Fevral',
+    #         3: 'Mart',
+    #         4: 'Aprel',
+    #         5: 'May',
+    #         6: 'Iyun',
+    #         7: 'Iyul',
+    #         8: 'Avgust',
+    #         9: 'Sentabr',
+    #         10: 'Oktabr',
+    #         11: 'Noyabr',
+    #         12: 'Dekabr',
+    #     }
+    #     month = self.qaysi.month
+    #     return OY_CHOICES.get(month)
 
     
 # class ProductFilialDaily(models.Model):
@@ -2799,7 +2807,7 @@ class MainToolType(models.Model):
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
 
-from dateutil.relativedelta import relativedelta
+# from dateutil.relativedelta import relativedelta
 
 
 class MainTool(models.Model):
@@ -2815,30 +2823,28 @@ class MainTool(models.Model):
     is_active = models.BooleanField(default=True)
     date = models.DateField(default=timezone.now)
 
-    @property
-    def sum_wear_month_summa(self):
-        today = timezone.now().date()
+    # @property
+    # def sum_wear_month_summa(self):
+    #     today = timezone.now().date()
 
-        if self.date > today:
-            return 0
+    #     if self.date > today:
+    #         return 0
 
-        date_diff = relativedelta(today, self.date)
+    #     # Soddaroq oylar farqini hisoblash
+    #     total_months = (today.year - self.date.year) * 12 + (today.month - self.date.month)
         
-        total_months = date_diff.years * 12 + date_diff.months
+    #     if total_months >= self.use_month:
+    #         return self.summa
         
-        if total_months >= self.use_month:
-            return self.summa
-        
-        return self.wear_month_summa * total_months
+    #     return self.wear_month_summa * total_months
 
-    @property
-    def sum_today_stayed(self):
-        if self.sum_wear_month_summa > 0:
-            return self.summa - self.sum_wear_month_summa
-        return 0 
+    # @property
+    # def sum_today_stayed(self):
+    #     wear_amount = self.sum_wear_month_summa
+    #     return max(self.summa - wear_amount, 0)  # Manfiy bo'lmasligini ta'minlaymiz
 
     class Meta:
-        verbose_name_plural = 'Asossiy Vosita'
+        verbose_name_plural = 'Asosiy Vositalar'
 
 
 
@@ -2870,3 +2876,20 @@ class RevisionItems(models.Model):
     @property
     def farqi(self):
         return self.quantity - self.old_quantity
+
+
+# models.py
+class VideoTutorial(models.Model):
+    url = models.CharField(max_length=255, verbose_name="Sahifa URL manzili")
+    video_url = models.URLField(verbose_name="Video URL")
+    title = models.CharField(max_length=255, verbose_name="Video nomi", blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Video qo'llanma"
+        verbose_name_plural = "Video qo'llanmalar"
+        unique_together = ('url',)
+
+    def __str__(self):
+        return f"{self.url} - {self.title}"

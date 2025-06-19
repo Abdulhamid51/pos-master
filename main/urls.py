@@ -297,5 +297,22 @@ urlpatterns = [
 
     path('b2c_naqd_add', b2c_naqd_add, name='b2c_naqd_add'),
     path('upload_excel', upload_excel, name='upload_excel'),
+    path('edit_product_prices', edit_product_prices, name='edit_product_prices'),
+
+    path('create-debtor-type/', create_debtor_type, name='create_debtor_type'),
+    path('create-price-type/', create_price_type, name='create_price_type'),
+    path('create-teritory/', create_teritory, name='create_teritory'),
+    path('create-region/', create_region, name='create_region'),
+
+    path('create-deliver-new/', create_deliver_new, name='create_deliver_new'),
+    path('create-measurement/', create_measurement, name='create_measurement'),
+    path('create-group/', create_group, name='create_group'),
+    path('b2c_shop_edit/', b2c_shop_edit, name='b2c_shop_edit'),
+
+    path('api/video-tutorial/check/', check_video_tutorial, name='check_video_tutorial'),
+    path('api/video-tutorial/save/', save_video_tutorial, name='save_video_tutorial'),
+    path('api/video-tutorial/delete/', delete_video_tutorial, name='delete_video_tutorial'),
+
+
 
 ]

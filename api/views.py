@@ -115,5 +115,8 @@ def add_daliy_rests():
     for i in KassaMerge.objects.filter(is_active=True):
         new = KassaDaily.objects.create(kassa_merge=i, summa=i.summa, valyuta=i.valyuta, date=day)
     
-
+# print(UserProfile.objects.all())
 # add_daliy_rests()
+
+
+# RejaChiqim.objects.all().delete()

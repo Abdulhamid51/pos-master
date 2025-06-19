@@ -22,6 +22,54 @@
 
     {% endblock css %}
 </head>
+
+<style>
+.video-tutorial-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 9999;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+.video-tutorial-link {
+    color: #4361ee;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.video-tutorial-link:hover {
+    text-decoration: underline;
+}
+
+.video-tutorial-link i {
+    margin-right: 5px;
+}
+
+.video-tutorial-edit-btn {
+    margin-left: 8px;
+    padding: 2px 6px;
+}
+</style>
+<style>
+/* Chrome, Safari, Edge */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+</style>
 <body class="sidebar-noneoverflow">
 <!-- BEGIN LOADER -->
 <div id="load_screen">
@@ -35,33 +83,55 @@
 
 <!--  BEGIN NAVBAR  -->
 <div class="header-container fixed-top">
-    <form action="{% url 'add_dollar_kursi' %}" method="post">
-        {% csrf_token %}
-        <header class="header navbar navbar-expand-sm">
-            <a href="javascript:void(0);" class="sidebarCollapse" data-placement="bottom">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="feather feather-menu">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
+    <header class="header navbar navbar-expand-sm">
+        <a href="javascript:void(0);" class="sidebarCollapse" data-placement="bottom">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="feather feather-menu">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </a>
+        <!-- <div id="message_container">
+            {% for message in messages %}
+                {% if message.tags == "success" %}
+                    <h5 class="text-success" style="margin: 0 2rem;">{{ message }}</h5>
+                {% elif message.tags == "error" %}
+                    <h5 class="text-danger" style="margin: 0 2rem;">{{ message }}</h5>
+                {% elif message.tags == "info" %}
+                    <h5 class="text-info" style="margin: 0 2rem;">{{ message }}</h5>
+                {% elif message.tags == "warning" %}
+                    <h5 class="text-warning" style="margin: 0 2rem;">{{ message }}</h5>
+                {% else %}
+                    <h5 class="text-secondary" style="margin: 0 2rem;">{{ message }}</h5>  {# fallback uchun #}
+                {% endif %}
+            {% endfor %}
+        </div> -->
+
+
+
+
+        <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
+            
+        </ul>
+        <div class="" style="margin: 0.5rem;">
+        </div>
+
+    
+    </header>
+    <!-- <div class="">
+        <div class="video-tutorial-container" style="display: none;">
+            <a href="#" class="video-tutorial-link" target="_blank">
+                <i class="fas fa-video"></i> Video qo'llanma
             </a>
-            <h4 class="text-danger" style="margin: 0 2rem;">
-                {% for i in messages %}
-                    {{i}}
-                {% endfor %}
-            </h4>
-
-            <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
-                
-            </ul>
-            <div class="" style="margin: 0.5rem;">
-            </div>
-
-           
-        </header>
-    </form>
+        </div>
+        {% if user.is_superuser %}
+        <button class="video-tutorial-edit-btn btn btn-sm btn-primary ml-2">
+            Qo'llanma <i class="fas fa-edit"></i>
+        </button>
+        {% endif %}
+    </div> -->
 </div>
 <div class="main-container" id="container">
 
@@ -717,8 +787,53 @@
         </div>
     </div>
 </div>
-<!--  END CONTENT AREA  -->
 </div>
+
+
+
+
+<!-- Video Tutorial Modal -->
+            <div class="modal fade" id="videoTutorialModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Video Qo'llanma</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="videoTutorialForm">
+                                <input type="hidden" id="currentUrl" value="{{ request.path }}">
+                                <div class="form-group">
+                                    <label for="videoUrl">Video URL (YouTube yoki boshqa xizmat):</label>
+                                    <input type="url" class="form-control" id="videoUrl" required placeholder="https://www.youtube.com/embed/...">
+                                </div>
+                                <div class="form-group">
+                                    <label for="videoTitle">Video nomi (ixtiyoriy):</label>
+                                    <input type="text" class="form-control" id="videoTitle" placeholder="Video qo'llanma nomi">
+                                </div>
+                            </form>
+                            <div id="existingVideoContainer" class="mt-3" style="display: none;">
+                                <h6>Mavjud video:</h6>
+                                <div class="embed-responsive embed-responsive-16by9 mb-2">
+                                    <iframe class="embed-responsive-item" id="existingVideoFrame" allowfullscreen></iframe>
+                                </div>
+                                <p id="existingVideoTitle"></p>
+                                <button class="btn btn-sm btn-danger" id="deleteVideoBtn">
+                                    <i class="fas fa-trash"></i> O'chirish
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                            <button type="button" class="btn btn-primary" id="saveVideoBtn">Saqlash</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
 <!-- END MAIN CONTAINER -->
 <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
 <script src="{% static 'assets/js/libs/jquery-3.1.1.min.js' %}"></script>
@@ -791,6 +906,98 @@ document.addEventListener("DOMContentLoaded", function () {
             tfootCells[colIndex].textContent = formatted;
         }
     });
+});
+</script>
+
+<script>
+$(document).ready(function() {
+    const currentUrl = window.location.pathname;
+    const videoContainer = $('.video-tutorial-container');
+    const videoLink = $('.video-tutorial-link');
+    const editBtn = $('.video-tutorial-edit-btn');
+    
+    // Sahifa yuklanganda video mavjudligini tekshirish
+    function checkVideoTutorial() {
+        $.ajax({
+            url: '/api/video-tutorial/check/',
+            type: 'GET',
+            data: { url: currentUrl },
+            success: function(response) {
+                if (response.exists) {
+                    videoLink.attr('href', response.video_url);
+                    videoContainer.show();
+                    
+                    // Superuser uchun edit modalini sozlash
+                    if (response.is_superuser) {
+                        $('#videoUrl').val(response.video_url);
+                        $('#videoTitle').val(response.title);
+                        $('#existingVideoFrame').attr('src', response.video_url);
+                        $('#existingVideoTitle').text(response.title);
+                        $('#existingVideoContainer').show();
+                    }
+                } else if (response.is_superuser) {
+                    // Superuser uchun qo'shish imkoniyati
+                    editBtn.show();
+                    editBtn.off('click').on('click', function() {
+                        $('#videoUrl, #videoTitle').val('');
+                        $('#existingVideoContainer').hide();
+                        $('#videoTutorialModal').modal('show');
+                    });
+                }
+            }
+        });
+    }
+    
+    // Video saqlash
+    $('#saveVideoBtn').click(function() {
+        const videoData = {
+            url: currentUrl,
+            video_url: $('#videoUrl').val(),
+            title: $('#videoTitle').val(),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        };
+        
+        $.ajax({
+            url: '/api/video-tutorial/save/',
+            type: 'POST',
+            data: videoData,
+            success: function(response) {
+                if (response.success) {
+                    $('#videoTutorialModal').modal('hide');
+                    checkVideoTutorial(); // Sahifani yangilash
+                    alert('Video qo\'llanma muvaffaqiyatli saqlandi');
+                } else {
+                    alert('Xatolik: ' + response.error);
+                }
+            }
+        });
+    });
+    
+    // Video o'chirish
+    $('#deleteVideoBtn').click(function() {
+        if (confirm('Haqiqatan ham bu video qo\'llanamani o\'chirmoqchimisiz?')) {
+            $.ajax({
+                url: '/api/video-tutorial/delete/',
+                type: 'POST',
+                data: {
+                    url: currentUrl,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#videoTutorialModal').modal('hide');
+                        videoContainer.hide();
+                        alert('Video qo\'llanma muvaffaqiyatli o\'chirildi');
+                    } else {
+                        alert('Xatolik: ' + response.error);
+                    }
+                }
+            });
+        }
+    });
+    
+    // Dastlabki tekshiruv
+    checkVideoTutorial();
 });
 </script>
 
