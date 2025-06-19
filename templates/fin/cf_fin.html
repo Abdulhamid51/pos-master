@@ -129,10 +129,12 @@
                                 <div class="row">
                                     <div class="col-md-4"></div>
                                     <div class="col-md-2">
-                                        <label for="" style="color: black !important; font-weight: bold;">Turi</label>
+                                        <label for="" style="color: black !important; font-weight: bold;">Valyuta</label>
                                         <select name="type_valyuta" class="form-control"> 
-                                               <option value="2">Som</option>
-                                               <option value="1"  {% if filters.type_valyuta == '1' %} selected  {% endif %}>Dollar</option>
+                                            <option value="">-----</option>
+                                                {% for i in valyuta %}
+                                               <option value="{{ i.id }}"  {% if filters.type_valyuta == i.id %} selected  {% endif %}>{{i.name}}</option>
+                                               {% endfor %}
                                         </select>
                                     </div>
                                     <div class="col-md-2">

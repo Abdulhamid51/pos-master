@@ -8100,11 +8100,11 @@ def cf_fin(request):
     start = time.time()
     today = datetime.now()
     year = int(request.GET.get('year_filter', today.year))
-    type_valyuta = request.GET.get('type_valyuta', '0')
+    type_valyuta = request.GET.get('type_valyuta')
     
     filters = {
         'year_filter':str(year),
-        'type_valyuta':type_valyuta,
+        'type_valyuta':int(type_valyuta) if type_valyuta else '',
     }
     months_dict = {
         1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
@@ -8112,15 +8112,16 @@ def cf_fin(request):
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
 
-    
-    payhistory_data = PayHistory.objects.filter(date__year=year).values('date__month').annotate(
-        som=Coalesce(Sum('som'), 0 , output_field=FloatField()),
-        dollar=Coalesce(Sum('dollar'), 0 , output_field=FloatField()),
+    pay = PayHistory.objects.filter(date__year=year)
+    if type_valyuta:
+        pay = pay.filter(valyuta_id=type_valyuta)
+        print(pay)
+    payhistory_data = pay.values('date__month').annotate(
+        summa=Coalesce(Sum('summa'), 0 , output_field=FloatField()),
     )
 
-    payhistory_data_pl = PayHistory.objects.filter(date__year=year, som__lt=0, dollar__lt=0).values('date__month').annotate(
-        som=Coalesce(Sum('som'), 0 , output_field=FloatField()),
-        dollar=Coalesce(Sum('dollar'), 0 , output_field=FloatField()),
+    payhistory_data_pl = pay.filter(summa__lt=0,).values('date__month').annotate(
+        summa=Coalesce(Sum('summa'), 0 , output_field=FloatField()),
     )
     
     payhistory_dict = {item['date__month']: item for item in payhistory_data}
@@ -8131,10 +8132,10 @@ def cf_fin(request):
     data_pl = []
     for num, month in months_dict.items():
         dt = {
-            'sum':payhistory_dict.get(num, {}).get('dollar' if type_valyuta == '1' else 'som', 0)
+            'sum':payhistory_dict.get(num, {}).get('summa', 0)
         }
         dt_pl = {
-            'sum':payhistory_data_pl_dict.get(num, {}).get('dollar' if type_valyuta == '1' else 'som', 0)
+            'sum':payhistory_data_pl_dict.get(num, {}).get('summa', 0)
         }
         data.append(dt)
         data_pl.append(dt_pl)
@@ -8144,7 +8145,8 @@ def cf_fin(request):
         'filters':filters,
         'data':data,
         'months':[val for x, val in months_dict.items()],
-        'data_pl':data_pl
+        'data_pl':data_pl,
+        'valyuta':Valyuta.objects.all(),
     }
     end = time.time()
     return render(request, 'fin/cf_fin.html', context)
