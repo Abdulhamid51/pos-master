@@ -28,20 +28,34 @@
 
 
                         <div class="widget-content widget-content-area br-6">
-                            <form action="{% url 'deliver_filter' %}" method="post">
-                                {% csrf_token %}
+                            <form>
                                 <div class="d-flex justify-content-between">
-                                    <div class="col-md-4 d-flex">
-                                        <select style="margin-right: 50px;" name="d_id" class="form-control">
-                                            {% for del in delivers %}                                            
-                                                {% if del.id == deliver.id %}
+                                    <div class="col-md-6 d-flex">
+                                        <select style="margin-right: 50px;" name="deliver" class="form-control">
+                                            <option value="">- - - - - - - </option>                                           
+                                            {% for del in delivers %}        
+                                                {% if filters.deliver == del.id %}
                                                     <option value="{{ del.id }}" selected>{{ del.name }}</option>
-                                                {% endif %}
+                                                {% else %}
                                                     <option value="{{ del.id }}">{{ del.name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <select style="margin-right: 50px;" name="season" class="form-control">
+                                            <option value="">- - - - - - - </option>                                       
+                                            {% for s in seasons %}     
+                                                {% if filters.season == s.id %}
+                                                    <option value="{{ s.id }}" selected>{{ s.name }}</option>
+                                                {% else %}
+                                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                                {% endif %}
                                             {% endfor %}
                                         </select>
                                         <button type="submit" class="btn btn-primary">Filterlash</button>
                                     </div>
+                                    
+
+                                    
                                     <div>
                                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalLong">
                                             Nolga tushirish
@@ -62,6 +76,7 @@
                                             <th class="">№</th>
                                             <th>Mahsulot</th>
                                             <th>Ishlab chiqaruvchi</th>
+                                            <th>Fasl</th>
                                             <th>Paketdagi soni</th>
                                             <th>So`m</th>
                                             <th>Soni</th>
@@ -80,6 +95,7 @@
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ productfilial.name }}</td>
                                                 <td>{% if productfilial.preparer %}{{ productfilial.preparer }}{% else %}-{% endif %}</td>
+                                                <td>{{ productfilial.get_season_display|default_if_none:'' }}</td>
                                                 <td>{{ productfilial.pack }}</td>
                                                 <td class="som" data-som="{{ productfilial.som }}">{{ productfilial.som|intcomma }}</td>
                                                 <td class="quantity" data-quantity="{{ productfilial.quantity|floatformat:0 }}">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
@@ -292,6 +308,17 @@
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#measurementModal">+</button>
                             </div>
+                        </div>
+
+
+                        <label for="">Fasl</label>
+                        <div class="input-group mb-2">
+                            <select class="form-control searchable" required name="season" id="seasonSelect">
+                                <option value="">- - - - - - - - </option>
+                                {% for a in seasons %}
+                                    <option value="{{ a.id }}">{{ a.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
 

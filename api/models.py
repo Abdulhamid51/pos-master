@@ -735,6 +735,13 @@ class ProductFilial(models.Model):
         ('litr', 'litr'),
         ('metr', 'metr')
     ]
+
+    season_select = [
+        ('bahor', 'Bahor'),
+        ('yoz', 'Yoz'),
+        ('kuz', 'Kuz'),
+        ('qish', 'Qish')
+    ]
     name = models.CharField(max_length=255)
     measurement_type = models.ForeignKey(MeasurementType, on_delete=models.CASCADE, null=True, blank=True)
     preparer = models.CharField(max_length=255, default="")
@@ -748,6 +755,7 @@ class ProductFilial(models.Model):
     group = models.ForeignKey(Groups, on_delete=models.CASCADE)
     deliver1 = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     measurement = models.CharField(choices=measure, default='dona', max_length=4)
+    season = models.CharField(choices=season_select, blank=True, null=True, max_length=20)
     min_count = models.IntegerField(default=0)
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, related_name='filial_product')
     pack = models.FloatField(default=0)

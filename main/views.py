@@ -1839,9 +1839,19 @@ class Products(LoginRequiredMixin, TemplateView):
     template_name = 'product.html'
 
     def get_context_data(self, **kwargs):
+        deliver = self.request.GET.get('deliver')
+        season = self.request.GET.get('season')
+
+        products = ProductFilial.objects.all()
+        if deliver:
+            products = products.filter(deliver=deliver)
+        
+        if season:
+            products = products.filter(season=season)
+
         delivers = Deliver.objects.all()
         context = super().get_context_data(**kwargs)
-        context['productfilials'] = ProductFilial.objects.all()
+        context['productfilials'] = products
         context['productfilials_total_som'] = ProductFilial.objects.aggregate(Sum('som'))['som__sum']
         context['productfilials_total_dollar'] = ProductFilial.objects.aggregate(Sum('dollar'))['dollar__sum']
         context['productfilials_total_quantity'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
@@ -1871,8 +1881,17 @@ class Products(LoginRequiredMixin, TemplateView):
             for i in ProductFilial.status_ready
         ]
 
+        context['seasons'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.season_select
+        ]
+
         context['measurements'] = MeasurementType.objects.filter(is_active=True)
 
+        context['filters'] = {
+            "deliver": int(deliver if deliver else 0),
+            "season": season,
+        }
         return context
 
 
@@ -5654,6 +5673,7 @@ def new_product_add(request):
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
     pack = request.POST.get('pack')
+    season = request.POST.get('season')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
@@ -5669,6 +5689,7 @@ def new_product_add(request):
         group_id=group,
         measurement_type_id=measurement_type,
         min_count=min_count,
+        season=season,
         filial_id=filial_id if filial_id else 4
     )
     if deliver:
@@ -8520,6 +8541,7 @@ def pl_fin(request):
     cost_totals = [allcart.filter(shop__date__year=year, shop__date__month=m).aggregate(sum=Sum(F('bring_price')))['sum'] or 0 for m in months]
 
 
+
     shop_totals = [sum([i.total_price for i in allshop.filter(date__year=year, date__month=m)]) for m in months]
     shop_total = sum([i for i in shop_totals])
 
@@ -8546,6 +8568,14 @@ def pl_fin(request):
     circulations_total = sum(i for i in circulations_totals)
 
 
+    pribl_ubitok = []
+    for i in months:
+        summa = marja_totals[i-1] - circulations_totals[i-1]
+        pribl_ubitok.append(summa)
+    pribl_ubitok_total = sum(pribl_ubitok)
+
+
+
 
     chart_data = []
     for i in months:
@@ -8558,6 +8588,8 @@ def pl_fin(request):
 
 
     context = {
+        'pribl_ubitok': pribl_ubitok,
+        'pribl_ubitok_total': pribl_ubitok_total,
         'categories': categories,
         'total_marja': total_marja,
         'total_cost': total_cost,
