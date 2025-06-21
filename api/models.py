@@ -2823,25 +2823,24 @@ class MainTool(models.Model):
     is_active = models.BooleanField(default=True)
     date = models.DateField(default=timezone.now)
 
-    # @property
-    # def sum_wear_month_summa(self):
-    #     today = timezone.now().date()
+    @property
+    def sum_wear_month_summa(self):
+        today = timezone.now().date()
 
-    #     if self.date > today:
-    #         return 0
+        if self.date > today:
+            return 0
 
-    #     # Soddaroq oylar farqini hisoblash
-    #     total_months = (today.year - self.date.year) * 12 + (today.month - self.date.month)
+        total_months = (today.year - self.date.year) * 12 + (today.month - self.date.month)
         
-    #     if total_months >= self.use_month:
-    #         return self.summa
+        if total_months >= self.use_month:
+            return self.summa
         
-    #     return self.wear_month_summa * total_months
+        return self.wear_month_summa * total_months
 
-    # @property
-    # def sum_today_stayed(self):
-    #     wear_amount = self.sum_wear_month_summa
-    #     return max(self.summa - wear_amount, 0)  # Manfiy bo'lmasligini ta'minlaymiz
+    @property
+    def sum_today_stayed(self):
+        wear_amount = self.sum_wear_month_summa
+        return max(self.summa - wear_amount, 0)  
 
     class Meta:
         verbose_name_plural = 'Asosiy Vositalar'

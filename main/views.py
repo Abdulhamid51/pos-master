@@ -9112,6 +9112,7 @@ def ombor_fin(request):
         summa = item['quantity'] * bring_price
         product_filial_dict[key] = val + summa  
 
+    
     data = []
     for num in range(1, 13):
         dt = {
