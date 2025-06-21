@@ -278,7 +278,7 @@
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_product">
                                                                     <option value="">Добавить позицию — введите наименование, код, штрихкод или артикул</option>
                                                                     {% for i in product %}
-                                                                        <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}|{{i.pack}}">{{ i.name }}</option>
+                                                                        <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}|{{i.pack}}">{{ i.name }} - {{ i.get_season_display|default_if_none:'' }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                                 <br>
