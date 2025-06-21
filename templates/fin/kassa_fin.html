@@ -351,6 +351,7 @@ function exportTableToExcel() {
     const pathname = window.location.pathname;
     document.querySelectorAll('.tab button').forEach(btn => {
         const url = btn.getAttribute('data-url');
+        
         if (url === pathname) {
             btn.classList.add('active');
         }

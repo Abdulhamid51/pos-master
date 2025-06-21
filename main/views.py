@@ -1839,9 +1839,19 @@ class Products(LoginRequiredMixin, TemplateView):
     template_name = 'product.html'
 
     def get_context_data(self, **kwargs):
+        deliver = self.request.GET.get('deliver')
+        season = self.request.GET.get('season')
+
+        products = ProductFilial.objects.all()
+        if deliver:
+            products = products.filter(deliver=deliver)
+        
+        if season:
+            products = products.filter(season=season)
+
         delivers = Deliver.objects.all()
         context = super().get_context_data(**kwargs)
-        context['productfilials'] = ProductFilial.objects.all()
+        context['productfilials'] = products
         context['productfilials_total_som'] = ProductFilial.objects.aggregate(Sum('som'))['som__sum']
         context['productfilials_total_dollar'] = ProductFilial.objects.aggregate(Sum('dollar'))['dollar__sum']
         context['productfilials_total_quantity'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
@@ -1871,8 +1881,17 @@ class Products(LoginRequiredMixin, TemplateView):
             for i in ProductFilial.status_ready
         ]
 
+        context['seasons'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.season_select
+        ]
+
         context['measurements'] = MeasurementType.objects.filter(is_active=True)
 
+        context['filters'] = {
+            "deliver": int(deliver if deliver else 0),
+            "season": season,
+        }
         return context
 
 
@@ -5654,6 +5673,7 @@ def new_product_add(request):
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
     pack = request.POST.get('pack')
+    season = request.POST.get('season')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
@@ -5669,6 +5689,7 @@ def new_product_add(request):
         group_id=group,
         measurement_type_id=measurement_type,
         min_count=min_count,
+        season=season,
         filial_id=filial_id if filial_id else 4
     )
     if deliver:
@@ -8100,11 +8121,11 @@ def cf_fin(request):
     start = time.time()
     today = datetime.now()
     year = int(request.GET.get('year_filter', today.year))
-    type_valyuta = request.GET.get('type_valyuta', '0')
+    type_valyuta = request.GET.get('type_valyuta')
     
     filters = {
         'year_filter':str(year),
-        'type_valyuta':type_valyuta,
+        'type_valyuta':int(type_valyuta) if type_valyuta else '',
     }
     months_dict = {
         1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
@@ -8112,15 +8133,16 @@ def cf_fin(request):
         9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr"
     }
 
-    
-    payhistory_data = PayHistory.objects.filter(date__year=year).values('date__month').annotate(
-        som=Coalesce(Sum('som'), 0 , output_field=FloatField()),
-        dollar=Coalesce(Sum('dollar'), 0 , output_field=FloatField()),
+    pay = PayHistory.objects.filter(date__year=year)
+    if type_valyuta:
+        pay = pay.filter(valyuta_id=type_valyuta)
+        print(pay)
+    payhistory_data = pay.values('date__month').annotate(
+        summa=Coalesce(Sum('summa'), 0 , output_field=FloatField()),
     )
 
-    payhistory_data_pl = PayHistory.objects.filter(date__year=year, som__lt=0, dollar__lt=0).values('date__month').annotate(
-        som=Coalesce(Sum('som'), 0 , output_field=FloatField()),
-        dollar=Coalesce(Sum('dollar'), 0 , output_field=FloatField()),
+    payhistory_data_pl = pay.filter(summa__lt=0,).values('date__month').annotate(
+        summa=Coalesce(Sum('summa'), 0 , output_field=FloatField()),
     )
     
     payhistory_dict = {item['date__month']: item for item in payhistory_data}
@@ -8131,10 +8153,10 @@ def cf_fin(request):
     data_pl = []
     for num, month in months_dict.items():
         dt = {
-            'sum':payhistory_dict.get(num, {}).get('dollar' if type_valyuta == '1' else 'som', 0)
+            'sum':payhistory_dict.get(num, {}).get('summa', 0)
         }
         dt_pl = {
-            'sum':payhistory_data_pl_dict.get(num, {}).get('dollar' if type_valyuta == '1' else 'som', 0)
+            'sum':payhistory_data_pl_dict.get(num, {}).get('summa', 0)
         }
         data.append(dt)
         data_pl.append(dt_pl)
@@ -8144,7 +8166,8 @@ def cf_fin(request):
         'filters':filters,
         'data':data,
         'months':[val for x, val in months_dict.items()],
-        'data_pl':data_pl
+        'data_pl':data_pl,
+        'valyuta':Valyuta.objects.all(),
     }
     end = time.time()
     return render(request, 'fin/cf_fin.html', context)
@@ -8494,8 +8517,11 @@ def pl_fin(request):
 
     categories = ProductCategory.objects.all()
     valyutas = Valyuta.objects.all()
+    circulations = MoneyCirculation.objects.all()
 
+    reja_chiqims = RejaChiqim.objects.filter(is_confirmed=True, valyuta_id=valyuta_filter)
     allcart = Cart.objects.filter(shop__valyuta_id=valyuta_filter)
+    allshop = Shop.objects.filter(valyuta_id=valyuta_filter)
 
     months = list(range(1, 13))
 
@@ -8514,6 +8540,11 @@ def pl_fin(request):
     total_cost = allcart.filter(shop__date__year=year).aggregate(sum=Sum(F('bring_price')))['sum'] or 0
     cost_totals = [allcart.filter(shop__date__year=year, shop__date__month=m).aggregate(sum=Sum(F('bring_price')))['sum'] or 0 for m in months]
 
+
+
+    shop_totals = [sum([i.total_price for i in allshop.filter(date__year=year, date__month=m)]) for m in months]
+    shop_total = sum([i for i in shop_totals])
+
     for i in categories:
         products = ProductFilial.objects.filter(category=i)
         i.cost_months = []
@@ -8523,8 +8554,42 @@ def pl_fin(request):
             i.cost_months.append(total)
         i.cost_percent = sum(i.cost_months) / (total_cost if total_cost else 1) * 100
 
+    
+    for i in circulations:
+        i.monthly_summa = []
+        i.total = 0 
+        for m in months:
+            chiqims = reja_chiqims.filter(qaysi__year=year, qaysi__month=m, money_circulation=i)
+            total = chiqims.aggregate(sum=Sum(F('total')))['sum'] or 0
+            i.total += total
+            i.monthly_summa.append(total)
+    
+    circulations_totals = [reja_chiqims.filter(qaysi__year=year, qaysi__month=m).aggregate(sum=Sum('total'))['sum'] or 0 for m in months]
+    circulations_total = sum(i for i in circulations_totals)
+
+
+    pribl_ubitok = []
+    for i in months:
+        summa = marja_totals[i-1] - circulations_totals[i-1]
+        pribl_ubitok.append(summa)
+    pribl_ubitok_total = sum(pribl_ubitok)
+
+
+
+
+    chart_data = []
+    for i in months:
+        dt = {
+            "kirim": 0,
+            "chiqim": reja_chiqims.filter(qaysi__year=year, qaysi__month=i).aggregate(sum=Sum(F('total')))['sum'] or 0,
+            "pribl": 0,
+        }
+        chart_data.append(dt)
+
 
     context = {
+        'pribl_ubitok': pribl_ubitok,
+        'pribl_ubitok_total': pribl_ubitok_total,
         'categories': categories,
         'total_marja': total_marja,
         'total_cost': total_cost,
@@ -8533,6 +8598,12 @@ def pl_fin(request):
         'valyuta_filter': int(valyuta_filter),
         'marja_totals': marja_totals,
         'cost_totals': cost_totals,
+        'shop_totals': shop_totals,
+        'shop_total': shop_total,
+        'circulations': circulations,
+        'circulations_totals': circulations_totals,
+        'circulations_total': circulations_total,
+        'chart_data': chart_data
 
     }
     return render(request, 'fin/pl_fin.html', context)

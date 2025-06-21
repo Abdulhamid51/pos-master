@@ -67,7 +67,7 @@
                         <select onchange="add_modal(this)" class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
                             <option value=""></option>
                             {% for i in products %}
-                                <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}&{{i.pack}}">{{ i.name }} - {{i.barcode}}</option>
+                                <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}&{{i.pack}}">{{ i.name }} - {{i.barcode}} - {{ i.get_season_display|default_if_none:'' }}</option>
                             {% endfor %}
                         </select>
                     </div>
