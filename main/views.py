@@ -5390,9 +5390,11 @@ def add_recieve(request):
     date = request.POST.get('date')
     valyuta = request.POST.get('valyuta')
     kurs = request.POST.get('kurs')
+    payment_date = request.POST.get('payment_date')
 
-    obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs)
+    obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs, payment_date=payment_date)
 
+    RejaChiqim.objects.create(payment_date=payment_date, total=0, kurs=kurs, valyuta_id=valyuta)
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
     query = dict(parse_qsl(url_parts.query))
@@ -9585,6 +9587,7 @@ def filial_add(request):
     savdo_puli_som = request.POST.get('savdo_puli_som')
     savdo_puli_dol = request.POST.get('savdo_puli_dol')
     valyuta = request.POST.get('valyuta')
+    main_warehouse = request.POST.get('main_warehouse') == 'on'
 
     Filial.objects.create(
         name=name,
@@ -9594,6 +9597,7 @@ def filial_add(request):
         savdo_puli_som=savdo_puli_som,
         savdo_puli_dol=savdo_puli_dol,
         valyuta_id=valyuta,
+        main_warehouse=main_warehouse,
     )
     return redirect(request.META['HTTP_REFERER'])
 
@@ -9606,6 +9610,7 @@ def filial_edit(request, id):
     savdo_puli_som = request.POST.get('savdo_puli_som')
     savdo_puli_dol = request.POST.get('savdo_puli_dol')
     valyuta = request.POST.get('valyuta')
+    main_warehouse = request.POST.get('main_warehouse') == 'on'
     filial = Filial.objects.get(id=id)
     filial.name=name
     filial.address=address
@@ -9613,6 +9618,7 @@ def filial_edit(request, id):
     filial.qarz_dol=qarz_dol
     filial.savdo_puli_som=savdo_puli_som
     filial.savdo_puli_dol=savdo_puli_dol
+    filial.main_warehouse=main_warehouse
     filial.valyuta_id=valyuta
     filial.save()
     return redirect(request.META['HTTP_REFERER'])

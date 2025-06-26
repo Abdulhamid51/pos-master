@@ -200,11 +200,19 @@
                             </select>
                             {% endif %}
 
+                            <!-- <label for="">Filial</label>
+                            <select class="form-control searchable" name="call_center" required>
+                                <option value=""></option>
+                                {% for i in call_center %}
+                                    <option value="{{i.id}}" {% if shop.saler == i %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select> -->
+
                             <label for="">Filial</label>
                             <select class="form-control searchable" name="filial" required>
                                 <option value=""></option>
                                 {% for i in filial %}
-                                    <option value="{{i.id}}" {% if shop.filial == i %}selected{% endif %}>{{ i.name }}</option>
+                                    <option value="{{i.id}}" {% if shop.filial == i or user.filial == i %}selected{% endif %}>{{ i.name }}</option>
                                 {% endfor %}
                             </select>
                             <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button>
@@ -411,6 +419,14 @@
     <script>
         $('select.searchable').selectize({ normalize: true });
     </script>
+
+    <script>
+        function products_focus() {
+            const selectize = $('#products')[0].selectize
+        selectize.focus()
+        }
+        products_focus()
+    </script>
 <script>
     // Format number with commas
     function formatNumber(num) {
@@ -599,6 +615,7 @@
         // Reset select
         $(this).val('');
         $(this).selectize()[0].selectize.clear();
+        products_focus()
     });
 
     // Add product to table
