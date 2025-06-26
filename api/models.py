@@ -59,6 +59,7 @@ class Valyuta(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     is_dollar = models.BooleanField(default=False)
     is_som = models.BooleanField(default=False)
+    is_activate = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -750,7 +751,7 @@ class ProductFilial(models.Model):
     dollar = models.IntegerField(default=0)
     sotish_dollar = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
-    barcode = models.CharField(max_length=255)
+    barcode = models.CharField(max_length=255, null=True, blank=True)
     barcode_image = models.ImageField(upload_to="barcode_product/", null=True, blank=True)
     group = models.ForeignKey(Groups, on_delete=models.CASCADE)
     deliver1 = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
@@ -775,7 +776,7 @@ class ProductFilial(models.Model):
     ready = models.IntegerField(choices=status_ready, default='1')
 
     def __str__(self):
-        return self.name + " - " + self.barcode
+        return self.name 
     
     class Meta:
         verbose_name_plural = '3.1) Product Filial'
@@ -789,7 +790,10 @@ class ProductFilial(models.Model):
     def cost_som(self):
         last = RecieveItem.objects.filter(product=self).last()
         return last.cost_som if last else 0
-        
+
+    @property
+    def product_barcode(self):
+        return ProductBarcode.objects.filter(product=self)    
 
     @property
     def pricetypevaluta_prices(self):
@@ -861,10 +865,13 @@ class ProductFilial(models.Model):
                 Value(0, output_field=FloatField())
             )
         )['foo']
-        # total = carts.aggregate(
-        #     foo=Coalesce(Sum((F('price') - F('bring_price')) * F('quantity')),output_field=float()),default=0)['foo']
         return total
     
+
+class ProductBarcode(models.Model):
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    barcode = models.CharField(max_length=255, unique=True)
+
 
     
 
@@ -885,6 +892,7 @@ class Recieve(models.Model):
     kurs = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
+    comment = models.TextField(null=True, blank=True)
     
 
     # difference = models.IntegerField(default=0)
@@ -1166,6 +1174,7 @@ class Course(models.Model):
         verbose_name_plural = "Dollar kursi"
 
 from django.contrib.humanize.templatetags.humanize import intcomma
+from dateutil.relativedelta import relativedelta
 
 
 class Shop(models.Model):
@@ -1210,6 +1219,20 @@ class Shop(models.Model):
     def total_price(self):
         return sum(i.total_price for i in Cart.objects.filter(shop=self))
 
+    @property
+    def total_narx(self):
+        return sum(i.price for i in Cart.objects.filter(shop=self))
+
+    @property
+    def return_status(self):
+        today = datetime.datetime.now().date()
+        if self.debt_return:
+            days_left = str((today - self.debt_return).days).replace('-', '')
+            if int(days_left) <= 3:
+                return 'qizil'
+            elif int(days_left) <= 10:
+                return 'sariq'
+        return 'yashil'
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -2900,3 +2923,14 @@ class VideoTutorial(models.Model):
 
     def __str__(self):
         return f"{self.url} - {self.title}"
+
+
+
+class LastSeen(models.Model):
+    qachon = models.DateTimeField(default=timezone.now)
+    device = models.CharField(max_length=255)
+    what_did = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    

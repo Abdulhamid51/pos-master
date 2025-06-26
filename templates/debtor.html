@@ -231,10 +231,10 @@
                                                 <td>{{ debtors.phone1|default_if_none:'' }}</td>
                                                 <td>{{ debtors.phone2|default_if_none:'' }}</td>
                                                 {% for i in debtors.debt_qarzimiz %}
-                                                    <td>{{ i.summa }}</td>
+                                                    <td>{{ i.summa|intcomma }}</td>
                                                 {% endfor %}
                                                 {% for i in debtors.debt_haqimiz %}
-                                                    <td>{{ i.summa }}</td>
+                                                    <td>{{ i.summa|intcomma }}</td>
                                                 {% endfor %}
 
                                                 <td>

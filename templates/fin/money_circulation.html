@@ -42,100 +42,178 @@
             display: none;
         }
     </style>
+    <style>
+        .nxl-content-sidebar-item {
+            padding: 0;
+            list-style: none;
+        }
+
+        .nxl-content-sidebar-item .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nxl-content-sidebar-item .nav-link {
+            padding: 10px 15px;
+            color: #333 !important;
+            text-decoration: none;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nxl-content-sidebar-item .nav-link:hover {
+            background-color: #f5f5f5 !important;
+        }
+
+        .nxl-content-sidebar-item .nav-link.active {
+            background-color: #d6f0f5 !important;
+            font-weight: 500;
+            color: #000 !important;
+        }
+    </style>
 {% endblock css %}
 {% block content %}
         <div id="content" class="main-content">
             <div class="layout-px-spacing">
                 <div class="row layout-top-spacing" id="cancel-row">
-                    <!-- <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
-                        <div class="widget-content widget-content-area br-6">
-                            <div class="tab">
-                                <button onclick="switchTab(event)" data-url="/money_circulation/">
-                                    <a href="{% url 'money_circulation' %}" style="font-weight: bold; color: black;">Manba</a>
-                                </button>
-                                <button onclick="switchTab(event)" data-url="/kassa_fin/">
-                                    <a href="{% url 'kassa_fin' %}" style="font-weight: bold; color: black;">Kassa</a>
-                                </button>
-                                <button onclick="switchTab(event)" data-url="/data_fin/">
-                                    <a href="{% url 'data_fin' %}" style="font-weight: bold; color: black;">Data</a>
-                                </button>
-                                <button onclick="switchTab(event)" data-url="/debet_kredit_fin/">
-                                    <a href="{% url 'debet_kredit_fin' %}" style="color: black !important;">Debet-Kredit</a>
-                                </button>
-                                <button onclick="switchTab(event)" data-url="/cf_fin/">
-                                    <a href="{% url 'cf_fin' %}" style="color: black !important;">CF</a>
-                                </button>
-                                <button onclick="switchTab(event)" data-url="/daily_cf_fin/">
-                                    <a href="{% url 'daily_cf_fin' %}" style="color: black !important;">Daily CF</a></button>
-                                <button onclick="switchTab(event)" data-url="/xarid_fin/">
-                                    <a href="{% url 'xarid_fin' %}" style="color: black !important;">Xarid</a></button>
-                                <button onclick="switchTab(event)" data-url="/sotuv_fin/">
-                                    <a href="{% url 'sotuv_fin' %}" style="color: black !important;">Sotuv</a></button>
-                                <button onclick="switchTab(event)" data-url="/pl_fin/">
-                                    <a href="{% url 'pl_fin' %}" style="color: black !important;">P/L</a></button>
-                                <button onclick="switchTab(event)" data-url="/balans_fin/">
-                                    <a href="{% url 'balans_fin' %}" style="color: black !important;">Balans</a></button>
-                                <button onclick="switchTab(event)" data-url="/majburiyat_fin/">
-                                    <a href="{% url 'majburiyat_fin' %}" style="color: black !important;">Majburiyat</a></button>
-                                <button onclick="switchTab(event)" data-url="/tolov_kalendar_fin/">
-                                    <a href="{% url 'tolov_kalendar_fin' %}" style="color: black !important;">Tolov Kalendari</a></button>
-                                <button onclick="switchTab(event)" data-url="/reja_tushum_fin/">
-                                    <a href="{% url 'reja_tushum_fin' %}" style="color: black !important;">Reja Tushum</a></button>
-                                <button onclick="switchTab(event)" data-url="/reja_chiqim_fin/">
-                                    <a href="{% url 'reja_chiqim_fin' %}" style="color: black !important;">Reja Chiqim</a></button>
-                                <button onclick="switchTab(event)" data-url="/asosiy_vosita_fin/">
-                                    <a href="{% url 'asosiy_vosita_fin' %}" style="color: black !important;">Asosiy Vosita</a></button>
-                                <button onclick="switchTab(event)" data-url="/ombor_fin/">
-                                    <a href="{% url 'ombor_fin' %}" style="color: black !important;">Sklad</a></button>
-                            </div>
+                    <div class="col-md-2">
+                        <div class="widget-content widget-content-area">
+                            <ul class="nav flex-column nxl-content-sidebar-item">
+                                {% if custom_user_profile.is_measurement_type %}
+                                <li class="nav-item">
+                                    <a href="{% url 'measurement_type_list' %}" class="nav-link {% if request.resolver_match.url_name == 'measurement_type_list' %}active{% endif %}">
+                                    <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                                        <span>O'lchov turlari</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_price_type %}
+                                <li class="nav-item">
+                                    <a href="{% url 'price_type' %}" class="nav-link {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
+                                        <i class="fa-solid fa-tag"></i>
+                                        <span>Narx Turi</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_filial_list %}
+                                <li class="nav-item">
+                                    <a href="{% url 'filial_list' %}" class="nav-link {% if request.resolver_match.url_name == 'filial_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-code-branch"></i>
+                                        <span>Filial</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_nds %}
+                                <li class="nav-item">
+                                    <a href="{% url 'nds_page' %}" class="nav-link {% if request.resolver_match.url_name == 'nds_page' %}active{% endif %}">
+                                        <i class="fa-solid fa-percent"></i>
+                                        <span>NDS</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_kadrlar %}
+                                <li class="nav-item">
+                                    <a href="{% url 'users_restrictions' %}" class="nav-link {% if request.resolver_match.url_name == 'users_restrictions' %}active{% endif %}">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>Foydalanuvchilar</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_valyuta %}
+                                <li class="nav-item">
+                                    <a href="{% url 'valyuta_list' %}" class="nav-link {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-coins"></i>
+                                        <span>Valyuta</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_kassa_merge %}
+                                <li class="nav-item">
+                                    <a href="{% url 'kassa_merge' %}" class="nav-link {% if request.resolver_match.url_name == 'kassa_merge' %}active{% endif %}">
+                                        <i class="fa-solid fa-link"></i>
+                                        <span>Kassa Biriktirish</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_kassa_new %}
+                                <li class="nav-item">
+                                    <a href="{% url 'kassa_new_list' %}" class="nav-link {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-cash-register"></i>
+                                        <span>Kassa</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_money_circulation %}
+                                <li class="nav-item">
+                                    <a href="{% url 'money_circulation' %}" class="nav-link {% if request.resolver_match.url_name == 'money_circulation' %}active{% endif %}">
+                                        <i class="fa-solid fa-money-bill-transfer"></i>
+                                        <span>Pul Muomalasi</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="nav-item">
+                                    <a href="{% url 'last_seen' %}" class="nav-link {% if request.resolver_match.url_name == 'last_seen' %}active{% endif %}">
+                                        <i class="fa-solid fa-seedling"></i>
+                                        <span>Oxirgi ko'rilgan</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                    </div> -->
-                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                    </div>
+                    <div class="col-xl-10 col-lg-12 col-sm-12  layout-spacing">
                         <div class="widget-content widget-content-area br-6">
-                            <div class="row">
-                                <div class="col-md-10">
+                            <div class="row mb-2">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">
+                                        Yaratish
+                                    </button>
                                 </div>
-                                <div class="col-md-2">
-                                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Yaratish</button>
-                                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-body">
-                                                        <form action="{% url 'money_circulation_add' %}" method="post" enctype="multipart/form-data">
-                                                            {% csrf_token %}
-                                                            <div class="form-group">
-                                                                <label for="recipient-name" class="col-form-label">Nomi</label>
-                                                                <input type="text" class="form-control" id="recipient-name" name="name" required>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-manba" class="col-form-label">Manba</label>
-                                                                <input type="text" class="form-control" id="recipient-manba" name="manba" required>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
-                                                                <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba">
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
-                                                                <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
-                                                                    {% for i in chiqim_turi %}
-                                                                    <option value="{{ i.id }}">{{ i.nomi }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
-                                                                <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;">
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
+                            </div>
+                            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <form action="{% url 'money_circulation_add' %}" method="post" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="recipient-name" class="col-form-label">Nomi</label>
+                                                    <input type="text" class="form-control" id="recipient-name" name="name" required>
                                                 </div>
-                                            </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-manba" class="col-form-label">Manba</label>
+                                                    <input type="text" class="form-control" id="recipient-manba" name="manba" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
+                                                    <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
+                                                    <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
+                                                        {% for i in chiqim_turi %}
+                                                        <option value="{{ i.id }}">{{ i.nomi }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
+                                                    <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;">
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </form>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="table-responsive mb-4 mt-4">

@@ -43,56 +43,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                    <!-- kassadagai pullar hisoboti (tepada) -->
-            
-            
-                
-            
-                    <!-- <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                        <div class="widget-content widget-content-area br-6">
-                            <div class="row">
-                                <div class="col-6">
-                                    <h4>Hodimlar</h4>
-                                </div>
-                            </div>
-                            <div class="table-responsive mb-4 mt-4">
-                                <table class="multi-table table table-hover" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th style="text-align: left;">#</th>
-                                            <th style="text-align: left;">Ism-Fmilya</th>
-                                            <th style="text-align: left;">Qarz(so'm)</th>
-                                            <th style="text-align: left;">Qarz($)</th>
-                                            <th style="text-align: left;">Oldi-berdi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for hodim in hodimlar_qarz %}
-                                        <tr>
-                                            <td style="text-align: left;">{{ forloop.counter}}</td>
-                                            <td style="text-align: left;">{{ hodim.ism_familya }}</td>
-                                            <td style="text-align: left;">{{ hodim.qarz_som }} so'm</td>
-                                            <td style="text-align: left;">{{ hodim.qarz_dol }} $</td>
-                                            <td style="text-align: left;"><button class="btn btn-primary" data-toggle="modal" data-target="#Qarz_berish_Modal_{{hodim.id}}">Berish</button><span style="color: white;">||</span><a href="/hodim-qarzlari/?hodim_id={{hodim.id}}"><button class="btn btn-primary">Olish</button></a></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th style="text-align: left;">#</th>
-                                            <th style="text-align: left;">Ism-Fmilya</th>
-                                            <th style="text-align: left;">Qarz(so'm)</th>
-                                            <th style="text-align: left;">Qarz($)</th>
-                                            <th style="text-align: left;">Oldi-berdi</th>
-                                        </tr>
-                                    </tfoot>
-                                    
-                                </table>
-                            
-                            </div>
-                        </div>
-                    </div> -->
-                    <div class="col-12" style="display: flex;justify-content: end;" >
+                    <!-- <div class="col-12" style="display: flex;justify-content: end;" >
                         <div class="row">
                                 <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
                                     <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
@@ -160,8 +111,8 @@
                             </div>
                             
                         </div>
-                    </form>
-                    <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                    </form> -->
+                    <!-- <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
                         <div class="widget-content widget-content-area br-6">
                             <div class="row">
                                 <div class="col-6">
@@ -222,9 +173,7 @@
                                                 </button>
                                             </td>
 
-                                            <!-- <td style="text-align: left;">
-                                                <button data-toggle="modal" data-target="#oylik_tolov_tasdiqlashModal_{{hodim.id}}" class="btn btn-primary">To'lash</button>
-                                            </td> -->
+                                            
                                         </tr>
 
                                         <div class="modal fade" id="KirimModal{{kirim.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
@@ -246,7 +195,6 @@
                                                         <input value="{{kirim.qancha_dol}}" class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
                                                         <label>Qancha (hisob raqam)</label>
                                                         <input value="{{kirim.qancha_hisob_raqamdan}}" class="form-control" type="number" name="qancha_hisob_raqamdan" placeholder="Qancha (hisob raqam)"><br>
-                                                        <!-- <input class="form-control" type="number" name="plastik" placeholder="Plastik"><br> -->
                                                         <label>Izoh</label>
                                                         <textarea value='{{kirim.izox}}' name="izox" class="form-control" id="" cols="30" rows="5" placeholder="{{kirim.izox}}"></textarea>
                                                         
@@ -359,7 +307,6 @@
                                                     <div class="modal-body">
                                                         <label>Qayerga</label>
                                                         <select class="form-control" name="chiqim_turi" id="" required>
-                                                            <!-- <option value="" disabled selected>--Qayerga--</option> -->
                                                             {% for chiqim_turi in chiqim_turlari %}
                                                                 
                                                                 {% if chiqim_turi.id == chiqim.qayerga.id %}
@@ -496,7 +443,7 @@
                                 </div> 
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                 </div>
 
@@ -504,7 +451,6 @@
         </div>
 
         {% for hodim in hodimlar_qarz %}
-        <!-- Qarz Berish Modal -->
         <div class="modal fade" id="Qarz_berish_Modal_{{hodim.id}}" tabindex="-1" aria-labelledby="Qarz_berish_ModalLabel_{{hodim.id}}" aria-hidden="true">
             <div class="modal-dialog">
             <form action="{% url 'hodim-qarz' %}" method="POST">

@@ -14,7 +14,15 @@
     <link href="{% static 'assets/css/apps/invoice.css'%}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!--  END CUSTOM STYLE FILE  -->
-    
+    <style>
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            width: 30rem;
+        }
+    </style>
 {% endblock css %}
 {% block content %}
         <!--  BEGIN CONTENT AREA  -->
@@ -22,6 +30,8 @@
             <div class="layout-px-spacing">
                 <div class="row invoice layout-top-spacing">
                     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div id="alert-container"></div>
+
                         <div class="app-hamburger-container">
                             <div class="hamburger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu chat-menu d-xl-none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
                         </div>
@@ -350,8 +360,8 @@
 
 
                   <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <form action="{% url 'new_product_add' %}" class="modal-content" method="post">
+                    <div class="modal-dialog" role="document">
+                        <form action="{% url 'new_product_add' %}" class="modal-content" method="post" style="width: 700px;">
                         {% csrf_token %}
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
@@ -361,82 +371,170 @@
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
-                            <label for="">Nomi</label>
-                            <input type="text" class="form-control" name="name" required>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="">Nomi</label>
+                                        <input type="text" class="form-control" name="name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Ishlab chiqaruvchi</label>
+                                        <select class="form-control searchable" required name="deliver" id="">
+                                            <option value="">- - - - - - - - </option>
+                                            {% for a in delivers %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Ulchov</label>
+                                        <select class="form-control searchable" required name="measurement_type">
+                                            {% for a in measurement_type %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Status</label>
+                                        <select class="form-control" required name="ready">
+                                                <option value="1">Xom ashyo</option>
+                                                <option value="2">Yarim tayyor</option>
+                                                <option value="3">Tayyor</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Valyuta</label>
+                                        <select class="form-control searchable" required name="valyuta">
+                                            {% for a in valyutas %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Min miqdor</label>
+                                        <input type="number" class="form-control" name="min_count" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Guruh</label>
+                                        <select class="form-control searchable" required name="group" id="">
+                                            <option value="">- - - - - - - - </option>
+                                            {% for a in groups %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label for="">Barcode</label>
+                                        <div id="barcode_container">
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control barcode-input" oninput="push(this)">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-secondary" onclick="addInput()">+</button>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="data_list" name="list_barcode" />
 
-                            <!-- <label for="">Ishlab chiqaruvchi</label>
-                            <input type="text" class="form-control" name="preparer" required> -->
+                                    <script>
+                                        let isBarcodeDuplicate = false;
 
-                            <label for="">Ishlab chiqaruvchi</label>
-                            <select class="form-control searchable" required name="deliver" id="">
-                                <option value="">- - - - - - - - </option>
-                                {% for a in delivers %}
-                                    <option value="{{a.id}}">{{ a.name }}</option>
-                                {% endfor %}
-                            </select>
+                                        function addInput() {
+                                            const inputs = document.querySelectorAll(".barcode-input");
+                                            const lastInput = inputs[inputs.length - 1];
 
-                            <label for="">Ulchov</label>
-                            <select class="form-control searchable" required name="measurement_type">
-                                {% for a in measurement_type %}
-                                    <option value="{{a.id}}">{{ a.name }}</option>
-                                {% endfor %}
-                            </select>
+                                            const inputValue = lastInput.value.trim();
 
-                            <label for="">Status</label>
-                            <select class="form-control" required name="ready">
-                                    <option value="1">Xom ashyo</option>
-                                    <option value="2">Yarim tayyor</option>
-                                    <option value="3">Tayyor</option>
-                            </select>
-                            <label for="">Valyuta</label>
-                            <select class="form-control searchable" required name="valyuta">
-                                {% for a in valyutas %}
-                                    <option value="{{a.id}}">{{ a.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <label for="">Min miqdor</label>
-                            <input type="number" class="form-control" name="min_count" required>
+                                            if (inputValue === '') {
+                                                showAlert("Barcode kiritilmagan!", "warning");
+                                                return;
+                                            }
 
+                                            if (isBarcodeDuplicate) {
+                                                showAlert("Bu barcode allaqachon mavjud!", "warning");
+                                                return;
+                                            }
 
-                            <label for="">Guruh</label>
-                            <select class="form-control searchable" required name="group" id="">
-                                <option value="">- - - - - - - - </option>
-                                {% for a in groups %}
-                                    <option value="{{a.id}}">{{ a.name }}</option>
-                                {% endfor %}
-                            </select>
+                                            const container = document.getElementById("barcode_container");
+                                            const group = document.createElement("div");
+                                            group.className = "input-group mb-2";
+                                            group.innerHTML = `
+                                                <input type="text" class="form-control barcode-input" oninput="push(this)">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-secondary" onclick="addInput()">+</button>
+                                                </div>
+                                            `;
+                                            container.appendChild(group);
+                                        }
 
-                            <label for="">Shtrix kod</label>
-                            <input type="text" class="form-control" name="barcode" value="{{new_barcode}}" required>
+                                        function push(item) {
+                                            const inputValue = item.value.trim();
 
+                                            if (inputValue === '') {
+                                                isBarcodeDuplicate = true;  
+                                                disableAddButtons(true);
+                                                return;
+                                            }
 
-                            <!-- <label for="">Tan som</label>
-                            <input type="text" class="form-control" name="som" required>
+                                            $.ajax({
+                                                url: "{% url 'filter_product_barcode' %}",
+                                                type: "POST",
+                                                data: JSON.stringify({ 'barcode': inputValue }),
+                                                contentType: "application/json",
+                                                success: function (response) {
+                                                    if (response.data.message) {
+                                                        showAlert(response.data.message, 'warning');
+                                                        isBarcodeDuplicate = true;
+                                                        disableAddButtons(true);
+                                                    } else {
+                                                        isBarcodeDuplicate = false;
+                                                        disableAddButtons(false);
+                                                    }
+                                                },
+                                                error: function () {
+                                                    showAlert("Server bilan bog'lanishda xatolik", "danger");
+                                                    isBarcodeDuplicate = true;
+                                                    disableAddButtons(true);
+                                                }
+                                            });
+                                        }
 
+                                        function disableAddButtons(disable) {
+                                            const buttons = document.querySelectorAll("#barcode_container .btn.btn-secondary");
+                                            buttons.forEach(btn => {
+                                                btn.disabled = disable;
+                                            });
+                                        }
 
-                            <label for="">Sotish som</label>
-                            <input type="text" class="form-control" name="sotish_som" required>
+                                        function Pushdata() {
+                                            const inputs = document.querySelectorAll(".barcode-input");
+                                            const data = [];
+                                            inputs.forEach(input => {
+                                                if (input.value.trim() !== '') {
+                                                    data.push(input.value.trim());
+                                                }
+                                            });
+                                            document.getElementById('data_list').value = JSON.stringify(data);
+                                        }
 
-
-                            <label for="">Miqdori</label>
-                            <input type="text" class="form-control" name="quantity" required> -->
-
-
-                            <!-- <label for="">Sotish som</label>
-                            <input type="text" class="form-control" name="name" required> -->
-
-                            
-                            
+                                        function showAlert(message, type) {
+                                            const alertContainer = document.getElementById("alert-container");
+                                            if (!alertContainer) return;
+                                            const alert = document.createElement("div");
+                                            alert.className = `alert alert-${type}`;
+                                            alert.innerText = message;
+                                            alertContainer.appendChild(alert);
+                                            setTimeout(() => alert.remove(), 3000);
+                                        }
+                                    </script>
+                                </div>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                    <button type="submit" class="btn btn-primary" onclick="Pushdata()">Saqlash</button>
+                                </div>
                             </div>
-                            <div class="modal-footer d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                            <button type="submit" class="btn btn-primary">Saqlash</button>
-                            </div>
-                        </div>
                         </form>
                     </div>
                 </div>
-
 
                 {% for recieve in recieves %}
                 {% for item in recieve.receiveitem.all %}
@@ -507,7 +605,21 @@
             {% endfor %}
 {% endblock content %}
 {% block js %}
+    <script>
+        const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                </div>
+            `);
 
+            $("#alert-container").append(alertElement);
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000);
+        };
+
+    </script>
     <!-- END GLOBAL MANDATORY SCRIPTS -->
     <script src="{% static 'assets/js/apps/invoice.js'%}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />

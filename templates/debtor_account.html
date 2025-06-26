@@ -41,44 +41,33 @@
                                         <tr>
                                             <th class="">№</th>
                                             <th>Mijoz</th>
-                                            <th>Qarzi</th>
                                             <th>Mahsulot soni</th>
-                                            <th>Savdo summasi</th>
-                                            <th>To'lov so'm</th>
-                                            <th>To'lov dollar</th>
+                                            {% for i in valyuta %}
+                                                <th>Savdo {{i.name}}</th>
+                                            {% endfor %}
+                                            {% for i in valyuta %}
+                                                <th>To'lov {{i.name}}</th>
+                                            {% endfor %}
                                         </tr>
                                     </thead>
                                     <tbody> 
                                         {% for debtor in debtors %}
                                             <tr>
                                                 <td class="">{{ forloop.counter }}</td>
-                                                <td>{{ debtor.debtor.fio }} | {{ debtor.debtor.phone1 }}</td>
-                                                <td>{{ debtor.debtor.som|intcomma }}</td>
-                                                <td>{{ debtor.count|intcomma }}</td>
-                                                <td>{{ debtor.shop_summa|intcomma }} | soni: {{debtor.shop_count}}</td>
-                                                <td>{{ debtor.payment_som|intcomma }}</td>
-                                                <td>{{ debtor.payment_dollar|intcomma }}</td>
-
+                                                <td>{{ debtor.fio }} | {{ debtor.phone1 }}</td>
+                                                <td>{{debtor.shop_quantity}}</td>
+                                                {% for x in debtor.valyuta %}
+                                                    <td>{{ x.shop_sum|intcomma }}</td>
+                                                {% endfor %}
+                                                {% for x in debtor.valyuta %}
+                                                    <td>{{ x.pay_sum|intcomma }}</td>
+                                                {% endfor %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td></td>
-                                            <td>Jami:</td>
-                                            <td></td>
-                                            <td></td>
-                                            <td>{{ total_shop|intcomma }}</td>
-                                            <td>{{ total_som|intcomma }}</td>
-                                            <td>{{ total_dollar|intcomma }}</td>
-
-                                        </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
