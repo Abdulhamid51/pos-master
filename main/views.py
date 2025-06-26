@@ -19,6 +19,8 @@ from django.utils import timezone
 from itertools import groupby
 from operator import itemgetter
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+
 
 
 
@@ -2175,6 +2177,21 @@ def deliver_filter(request):
         'delivers': delivers,
         "deliver": deliver
     }
+    context['groups'] = Groups.objects.all()
+
+    context['ready_types'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.status_ready
+        ]
+
+    context['seasons'] = [
+        {"id": i[0], "name": i[1]}
+        for i in ProductFilial.season_select
+    ]
+
+    context['measurements'] = MeasurementType.objects.filter(is_active=True)
+
+
     context['dollar_kurs'] = Course.objects.last().som
     return render(request, 'product.html', context)
 
@@ -5666,6 +5683,7 @@ def new_product_add(request):
     min_count = request.POST.get('min_count')
     filial_id = request.POST.get('filial_id')
     ready = request.POST.get('ready')
+    quantity = request.POST.get('quantity')
     valyuta = request.POST.get('valyuta')
     shelf_code = request.POST.get('shelf_code')
     pr = ProductFilial.objects.create(
@@ -5681,6 +5699,8 @@ def new_product_add(request):
         filial_id=filial_id if filial_id else 4,
         shelf_code=shelf_code,
     )
+    if quantity:
+        pr.quantity = quantity
     if deliver:
         pr.deliver.add(Deliver.objects.get(id=deliver))
     pr.save()
@@ -5701,6 +5721,22 @@ def filter_product_barcode(request):
     else:
         return JsonResponse({"data": ''}, status=200)
 
+@require_GET
+def check_product_quantity(request):
+    product_id = request.GET.get('product_id')
+    try:
+        product = ProductFilial.objects.get(id=product_id)
+        return JsonResponse({
+            'success': True,
+            'quantity': product.quantity,
+            'product_id': product.id,
+            'product_name': product.name
+        })
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Product not found'
+        }, status=404)
 # for i in UserProfile.objects.filter(id=11):
 #     i.refresh_total('2024-06-26')
 
@@ -7094,10 +7130,11 @@ def b2c_shop_detail(request, id):
     call_center = UserProfile.objects.filter(staff=6)
     cart = Cart.objects.filter(shop=shop)
     totals = {
-        'total_pack':cart.aggregate(all=Coalesce(Sum('total_pack'), 0, output_field=IntegerField()))['all'],
-        'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=IntegerField()))['all'],
-        'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all'],
+        'total_pack':cart.aggregate(all=Sum('total_pack'))['all'] or 0,
+        'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all'],
+        'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=FloatField()))['all'],
     }
+    
     context = {
        'shop':shop,
        'cart':cart,
@@ -7110,6 +7147,22 @@ def b2c_shop_detail(request, id):
        'valyuta':Valyuta.objects.all(),
        'filial':Filial.objects.filter(is_activate=True),
     }
+
+    context['groups'] = Groups.objects.all()
+
+    context['ready_types'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.status_ready
+        ]
+
+    context['seasons'] = [
+        {"id": i[0], "name": i[1]}
+        for i in ProductFilial.season_select
+    ]
+
+    context['measurements'] = MeasurementType.objects.filter(is_active=True)
+    context['delivers'] = Deliver.objects.filter()
+
     return render(request, 'b2c_shop_detail.html', context)
 
 @csrf_exempt
@@ -7140,6 +7193,7 @@ def b2c_shop_cart_add(request, id):
 def b2c_shop_cart_edit(request, id):
     quantity = request.POST.get('quantity')  
     total_pack = request.POST.get('total_pack')  
+    agreed_price = request.POST.get('agreed_price')  
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
     product.quantity += cart_item.quantity
@@ -7148,6 +7202,7 @@ def b2c_shop_cart_edit(request, id):
         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
     cart_item.quantity = quantity
     cart_item.total_pack = total_pack
+    cart_item.price = float(agreed_price)
     cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
@@ -8514,6 +8569,7 @@ def pl_fin(request):
     circulations = MoneyCirculation.objects.all()
 
     reja_chiqims = RejaChiqim.objects.filter(is_confirmed=True, valyuta_id=valyuta_filter)
+    kirims = Kirim.objects.filter(valyuta_id=valyuta_filter)
     allcart = Cart.objects.filter(shop__valyuta_id=valyuta_filter)
     allshop = Shop.objects.filter(valyuta_id=valyuta_filter)
 
@@ -8574,9 +8630,9 @@ def pl_fin(request):
     chart_data = []
     for i in months:
         dt = {
-            "kirim": 0,
+            "kirim": kirims.filter(qachon__year=year, qachon__month=i).aggregate(sum=Sum(F('summa')))['sum'] or 0,
             "chiqim": reja_chiqims.filter(qaysi__year=year, qaysi__month=i).aggregate(sum=Sum(F('total')))['sum'] or 0,
-            "pribl": 0,
+            "pribl": pribl_ubitok[i-1],
         }
         chart_data.append(dt)
 
@@ -9333,7 +9389,8 @@ def b2b_shop_ajax(request, product_id):
         'filial':Filial.objects.all(),
         'customer':Debtor.objects.all(),
         'contract':Contract.objects.filter(is_active=True),
-        'product':ProductFilial.objects.filter(quantity__gt=0, price_types__type=shop.type_price).annotate(price_ty=Coalesce(Sum(fields, output_field=FloatField()), Value(0.0))),
+        'product':ProductFilial.objects.filter(quantity__gt=0).annotate(price_ty=Coalesce(Sum(fields, output_field=FloatField()), Value(0.0))),
+        # 'product':ProductFilial.objects.filter(quantity__gt=0, price_types__type=shop.type_price).annotate(price_ty=Coalesce(Sum(fields, output_field=FloatField()), Value(0.0))),
         'user_profile':UserProfile.objects.all(),
         'groups':Groups.objects.all(),
         'call_center':UserProfile.objects.filter(staff=6),
@@ -9349,6 +9406,23 @@ def b2b_shop_ajax(request, product_id):
         product_html = render_to_string('product_list.html',
          {'product': ProductFilial.objects.filter(price_types__type_id=type_id).annotate(price_ty=Coalesce(Sum('price_types__price', output_field=FloatField()), Value(0.0)))}, request)
         return JsonResponse({'product_html': product_html})
+    
+    
+    context['groups'] = Groups.objects.all()
+
+    context['ready_types'] = [
+            {"id": i[0], "name": i[1]}
+            for i in ProductFilial.status_ready
+        ]
+
+    context['seasons'] = [
+        {"id": i[0], "name": i[1]}
+        for i in ProductFilial.season_select
+    ]
+
+    context['measurements'] = MeasurementType.objects.filter(is_active=True)
+    context['delivers'] = Deliver.objects.filter()
+    
     return render(request, 'b2b_shop_ajax.html', context)
 
 def b2b_shop_ajax_add(request, product_id):

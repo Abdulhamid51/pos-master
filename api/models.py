@@ -1219,6 +1219,10 @@ class Shop(models.Model):
     @property
     def total_price(self):
         return sum(i.total_price for i in Cart.objects.filter(shop=self))
+    
+    @property
+    def total_pay(self):
+        return PayHistory.objects.filter(shop=self).aggregate(sum=Sum('summa'))['sum'] or 0
 
     @property
     def total_narx(self):
@@ -1700,6 +1704,7 @@ class PayHistory(models.Model):
     @property
     def get_model(self):
         return self._meta.model_name
+
 
     def save_kassa(self, kassa, old_values=None):
         """
