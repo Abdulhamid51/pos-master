@@ -42,33 +42,23 @@
                                             <th>Mijoz</th>
                                             <th>Sana</th>
                                             <th>Soni</th>
-                                            <th>So'm</th>
-                                            <th>Dollar</th>
-                                            <th>Nasiya</th>
-                                            <th>Plastik</th>
-                                            <th>Click</th>
-                                            <th>Skidka</th>
+                                            <th>Narxi</th>
                                             <th>Jami</th>
+                                            <th>Tolov sanasi</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
                                         
                                         {% for sh in shop %}
-                                            
-                                        <tr>
-                                            <td>{{forloop.counter}}</td>
-                                            <td><a href="{% url 'shop_detail' sh.id %}">{{sh.debtor.fio}}</a></td>
-                                            <td>{{sh.date   }}</td>
-                                            <td>{{sh.product_count|intcomma}}</td>
-                                            <td>{{sh.naqd_som|intcomma}}</td>
-                                            <td>{{sh.naqd_dollar|intcomma}}</td>
-                                            <td>{{sh.nasiya_som|intcomma}}</td>
-                                            <td>{{sh.plastik|intcomma}}</td>
-                                            <td>{{sh.click|intcomma}}</td>
-                                            <td>{{sh.skidka_som|intcomma}}</td>
-                                            <td>{{sh.som|intcomma}}</td>
-                                        </tr>
-                                        
+                                            <tr>
+                                                <td>{{forloop.counter}}</td>
+                                                <td><a href="{% url 'shop_detail' sh.id %}">{{sh.debtor.fio}}</a></td>
+                                                <td>{{sh.date|date:'Y-m-d'}}</td>
+                                                <td>{{sh.product_count|intcomma}}</td>
+                                                <td>{{sh.total_narx|intcomma}}</td>
+                                                <td>{{sh.total_price|intcomma}}</td>
+                                                <td>{{sh.debt_return|date:'Y-m-d'}}</td>
+                                            </tr>
                                         {% endfor %}
                                     </tbody>
                                     <tfoot>

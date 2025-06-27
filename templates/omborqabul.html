@@ -84,8 +84,7 @@
                                                     <th>{{ v.name }}</th>
                                                 {% endfor %}
                                                     
-                                                <!-- <th><div>So`m</div></th>
-                                                <th><div>Sotish som</div></th> -->
+                                              
                                                 <th class="text-center">Jami soni</th>
                                                 <th class="text-center">Sana</th>
                                             </tr>
@@ -96,8 +95,6 @@
                                                     <td><div class="td-content">{{ forloop.counter }}</div></td>
                                                     <td><a href="{% url 'omborqabuldetail' w.id %}?active={{w.id}}" target="_blank" rel="noopener noreferrer"><div class="td-content">{{ w.name }}</a></div></td>
                                                     <td><div class="td-content">{{ w.deliver }}</div></td>
-                                                    <!-- <td><div class="td-content">{{ w.som|intcomma }}</div></td>
-                                                    <td><div class="td-content">{{ w.sum_sotish_som|intcomma }}</div></td> -->
                                                     
                                                     {% for v in valyutas %}
                                                         <td>

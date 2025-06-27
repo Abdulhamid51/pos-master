@@ -38,7 +38,6 @@
                                 </div>
                             </div>
 
-
                             <div class="widget-content-area">
                                 <div class="table-responsive mb-4">
                                     <table id="html5-extension" class="table table-hover">
@@ -47,8 +46,6 @@
                                                 <th class="">№</th>
                                                 <th>Mahsulot</th>
                                                 <th>Ishlab chiqaruvchi</th>
-                                                <th>So`m</th>
-                                                <th>Dollar</th>
                                                 <th>Soni</th>
                                                 <th>Barcode</th>
                                                 <th>Guruh</th>
@@ -60,24 +57,24 @@
                                                     <td class="">{{ forloop.counter }}</td>
                                                     <td>{{ ombor.name }}</td>
                                                     <td>{{ ombor.preparer }}</td>
-                                                    <td>{{ ombor.som|intcomma }}</td>
-                                                    <td>{{ ombor.dollar|intcomma }}</td>
                                                     <td>{{ ombor.quantity|floatformat:1|intcomma }}</td>
-                                                    <td>{{ ombor.barcode }}</td>
+                                                    <td>
+                                                        {% for x in ombor.product_barcode %}
+                                                            {{x.barcode}}<br>
+                                                        {% endfor %}
+                                                    </td>
                                                     <td>{{ ombor.group }}</td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th class="">Jami:</th>
-                                                <th>Mahsulot</th>
-                                                <th>Ishlab chiqaruvchi</th>
-                                                <th>{{ total_som|floatformat|intcomma }}</th>
-                                                <th>{{ total_dollar|floatformat|intcomma }}</th>
-                                                <th>{{ total_quantity }}</th>
-                                                <th>Barcode</th>
-                                                <th>Guruh</th>
+                                                <th>Jami:</th>
+                                                <th></th>
+                                                <th></th>
+                                                <th>{{ total_quantity|intcomma }}</th>
+                                                <th></th>
+                                                <th></th>
                                             </tr>
                                         </tfoot>
                                     </table>

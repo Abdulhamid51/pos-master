@@ -15,6 +15,8 @@ admin.site.unregister(Group)
 admin.site.register(Kamomad)
 admin.site.unregister(User)
 admin.site.register(MoneyCirculation)
+admin.site.register(ProductBarcode)
+admin.site.register(LastSeen)
 # admin.site.register(ExternalIncomeUserDebt)
 
 @admin.register(User) 

@@ -17,6 +17,14 @@
             margin: auto;
             }
         </style>
+        <style>
+            #excel22 td {
+                color: red !important;
+            }
+            #excel21 td {
+                color: green !important;
+            }
+        </style>
     {% endblock css %}
 
 
@@ -216,8 +224,6 @@
                                                         Tahrirlash
                                                     </button>
                                                 </td>
-
-                                              
                                             </tr>
 
                                             <div class="modal fade" id="KirimModal{{kirim.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
@@ -254,11 +260,9 @@
                                             <tr>
                                                 <th style="text-align: left;">Jami: </th>
                                                 <th style="text-align: left;"></th>
-                                                
                                                 {% for q in kirim_totals %}
                                                     <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
                                                 {% endfor %}
-                                                    
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
@@ -284,6 +288,7 @@
 
                                     </div>
                                 </div>
+                                
                                 <div class="table-responsive mb-4 mt-4">
                                     <table class="multi-table table table-hover" id="excel22" style="width:100%">
                                         <thead>
@@ -317,7 +322,7 @@
                                                 <td style="text-align: left;">
                                                     {{ chiqim.money_circulation.name }}
                                                 </td><td style="text-align: left;">
-                                                    {{ chiqim.qaysi|date:'Y-m' }}
+                                                    {{ chiqim.qaysi|date:'Y-m-d' }}
                                                 </td>
                                                 {% for q in chiqim.summa_for_valutas %}
                                                     <td style="text-align: left;">
@@ -331,7 +336,7 @@
                                                 <td style="text-align: left;">{{ chiqim.subcategory|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ chiqim.payhistory.kontr_agent|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ chiqim.izox }}</td>
-                                                <td style="text-align: left;">{{ chiqim.qachon }}</td>
+                                                <td style="text-align: left;">{{ chiqim.qachon|date:'Y-m-d H:i' }}</td>
                                                 <td style="text-align: left;">
                                                     <button data-toggle="modal" data-target="#ChiqimModal{{chiqim.id}}" class="btn btn-primary">
                                                         Tahrirlash

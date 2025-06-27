@@ -1842,7 +1842,7 @@ class Products(LoginRequiredMixin, TemplateView):
         deliver = self.request.GET.get('deliver')
         season = self.request.GET.get('season')
 
-        products = ProductFilial.objects.all()
+        products = ProductFilial.objects.all()[:30]
         if deliver:
             products = products.filter(deliver=deliver)
         
@@ -2025,8 +2025,6 @@ class ProductFilialView(LoginRequiredMixin, TemplateView):
         
         delivers = Deliver.objects.all()
         queryset = ProductFilial.objects.all()
-        # total_recieve = 0
-        # total_carts = 0
 
         if not start_date or not end_date:
             start_date = datetime.now().date().replace(day=1)
@@ -2035,31 +2033,23 @@ class ProductFilialView(LoginRequiredMixin, TemplateView):
         if deliver_id:
             queryset = queryset.filter(deliver__id=deliver_id)
         
-        # if debtor:
-        #     queryset = queryset.filter(shop__debtor__id=debtor)
         data = []
         id_list = [i.id for i in queryset if i.return_carts(start_date, end_date, debtor) != 0]
         queryset = queryset.filter(id__in=id_list)
-        for i in queryset:
-            # for c in i.cart.all():
-            # c_foyda = (i.sotish_som - c.price) * c.quantity
 
+        for i in queryset:
             dt = {
                 'name': i.name,
                 'preparer': i.preparer,
                 'som': i.som,
                 'quantity': i.quantity,
                 'filial': i.filial,
-                'barcode': i.barcode,
+                'product_barcode': i.product_barcode,
                 'start_quantity': i.start_quantity,
                 'jami_foyda': i.foyda(start_date, end_date, debtor),
                 'recieve_quantity': i.return_recieves(start_date, end_date, deliver_id),
                 'cart_quantity': i.return_carts(start_date, end_date, debtor)
             }
-        # foyda += i(start_date, end_date)
-        # jami_foyda += i.foyda(start_date, end_date) * i.return_carts(start_date, end_date)
-            # dt['recieve_quantity'] = i.return_recieves(start_date, end_date)
-            # dt['cart_quantity'] = i.return_carts(start_date, end_date)
             data.append(dt)
         data = reversed(sorted(data, key=lambda x: x['jami_foyda']))
         context['foyda_total'] = sum([i.foyda(start_date, end_date, debtor) for i in queryset])
@@ -2094,41 +2084,64 @@ from django.views import View
 class DebtorAccountView(LoginRequiredMixin, View):
     
     def get(self, request):
-        start_date = request.GET.get('start_date') if request.GET.get('start_date') else datetime.now().date().replace(day=1)
-        end_date = request.GET.get('end_date') if request.GET.get('end_date') else datetime.now().date()
-        debtors = Debtor.objects.all()
+        start_date = request.GET.get('start_date') or datetime.now().date().replace(day=1)
+        end_date = request.GET.get('end_date') or datetime.now().date()
+
+        valyuta = Valyuta.objects.all()
+        debtors = Debtor.objects.values('id', 'fio', 'phone1')
+
+        shop = Shop.objects.filter(
+            debtor__isnull=False,
+            date__date__gte=start_date,
+            date__date__lte=end_date
+        ).values('debtor_id', 'valyuta_id').annotate(
+            summa=Sum(F('cart__price') * F('cart__quantity'), default=0),
+            product_count=Sum('cart__quantity', default=0)
+        )
+
+        pay_history = PayHistory.objects.filter(
+            debtor__isnull=False,
+            date__date__gte=start_date,
+            date__date__lte=end_date
+        ).values('debtor_id', 'valyuta_id', 'summa')
+
+        shop_dict = {(item['debtor_id'], item['valyuta_id']): item for item in shop}
+        pay_dict = {(item['debtor_id'], item['valyuta_id']): item for item in pay_history}
+
         data = []
         for debtor in debtors:
-            shop = Shop.objects.filter(debtor=debtor, date__date__gte=start_date, date__date__lte=end_date)
-            pay_history = PayHistory.objects.filter(debtor=debtor, date__date__gte=start_date, date__date__lte=end_date)
-            shop_summa = sum([i.som for i in shop])
-            product_count = sum([i.product_count for i in shop])
-            payment_som = sum([i.som for i in pay_history])
-            payment_dollar = sum([i.dollar for i in pay_history])
             dt = {
-                'debtor': debtor,
-                'shop_summa': shop_summa,
-                'shop_count': shop.count(),
-                'count': product_count,
-                'payment_som': payment_som,
-                'payment_dollar': payment_dollar
+                'fio': debtor['fio'],
+                'phone1': debtor['phone1'],
+                'shop_count': sum(1 for i in shop if i['debtor_id'] == debtor['id']),
+                'shop_quantity': sum(i['product_count'] for i in shop if i['debtor_id'] == debtor['id']),
+                'valyuta': []
             }
-            # if shop_summa or product_count or payment_dollar or payment_som != 0:
+            for x in valyuta:
+                vl = {
+                    'shop_sum': shop_dict.get((debtor['id'], x.id), {}).get('summa', 0),
+                    'pay_sum': pay_dict.get((debtor['id'], x.id), {}).get('summa', 0),
+                }
+                dt['valyuta'].append(vl)
             data.append(dt)
-        total_som = sum([i['payment_som'] for i in data])
-        total_dollar = sum([i['payment_dollar'] for i in data])
-        total_shop = sum([i['shop_summa'] for i in data])
-        data = sorted(data, key=lambda instance: instance['shop_summa'])
-        data.reverse()
+
+        total_pay_dict = {}
+        for item in pay_history:
+            val_id = item['valyuta_id']
+            total_pay_dict[val_id] = total_pay_dict.get(val_id, {'summa': 0})
+            total_pay_dict[val_id]['summa'] += item['summa']
+
+        total = [{'summa': total_pay_dict.get(val.id, {}).get('summa', 0)} for val in valyuta]
+
         context = {
             'debtors': data,
             'start_date': start_date,
             'end_date': end_date,
-            'total_som': total_som,
-            'total_dollar': total_dollar,
-            'total_shop': total_shop,
+            'valyuta': valyuta,
+            'total': total,
         }
         return render(request, 'debtor_account.html', context)
+
 
 
 def deliver_filter(request): 
@@ -2665,10 +2678,7 @@ class Ombor(LoginRequiredMixin, TemplateView):
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['ombors'] = ProductFilial.objects.all()
-        context['total_som'] = ProductFilial.objects.aggregate(Sum('som'))['som__sum']
-        context['total_dollar'] = ProductFilial.objects.aggregate(Sum('dollar'))['dollar__sum']
         context['total_quantity'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
-        context['dollar_kurs'] = Course.objects.last().som
 
         return context
 
@@ -2867,7 +2877,7 @@ class OmborMinus(LoginRequiredMixin, TemplateView):
                 'preparer': product.preparer,
                 'kurs': product.kurs,
                 'quantity': product.quantity,
-                'barcode': product.barcode,
+                'product_barcode': product.product_barcode,
                 'group': product.group,
                 'valyuta': []
             }
@@ -3288,7 +3298,7 @@ def deliver_detail(request, id):
             
         elif i._meta.model_name == 'recieve':
             dt['type_payment'] = 'Maxsulot qabul'
-            dt['pay_summa'] = i.summa_total
+            dt['pay_summa'] = i.total_bring_price
         
         elif i._meta.model_name == 'bonus':
             dt['type_payment'] = 'Bonus berildi'
@@ -3302,7 +3312,7 @@ def deliver_detail(request, id):
     summa_total_for_valyuta = []
     for val in valyuta:
         pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
-        pay_recieve_summa = sum([i.summa_total for i in recieve.filter(valyuta=val)])
+        pay_recieve_summa = sum([i.total_bring_price for i in recieve.filter(valyuta=val)])
         dt_sum_valyuta = {
             'valyuta':val.id,
             'pay_pay_summa':pay_summa + pay_recieve_summa,
@@ -3324,7 +3334,6 @@ def deliver_detail(request, id):
 
 
 def income_user_detail(request):
-    pass
     id = request.GET.get('d')
     valyuta = Valyuta.objects.all()
     debt_shot = Wallet.objects.filter(partner_id=id)
@@ -3694,7 +3703,6 @@ def kassa(request):
     hodimlar_qarz = []
     shu_oylik_chiqimlar = Chiqim.objects.filter(is_approved=True).order_by('-id')
     shu_oylik_kirimlar = Kirim.objects.filter(is_approved=True).order_by('-id')
-    # if request.method == 'POST':
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     deliver = [int(i) for i in request.GET.getlist('deliver')  if i != '']
@@ -3727,22 +3735,10 @@ def kassa(request):
     if subcategory:
         shu_oylik_chiqimlar = shu_oylik_chiqimlar.filter(subcategory_id__in=subcategory)
 
-    # if expanse_category:
-    #     expenses = expenses.filter(category_id=expanse_category)
 
     categories = ChiqimCategory.objects.all()
     subcategories = ChiqimSubCategory.objects.all()
     valutas = Valyuta.objects.all()
-    
-    # chiqim_total_som = shu_oylik_chiqimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
-    # chiqim_total_dollar = shu_oylik_chiqimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
-    # chiqim_hisob_raqam_total = shu_oylik_chiqimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
-    # chiqim_plastik = shu_oylik_chiqimlar.aggregate(Sum('plastik'))['plastik__sum']
-    
-    # kirim_total_som = shu_oylik_kirimlar.aggregate(Sum('qancha_som'))['qancha_som__sum']
-    # kirim_total_dollar = shu_oylik_kirimlar.aggregate(Sum('qancha_dol'))['qancha_dol__sum']
-    # kirim_hisob_raqam_total = shu_oylik_kirimlar.aggregate(Sum('qancha_hisob_raqamdan'))['qancha_hisob_raqamdan__sum']
-    # kirim_plastik = shu_oylik_kirimlar.aggregate(Sum('plastik'))['plastik__sum']
 
     for hodim in hodimlar:
         qarz_som = 0
@@ -3807,7 +3803,7 @@ def kassa(request):
 
     chart_month = []
 
-    year = datetime.date.fromisoformat(start_date).year if start_date else bugun.year
+    year = date.fromisoformat(start_date).year if start_date else bugun.year
 
     months = {
         '1': 'Yan', '2': 'Fev', '3': 'Mart', '4': 'Apr',
@@ -3848,24 +3844,14 @@ def kassa(request):
         'barcha_hodimlar':hodimlar,
         'shu_oylik_chiqimlar':shu_oylik_chiqimlar,
         'shu_oylik_kirimlar':shu_oylik_kirimlar,
-        # "chiqim_turlari":chiqim_turlari,
         'categories':categories,
         'subcategories':subcategories,
         'hodimlar_qarz':hodimlar_qarz,
         'kassa':kassa_var,
         'valutas': valutas,
-        # 'chiqim_total_som': chiqim_total_som,
-        # 'chiqim_total_dollar': chiqim_total_dollar,
-        # 'chiqim_hisob_raqam_total': chiqim_hisob_raqam_total,
-        # 'kirim_total_som': kirim_total_som,
-        # 'kirim_total_dollar': kirim_total_dollar,
-        # 'kirim_hisob_raqam_total': kirim_hisob_raqam_total,
-        # 'chiqim_plastik': chiqim_plastik,
-        # 'kirim_plastik': kirim_plastik,
         'filial': "active",
         'filial_t': "true",
         'filials': branches,
-        # 'current_filial': current_filial,
         'total_expenses': total_expenses,
         'expenses': expenses,
         'chiqim_turi': ChiqimTuri.objects.all(),
@@ -3881,7 +3867,6 @@ def kassa(request):
             'start_date': start_date,
             'end_date': end_date,
             'deliver': deliver,
-            # 'chiqim_turi': int(chiqim_turi) if chiqim_turi else 0,
             'category': category,
             'subcategory': subcategory,
             'debtor': debtor
@@ -5669,6 +5654,8 @@ def add_expanse_type(request):
 
 
 def new_product_add(request):
+    barcodes = request.POST.get('list_barcode', '[]')
+    barcode_list = json.loads(barcodes)
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
@@ -5685,7 +5672,7 @@ def new_product_add(request):
         pack=pack,
         valyuta_id=valyuta,
         ready=ready,
-        barcode=barcode,
+        # barcode=barcode,
         group_id=group,
         measurement_type_id=measurement_type,
         min_count=min_count,
@@ -5695,9 +5682,22 @@ def new_product_add(request):
     if deliver:
         pr.deliver.add(Deliver.objects.get(id=deliver))
     pr.save()
+    for barcode in barcode_list:
+        if barcode:
+            ProductBarcode.objects.create(barcode=barcode, product=pr)
     messages.success(request, "Muvaffaqiyatli saqlandi")
+
     return redirect(request.META['HTTP_REFERER'])
 
+@csrf_exempt
+def filter_product_barcode(request):
+    data = json.loads(request.body)
+    barcode = data.get('barcode', '').strip()
+    prd = ProductBarcode.objects.filter(barcode=barcode)
+    if prd:
+        return JsonResponse({"data": {'message':"Barcode mavjud!"}}, status=200)
+    else:
+        return JsonResponse({"data": ''}, status=200)
 
 # for i in UserProfile.objects.filter(id=11):
 #     i.refresh_total('2024-06-26')
@@ -6062,10 +6062,7 @@ def kassa_is_approved(request):
 
         hodimlar_qarz.append(dt)
     
-    total_expenses = expenses.aggregate(foo=Coalesce(
-        Sum('total_sum'),
-        0
-    ))['foo']
+    total_expenses = expenses.aggregate(foo=Coalesce(Sum('total_sum'),0, output_field=FloatField()))['foo']
 
     hodimlar_royxat = [
         hodim
@@ -6623,18 +6620,12 @@ def price_type_del(request, id):
 from django.db.models import OuterRef, Subquery
 
 def product_price_type(request, id):
-    price_dollar_subquery = ProductPriceType.objects.filter(
-        type_id=id,
-        product=OuterRef('pk')
-    ).values('price_dollar')[:1]
-
     price_som_subquery = ProductPriceType.objects.filter(
         type_id=id,
         product=OuterRef('pk')
     ).values('price')[:1]
 
     products = ProductFilial.objects.annotate(
-        price_type_dollar=Subquery(price_dollar_subquery),
         price_type_som=Subquery(price_som_subquery)
     )
     context = {
@@ -6971,6 +6962,7 @@ def shop_nakladnoy(request, order_id):
     cart = Cart.objects.filter(shop=shop)
     data = {
         'chek':order_id,
+        'status':shop.status,
         'seller':shop.saler,
         'date_time':shop.date,
         'customer':shop.debtor.fio,
@@ -8880,7 +8872,7 @@ def reja_tushum_fin(request):
         'deliver':Deliver.objects.all(),
         'external_income_user':ExternalIncomeUser.objects.filter(is_active=True),
         'valyuta':Valyuta.objects.all(),
-        'money_circulation':MoneyCirculation.objects.all(),
+        'money_circulation':MoneyCirculation.objects.filter(is_delete=False),
         'kassa':KassaNew.objects.all(),
         'kurs':Course.objects.last().som or 0,
     }
@@ -8963,7 +8955,8 @@ def reja_chiqim_fin(request):
         'reja':reja,
         'filter':filter,
         'kassa':KassaNew.objects.all(),
-        'money_circulation':MoneyCirculation.objects.all(),
+        'money_circulation':MoneyCirculation.objects.filter(is_delete=False),
+
         'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
         'kurs':Course.objects.last().som or 0,
@@ -9181,6 +9174,7 @@ def ombor_fin(request):
         summa = item['quantity'] * bring_price
         product_filial_dict[key] = val + summa  
 
+    
     data = []
     for num in range(1, 13):
         dt = {
@@ -9474,6 +9468,11 @@ def nds_view(request):
     }
     return render(request, 'nds_page.html', context)
 
+def nds_del(request, id):
+    NDS.objects.get(id=id).delete()
+    return redirect(request.META['HTTP_REFERER'])
+
+
 def filial_list(request):
     context = {
         'filial':Filial.objects.filter(is_activate=True),
@@ -9713,7 +9712,7 @@ def income_give(request, id):
 
 
 def valyuta_list(request):
-    valyuta = Valyuta.objects.all()
+    valyuta = Valyuta.objects.filter(is_activate=True)
     context = {
         'valyuta':valyuta
     }
@@ -9731,7 +9730,10 @@ def valyuta_edit(request,id):
     valyuta.save()
     return redirect(request.META['HTTP_REFERER'])
 
-
+def valyuta_del(request, id):
+    Valyuta.objects.filter(id=id).update(is_activate=True)
+    return redirect(request.META['HTTP_REFERER'])
+    
 def kassa_merge(request):
     merge = KassaMerge.objects.filter(is_active=True)
     context = {
@@ -10274,6 +10276,9 @@ def measurement_type_edit(request,id):
     valyuta.save()
     return redirect(request.META['HTTP_REFERER'])
 
+def measurement_type_del(request, id):
+    valyuta = MeasurementType.objects.filter(id=id).update(is_active=False)
+    return redirect(request.META['HTTP_REFERER'])
 
 
 
@@ -10485,3 +10490,94 @@ def delete_video_tutorial(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    
+
+from dateutil.relativedelta import relativedelta
+
+def expiring_shop(request):
+    today = datetime.today()
+    year = int(request.GET.get('year', today.year))
+    month = int(request.GET.get('month', today.month))
+    shop = Shop.objects.filter(date__year=year,date__month=month,debt_return__isnull=False)
+
+    filter = {
+        'month':today.month,
+        'year':today.year,
+    }
+    context = {
+        'shop':shop,
+        'filter':filter
+    }
+    return render(request, 'expiring_shop.html',context)
+
+
+
+
+def last_seen(request):
+    today = date.today()
+    start_date = str(request.GET.get('start_date', today.replace(day=1)))
+    end_date = str(request.GET.get('end_date', today))
+    use = request.GET.get('use')
+    last = LastSeen.objects.filter(qachon__date__range=(start_date, end_date))
+    if use:
+        last = last.filter(user__id=use)
+    filters = { 
+        'start_date':start_date,
+        'end_date':end_date,
+    }
+    paginator_pay = Paginator(last, 20)
+    page_number = request.GET.get('page')
+    page_pay = paginator_pay.get_page(page_number)
+
+    context = {
+        'pay':page_pay,
+        'use':User.objects.all(),
+        'filters':filters,
+    }
+    return render(request, 'last_seen.html',context)
+
+
+@csrf_exempt
+def search_barcode(request):
+    search = request.GET.get('search')
+    shop = Shop.objects.filter(id__icontains=search, cart__isnull=False).values('id')  
+    return JsonResponse({'data': list(shop)})
+
+
+
+
+def return_shop(request, id):
+    shop = Shop.objects.get(id=id)
+    cart = Cart.objects.filter(shop=shop)
+    for loop in cart:
+        loop.product.quantity += loop.quantity
+        loop.product.save()
+    shop.status = 3
+    shop.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def product_filail_zero(request):
+    filial = request.GET.get('filial')
+    group = request.GET.get('group')
+    deliver = request.GET.get('deliver')
+
+    last = ProductFilial.objects.filter(quantity__lte=0)
+    if filial:
+        last = last.filter(filial_id=filial)
+    if group:
+        last = last.filter(group_id=group)
+    if deliver:
+        last = last.filter(deliver1_id=deliver)
+    paginator_pay = Paginator(last, 20)
+    page_number = request.GET.get('page')
+    page_pay = paginator_pay.get_page(page_number)
+    context = {
+        'pay':page_pay,
+        'filial':Filial.objects.filter(is_activate=True),
+        'group':Groups.objects.all(),
+        'deliver':Deliver.objects.all(),
+    }
+    return render(request, 'product_filail_zero.html',context)

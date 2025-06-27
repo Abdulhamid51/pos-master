@@ -67,8 +67,6 @@
                                             <th class="">№</th>
                                             <th>Mahsulot</th>
                                             <th>Ishlab chiqaruvchi</th>
-                                            <th>So`m</th>
-                                            <th>So`m * Soni</th>
                                             <th>Filial</th>
                                             <th>Shtrix kod</th>
                                             <th>Boshlang'ich
@@ -77,7 +75,6 @@
                                             <th>kelgan</th>
                                             <th>Sotilgan</th>
                                             <th>Qolgan</th>
-                                            <!-- <th>Foyda</th> -->
                                             <th>Jami Foyda</th>
 
                                         </tr>
@@ -88,17 +85,18 @@
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ productfilial.name }}</td>
                                                 <td>{% if productfilial.preparer %}{{ productfilial.preparer }}{% else %}-{% endif %}</td>
-                                                <td class="som" data-som="{{ productfilial.som }}">{{ productfilial.som|intcomma }}</td>
-                                                <td class="allprice" data-all="{{ productfilial.som|mul:productfilial.quantity|floatformat:0 }}">{{ productfilial.som|mul:productfilial.quantity|floatformat:0|intcomma }}</td>
                                                 <td>{{ productfilial.filial }}</td>
-                                                <td>{{ productfilial.barcode }}</td>
+                                                <td>
+                                                    {% for x in ombor.product_barcode %}
+                                                        {{x.barcode}}<br>
+                                                    {% endfor %}
+                                                </td>
+                                                </td>
                                                 <td>{{ productfilial.start_quantity|intcomma }}</td>
                                                 <td>{{ productfilial.recieve_quantity|intcomma }}</td>
                                                 <td>{{ productfilial.cart_quantity|intcomma}}</td>
                                                 <td class="quantity">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
-                                                <!-- <td>{{ productfilial.foyda|intcomma }}</td> -->
                                                 <td>{{ productfilial.jami_foyda|intcomma }}</td>
-
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -107,15 +105,12 @@
                                             <th class="">Jami:</th>
                                             <th></th>
                                             <th></th>
-                                            <th id="som1">{{ productfilials_total_som|intcomma }}|</th>
-                                            <th id="allprice1">{{ total_product_sum|intcomma }}| </th>
-                                            <!-- <th>{{ productfilials_total_min_count|intcomma }}</th> -->
+                                            <th></th>
                                             <th></th>
                                             <th></th>
                                             <th>{{ recieves_total|intcomma }}</th>
                                             <th>{{ carts_total|intcomma }}</th>
                                             x<th id="quantity1">{{ productfilials_total_quantity|intcomma }} </th>
-                                            <!-- <th>{{ foyda_total|intcomma }}</th> -->
                                             <th>{{ foyda_total|intcomma }}</th>
                                         </tr>
                                     </tfoot>

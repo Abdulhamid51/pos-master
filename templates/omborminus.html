@@ -51,11 +51,15 @@
                                                 <td>{{ ombor.name }}</td>
                                                 <td>{{ ombor.preparer }}</td>
                                                 {% for x in ombor.valyuta %}
-                                                <td>{{ x.summa|default_if_none:'0' }}</td>
+                                                <td>{% if x.summa %} {{x.summa|intcomma}}{%else%}0{%endif%}</td>
                                                 {% endfor %}
                                                 <td>{{ ombor.kurs }}</td>
                                                 <td>{{ ombor.quantity|floatformat:0|intcomma }}</td>
-                                                <td>{{ ombor.barcode }}</td>
+                                                <td>
+                                                    {% for x in ombor.product_barcode %}
+                                                        {{x.barcode}}<br>
+                                                    {% endfor %}
+                                                </td>
                                                 <td>{{ ombor.group }}</td>
                                             </tr>
                                         {% endfor %}

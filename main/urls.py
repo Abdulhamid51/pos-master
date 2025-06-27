@@ -99,7 +99,7 @@ urlpatterns = [
     
     path('payment_user/<int:id>/', payment_user, name='payment_user'),
     path('one_day_price/', one_day_price, name='one_day_price'),
-    path('one_day_price/<int:id>/', one_day_price_add, name='one_day_price_add'),
+    path('one_day_price_add/<int:id>/', one_day_price_add, name='one_day_price_add'),
     path('one_day_status_change/<int:id>/', one_day_status_change, name='one_day_status_change'),
     path('flex_status_change/<int:id>/', flex_status_change, name='flex_status_change'),
     path('mobile_status_change/<int:id>/', mobile_status_change, name='mobile_status_change'),
@@ -202,10 +202,12 @@ urlpatterns = [
     path('reja_chiqim_fin_del/<int:id>', reja_chiqim_fin_del, name='reja_chiqim_fin_del'),
     path('asosiy_vosita_fin/', asosiy_vosita_fin, name='asosiy_vosita_fin'),
     path('add_main_tool_type/', add_main_tool_type, name='add_main_tool_type'),
+    path('filter_product_barcode/', filter_product_barcode, name='filter_product_barcode'),
     path('add_main_tool/', add_main_tool, name='add_main_tool'),
     path('ajax_list_main_tool_type/', ajax_list_main_tool_type, name='ajax_list_main_tool_type'),
     path('edit_main_tool/<int:id>', edit_main_tool, name='edit_main_tool'),
     path('ombor_fin/', ombor_fin, name='ombor_fin'),
+
     path('b2b_shop/', b2b_shop_view, name='b2b_shop'),
     path('b2b_shop_add/', b2b_shop_add, name='b2b_shop_add'),
     path('b2b_shop_ajax/<int:product_id>', b2b_shop_ajax, name='b2b_shop_ajax'),
@@ -219,6 +221,8 @@ urlpatterns = [
     path('ajax_reja_tushum_list/<int:shop_id>', ajax_reja_tushum_list, name='ajax_reja_tushum_list'),
     path('b2b_shop_ajax_cart_delete/<int:product_id>', b2b_shop_ajax_cart_delete, name='b2b_shop_ajax_cart_delete'),
     path('nds_page/', nds_view, name='nds_page'),
+    path('nds_del/<int:id>', nds_del, name='nds_del'),
+    
     path('users_restrictions/', users_restrictions, name='users_restrictions'),
     path('users_restrictions_limit/<int:id>', users_restrictions_limit, name='users_restrictions_limit'),
     path('users_add/', users_add, name='users_add'),
@@ -248,6 +252,7 @@ urlpatterns = [
     path('valyuta_list', valyuta_list, name='valyuta_list'),
     path('valyuta_add', valyuta_add, name='valyuta_add'),
     path('valyuta_edit/<int:id>', valyuta_edit, name='valyuta_edit'),
+    path('valyuta_del/<int:id>', valyuta_del, name='valyuta_del'),
 
     path('kassa_merge', kassa_merge, name='kassa_merge'),
     path('kassa_merge_add', kassa_merge_add, name='kassa_merge_add'),
@@ -290,6 +295,7 @@ urlpatterns = [
     path('measurement_type_list', measurement_type_list, name='measurement_type_list'),
     path('measurement_type_add', measurement_type_add, name='measurement_type_add'),
     path('measurement_type_edit/<int:id>', measurement_type_edit, name='measurement_type_edit'),
+    path('measurement_type_del/<int:id>', measurement_type_del, name='measurement_type_del'),
     path('for_pro', for_pro, name='for_pro'),
     path('mobile_order_list', mobile_order_list, name='mobile_order_list'),
     path('mobile_order_detail/<int:id>', mobile_order_detail, name='mobile_order_detail'),
@@ -313,6 +319,11 @@ urlpatterns = [
     path('api/video-tutorial/save/', save_video_tutorial, name='save_video_tutorial'),
     path('api/video-tutorial/delete/', delete_video_tutorial, name='delete_video_tutorial'),
 
+    path('expiring_shop/', expiring_shop, name='expiring_shop'),
+    path('last_seen/', last_seen, name='last_seen'),
+    path('search_barcode/', search_barcode, name='search_barcode'),
+    path('return_shop/<int:id>', return_shop, name='return_shop'),
+    path('product_filail_zero/', product_filail_zero, name='product_filail_zero'),
 
 
 ]
