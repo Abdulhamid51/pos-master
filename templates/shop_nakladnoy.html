@@ -101,20 +101,11 @@
                   <h2 class="mb-1 text-white">
                    Eco Maruf
                   </h2>
-                  <!-- <img src="{{brand.logo.url}}" alt="logo1" class="logo" /> -->
                 </div>
-                <!-- <div class="text-muted">
-                  <p class="mb-1">
-                    {{ brand.location|default_if_none:' ' }}
-                  </p>
-                  <p>
-                    <i class="uil uil-phone me-1"></i> {{ brand.phone|default_if_none:'' }}
-                  </p>
-                </div> -->
               </div>
               <hr class="my-4" />
               <div class="box_to_print row" style="font-size: 12px">
-                <div class="col-6">
+                <div class="col-4">
                   <div class="">
                     <h7 class="">Mijoz:</h7>
                     <p class style="color : red">{{ data.customer }}</p>
@@ -125,7 +116,57 @@
                     <p class="">{{ data.valyuta}}</p>
                   </div>
                 </div>
-                <div class="col-6">
+                <style>
+                  .return-stamp {
+                    position: relative;
+                    width: 150px;
+                    height: 150px;
+                    border: 6px solid #a30000;
+                    border-radius: 50%;
+                    color: #a30000;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transform: rotate(-15deg);
+                    font-size: 18px;
+                    background: white;
+                    box-shadow: 0 0 0 5px white, 0 0 0 10px #a30000;
+                  }
+
+                  .return-stamp::before, .return-stamp::after {
+                    content: "★ ★ ★ ★ ★";
+                    position: absolute;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    font-size: 12px;
+                  }
+
+                  .return-stamp::before {
+                    top: 20px;
+                  }
+
+                  .return-stamp::after {
+                    bottom: 20px;
+                  }
+
+                  .text-qaytarildi {
+                    transform: rotate(-10deg);
+                  }
+                  </style>
+
+                  <div class="col-md-4 text-center">
+                    {% if data.status == 3%}
+                      <div class="return-stamp">
+                        <div class="text-qaytarildi">Qaytarildi</div>
+                      </div>
+                    {% endif %}
+                  </div>
+
+
+                <div class="col-4">
                   <div class="" style="float: right">
                     <div class="mt-4">
                       <h7 class="font-size-15 mb-1">Buyurtma vaqti:</h7>
@@ -133,8 +174,11 @@
                     </div>
                     <div class="mt-4">
                         <h7 class="font-size-15 mb-1">Sotuvchi:</h7>
-                        <p>{{ data.seller    }}</p>
+                        <p>{{ data.seller}}</p>
                       </div>
+                    <div class="mt-4">
+                        <h7 class="font-size-15 mb-1">Check:  {{ data.chek}}</h7>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -202,7 +246,7 @@
                       class="btn btn-success me-1"
                       ><i class="fa fa-print"></i
                     ></a>
-                    <!-- <a href="#" class="btn btn-primary w-md">Yuborish</a> -->
+                    <a href="{% url 'return_shop' data.chek %}" class="btn btn-primary w-md">Qaytarish</a>
                   </div>
                 </div>
               </div>

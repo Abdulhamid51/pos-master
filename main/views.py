@@ -6962,6 +6962,7 @@ def shop_nakladnoy(request, order_id):
     cart = Cart.objects.filter(shop=shop)
     data = {
         'chek':order_id,
+        'status':shop.status,
         'seller':shop.saler,
         'date_time':shop.date,
         'customer':shop.debtor.fio,
@@ -8871,7 +8872,7 @@ def reja_tushum_fin(request):
         'deliver':Deliver.objects.all(),
         'external_income_user':ExternalIncomeUser.objects.filter(is_active=True),
         'valyuta':Valyuta.objects.all(),
-        'money_circulation':MoneyCirculation.objects.all(),
+        'money_circulation':MoneyCirculation.objects.filter(is_delete=False),
         'kassa':KassaNew.objects.all(),
         'kurs':Course.objects.last().som or 0,
     }
@@ -8954,7 +8955,8 @@ def reja_chiqim_fin(request):
         'reja':reja,
         'filter':filter,
         'kassa':KassaNew.objects.all(),
-        'money_circulation':MoneyCirculation.objects.all(),
+        'money_circulation':MoneyCirculation.objects.filter(is_delete=False),
+
         'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
         'kurs':Course.objects.last().som or 0,
@@ -10534,3 +10536,48 @@ def last_seen(request):
         'filters':filters,
     }
     return render(request, 'last_seen.html',context)
+
+
+@csrf_exempt
+def search_barcode(request):
+    search = request.GET.get('search')
+    shop = Shop.objects.filter(id__icontains=search, cart__isnull=False).values('id')  
+    return JsonResponse({'data': list(shop)})
+
+
+
+
+def return_shop(request, id):
+    shop = Shop.objects.get(id=id)
+    cart = Cart.objects.filter(shop=shop)
+    for loop in cart:
+        loop.product.quantity += loop.quantity
+        loop.product.save()
+    shop.status = 3
+    shop.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def product_filail_zero(request):
+    filial = request.GET.get('filial')
+    group = request.GET.get('group')
+    deliver = request.GET.get('deliver')
+
+    last = ProductFilial.objects.filter(quantity__lte=0)
+    if filial:
+        last = last.filter(filial_id=filial)
+    if group:
+        last = last.filter(group_id=group)
+    if deliver:
+        last = last.filter(deliver1_id=deliver)
+    paginator_pay = Paginator(last, 20)
+    page_number = request.GET.get('page')
+    page_pay = paginator_pay.get_page(page_number)
+    context = {
+        'pay':page_pay,
+        'filial':Filial.objects.filter(is_activate=True),
+        'group':Groups.objects.all(),
+        'deliver':Deliver.objects.all(),
+    }
+    return render(request, 'product_filail_zero.html',context)

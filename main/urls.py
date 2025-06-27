@@ -319,6 +319,11 @@ urlpatterns = [
     path('api/video-tutorial/save/', save_video_tutorial, name='save_video_tutorial'),
     path('api/video-tutorial/delete/', delete_video_tutorial, name='delete_video_tutorial'),
 
-    path('expiring-shop/', expiring_shop, name='expiring_shop'),
+    path('expiring_shop/', expiring_shop, name='expiring_shop'),
     path('last_seen/', last_seen, name='last_seen'),
+    path('search_barcode/', search_barcode, name='search_barcode'),
+    path('return_shop/<int:id>', return_shop, name='return_shop'),
+    path('product_filail_zero/', product_filail_zero, name='product_filail_zero'),
+
+
 ]

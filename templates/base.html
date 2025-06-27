@@ -56,17 +56,41 @@
 }
 </style>
 <style>
-/* Chrome, Safari, Edge */
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
+    /* Chrome, Safari, Edge */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
-/* Firefox */
-input[type=number] {
-    -moz-appearance: textfield;
-}
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+<style>
+    .sidebar-wrapper {
+        overflow-y: auto;
+        position: fixed;
+        width: 260px;
+    }
+
+    .sidebar-wrapper::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sidebar-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .sidebar-wrapper::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 </style>
 <body class="sidebar-noneoverflow">
 <!-- BEGIN LOADER -->
@@ -95,8 +119,64 @@ input[type=number] {
         <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
             
         </ul>
-        <div class="" style="margin: 0.5rem;">
+        <div style="margin-right: 3rem; margin-top: -2rem; position: relative;">
+            <input type="text" placeholder="Check" oninput="search(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
+            <div id="dropdown" style="position: absolute; top: 35px; left: 0; right: 0; background: white; border: 1px solid #ccc; display: none; z-index: 1000;"></div>
         </div>
+
+
+
+        <script>
+            function search(item) {
+                let value = item.value;
+
+                if (value.trim() === '') {
+                    $('#dropdown').hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'search_barcode' %}",
+                    type: "GET",
+                    data: { 'search': value },
+                    success: function(response) {
+                        const dropdown = $('#dropdown');
+                        dropdown.empty();
+
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(shop) {
+                                dropdown.append(
+                                    `<div style="padding: 5px; cursor: pointer; color: blue;" onclick="goToShop(${shop.id})">
+                                        Check: ${shop.id}
+                                    </div>`
+                                );
+                            });
+                        } else {
+                            dropdown.append('<div style="padding: 5px; color: red;">Shtrix-kod yo‘q</div>');
+                        }
+
+                        dropdown.show();
+                    },
+                    error: function () {
+                        console.log("Xatolik yuz berdi");
+                    }
+                });
+            }
+
+            function goToShop(id) {
+                window.open(`/shop_nakladnoy/${id}`, '_blank');
+            }
+
+            document.addEventListener('click', function(event) {
+                const input = document.getElementById('barcode-input');
+                const dropdown = document.getElementById('dropdown');
+                if (!input.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        </script>
+
+
 
     
         <div class="" style="margin-right: 3rem;margin-top: -2rem;">
@@ -312,7 +392,7 @@ input[type=number] {
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name == 'deliver' %}show{% elif url_name == 'expiring_shop' %}{% elif url_name == 'debtor_account' %}show{% elif url_name == 'debtor' %}show{% elif url_name == 'externalincomeuser' %}show{% endif %}" 
+                            <ul class="collapse submenu list-unstyled {% if url_name == 'deliver' %}show{% elif url_name == 'expiring_shop' %}show{% elif url_name == 'debtor_account' %}show{% elif url_name == 'debtor' %}show{% elif url_name == 'externalincomeuser' %}show{% endif %}" 
                             id="narx-hamkorlar" data-parent="#accordionExample">
                                 {% if custom_user_profile.is_yetkazib_beruvchilar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'deliver' %}active{% endif %}">
@@ -344,8 +424,8 @@ input[type=number] {
                     {% endwith %}
                         
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name == 'ombor' %}active{% elif url_name == 'omborqabul' %}active{% elif url_name == 'omborminus' %}active{% elif url_name == 'product_filial' %}active{% elif url_name == 'product_editing_page' %}active{% elif url_name == 'product' %}active{% elif url_name == 'tovar_prixod' %}active{% elif url_name == 'tovar_prixod_tarix' %}active{% elif url_name == 'write_off' %}active{% elif url_name == 'write_off_tarix' %}active{% elif url_name == 'recieve' %}active{% elif url_name == 'deliver_return' %}active{% elif url_name == 'deliver_return_item_detail' %}active{% elif url_name == 'deliver_return_tarix' %}active{% endif %}">
-                            <a href="#components" data-toggle="collapse" aria-expanded="{% if url_name == 'ombor' %}true{% elif url_name == 'omborqabul' %}true{% elif url_name == 'omborminus' %}true{% elif url_name == 'product_filial' %}true{% elif url_name == 'product_editing_page' %}true{% elif url_name == 'product' %}true{% elif url_name == 'tovar_prixod' %}true{% elif url_name == 'tovar_prixod_tarix' %}true{% elif url_name == 'write_off' %}true{% elif url_name == 'write_off_tarix' %}true{% elif url_name == 'recieve' %}true{% elif url_name == 'deliver_return' %}true{% elif url_name == 'deliver_return_item_detail' %}true{% elif url_name == 'deliver_return_tarix' %}true{% else %}false{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name == 'ombor' %}active{% elif url_name == 'omborqabul' %}active{% elif url_name == 'product_filail_zero' %}active{% elif url_name == 'omborminus' %}active{% elif url_name == 'product_filial' %}active{% elif url_name == 'product_editing_page' %}active{% elif url_name == 'product' %}active{% elif url_name == 'tovar_prixod' %}active{% elif url_name == 'tovar_prixod_tarix' %}active{% elif url_name == 'write_off' %}active{% elif url_name == 'write_off_tarix' %}active{% elif url_name == 'recieve' %}active{% elif url_name == 'deliver_return' %}active{% elif url_name == 'deliver_return_item_detail' %}active{% elif url_name == 'deliver_return_tarix' %}active{% endif %}">
+                            <a href="#components" data-toggle="collapse" aria-expanded="{% if url_name == 'ombor' %}true{% elif url_name == 'product_filail_zero' %}true{% elif url_name == 'omborqabul' %}true{% elif url_name == 'omborminus' %}true{% elif url_name == 'product_filial' %}true{% elif url_name == 'product_editing_page' %}true{% elif url_name == 'product' %}true{% elif url_name == 'tovar_prixod' %}true{% elif url_name == 'tovar_prixod_tarix' %}true{% elif url_name == 'write_off' %}true{% elif url_name == 'write_off_tarix' %}true{% elif url_name == 'recieve' %}true{% elif url_name == 'deliver_return' %}true{% elif url_name == 'deliver_return_item_detail' %}true{% elif url_name == 'deliver_return_tarix' %}true{% else %}false{% endif %}" class="dropdown-toggle">
                                 <div style="display: flex; align-items: center;">
                                     <i class="fa-solid fa-warehouse" style="font-size: 17px;"></i>
                                     <span style="margin-left: 10px;">Ombor</span>
@@ -358,7 +438,7 @@ input[type=number] {
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name == 'ombor' %}show{% elif url_name == 'omborqabul' %}show{% elif url_name == 'omborminus' %}show{% elif url_name == 'product_filial' %}show{% elif url_name == 'product_editing_page' %}show{% elif url_name == 'product' %}show{% elif url_name == 'tovar_prixod' %}show{% elif url_name == 'tovar_prixod_tarix' %}show{% elif url_name == 'write_off' %}show{% elif url_name == 'write_off_tarix' %}show{% elif url_name == 'recieve' %}show{% elif url_name == 'deliver_return' %}show{% elif url_name == 'deliver_return_item_detail' %}show{% elif url_name == 'deliver_return_tarix' %}show{% endif %}"
+                            <ul class="collapse submenu list-unstyled {% if url_name == 'ombor' %}show{% elif url_name == 'product_filail_zero' %}show{% elif url_name == 'omborqabul' %}show{% elif url_name == 'omborminus' %}show{% elif url_name == 'product_filial' %}show{% elif url_name == 'product_editing_page' %}show{% elif url_name == 'product' %}show{% elif url_name == 'tovar_prixod' %}show{% elif url_name == 'tovar_prixod_tarix' %}show{% elif url_name == 'write_off' %}show{% elif url_name == 'write_off_tarix' %}show{% elif url_name == 'recieve' %}show{% elif url_name == 'deliver_return' %}show{% elif url_name == 'deliver_return_item_detail' %}show{% elif url_name == 'deliver_return_tarix' %}show{% endif %}"
                                 id="components" data-parent="#accordionExample">
                                 {% if custom_user_profile.is_ombor_boshkaruvi_ombor %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'ombor'  %}active{% endif %}">
@@ -428,6 +508,9 @@ input[type=number] {
                                     <a href="{% url 'deliver_return_tarix' %}">Taminotchi Tarix</a>
                                 </li>
                                 {% endif %}
+                                <li class="menu {% if request.resolver_match.url_name == 'product_filail_zero' %}active{% endif %}">
+                                    <a href="{% url 'product_filail_zero' %}">Yoq maxsulotlar</a>
+                                </li>
                             </ul>
                         </li>
                     {% endwith %}

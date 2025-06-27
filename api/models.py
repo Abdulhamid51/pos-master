@@ -1214,6 +1214,7 @@ class Shop(models.Model):
     nds_count = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
+    status = models.IntegerField(choices=((1, 'Yaratildi'),(2, 'Tasdiqlandi'), (3, 'Qaytarildi')), default=1)
 
     @property
     def total_price(self):
