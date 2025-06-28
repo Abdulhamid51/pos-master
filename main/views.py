@@ -3815,9 +3815,19 @@ def kassa(request):
         .values('qachon__month') \
         .annotate(summa=Coalesce(Sum(F('summa') / F('currency')), 0, output_field=IntegerField()))
     
+    # chart_shop = Shop.objects.filter(date__year=year) \
+    #     .values('date__month') \
+    #     .annotate(total=Sum((F('cart__quantity')*F('cart__price')) / F('kurs')))
+
     chart_shop = Shop.objects.filter(date__year=year) \
-        .values('date__month') \
-        .annotate(total=Sum((F('cart__quantity')*F('cart__price')) / F('kurs')))
+    .values('date__month') \
+    .annotate(
+        total=Sum(
+            (F('cart__quantity') * F('cart__price')) / F('kurs'),
+            output_field=FloatField()
+        )
+    )
+
     
     chart_chiqim_dict = {item['qachon__month']: item for item in chart_chiqim}
     chart_shop_dict = {item['date__month']: item for item in chart_shop}
