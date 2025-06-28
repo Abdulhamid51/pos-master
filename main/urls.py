@@ -325,5 +325,7 @@ urlpatterns = [
     path('return_shop/<int:id>', return_shop, name='return_shop'),
     path('product_filail_zero/', product_filail_zero, name='product_filail_zero'),
 
+    path('savdo/', savdo, name='savdo'),
+    
 
 ]
