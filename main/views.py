@@ -10614,3 +10614,10 @@ def product_filail_zero(request):
         'deliver':Deliver.objects.all(),
     }
     return render(request, 'product_filail_zero.html',context)
+
+
+
+
+def savdo(request):
+    context = {}
+    return render(request, 'savdo.html', context)

@@ -1,8 +1,10 @@
 from django.shortcuts import render
-from api.models import ProductFilial, Debtor, MCart, MOrder, ProductPriceType, Sum
+from api.models import ProductFilial, Debtor, MCart, MOrder, ProductPriceType, Sum, Shop, Cart
 from django.http.response import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+
 
 def abot_index(request, order_id):
     order = MOrder.objects.get(id=order_id)
@@ -51,3 +53,66 @@ def mobile_done_cart(request, order_id):
     order.products.set(back)
     order.save()
     return JsonResponse({'ok':True})
+
+
+
+
+def cart_webapp(request, order_id):
+    m_order, created = MOrder.objects.get_or_create(id=order_id)
+    
+    products = [
+        {
+            'id': 1,
+            'name': 'Giggles baby taglik (N°3)',
+            'description': '68 Sht',
+            'price': 91000
+        },
+        {
+            'id': 2,
+            'name': 'Giggles baby taglik (N°2)',
+            'description': '76 Sht',
+            'price': 83993
+        },
+        {
+            'id': 3,
+            'name': 'Baby One baby taglik (N°2)',
+            'description': '38 Sht',
+            'price': 41002
+        }
+    ]
+    
+    return render(request, 'cart.html', {
+        'order_id': order_id,
+        'products': products
+    })
+
+@csrf_exempt
+def webapp_callback(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            order_id = data.get('order_id')
+            products = data.get('products')
+            
+            # Process the order
+            m_order = MOrder.objects.get(id=order_id)
+            shop_order = Shop.objects.create(
+                debtor=m_order.debtor,
+                total_price=sum(p['price'] * p['quantity'] for p in products),
+                date=timezone.now()
+            )
+            
+            for product in products:
+                Cart.objects.create(
+                    shop=shop_order,
+                    product=ProductFilial.objects.get(id=product['id']),
+                    quantity=product['quantity'],
+                    price=product['price'],
+                    total_price=product['price'] * product['quantity']
+                )
+            
+            return JsonResponse({'status': 'success', 'order_id': shop_order.id})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
