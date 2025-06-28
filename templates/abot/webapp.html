@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Buyurtma berish</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 10px; }
+        .product { padding: 10px; border: 1px solid #ccc; margin-bottom: 10px; border-radius: 10px; }
+        .btn { background-color: #0047AB; color: white; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn:hover { background-color: #003C9E; }
+    </style>
+</head>
+<body>
+    <h2>🛍 Mahsulotlar ro'yxati</h2>
+    <div id="products"></div>
+
+    <script>
+        async function loadProducts() {
+            const response = await fetch('/bot/products/');
+            const data = await response.json();
+            const container = document.getElementById('products');
+
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'product';
+                div.innerHTML = `
+                    <strong>${item.name}</strong><br>
+                    ${item.count} dona<br>
+                    <b>${item.price} SUM</b><br>
+                    <button class="btn" onclick="addToCart(${item.id})">Savatchaga qo'shish</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addToCart(productId) {
+            alert("Savatchaga qo‘shildi: ID " + productId);
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>

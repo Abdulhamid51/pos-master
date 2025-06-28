@@ -3,127 +3,71 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
 import requests
-from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder
+from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder, ProductFilial
 import datetime
 from django.contrib.humanize.templatetags.humanize import intcomma
-from .views import abot_index
-from django.urls import reverse
+import json
 
 @csrf_exempt
 def webhook(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
+        data = json.loads(request.body)
+        message = data.get('message', {})
+        chat_id = message.get('chat', {}).get('id')
+        text = message.get('text', '').strip().lower()
+
+        if 'callback_query' in data:
+            callback = data['callback_query']
+            chat_id = callback['message']['chat']['id']
+            message_id = callback['message']['message_id']  
+
+            callback_data = json.loads(callback['data'])  
+            remove_inline_buttons(chat_id, message_id)
+
+            if callback_data['action'] == "confirm_payment":
+                send_message(chat_id, "✅ To'lov tasdiqlandi!")
+            elif callback_data['action'] == "reject_payment":
+                kirim_id = callback_data.get('kirim_id')
+                if kirim_id:
+                    confirim_kirim(kirim_id)
+                    send_message(chat_id, "⛔ To'lov rad etildi!")
+                else:
+                    send_message(chat_id, "⚠️ ID topilmadi.")
             
-            # Handle web app data
-            if 'web_app_data' in data.get('message', {}):
-                webapp_data = json.loads(data['message']['web_app_data']['data'])
-                chat_id = data['message']['chat']['id']
-                
-                if webapp_data.get('action') == 'order_completed':
-                    order_id = webapp_data.get('order_id')
-                    total = webapp_data.get('total', 0)
-                    send_message(chat_id, f"✅ Buyurtma qabul qilindi!\nBuyurtma raqami: {order_id}\nJami: {intcomma(total)} SUM")
-                    return JsonResponse({"status": "ok"})
-            
-            # Handle callback queries
-            if 'callback_query' in data:
-                callback = data['callback_query']
-                chat_id = callback['message']['chat']['id']
-                message_id = callback['message']['message_id']  
-
-                callback_data = json.loads(callback['data'])  
-                remove_inline_buttons(chat_id, message_id)
-
-                if callback_data['action'] == "confirm_payment":
-                    send_message(chat_id, "✅ To'lov tasdiqlandi!")
-                elif callback_data['action'] == "reject_payment":
-                    kirim_id = callback_data.get('kirim_id')
-                    if kirim_id:
-                        confirim_kirim(kirim_id)
-                        send_message(chat_id, "⛔ To'lov rad etildi!")
-                    else:
-                        send_message(chat_id, "⚠️ ID topilmadi.")
-                
-                return JsonResponse({"status": "ok"})
-            
-            # Handle text messages
-            message = data.get('message', {})
-            chat_id = message.get('chat', {}).get('id')
-            text = message.get('text', '').strip().lower()
-
-            if text == '/start':
-                send_menu(chat_id)
-            elif text in ['balans', '💰 balans', '💰 balans'.lower()]:
-                balance_data = get_balance(chat_id)
-                send_message(chat_id, f"📊 Sizning balansingiz:\n{balance_data}")
-            elif text in ['buyurtmalar', '📝 buyurtmalar', '📝 buyurtmalar'.lower()]:
-                send_order_period_menu(chat_id)
-            elif text in ['buyurtma berish', '🛒 buyurtma berish', '🛒 buyurtma berish'.lower()]:
-                mobile_cart_send(request, chat_id)  
-            elif text == '30 kun':
-                messages = get_order('bir oy', chat_id)
-                for msg in messages:
-                    send_message(chat_id, msg)
-            elif text == '1 yil':
-                messages = get_order('bir yil', chat_id)
-                for msg in messages:
-                    send_message(chat_id, msg)
-            elif text == '🔙 orqaga':
-                send_menu(chat_id)
-            else:
-                send_message(chat_id, "Menyudan foydalaning yoki 'balans' deb yozing.")
-
             return JsonResponse({"status": "ok"})
-            
-        except Exception as e:
-            print(f"Error in webhook: {str(e)}")
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
-            
+        
+        if text == '/start':
+            send_menu(chat_id)
+        elif text in ['balans', '💰 balans', '💰 balans'.lower()]:
+            balance_data = get_balance(chat_id)
+            send_message(chat_id, f"📊 Sizning balansingiz:\n{balance_data}")
+        elif text in ['buyurtmalar', '📝 buyurtmalar', '📝 buyurtmalar'.lower()]:
+            send_order_period_menu(chat_id)
+        elif text in ['🛒 buyurtma berish', 'buyurtma berish']:
+            send_webapp_link(chat_id)
+        elif text == '30 kun':
+            messages = get_order('bir oy', chat_id)
+            for msg in messages:
+                send_message(chat_id, msg)
+        elif text == '1 yil':
+            messages = get_order('bir yil', chat_id)
+            for msg in messages:
+                send_message(chat_id, msg)
+        elif text == '🔙 orqaga':
+            send_menu(chat_id)
+        else:
+            send_message(chat_id, "Menyudan foydalaning yoki 'balans' deb yozing.")
+
+        return JsonResponse({"status": "ok"})
     else:
         return JsonResponse({"message": "Webhook ishlayapti"}, status=200)
 
-
-def mobile_cart_send(request, chat_id): 
-    try:
-        customer = Debtor.objects.filter(tg_id=chat_id).first()
-        if not customer:
-            send_message(chat_id, "❌ Mijoz topilmadi.")
-            return JsonResponse({"status": "error", "message": "Customer not found"})
-
-        m_order = MOrder.objects.create(debtor=customer)
-        order_url = f"https://{settings.DOMAIN}{reverse('abot_index', args=[m_order.id])}"
-
-        url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {
-            'chat_id': chat_id,
-            'text': "🛒 Buyurtma berish uchun tugmani bosing:",
-            'reply_markup': {
-                "inline_keyboard": [
-                    [
-                        {
-                            "text": "🛒 Buyurtma berish",
-                            "web_app": {"url": order_url}
-                        }
-                    ]
-                ]
-            }
-        }
-        response = requests.post(url, json=payload)
-        return JsonResponse(response.json())
-        
-    except Exception as e:
-        print(f"Error in mobile_cart_send: {str(e)}")
-        send_message(chat_id, "❌ Xatolik yuz berdi, qaytadan urinib ko'ring.")
-        return JsonResponse({"status": "error", "message": str(e)})
 
 def send_message(chat_id, text):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {'chat_id': chat_id, 'text': text}
     response = requests.post(url, json=payload)
-    print(response.json())
 
-import json
 
 def remove_inline_buttons(chat_id, message_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup"
@@ -133,7 +77,6 @@ def remove_inline_buttons(chat_id, message_id):
         "reply_markup": {}
     }
     response = requests.post(url, json=payload)
-    print(response.json())
 
 
 def send_kirim_message(chat_id, text, kirim_id):
@@ -157,7 +100,6 @@ def send_kirim_message(chat_id, text, kirim_id):
         }
     }
     response = requests.post(url, json=payload)
-    print(response.json())
 
 
 
@@ -168,7 +110,7 @@ def send_menu(chat_id):
         'text': "Asosiy menyu:",
         'reply_markup': {
             'keyboard': [
-                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}, {'text':'🛒 Buyurtma berish'}]
+                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}]
             ],
             'resize_keyboard': True,
             'one_time_keyboard': False
@@ -254,42 +196,23 @@ def get_order(period, chat_id):
         logger.error(f"Error fetching orders: {ex}")
         return [f"❌ Xatolik yuz berdi, keyinroq urinib ko'ring.\n{ex}"]
 
+    
+    
 
-def send_order_url_only(order_id):
-    path = reverse('abot_index', args=[order_id])
-    full_url = f"https://ecomaruf.kabinett.uz{path}"
-    return full_url
-
-
-
-def mobile_cart_send(request, chat_id): 
-    customer = Debtor.objects.filter(tg_id=chat_id).first()
-    if not customer:
-        send_message(chat_id, "❌ Mijoz topilmadi.")
-        return
-
-    m_order = MOrder.objects.create(debtor=customer)
-    order_url = send_order_url_only(m_order.id)
-
+def send_webapp_link(chat_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        'chat_id': chat_id,
-        'text': "🛒 Buyurtma berish uchun tugmani bosing:",
-        'reply_markup': {
+        "chat_id": chat_id,
+        "text": "🛒 Mahsulotlarni tanlash uchun tugmani bosing:",
+        "reply_markup": {
             "inline_keyboard": [
-                [
-                    {
-                        "text": "🛒 Buyurtma berish",
-                        "url": order_url
+                [{
+                    "text": "🛒 Mahsulotlar",
+                    "web_app": {
+                        "url": f"https://yourdomain.com/webapp/{chat_id}/"
                     }
-                ]
+                }]
             ]
         }
     }
     requests.post(url, json=payload)
-
-
-    
-    
-
-    
