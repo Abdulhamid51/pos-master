@@ -767,7 +767,7 @@ class ProductFilial(models.Model):
     distributsiya = models.IntegerField(default=0)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, blank=True, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
-
+    shelf_code = models.IntegerField(default=0)
     status_ready = [
         (1, 'xom ashyo'),
         (2, 'yarim tayyor'),
