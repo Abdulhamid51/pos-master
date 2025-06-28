@@ -5667,6 +5667,7 @@ def new_product_add(request):
     filial_id = request.POST.get('filial_id')
     ready = request.POST.get('ready')
     valyuta = request.POST.get('valyuta')
+    shelf_code = request.POST.get('shelf_code')
     pr = ProductFilial.objects.create(
         name=name,
         pack=pack,
@@ -5677,7 +5678,8 @@ def new_product_add(request):
         measurement_type_id=measurement_type,
         min_count=min_count,
         season=season,
-        filial_id=filial_id if filial_id else 4
+        filial_id=filial_id if filial_id else 4,
+        shelf_code=shelf_code,
     )
     if deliver:
         pr.deliver.add(Deliver.objects.get(id=deliver))
@@ -8858,12 +8860,33 @@ def reja_tushum_fin(request):
     today = datetime.today()
     year = request.GET.get('year', str(today.year))
     month = request.GET.get('month', str(today.month))
+    
+    debtor = request.GET.get('debtor')
+    deliver = request.GET.get('deliver')
+    external_income_user = request.GET.get('external_income_user')
+    valyuta = request.GET.get('valyuta')
+    money_circulation = request.GET.get('money_circulation')
+    kassa = request.GET.get('kassa')
+
     filter = {
         "year":year,
         "month":month,
     }
     if year and month:
         reja = reja.filter(payment_date__year=year, payment_date__month=month)
+    if debtor:
+        reja = reja.filter(debtor_id=debtor)
+    if deliver:
+        reja = reja.filter(deliver_id=deliver)
+    if external_income_user:
+        reja = reja.filter(external_income_user_id=external_income_user)
+    if valyuta:
+        reja = reja.filter(valyuta_id=valyuta)
+    if money_circulation:
+        reja = reja.filter(money_circulation_id=money_circulation)
+    if kassa:
+        reja = reja.filter(money_circulation_id=kassa)
+
     context = {
         'today':today,
         'reja':reja,
