@@ -122,7 +122,8 @@ class Filial(models.Model):
     savdo_puli_dol = models.BigIntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     is_activate = models.BooleanField(default=True)
-    
+    main_warehouse = models.BooleanField(default=False)
+                    
     def __str__(self):
         return self.name
 
@@ -738,9 +739,9 @@ class ProductFilial(models.Model):
     ]
 
     season_select = [
-        ('bahor', 'Bahor'),
+        # ('bahor', 'Bahor'),
         ('yoz', 'Yoz'),
-        ('kuz', 'Kuz'),
+        # ('kuz', 'Kuz'),
         ('qish', 'Qish')
     ]
     name = models.CharField(max_length=255)
@@ -879,6 +880,7 @@ class Recieve(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
+    payment_date = models.DateTimeField(blank=True, null=True)
     som = models.IntegerField(default=0)
     sum_sotish_som = models.IntegerField(default=0)
     dollar = models.IntegerField(default=0)
@@ -1219,6 +1221,10 @@ class Shop(models.Model):
     @property
     def total_price(self):
         return sum(i.total_price for i in Cart.objects.filter(shop=self))
+    
+    @property
+    def total_pay(self):
+        return PayHistory.objects.filter(shop=self).aggregate(sum=Sum('summa'))['sum'] or 0
 
     @property
     def total_narx(self):
@@ -1700,6 +1706,7 @@ class PayHistory(models.Model):
     @property
     def get_model(self):
         return self._meta.model_name
+
 
     def save_kassa(self, kassa, old_values=None):
         """

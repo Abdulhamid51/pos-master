@@ -869,7 +869,7 @@
 
             selectizeInstance.on('type', function (query) {
                 lastQuery = query;
-                console.log(lastQuery, 'eeeeeeee')
+                console.log(lastQuery)
                 if (query && selectizeInstance.currentResults.items.length === 0) {
                     console.log("🆕 Hech nima topilmadi, tugma ochildi!");
                     modalButton.style.display = 'block';
@@ -903,8 +903,6 @@
         $(document).ready(function () {
             const $select = $('#shop_select_product').selectize();
             const selectizeControl = $select[0].selectize;
-            selectizeControl.focus();
-
             const productList = document.getElementById('product_list');
 
             selectizeControl.on('change', function (value) {
@@ -912,12 +910,10 @@
                     return;
                 }
 
-                const selectizeControl = $('#shop_select_product')[0].selectize;
-
                 const [id, price, select_quantity, pack] = value.split('|');
                 const selectedProduct = selectizeControl.getItem(value).text().trim();
+                console.log(selectedProduct)
                 const existingProducts = productList.querySelectorAll('.product_name');
-
 
                 let productExists = Array.from(existingProducts).some(product => product.textContent === selectedProduct);
 
@@ -950,7 +946,6 @@
                 productList.insertAdjacentHTML('beforeend', newRow);
 
                 selectizeControl.clear(); 
-                selectizeControl.focus();
             });
 
             productList.addEventListener('click', function (e) {
@@ -1104,57 +1099,14 @@ function calculate_pack(input) {
                         type: $('input[name="type_price"]:checked').val() 
                     }, function(data) {
                         const price = parseFloat(data['price']) || 0;
-                        const productList = document.getElementById('product_list');
-
-                        // const $select = $('#shop_select_product').selectize();
-                        // const selectizeControl = $select[0].selectize;
-                        const selectizeControl = $('#shop_select_product')[0].selectize;
-
-
-                        // addProductToTable(
-                        //     response.product_id, 
-                        //     response.product_name, 
-                        //     response.barcode, 
-                        //     response.pack, 
-                        //     price,
-                        //     quantity
-                        // );
-
-                        // const newRow = `
-                        //     <div class="row">
-                        //         <div class="col-md-1"><input type="checkbox"></div>
-                        //         <div class="col-md-2"><p class="product_name">${response.product_name}</p></div>
-                        //         <div class="col-md-1"><p style='display:none;' class="id_product">${response.product_id}</p></div>
-                        //         <div class="col-md-2"><input type="number" data-pack="${response.pack}" onkeyup="calculate_pack(this)" name="pack" onchange="pushData(this)"></div>
-                        //         <div class="col-md-2"><input type="number" onkeyup="calculate_pack(this)" name="quantity"  onchange="pushData(this)"></div>
-                        //         <div class="col-md-1"><h6 class="ostatok" data-original="${quantity}">${quantity}</h6></div>
-                        //         <div class="col-md-1"><p class="price_product_list">${price}</p></div>
-                        //         <div class="col-md-2" style="display: flex; gap: 7px;">
-                        //             <label for=""></label>
-                        //             <input type="text"  class="skidka_input" placeholder="Скидка" oninput="pushData(this)" style="height:22px">
-                        //         </div>
-                        //         <div class="col-md-1" style="display:flex; gap:15px;" >
-                        //             <h6 class="summa_product_list"></h6>
-                        //             <h6 class="delete-btn" style="color:red;cursor:pointer;">x</h6>
-                        //         </div>
-                        //     </div>
-                        //     <br>
-                        // `;
-
-                        const value = `${response.product_id}|${0}|${quantity}|${response.pack}`;
-                        const label = `${response.product_name} - ${response.barcode}`;
-
-                        if (!selectizeControl.options[value]) {
-                            selectizeControl.addOption({ value: value, text: label });
-                        }
-
-                        // Ixtiyoriy: uni tanlangan holatga o‘rnatish
-                        selectizeControl.setValue(value);
-
-                        productList.insertAdjacentHTML('beforeend', newRow);
-
-                        selectizeControl.clear(); 
-                        selectizeControl.focus();
+                        addProductToTable(
+                            response.product_id, 
+                            response.product_name, 
+                            response.barcode, 
+                            response.pack, 
+                            price,
+                            quantity
+                        );
                     });
                 } else {
                     showAlert(response.message, "danger");
