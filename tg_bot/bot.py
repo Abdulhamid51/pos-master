@@ -110,7 +110,7 @@ def send_menu(chat_id):
         'text': "Asosiy menyu:",
         'reply_markup': {
             'keyboard': [
-                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}]
+                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}, {'text':'🛒 Buyurtma berish'}]
             ],
             'resize_keyboard': True,
             'one_time_keyboard': False
@@ -209,7 +209,7 @@ def send_webapp_link(chat_id):
                 [{
                     "text": "🛒 Mahsulotlar",
                     "web_app": {
-                        "url": f"https://yourdomain.com/webapp/{chat_id}/"
+                        "url": f"https://ecomaruf.kabinett.uz/bot/webapp/{chat_id}/"
                     }
                 }]
             ]
