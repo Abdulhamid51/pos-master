@@ -2114,7 +2114,7 @@ class DebtorAccountView(LoginRequiredMixin, View):
                 'fio': debtor['fio'],
                 'phone1': debtor['phone1'],
                 'shop_count': sum(1 for i in shop if i['debtor_id'] == debtor['id']),
-                'shop_quantity': sum(i['product_count'] for i in shop if i['debtor_id'] == debtor['id']),
+                'shop_quantity': sum(i['product_count'] or 0 for i in shop if i['debtor_id'] == debtor['id']),
                 'valyuta': []
             }
             for x in valyuta:

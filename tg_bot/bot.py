@@ -3,10 +3,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
 import requests
-from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder, ProductFilial
+from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder
 import datetime
 from django.contrib.humanize.templatetags.humanize import intcomma
-import json
 
 @csrf_exempt
 def webhook(request):
@@ -43,8 +42,8 @@ def webhook(request):
             send_message(chat_id, f"📊 Sizning balansingiz:\n{balance_data}")
         elif text in ['buyurtmalar', '📝 buyurtmalar', '📝 buyurtmalar'.lower()]:
             send_order_period_menu(chat_id)
-        elif text in ['🛒 buyurtma berish', 'buyurtma berish']:
-            send_webapp_link(chat_id)
+        elif text in ['buyurtma berish', '🛒 buyurtma berish', '🛒 buyurtma berish'.lower()]:
+            open_web_app_directly(chat_id)
         elif text == '30 kun':
             messages = get_order('bir oy', chat_id)
             for msg in messages:
@@ -62,12 +61,30 @@ def webhook(request):
     else:
         return JsonResponse({"message": "Webhook ishlayapti"}, status=200)
 
+def open_web_app_directly(chat_id):
+    web_app_url = f"https://ecomaruf.kabinett.uz/abot/abot_index/{chat_id}/"
+    return send_message(
+        chat_id,
+        " ",  # Empty message
+        reply_markup=json.dumps({
+            "inline_keyboard": [[{
+                "text": "🛒 Buyurtma berish",
+                "web_app": {"url": web_app_url}
+            }]]
+        })
+    )
 
-def send_message(chat_id, text):
+def send_message(chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {'chat_id': chat_id, 'text': text}
+    payload = {
+        'chat_id': chat_id,
+        'text': text,
+        'parse_mode': 'HTML'
+    }
+    if reply_markup:
+        payload['reply_markup'] = reply_markup
     response = requests.post(url, json=payload)
-
+    return response.json()
 
 def remove_inline_buttons(chat_id, message_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/editMessageReplyMarkup"
@@ -77,14 +94,14 @@ def remove_inline_buttons(chat_id, message_id):
         "reply_markup": {}
     }
     response = requests.post(url, json=payload)
-
+    return response.json()
 
 def send_kirim_message(chat_id, text, kirim_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': chat_id, 
         'text': text,
-        'reply_markup':{
+        'reply_markup': {
             "inline_keyboard": [
                 [
                     {
@@ -100,24 +117,28 @@ def send_kirim_message(chat_id, text, kirim_id):
         }
     }
     response = requests.post(url, json=payload)
-
-
+    return response.json()
 
 def send_menu(chat_id):
+    web_app_url = f"https://ecomaruf.kabinett.uz/bot/abot_index/{chat_id}"
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': chat_id,
         'text': "Asosiy menyu:",
         'reply_markup': {
             'keyboard': [
-                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}, {'text':'🛒 Buyurtma berish'}]
+                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}],
+                [{
+                    'text': '🛒 Buyurtma berish', 
+                    'web_app': {'url': web_app_url}
+                }]
             ],
             'resize_keyboard': True,
             'one_time_keyboard': False
         }
     }
     response = requests.post(url, json=payload)
-
+    return response.json()
 
 def send_order_period_menu(chat_id):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -134,7 +155,7 @@ def send_order_period_menu(chat_id):
         }
     }
     response = requests.post(url, json=payload)
-
+    return response.json()
 
 def get_balance(chat_id):
     text = ""
@@ -154,16 +175,11 @@ def get_balance(chat_id):
 
     return text
 
-
 def confirim_kirim(kirim_id):
-    kirim =  Kirim.objects.get(id=kirim_id)
+    kirim = Kirim.objects.get(id=kirim_id)
     kirim.is_approved = False
     kirim.save()
     return True
-
-import logging
-
-logger = logging.getLogger(__name__)
 
 def get_order(period, chat_id):
     try:
@@ -193,26 +209,4 @@ def get_order(period, chat_id):
 
         return messages
     except Exception as ex:
-        logger.error(f"Error fetching orders: {ex}")
         return [f"❌ Xatolik yuz berdi, keyinroq urinib ko'ring.\n{ex}"]
-
-    
-    
-
-def send_webapp_link(chat_id):
-    url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": "🛒 Mahsulotlarni tanlash uchun tugmani bosing:",
-        "reply_markup": {
-            "inline_keyboard": [
-                [{
-                    "text": "🛒 Mahsulotlar",
-                    "web_app": {
-                        "url": f"https://ecomaruf.kabinett.uz/bot/webapp/{chat_id}/"
-                    }
-                }]
-            ]
-        }
-    }
-    requests.post(url, json=payload)
