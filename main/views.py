@@ -1844,7 +1844,7 @@ class Products(LoginRequiredMixin, TemplateView):
         deliver = self.request.GET.get('deliver')
         season = self.request.GET.get('season')
 
-        products = ProductFilial.objects.all()[:30]
+        products = ProductFilial.objects.all()
         if deliver:
             products = products.filter(deliver=deliver)
         

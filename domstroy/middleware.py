@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 import re
-from user_agents import parse
+# from user_agents import parse
 from api.models import LastSeen
 
 
@@ -425,29 +425,29 @@ def gete(path):
 
     
 def devices(request):
-    user_agent_str = request.META.get('HTTP_USER_AGENT', '')
-    user_agent = parse(user_agent_str)
+    # user_agent_str = request.META.get('HTTP_USER_AGENT', '')
+    # user_agent = parse(user_agent_str)
 
-    os_name = user_agent.os.family
-    browser_name = user_agent.browser.family
+    # os_name = user_agent.os.family
+    # browser_name = user_agent.browser.family
 
-    if 'Windows' in os_name or 'Mac' in os_name or 'Linux' in os_name:
-        device_type = 'Kompyuter'
-        device_name = os_name 
-    elif user_agent.is_mobile:
-        device_type = 'Telefon'
-        device_name = user_agent.device.family
-    elif user_agent.is_tablet:
-        device_type = 'Planshet'
-        device_name = user_agent.device.family
-    elif user_agent.is_bot:
-        device_type = 'Bot'
-        device_name = "Bot"
-    else:
-        device_type = 'Noma’lum'
-        device_name = "Noma’lum qurilma"
+    # if 'Windows' in os_name or 'Mac' in os_name or 'Linux' in os_name:
+    #     device_type = 'Kompyuter'
+    #     device_name = os_name 
+    # elif user_agent.is_mobile:
+    #     device_type = 'Telefon'
+    #     device_name = user_agent.device.family
+    # elif user_agent.is_tablet:
+    #     device_type = 'Planshet'
+    #     device_name = user_agent.device.family
+    # elif user_agent.is_bot:
+    #     device_type = 'Bot'
+    #     device_name = "Bot"
+    # else:
+    #     device_type = 'Noma’lum'
+    #     device_name = "Noma’lum qurilma"
 
-    return f"{device_type} | {os_name} | {browser_name}"
+    return f"{1} | {1} | {1}"
 
 logger = logging.getLogger(__name__)
 

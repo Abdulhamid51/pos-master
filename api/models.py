@@ -739,9 +739,9 @@ class ProductFilial(models.Model):
     ]
 
     season_select = [
-        ('bahor', 'Bahor'),
+        # ('bahor', 'Bahor'),
         ('yoz', 'Yoz'),
-        ('kuz', 'Kuz'),
+        # ('kuz', 'Kuz'),
         ('qish', 'Qish')
     ]
     name = models.CharField(max_length=255)
