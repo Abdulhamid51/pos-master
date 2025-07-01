@@ -5,5 +5,5 @@ from .views import abot_index,mobile_done_cart
 urlpatterns = [
     path('webhook/', bot.webhook, name='webhook'),
     path('abot_index/<int:chat_id>', abot_index, name='abot_index'),
-    path('mobile_done_cart', mobile_done_cart, name='mobile_done_cart')
+    path('mobile_done_cart/<int:chat_id>', mobile_done_cart, name='mobile_done_cart')
 ]

@@ -682,7 +682,6 @@
       color: #666;
     }
 
-    /* Extra small devices */
     @media (max-width: 350px) {
       html {
         font-size: 13px;
@@ -837,9 +836,7 @@
     function handleBackButton() {
         if (document.getElementById('simpleCartModal').classList.contains('active')) {
             closeSimpleCart();
-        } else if (data.length > 0 && !isPlacingOrder) {
-            showExitConfirmation();
-        } else {
+        }  else {
             if (tgWebApp) {
                 tgWebApp.disableClosingConfirmation();
                 tgWebApp.close();
@@ -847,16 +844,7 @@
         }
     }
 
-    function showExitConfirmation() {
-        if (confirm("Buyurtmani bekor qilasizmi? Savatchadagi mahsulotlar yo'qoladi.")) {
-            if (tgWebApp) {
-                tgWebApp.disableClosingConfirmation();
-                tgWebApp.close();
-            } else {
-                window.location.href = "/";
-            }
-        }
-    }
+    
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.add("active");
@@ -1131,17 +1119,13 @@
     }
 
     function handleLogout() {
-        if (data.length > 0) {
-            showExitConfirmation();
-        } else {
             if (tgWebApp) {
                 tgWebApp.disableClosingConfirmation();
                 tgWebApp.close();
             } else {
-                window.location.href = "/";
+                window.location.href = "{% url 'home' %}";
             }
         }
-    }
 
     function handlePlaceOrder() {
         if (data.length > 0) {
@@ -1151,7 +1135,6 @@
         }
     }
 
-    // Initialize
     updateCartTotal();
 
     document.addEventListener('keydown', function(event) {

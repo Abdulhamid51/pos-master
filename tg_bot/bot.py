@@ -44,7 +44,7 @@ def webhook(request):
         elif text in ['buyurtmalar', '📝 buyurtmalar', '📝 buyurtmalar'.lower()]:
             send_order_period_menu(chat_id)
         elif text in ['buyurtma berish', '🛒 buyurtma berish', '🛒 buyurtma berish'.lower()]:
-            web_app_url = f"https://{settings.DOMAIN}/abot/{chat_id}/"
+            web_app_url = f"https://{settings.DOMAIN}/abot/{chat_id}"
             keyboard = {
                 "inline_keyboard": [
                     [{
