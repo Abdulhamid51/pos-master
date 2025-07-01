@@ -254,7 +254,7 @@
       font-size: 0.7rem;
     }
 
-    /* Fixed Grid View Styles */
+    /* Grid View Styles */
     .grid-view .content {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -370,98 +370,113 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
+      background: white;
       z-index: 1001;
+      display: none;
+      flex-direction: column;
+    }
+
+    .modal.active {
+      display: flex;
     }
 
     .modal-content {
-      background: white;
-      border-radius: 10px;
-      width: 92%;
-      max-width: 380px;
-      padding: 1.2rem;
-      box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      padding: 0;
     }
 
     .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.8rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 1;
     }
 
     .modal-title {
-      font-size: 1.1rem;
+      font-size: 1.5rem;
       font-weight: bold;
       color: #001f3f;
     }
 
     .close-modal {
-      font-size: 1.4rem;
+      font-size: 1.8rem;
       cursor: pointer;
       color: #666;
     }
 
     .modal-body {
-      margin-bottom: 1.2rem;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .modal-product {
       display: flex;
-      gap: 0.8rem;
-      margin-bottom: 0.8rem;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 2rem;
     }
 
     .modal-product img {
-      width: 70px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 6px;
-      flex-shrink: 0;
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #eee;
     }
 
     .modal-product-info {
-      flex: 1;
+      width: 100%;
+      text-align: center;
     }
 
     .modal-product-name {
       font-weight: bold;
-      margin-bottom: 0.2rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
     }
 
     .modal-product-price {
       color: #2b4eff;
       font-weight: bold;
-      margin-bottom: 0.4rem;
-      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      font-size: 1.2rem;
     }
 
     .modal-product-quantity {
-      font-size: 0.8rem;
+      font-size: 1rem;
       color: #666;
+      margin-bottom: 1.5rem;
     }
 
     .quantity-control {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin: 1rem 0;
+      gap: 1.5rem;
+      margin: 2rem 0;
       justify-content: center;
     }
 
     .quantity-btn {
-      width: 28px;
-      height: 28px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       background: white;
-      font-size: 0.9rem;
+      font-size: 2rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -469,31 +484,60 @@
     }
 
     .quantity-input {
-      width: 45px;
+      width: 120px;
       text-align: center;
-      padding: 0.2rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 0.9rem;
+      padding: 0.8rem;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .decimal-hint {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .decimal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .decimal-btn {
+      padding: 0.5rem;
+      flex: 1;
+      background-color: #f0f0f0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .modal-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-top: 1px solid #eee;
+      position: sticky;
+      bottom: 0;
+      background: white;
     }
 
     .modal-btn {
       flex: 1;
-      padding: 0.7rem;
-      border-radius: 7px;
+      padding: 1.2rem;
+      border-radius: 10px;
       border: none;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
     }
 
     .cancel-btn {
-      background: #ff0000;
+      background: #ff4444;
       color: #ffffff;
     }
 
@@ -534,7 +578,6 @@
       font-size: 0.9rem;
     }
 
-    /* Simple Cart Modal Styles */
     .simple-cart-modal {
       position: fixed;
       top: 0;
@@ -663,8 +706,36 @@
       font-size: 0.8rem;
       color: #666;
     }
+    @media (max-width: 600px) {
+      .modal-product img {
+        width: 150px;
+        height: 150px;
+      }
+      
+      .quantity-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+      
+      .quantity-input {
+        width: 100px;
+        font-size: 1.2rem;
+      }
+      
+      .modal-title {
+        font-size: 1.3rem;
+      }
+      
+      .modal-product-name {
+        font-size: 1.1rem;
+      }
+      
+      .modal-product-price {
+        font-size: 1rem;
+      }
+    }
 
-    /* Extra small devices */
     @media (max-width: 350px) {
       html {
         font-size: 13px;
@@ -686,8 +757,20 @@
         height: 70px;
       }
       
-      .simple-cart-item {
-        padding: 0.7rem 0;
+      .modal-product img {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .quantity-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .quantity-input {
+        width: 80px;
+        font-size: 1rem;
       }
     }
 </style>
@@ -709,10 +792,11 @@
     <div class="sidebar-header">
       <span class="close-btn" onclick="closeSidebar()">✕</span>
       <div class="username">{{customer.fio}}</div>
-      <div class="email">{{customer.phone1}}</div>
+      <div class="email">{{customer.phone1|default_if_none:''}}</div>
     </div>
     <ul>
       <li><a href="#" onclick="handlePlaceOrder()">➕ Buyurtma berish</a></li>
+      <li><a href="{% url 'debtor_orders' chat_id %}">🛒 Buyurtmalarim</a></li>
       <li><a href="#" onclick="handleLogout()">🔓 Chiqish</a></li>
     </ul>
   </div>
@@ -767,18 +851,17 @@
         </div>
         
         <div class="quantity-control">
-          <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
-          <input type="number" class="quantity-input" id="quantityInput" value="0" min="0">
+          <button class="quantity-btn" onclick="changeQuantity(1)">-</button>
+          <input type="text" class="quantity-input" id="quantityInput" value="0" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
           <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
         </div>
       </div>
       <div class="modal-actions">
-        <button class="modal-btn cancel-btn" onclick="DelModal()">Ochirish</button>
+        <button class="modal-btn cancel-btn" onclick="removeFromCart()">O'chirish</button>
         <button class="modal-btn add-to-cart-btn" onclick="addToCart()">Qo'shish</button>
       </div>
     </div>
   </div>
-
   <div class="simple-cart-modal" id="simpleCartModal">
     <div class="simple-cart-content">
       <div class="simple-cart-header">
@@ -799,26 +882,42 @@
       </div>
     </div>
   </div>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const cartData = [];
+    const cartData = JSON.parse('{{ initial_cart_data|escapejs }}') || [];
     let currentProductPrice = 0;
     let currentProductMaxQuantity = 0;
     let isPlacingOrder = false;
     let isTelegram = {% if is_telegram %}true{% else %}false{% endif %};
     let tgWebApp = null;
     
-    // Initialize Telegram Web App if available
     if (isTelegram && window.Telegram && window.Telegram.WebApp) {
         tgWebApp = window.Telegram.WebApp;
         tgWebApp.expand();
         tgWebApp.enableClosingConfirmation();
         
-        // Set up back button behavior
         tgWebApp.BackButton.onClick(() => {
             handleBackButton();
         });
+    }
+
+    // Helper functions for decimal numbers
+    function parseQuantity(value) {
+        if (typeof value === 'string') {
+            value = value.replace(',', '.').replace(/[^\d.]/g, '');
+            if (value.startsWith('.')) value = '0' + value;
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+        }
+        const num = parseFloat(value);
+        return isNaN(num) ? 0 : num;
+    }
+
+    function formatQuantity(value) {
+        const num = parseQuantity(value);
+        return num % 1 === 0 ? num.toString() : num.toFixed(2);
     }
 
     // Initialize the view when page loads
@@ -827,12 +926,29 @@
         updateCartTotal();
         
         // Quantity input validation
-        document.getElementById('quantityInput').addEventListener('input', function() {
-            let value = parseInt(this.value) || 0;
-            if (value < 0) value = 0;
-            if (value > currentProductMaxQuantity) value = currentProductMaxQuantity;
+        const quantityInput = document.getElementById('quantityInput');
+        quantityInput.addEventListener('input', function() {
+            let value = this.value;
+            value = value.replace(/[^0-9.]/g, '');
+            
+            const decimalSplit = value.split('.');
+            if (decimalSplit.length > 2) {
+                value = decimalSplit[0] + '.' + decimalSplit.slice(1).join('');
+            }
+            
+            if (value.startsWith('.')) {
+                value = '0' + value;
+            }
+            
             this.value = value;
         });
+
+        quantityInput.addEventListener('blur', function() {
+            this.value = formatQuantity(this.value);
+        });
+
+        // Initialize product cards with cart data
+        initializeProductCards();
     });
 
     function initializeView() {
@@ -841,84 +957,73 @@
         tgWebApp.expand();
       }
       
-      // Set default view to list view
       document.getElementById('contentView').classList.add('list-view');
       document.getElementById('listIcon').style.display = 'inline-block';
       document.getElementById('gridIcon').style.display = 'none';
     }
 
-    function handleBackButton() {
-        if (document.getElementById('simpleCartModal').classList.contains('active')) {
-            closeSimpleCart();
-        } else if (cartData.length > 0 && !isPlacingOrder) {
-            showExitConfirmation();
-        } else {
-            if (tgWebApp) {
-                tgWebApp.disableClosingConfirmation();
-                tgWebApp.close();
+    function initializeProductCards() {
+        const productCards = document.querySelectorAll('.product');
+        productCards.forEach(card => {
+            const cardProductId = card.querySelector('.product-id').textContent;
+            const cartItem = cartData.find(el => el.product_id == cardProductId);
+            const addButtonContainer = card.querySelector('.add-btn-container');
+            
+            if (addButtonContainer) {
+                addButtonContainer.innerHTML = '';
+                
+                if (cartItem && cartItem.quantity > 0) {
+                    const quantityDisplay = document.createElement('div');
+                    quantityDisplay.className = 'quantity-display';
+                    quantityDisplay.innerHTML = `
+                        <span class="quantity-text">${formatQuantity(cartItem.quantity)} ${cartItem.measurement}</span>
+                        <button class="edit-btn" onclick="openModal(this)">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    `;
+                    addButtonContainer.appendChild(quantityDisplay);
+                } else {
+                    const addButton = document.createElement('button');
+                    addButton.className = 'add-btn';
+                    addButton.onclick = function() { openModal(this); };
+                    addButton.innerHTML = "Savatchaga<br>qo'shish";
+                    addButtonContainer.appendChild(addButton);
+                }
             }
-        }
-    }
-
-    function showExitConfirmation() {
-        if (confirm("Buyurtmani bekor qilasizmi? Savatchadagi mahsulotlar yo'qoladi.")) {
-            if (tgWebApp) {
-                tgWebApp.disableClosingConfirmation();
-                tgWebApp.close();
-            } else {
-                window.location.href = "/";
-            }
-        }
-    }
-
-    function toggleSidebar() {
-        document.getElementById("sidebar").classList.add("active");
-        document.getElementById("overlay").classList.add("active");
-    }
-
-    function closeSidebar() {
-        document.getElementById("sidebar").classList.remove("active");
-        document.getElementById("overlay").classList.remove("active");
-    }
-    
-    function toggleView() {
-        const contentView = document.getElementById('contentView');
-        const listIcon = document.getElementById('listIcon');
-        const gridIcon = document.getElementById('gridIcon');
-        
-        if (contentView.classList.contains('list-view')) {
-            // Switch to grid view
-            contentView.classList.remove('list-view');
-            contentView.classList.add('grid-view');
-            listIcon.style.display = 'none';
-            gridIcon.style.display = 'inline-block';
-        } else {
-            // Switch to list view
-            contentView.classList.remove('grid-view');
-            contentView.classList.add('list-view');
-            gridIcon.style.display = 'none';
-            listIcon.style.display = 'inline-block';
-        }
-    }
-    
-    // Search functionality
-    document.querySelector('.navbar input').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const products = document.querySelectorAll('.product');
-        
-        products.forEach(product => {
-            const productName = product.querySelector('.product-title').textContent.toLowerCase();
-            product.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
         });
-    });
-    
+    }
+
+    function appendDecimal(value) {
+        const input = document.getElementById('quantityInput');
+        const current = parseQuantity(input.value);
+        const toAdd = parseQuantity(value);
+        const newValue = current + toAdd;
+        
+        if (newValue <= currentProductMaxQuantity) {
+            input.value = formatQuantity(newValue);
+        } else {
+            input.value = formatQuantity(currentProductMaxQuantity);
+        }
+    }
+
+    function changeQuantity(change) {
+        const input = document.getElementById('quantityInput');
+        let currentValue = parseQuantity(input.value);
+        let newValue = currentValue + change;
+        
+        if (newValue < 0) newValue = 0;
+        if (newValue > currentProductMaxQuantity) newValue = currentProductMaxQuantity;
+        
+        input.value = formatQuantity(newValue);
+    }
+
     function openModal(button) {
         const product = button.closest('.product');
         const name = product.querySelector('.product-title').textContent;
         const priceText = product.querySelector('.product-price').textContent;
-        const price = parseInt(priceText.replace(/\D/g, ''));
+        const price = parseFloat(priceText.replace(/[^\d.]/g, ''));
         const quantityText = product.querySelector('.product-quantity').textContent;
-        const quantity = parseInt(quantityText) || 0;
+        const quantity = parseQuantity(quantityText.split(' ')[0]);
         const measurement = product.querySelector('.product-measurement').textContent;
         const image = product.querySelector('.product-image').src;
         const id = product.querySelector('.product-id').textContent;
@@ -929,74 +1034,223 @@
         document.getElementById('modalProductName').textContent = name;
         document.getElementById('modalProductID').textContent = id;
         document.getElementById('modalProductPrice').textContent = priceText;
-        document.getElementById('modalProductQuantity').textContent = `${quantity} ${measurement} mavjud`;
+        document.getElementById('modalProductQuantity').textContent = `${formatQuantity(quantity)} ${measurement} mavjud`;
         document.getElementById('modalProductMeasurement').textContent = measurement;
         document.getElementById('modalProductImage').src = image;
-        document.getElementById('quantityInput').max = quantity;
-        document.getElementById('quantityInput').value = initialQuantity; 
-        document.getElementById('addToCartModal').style.display = 'flex';
+        document.getElementById('quantityInput').value = formatQuantity(initialQuantity);
+        
+        document.getElementById('addToCartModal').classList.add('active');
         
         currentProductPrice = price;
         currentProductMaxQuantity = quantity;
-    }
-    
-    function closeModal() {
-        document.getElementById('addToCartModal').style.display = 'none';
-    }
-    
-    function changeQuantity(change) {
-        const input = document.getElementById('quantityInput');
-        let newValue = parseInt(input.value) + change;
         
-        if (isNaN(newValue)) newValue = 0;
-        if (newValue < 0) newValue = 0;
-        if (newValue > currentProductMaxQuantity) newValue = currentProductMaxQuantity;
-        
-        input.value = newValue;
+        if (isTelegram && tgWebApp) {
+            tgWebApp.BackButton.show();
+        }
     }
 
+    function closeModal() {
+        document.getElementById('addToCartModal').classList.remove('active');
+        
+        if (isTelegram && tgWebApp) {
+            if (!document.getElementById('simpleCartModal').classList.contains('active')) {
+                tgWebApp.BackButton.hide();
+            }
+        }
+    }
+    function openSimpleCart() {
+        const simpleCartModal = document.getElementById('simpleCartModal');
+        simpleCartModal.classList.add('active');
+        
+        const simpleCartBody = document.getElementById('simpleCartBody');
+        const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+        
+        if (cartData.length === 0) {
+            emptyCartMessage.style.display = 'block';
+            simpleCartBody.innerHTML = '';
+            simpleCartBody.appendChild(emptyCartMessage);
+            document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+        } else {
+            emptyCartMessage.style.display = 'none';
+            simpleCartBody.innerHTML = '';
+            
+            let totalPrice = 0;
+            
+            cartData.forEach(item => {
+                const itemTotal = item.quantity * item.price;
+                totalPrice += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'simple-cart-item';
+                
+                let productImage = '/static/default.png';
+                document.querySelectorAll('.product').forEach(card => {
+                    const cardProductId = card.querySelector('.product-id').textContent;
+                    if (cardProductId === item.product_id) {
+                        const img = card.querySelector('.product-image');
+                        if (img) {
+                            productImage = img.src;
+                        }
+                    }
+                });
+                
+                cartItem.innerHTML = `
+                    <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
+                    <div class="simple-cart-item-info">
+                        <div class="simple-cart-item-name">${item.name}</div>
+                        <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
+                        <div class="simple-cart-item-quantity">${formatQuantity(item.quantity)} ${item.measurement}</div>
+                    </div>
+                `;
+                
+                simpleCartBody.appendChild(cartItem);
+            });
+            
+            document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+        }
+        
+        if (isTelegram && tgWebApp) {
+            tgWebApp.BackButton.show();
+        }
+    }
+    function closeSimpleCart() {
+        document.getElementById('simpleCartModal').classList.remove('active');
+        
+        if (isTelegram && tgWebApp) {
+            if (!document.getElementById('addToCartModal').classList.contains('active')) {
+                tgWebApp.BackButton.hide();
+            }
+        }
+    }
+    function checkout() {
+        if (cartData.length === 0) {
+            alert("Savatchangiz bo'sh!");
+            return;
+        }
+        
+        isPlacingOrder = true;
+        
+        const orderData = cartData.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price
+        }));
+        
+        $.ajax({
+            url: `/bot/mobile_done_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify(orderData),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.ok) {
+                    cartData.length = 0;
+                    updateCartTotal();
+                    
+                    if (tgWebApp) {
+                        tgWebApp.disableClosingConfirmation();
+                        tgWebApp.close();
+                    } else {
+                        window.location.href = "{% url 'debtor_orders' chat_id %}";
+                    }
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                    isPlacingOrder = false;
+                }
+            },
+            error: function (xhr, status, error) {
+                isPlacingOrder = false;
+            },
+        });
+    }
     function addToCart() {
-        const quantity = parseInt(document.getElementById('quantityInput').value) || 0;
+        const quantity = parseQuantity(document.getElementById('quantityInput').value);
         const productId = document.getElementById('modalProductID').textContent;
         const productName = document.getElementById('modalProductName').textContent;
         const measurement = document.getElementById('modalProductMeasurement').textContent;
         
         if (quantity <= 0) {
-            // Remove item if quantity is 0 or less
-            const index = cartData.findIndex(el => el.product_id == productId);
-            if (index !== -1) {
-                cartData.splice(index, 1);
-            }
-        } else {
-            // Update or add item
-            let productExists = cartData.find(el => el.product_id == productId);
-            if (productExists) {
-                productExists.quantity = quantity;
-            } else {
-                cartData.push({
-                    product_id: productId,
-                    name: productName,
-                    quantity: quantity,
-                    price: currentProductPrice,
-                    measurement: measurement
-                });
-            }
+            removeFromCart();
+            return;
         }
-        
-        updateCartTotal();
-        closeModal();
+
+        const cartItem = {
+            product_id: productId,
+            quantity: quantity,
+            price: currentProductPrice,
+            measurement: measurement
+        };
+
+        $.ajax({
+            url: `/bot/add_to_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify(cartItem),
+            contentType: "application/json",
+            success: function(response) {
+                if (response.ok) {
+                    let productExists = cartData.find(el => el.product_id == productId);
+                    if (productExists) {
+                        productExists.quantity = quantity;
+                        productExists.measurement = measurement;
+                    } else {
+                        cartData.push({
+                            product_id: productId,
+                            name: productName,
+                            quantity: quantity,
+                            price: currentProductPrice,
+                            measurement: measurement
+                        });
+                    }
+                    updateCartTotal();
+                    closeModal();
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
     }
 
     function removeFromCart() {
-        const productId = document.getElementById('modalProductID').textContent;
-        const index = cartData.findIndex(el => el.product_id == productId);
+        const productId = document.getElementById('modalProductID').textContent.trim();
         
-        if (index !== -1) {
-            cartData.splice(index, 1);
-        }
-        
-        updateCartTotal();
-        closeModal();
+        $.ajax({
+            url: `/bot/remove_from_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify({ product_id: productId }),
+            contentType: "application/json",
+            success: function(response) {
+                if (response.ok) {
+                    const index = cartData.findIndex(el => el.product_id.toString() === productId.toString());
+                    if (index !== -1) {
+                        cartData.splice(index, 1);
+                    }
+                    
+                    updateCartTotal();
+                    
+                    const productCards = document.querySelectorAll('.product');
+                    productCards.forEach(card => {
+                        const cardProductId = card.querySelector('.product-id').textContent.trim();
+                        if (cardProductId === productId) {
+                            const addButtonContainer = card.querySelector('.add-btn-container');
+                            if (addButtonContainer) {
+                                addButtonContainer.innerHTML = `
+                                    <button class="add-btn" onclick="openModal(this)">Savatchaga<br>qo'shish</button>
+                                `;
+                            }
+                        }
+                    });
+                    
+                    closeModal();
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
     }
       
     function updateCartTotal() {
@@ -1023,135 +1277,173 @@
             }
         }
         
-        // Update all product cards
-        const productCards = document.querySelectorAll('.product');
-        productCards.forEach(card => {
-            const cardProductId = card.querySelector('.product-id').textContent;
-            const cartItem = cartData.find(el => el.product_id == cardProductId);
-            const addButtonContainer = card.querySelector('.add-btn-container');
-            
-            if (addButtonContainer) {
-                addButtonContainer.innerHTML = '';
-                
-                if (cartItem && cartItem.quantity > 0) {
-                    // Show quantity display with edit button
-                    const quantityDisplay = document.createElement('div');
-                    quantityDisplay.className = 'quantity-display';
-                    quantityDisplay.innerHTML = `
-                        <span class="quantity-text">${cartItem.quantity} ${cartItem.measurement}</span>
-                        <button class="edit-btn" onclick="openModal(this)">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                    `;
-                    addButtonContainer.appendChild(quantityDisplay);
-                } else {
-                    // Show add to cart button
-                    const addButton = document.createElement('button');
-                    addButton.className = 'add-btn';
-                    addButton.onclick = function() { openModal(this); };
-                    addButton.innerHTML = "Savatchaga<br>qo'shish";
-                    addButtonContainer.appendChild(addButton);
-                }
-            }
-        });
+        initializeProductCards();
     }
 
-    function openSimpleCart() {
-        const simpleCartModal = document.getElementById('simpleCartModal');
-        simpleCartModal.classList.add('active');
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.add("active");
+        document.getElementById("overlay").classList.add("active");
+    }
+
+    function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("active");
+        document.getElementById("overlay").classList.remove("active");
+    }
+    
+    function toggleView() {
+        const contentView = document.getElementById('contentView');
+        const listIcon = document.getElementById('listIcon');
+        const gridIcon = document.getElementById('gridIcon');
         
-        const simpleCartBody = document.getElementById('simpleCartBody');
-        const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
-        
-        if (cartData.length === 0) {
-            emptyCartMessage.style.display = 'block';
-            simpleCartBody.innerHTML = '';
-            simpleCartBody.appendChild(emptyCartMessage);
-            document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+        if (contentView.classList.contains('list-view')) {
+            contentView.classList.remove('list-view');
+            contentView.classList.add('grid-view');
+            listIcon.style.display = 'none';
+            gridIcon.style.display = 'inline-block';
         } else {
-            emptyCartMessage.style.display = 'none';
-            simpleCartBody.innerHTML = '';
-            
-            let totalPrice = 0;
-            
-            cartData.forEach(item => {
-                const itemTotal = item.quantity * item.price;
-                totalPrice += itemTotal;
-                
-                const cartItem = document.createElement('div');
-                cartItem.className = 'simple-cart-item';
-                
-                // Find product image from product cards
-                let productImage = '/static/default.png';
-                document.querySelectorAll('.product').forEach(card => {
-                    const cardProductId = card.querySelector('.product-id').textContent;
-                    if (cardProductId === item.product_id) {
-                        const img = card.querySelector('.product-image');
-                        if (img) {
-                            productImage = img.src;
-                        }
-                    }
-                });
-                
-                cartItem.innerHTML = `
-                    <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
-                    <div class="simple-cart-item-info">
-                        <div class="simple-cart-item-name">${item.name}</div>
-                        <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
-                        <div class="simple-cart-item-quantity">${item.quantity} ${item.measurement}</div>
-                    </div>
-                `;
-                
-                simpleCartBody.appendChild(cartItem);
-            });
-            
-            document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+            contentView.classList.remove('grid-view');
+            contentView.classList.add('list-view');
+            gridIcon.style.display = 'none';
+            listIcon.style.display = 'inline-block';
         }
     }
-
-    function closeSimpleCart() {
-        document.getElementById('simpleCartModal').classList.remove('active');
-    }
-
-    function checkout() {
-        if (cartData.length === 0) {
-            alert("Savatchangiz bo'sh!");
-            return;
-        }
+    
+    document.querySelector('.navbar input').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const products = document.querySelectorAll('.product');
         
-        isPlacingOrder = true;
-        
-        $.ajax({
-            url: `/mobile_done_cart/{{ chat_id }}/`,
-            type: "POST",
-            data: JSON.stringify(cartData),
-            contentType: "application/json",
-            success: function (response) {
-                if (tgWebApp) {
-                    tgWebApp.disableClosingConfirmation();
-                    tgWebApp.close();
-                } else {
-                    window.location.replace('/login');
-                }
-            },
-            error: function (xhr, status, error) {
-                alert('Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring');
-                console.error(error);
-                isPlacingOrder = false;
-            },
+        products.forEach(product => {
+            const productName = product.querySelector('.product-title').textContent.toLowerCase();
+            product.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
         });
-    }
+    });
 
-    function handleLogout() {
-        if (cartData.length > 0) {
-            showExitConfirmation();
+    function handleBackButton() {
+        if (document.getElementById('simpleCartModal').classList.contains('active')) {
+            closeSimpleCart();
+        } else if (document.getElementById('addToCartModal').classList.contains('active')) {
+            closeModal();
         } else {
             if (tgWebApp) {
                 tgWebApp.disableClosingConfirmation();
                 tgWebApp.close();
-            } else {
-                window.location.href = "/";
             }
+        }
+    }
+
+    
+    function openSimpleCart() {
+    const simpleCartModal = document.getElementById('simpleCartModal');
+    simpleCartModal.classList.add('active');
+    
+    const simpleCartBody = document.getElementById('simpleCartBody');
+    const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+    
+    if (cartData.length === 0) {
+        emptyCartMessage.style.display = 'block';
+        simpleCartBody.innerHTML = '';
+        simpleCartBody.appendChild(emptyCartMessage);
+        document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+    } else {
+        emptyCartMessage.style.display = 'none';
+        simpleCartBody.innerHTML = '';
+        
+        let totalPrice = 0;
+        
+        cartData.forEach(item => {
+            const itemTotal = item.quantity * item.price;
+            totalPrice += itemTotal;
+            
+            const cartItem = document.createElement('div');
+            cartItem.className = 'simple-cart-item';
+            
+            let productImage = '/static/default.png';
+            document.querySelectorAll('.product').forEach(card => {
+                const cardProductId = card.querySelector('.product-id').textContent;
+                if (cardProductId === item.product_id) {
+                    const img = card.querySelector('.product-image');
+                    if (img) {
+                        productImage = img.src;
+                    }
+                }
+            });
+            
+            cartItem.innerHTML = `
+                <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
+                <div class="simple-cart-item-info">
+                    <div class="simple-cart-item-name">${item.name}</div>
+                    <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
+                    <div class="simple-cart-item-quantity">${formatQuantity(item.quantity)} ${item.measurement}</div>
+                </div>
+            `;
+            
+            simpleCartBody.appendChild(cartItem);
+        });
+        
+        document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+    }
+    
+    if (isTelegram && tgWebApp) {
+        tgWebApp.BackButton.show();
+    }
+}
+
+function closeSimpleCart() {
+    document.getElementById('simpleCartModal').classList.remove('active');
+    
+    if (isTelegram && tgWebApp) {
+        if (!document.getElementById('addToCartModal').classList.contains('active')) {
+            tgWebApp.BackButton.hide();
+        }
+    }
+}
+
+function checkout() {
+    if (cartData.length === 0) {
+        alert("Savatchangiz bo'sh!");
+        return;
+    }
+    
+    isPlacingOrder = true;
+    
+    const orderData = cartData.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price
+    }));
+    
+    $.ajax({
+        url: `/bot/mobile_done_cart/{{ chat_id }}`,
+        type: "POST",
+        data: JSON.stringify(orderData),
+        contentType: "application/json",
+        success: function (response) {
+            if (response.ok) {
+                cartData.length = 0;
+                updateCartTotal();
+                
+                if (tgWebApp) {
+                    tgWebApp.disableClosingConfirmation();
+                    tgWebApp.close();
+                } else {
+                    window.location.href = "{% url 'debtor_orders' chat_id %}";
+                }
+            } else {
+                alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                isPlacingOrder = false;
+            }
+        },
+        error: function (xhr, status, error) {
+            isPlacingOrder = false;
+        },
+    });
+}
+    function handleLogout() {
+        if (tgWebApp) {
+            tgWebApp.disableClosingConfirmation();
+            tgWebApp.close();
+        } else {
+            window.location.href = "/";
         }
     }
 
@@ -1163,7 +1455,6 @@
         }
     }
 
-    // Close modals when clicking outside
     document.addEventListener('click', function(e) {
         if (e.target === document.getElementById('addToCartModal')) {
             closeModal();
@@ -1173,7 +1464,6 @@
         }
     });
 
-    // Close modals with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeModal();
@@ -1183,4 +1473,3 @@
 </script>
 </body>
 </html>
-

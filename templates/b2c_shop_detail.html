@@ -627,7 +627,7 @@
         $.get("{% url 'check_product_quantity' %}", { product_id: productId }, function(qtyData) {
             const availableQty = parseFloat(qtyData.quantity) || 0;
             if (availableQty < quantity) {
-                showAlert(`Not enough quantity available! Only ${availableQty} left in stock.`, "danger");
+                showAlert(`Qolqiq yetarli emas! ${availableQty} ta bor omborda.`, "danger");
                 return;
             }
 

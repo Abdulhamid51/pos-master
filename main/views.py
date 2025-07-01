@@ -10505,27 +10505,30 @@ def mobile_order_list(request):
         'start_date':start_date,
         'end_date':end_date,
     }
-    order = MOrder.objects.filter(debtor__isnull=False)
+    order = MOrder.objects.filter(debtor__isnull=False, status=2)
     if start_date and end_date:
         order = order.filter(date__date__range=(start_date, end_date))
-    summa = sum(
-        i.total_summa for order in order for i in order.products.all()
-    )
     context = {
         'order':order,
-        'summa':summa,
+        'summa':MCart.objects.filter(m_order__in=order).aggregate(all=Coalesce(Sum(F('price')*F('quantity')), 0, output_field=FloatField()))['all'],
         'filters':filters
     }
     return render(request, 'mobile_order_list.html', context)
 
 def morder_change_status(request, id):
-    MOrder.objects.filter(id=id).update(status=request.POST.get('status'))
+    order = MOrder.objects.filter(id=id).update(is_confirmed=True)
+    cart = MCart.objects.filter(m_order=order, is_confirmed=False)
+    for i in cart:
+        i.product.quantity -= i.quantity
+        i.product.save()
+        i.is_confirmed=True
+        i.save()
     return redirect(request.META['HTTP_REFERER'])
 
 
 def mobile_order_detail(request, id):
     order = MOrder.objects.get(id=id)
-    cart = order.products.all()
+    cart = MCart.objects.filter(m_order=order)
     totals = {
         'summa':cart.aggregate(all=Coalesce(Sum(F('price')*F('quantity')), 0, output_field=FloatField()))['all'],
         'quantity':cart.aggregate(all=Coalesce(Sum(F('quantity')), 0, output_field=FloatField()))['all']
