@@ -122,7 +122,8 @@ class Filial(models.Model):
     savdo_puli_dol = models.BigIntegerField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     is_activate = models.BooleanField(default=True)
-    
+    main_warehouse = models.BooleanField(default=False)
+                    
     def __str__(self):
         return self.name
 
@@ -738,9 +739,9 @@ class ProductFilial(models.Model):
     ]
 
     season_select = [
-        ('bahor', 'Bahor'),
+        # ('bahor', 'Bahor'),
         ('yoz', 'Yoz'),
-        ('kuz', 'Kuz'),
+        # ('kuz', 'Kuz'),
         ('qish', 'Qish')
     ]
     name = models.CharField(max_length=255)
@@ -879,6 +880,7 @@ class Recieve(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
+    payment_date = models.DateTimeField(blank=True, null=True)
     som = models.IntegerField(default=0)
     sum_sotish_som = models.IntegerField(default=0)
     dollar = models.IntegerField(default=0)
@@ -1219,6 +1221,10 @@ class Shop(models.Model):
     @property
     def total_price(self):
         return sum(i.total_price for i in Cart.objects.filter(shop=self))
+    
+    @property
+    def total_pay(self):
+        return PayHistory.objects.filter(shop=self).aggregate(sum=Sum('summa'))['sum'] or 0
 
     @property
     def total_narx(self):
@@ -1700,6 +1706,7 @@ class PayHistory(models.Model):
     @property
     def get_model(self):
         return self._meta.model_name
+
 
     def save_kassa(self, kassa, old_values=None):
         """
@@ -2222,41 +2229,7 @@ def generate_key():
     return binascii.hexlify(os.urandom(20)).decode()
 
 
-class MCart(models.Model):
-    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
-    debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
-    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
-    quantity = models.FloatField()
-    price = models.FloatField()
-    status = models.CharField(choices=(
-        ('1', 'Maxsulot Savatchada'),
-        ('2', 'Sotib olingan')
-    ), max_length=255, default=1)
-    total = models.FloatField(blank=True, null=True)
-    applied = models.BooleanField(default=False)
-    comment = models.TextField(blank=True, null=True)
-    
-    @property
-    def get_date(self):
-        morder = self.morders.last()
-        if morder:
-            return morder.date
-        return None
-    
-    @property
-    def total_summa(self):
-        return self.price * self.quantity
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
-        
-    #     employes = MobilUser.objects.all()
-    #     for i in employes:
-    #         obj, created = MobilPayment.objects.get_or_create(m_user=i, sana=self.get_date)
-    #         obj.total_price = MCart.objects.filter(morders__sold=True, morders__date__date=self.get_date).distinct().aggregate(all=Coalesce(Sum('quantity'), 0))['all']
-    #         obj.save()        
-    
-    class Meta:
-        verbose_name_plural = 'Mobile Cart'
+
 
 class Telegramid(models.Model):
     name = models.CharField(max_length=255)
@@ -2274,30 +2247,50 @@ from django.db.models import ExpressionWrapper
 
 class MOrder(models.Model):
     user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
-    products = models.ManyToManyField(MCart, related_name='morders')
     date = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
     sold = models.BooleanField(default=False)
     status = models.IntegerField(choices=((1, 'new'),(2, 'done'), (3,'rejected')), default=1)
-
-
+    is_confirmed = models.BooleanField(default=False)
     @property
     def total_basket(self):
-        return self.products.aggregate(
-            all=Coalesce(
-                Sum(
-                    ExpressionWrapper(
-                        F('price') * F('quantity'),
-                        output_field=FloatField()
-                    )
-                ),
-                0.0
-            )
-        )['all']
+        return MCart.objects.filter(m_order=self).aggregate(all=Coalesce(Sum(F('price')*F('quantity')), 0, output_field=FloatField()))['all']
         
     class Meta:
         verbose_name_plural = "Mobile order"
+
+
+class MCart(models.Model):
+    m_order = models.ForeignKey(MOrder, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
+    debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    quantity = models.FloatField()
+    price = models.FloatField()
+    status = models.CharField(choices=(
+        ('1', 'Maxsulot Savatchada'),
+        ('2', 'Sotib olingan')
+    ), max_length=255, default=1)
+    total = models.FloatField(blank=True, null=True)
+    applied = models.BooleanField(default=False)
+    comment = models.TextField(blank=True, null=True)
+    is_confirmed = models.BooleanField(default=False)
+    
+    @property
+    def get_date(self):
+        morder = self.morders.last()
+        if morder:
+            return morder.date
+        return None
+    
+    @property
+    def total_summa(self):
+        return self.price * self.quantity
+    
+    class Meta:
+        verbose_name_plural = 'Mobile Cart'
+
 
 import requests
 

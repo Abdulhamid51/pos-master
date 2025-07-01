@@ -46,22 +46,6 @@
         .input-group-text {
             font-size: 12px;
         }
-        
-        [contenteditable="true"] {
-            border-bottom: 1px dashed #007bff;
-            padding: 2px;
-            min-width: 50px;
-        }
-        
-        [contenteditable="true"]:focus {
-            outline: none;
-            background-color: #f8f9fa;
-        }
-        
-        .price-input {
-            width: 100px;
-            text-align: center;
-        }
     </style>
 {% endblock css %}
 
@@ -80,19 +64,12 @@
                         </select>
                     </div>
                     <div class="col-md-5">
-                        <div class="input-group">
-                            <select class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
-                                <option value=""></option>
-                                {% for i in products %}
-                                    <option value="{{ i.id }}&{{ i.name }}&{{ i.quantity }}&{{ i.barcode }}&{% if i.pack == 0 %}1{% else %}{{ i.pack }}{% endif %}">
-                                    {{ i.name }} - {{ i.barcode }} - {{ i.get_season_display|default_if_none:'' }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#new_product_add">+</button>
-                            </div>
-                        </div>
+                        <select onchange="add_modal(this)" class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
+                            <option value=""></option>
+                            {% for i in products %}
+                                <option value="{{i.id}}&{{i.name}}&{{i.quantity}}&{{i.barcode}}&{{i.pack}}">{{ i.name }} - {{i.barcode}} - {{ i.get_season_display|default_if_none:'' }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="btn-group col-md-5" role="group" aria-label="Price Types">
                         <input type="radio" class="btn-check price_type_input" name="type_price" id="oddiy" value="" autocomplete="off" checked>
@@ -129,27 +106,23 @@
                                         <td>{{ i.product.pack }}</td>
                                         <td>
                                             <div class="input-group">
-                                                <input type="text" class="form-control pack-input" 
+                                                <input type="number" class="form-control pack-input" 
                                                        value="{{ i.total_pack|floatformat }}" min="0" step="0.01"
                                                        data-pack="{{ i.product.pack }}"
-                                                       onkeyup="updateQuantityFromPack(this)" style="width: 6rem;">
+                                                       onchange="updateQuantityFromPack(this)" style="min-width: 6rem;">
+                                                <!-- <span class="input-group-text">paket</span> -->
                                             </div>
                                         </td>
                                         <td>
                                             <div class="input-group">
-                                                <input type="text" class="form-control quantity-input" 
+                                                <input type="number" class="form-control quantity-input" 
                                                        value="{{ i.quantity|floatformat }}" min="0" step="0.01"
-                                                       onkeyup="updatePackFromQuantity(this)" style="width: 6rem;">
+                                                       onchange="updatePackFromQuantity(this)" style="min-width: 6rem;">
+                                                <!-- <span class="input-group-text">dona</span> -->
                                             </div>
                                         </td>
                                         <td>{{ i.price_without_skidka|intcomma }}</td>
-                                        <td>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control price-input" 
-                                                       value="{{ i.price|floatformat }}" min="0" step="0.01"
-                                                       onchange="updatePrice(this)">
-                                            </div>
-                                        </td>
+                                        <td class="price">{{ i.price|intcomma }}</td>
                                         <td class="total" data-value="{{i.total_price}}">{{ i.total_price|intcomma }}</td>
                                         <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
                                     </tr>
@@ -200,34 +173,22 @@
                             </select>
                             {% endif %}
 
-                            <!-- <label for="">Filial</label>
-                            <select class="form-control searchable" name="call_center" required>
-                                <option value=""></option>
-                                {% for i in call_center %}
-                                    <option value="{{i.id}}" {% if shop.saler == i %}selected{% endif %}>{{ i }}</option>
-                                {% endfor %}
-                            </select> -->
-
                             <label for="">Filial</label>
                             <select class="form-control searchable" name="filial" required>
                                 <option value=""></option>
                                 {% for i in filial %}
-                                    <option value="{{i.id}}" {% if shop.filial == i or user.filial == i %}selected{% endif %}>{{ i.name }}</option>
+                                    <option value="{{i.id}}" {% if shop.filial == i %}selected{% endif %}>{{ i.name }}</option>
                                 {% endfor %}
                             </select>
                             <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button>
                             <br><hr style="color: black;">
-
-                            <label for="">Jami summa</label>
-                            <input type="text" class="form-control" id="all_total_2" name="all_total" value="{{ totals.total }}" disabled>
-                            <br>
-                            <label for="">Naqd berildi</label>
-                            <input onclick="calculateRemaining()" type="text" class="form-control" id="naqd_summa" value="{{shop.total_pay}}" name="naqd_summa">
+                            <label for="">Summa</label>
+                            <input type="number" class="form-control" id="naqd_summa" value="0" name="naqd_summa">
                             
+                            {% if shop.debtor.fio != "Naqd" %}
                             <br><hr>
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
-                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
-                            {% if shop.debtor.fio != "Naqd" %}
+                            <input value="{{shop.total_price}}" type="number" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
                             {% endif %}
                         </form>
                     </div>
@@ -251,164 +212,58 @@
     </div>
 </div>
 
-<!-- Add New Product Modal -->
-<div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+<!-- Add Product Modal -->
+<button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+    Yangi 
+</button>
+<div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <form id="newProductForm" class="modal-content" method="post">
-        {% csrf_token %}
-        <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-            <label for="">Nomi</label>
-            <input type="text" class="form-control" name="name" required>
-            <input type="hidden" name="from_ajax" value="True">
+        <form id="add_form" class="modal-content" method="post" action="">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" id="recieve_item_add_product_div">
+                    <input type="hidden" name="product" id="recieve_item_add_product_id">
+                    
+                    <label for="">Shtrix kod</label>
+                    <input id="product_barcode" type="number" name="barcode" class="form-control" disabled>
+                    
+                    <label for="">Omborda qoldiq</label>
+                    <input id="ombor_qoldiq" type="text" name="qoldiq" class="form-control" disabled>
 
-            <label for="">Ishlab chiqaruvchi</label>
-                <div class="input-group mb-2">
-                    <select class="form-control searchable" required name="deliver" id="deliverSelect">
-                        <option value="">- - - - - - - - </option>
-                        {% for a in delivers %}
-                            <option value="{{ a.id }}">{{ a.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="input-group-append">
-                        <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#deliverModal">+</button>
+                    <label for="">1 paketdagi dona soni</label>
+                    <input id="product_pack" type="number" name="pack" class="form-control" disabled>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="">Paket soni</label>
+                            <input type="number" id="pack_quantity_input" name="total_pack" class="form-control" value="0" min="0" step="0.01" data-pack="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="">Dona soni</label>
+                            <input type="number" step="1" id="modal_quantity_input" name="quantity" class="form-control" value="0" min="0">
+                        </div>
                     </div>
-                </div>
 
-                <label for="">O‘lchov</label>
-                <div class="input-group mb-2">
-                    <select class="form-control searchable" required name="measurement" id="measurementSelect">
-                        <option value="">- - - - - - - - </option>
-                        {% for a in measurements %}
-                            <option value="{{ a.id }}">{{ a.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="input-group-append">
-                        <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#measurementModal">+</button>
-                    </div>
-                </div>
+                    <label for="">Narx</label>
+                    <input id="sotuv_sotish_som" type="number" name="sotish_som" class="form-control" disabled>
 
-                <label for="">Fasl</label>
-                <div class="input-group mb-2">
-                    <select class="form-control searchable" required name="season" id="seasonSelect">
-                        <option value="">- - - - - - - - </option>
-                        {% for a in seasons %}
-                            <option value="{{ a.id }}">{{ a.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-            <label for="">Min miqdor</label>
-            <input type="text" class="form-control" name="min_count" required>
-
-            <label for="">Paketdagi soni</label>
-            <input type="text" class="form-control" name="pack" required>
-
-            <label for="">Guruh</label>
-            <div class="input-group mb-2">
-                <select class="form-control searchable" required name="group" id="groupSelect">
-                    <option value="">- - - - - - - - </option>
-                    {% for a in groups %}
-                        <option value="{{ a.id }}">{{ a.name }}</option>
-                    {% endfor %}
-                </select>
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#groupModal">+</button>
+                    <label for="">Kelishilgan narxi</label>
+                    <input id="sotuv_kelishilgan_som" type="number" name="sotish_som" class="form-control">
                 </div>
             </div>
-
-            <label for="">Turi</label>
-            <select name="ready" class="form-control" id="" required>
-                <option value="">- - - - - - - </option>
-                {% for i in ready_types %}
-                    <option value="{{i.id}}">{{ i.name }}</option>
-                {% endfor %}
-            </select>
-
-            <label for="">Shtrix kod</label>
-            <input type="text" class="form-control" name="barcode" value="{{new_barcode}}" required>
-
-            <label for="">Soni</label>
-            <input type="text" class="form-control" name="quantity" value="1" min="1" required>
-
+            <div class="modal-footer d-flex justify-content-between">
+                <button id="modal_delete" type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                <button type="submit" class="btn btn-primary">Saqlash</button>
             </div>
-        </div>
-        <div class="modal-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-            <button type="submit" class="btn btn-primary">Saqlash</button>
-        </div>
         </form>
     </div>
 </div>
-
-<!-- Deliver Modal -->
-<div class="modal fade" id="deliverModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="deliverForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Yangi Ishlab chiqaruvchi</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <input type="text" name="name" class="form-control mb-2" placeholder="Nomi" required>
-          <input type="text" name="phone1" class="form-control mb-2" placeholder="Telefon 1" required>
-          <input type="text" name="phone2" class="form-control mb-2" placeholder="Telefon 2">
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Saqlash</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Measurement Modal -->
-<div class="modal fade" id="measurementModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="measurementForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Yangi O‘lchov</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <input type="text" name="name" class="form-control" placeholder="O‘lchov nomi" required>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Saqlash</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Group Modal -->
-<div class="modal fade" id="groupModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="groupForm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Yangi Guruh</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <input type="text" name="name" class="form-control" placeholder="Guruh nomi" required>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Saqlash</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
 <input type="hidden" id="order_id" value="{{shop.id}}">
 
 {% endblock content %}
@@ -418,14 +273,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
     <script>
         $('select.searchable').selectize({ normalize: true });
-    </script>
-
-    <script>
-        function products_focus() {
-            const selectize = $('#products')[0].selectize
-        selectize.focus()
-        }
-        products_focus()
     </script>
 <script>
     // Format number with commas
@@ -456,7 +303,7 @@
         const packSize = parseFloat($(input).data('pack')) || 1;
         const quantity = packValue * packSize;
         
-        row.find('.quantity-input').val(quantity.toFixed(2));
+        row.find('.quantity-input').val(quantity);
         updateCartItem(row);
     }
 
@@ -471,24 +318,12 @@
         updateCartItem(row);
     }
 
-    // Update price when changed
-    function updatePrice(input) {
-        const row = $(input).closest('tr');
-        const newPrice = parseFloat($(input).val()) || 0;
-        const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
-        const total = newPrice * quantity;
-        
-        row.find('.total').text(formatNumber(total.toFixed(2)));
-        row.find('.total').attr('data-value', total.toFixed(2));
-        updateCartItem(row);
-    }
-
     // Update cart item on server
     function updateCartItem(row) {
         const cart_id = row.data('id');
         const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
         const totalPack = parseFloat(row.find('.pack-input').val()) || 0;
-        const price = parseFloat(row.find('.price-input').val()) || 0;
+        const price = parseFloat(row.find('.price').text().replace(/,/g, '')) || 0;
         const total = quantity * price;
         
         $.ajax({
@@ -496,8 +331,7 @@
             type: "POST",
             data: { 
                 quantity: quantity,
-                total_pack: totalPack,
-                agreed_price: price
+                total_pack: totalPack 
             },
             success: function(response) {
                 if (response.success) {
@@ -523,7 +357,7 @@
         $("tbody tr").each(function() {
             const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
             const pack = parseFloat($(this).find('.pack-input').val()) || 0;
-            const price = parseFloat($(this).find('.price-input').val()) || 0;
+            const price = parseFloat($(this).find('.price').text().replace(/,/g, '')) || 0;
 
             totalQuantity += quantity;
             totalPack += pack;
@@ -533,18 +367,18 @@
         $("#quantity_total").text(formatNumber(totalQuantity.toFixed(2)));
         $("#pack_total").text(formatNumber(totalPack.toFixed(2)));
         $("#all_total").text(formatNumber(totalSum.toFixed(2)));
-        $("#all_total_2").val(formatNumber(totalSum.toFixed(2)));
         calculateRemaining();
     }
 
     // Calculate remaining payment
     function calculateRemaining() {
-        const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
+        const total = parseFloat($("#all_total").text().replace(/,/g, "")) || 0;
         const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
         const remaining = Math.max(total - naqd_summa, 0);
+        
         $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
     }
-    calculateRemaining()
+
     // Finalize order
     function Yakunlash() {
         const summa = parseFloat($('#naqd_summa').val()) || 0;
@@ -572,163 +406,103 @@
         }
     }
 
-    // Check if product already exists in cart
-    function productExistsInCart(productId) {
-        let exists = false;
-        $("tbody tr").each(function() {
-            const name = $(this).find('td:eq(1)').text().trim();
-            if (name.includes(productId)) {
-                exists = true;
-                return false; // break loop
-            }
-        });
-        return exists;
-    }
-
-    // Add product directly to table when selected
-    $('#products').on('change', function() {
-        const itemValue = $(this).val();
-        if (!itemValue) return;
-        
+    // Add product modal
+    function add_modal(item) {
+        const itemValue = $(item).val(); 
         const [pr_id, pr_name, quantity, barcode, pack] = itemValue.split('&');
         const price_type = $('input[name="type_price"]:checked').val();
-
+        
         if (pr_id) {
-            // Check if product already exists in cart
-            const existingRow = $(`tr:contains('${pr_name}')`).first();
-            if (existingRow.length > 0) {
-                // Product exists - increment quantity
-                const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
-                const newQty = currentQty + 1;
-                existingRow.find('.quantity-input').val(newQty);
-                updatePackFromQuantity(existingRow.find('.quantity-input'));
-                updateCartItem(existingRow);
-            } else {
-                // Product doesn't exist - add new row
-                $.get("{% url 'check_price' %}", { product: pr_id, type: price_type }, function(data) {
-                    const price = parseFloat(data['price']) || 0;
-                    addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
-                });
-            }
-        }
-        
-        // Reset select
-        $(this).val('');
-        $(this).selectize()[0].selectize.clear();
-        products_focus()
-    });
-
-    // Add product to table
-    function addProductToTable(productId, productName, barcode, pack, price, quantity = 1) {
-        const orderId = $("#order_id").val();
-        const totalPack = quantity / parseFloat(pack);
-        
-        // Check available quantity
-        $.get("{% url 'check_product_quantity' %}", { product_id: productId }, function(qtyData) {
-            const availableQty = parseFloat(qtyData.quantity) || 0;
-            if (availableQty < quantity) {
-                showAlert(`Qolqiq yetarli emas! ${availableQty} ta bor omborda.`, "danger");
-                return;
-            }
-
-            $.ajax({
-                url: `/b2c_shop_cart_add/${orderId}`,
-                type: "POST",
-                data: {
-                    product_id: productId,
-                    quantity: quantity,
-                    total_pack: totalPack,
-                    product_price: price,
-                    agreed_price: price,
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showAlert(response.message, "success");
-                        const newRow = `
-                            <tr data-id="${response.cart_id}">
-                                <td>${$("tbody tr").length + 1}</td>
-                                <td>${productName}</td>
-                                <td>${barcode}</td>
-                                <td>${pack}</td>
-                                <td>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control pack-input" 
-                                               value="${totalPack.toFixed(2)}" min="0" step="0.01"
-                                               data-pack="${parseInt(pack) || 1}"
-                                               onkeyup="updateQuantityFromPack(this)" style="width: 6rem;">
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control quantity-input" 
-                                               value="${quantity.toFixed(2)}" min="0" step="0.01"
-                                               onkeyup="updatePackFromQuantity(this)" style="width: 6rem;">
-                                    </div>
-                                </td>
-                                <td>${formatNumber(price.toFixed(2))}</td>
-                                <td>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control price-input" 
-                                               value="${price.toFixed(2)}" min="0" step="0.01"
-                                               onchange="updatePrice(this)">
-                                    </div>
-                                </td>
-                                <td class="total" data-value="${(quantity * price).toFixed(2)}">${formatNumber((quantity * price).toFixed(2))}</td>
-                                <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
-                            </tr>`;
-                        
-                        $("tbody").append(newRow);
-                        updateTotals();
-                        
-                        // Add the new product to selectize dropdown
-                        const selectize = $('#products')[0].selectize;
-                        selectize.addOption({
-                            value: `${productId}&${productName}&1&${barcode}&${pack}`,
-                            text: `${productName} - ${barcode}`
-                        });
-                        selectize.refreshOptions(false);
-                    } else {
-                        showAlert(response.message, "danger");
-                    }
-                },
-                error: function() {
-                    showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
-                }
+            $('#recieve_item_add_button').click();
+            $('#recieve_item_add_product_id').val(pr_id);
+            $('#product_barcode').val(barcode);
+            $('#ombor_qoldiq').val(quantity);
+            $('#product_pack').val(pack);
+            $('#pack_quantity_input').data('pack', pack);
+            $('#recieve_item_add_product_name').text(pr_name);
+            
+            $.get("{% url 'check_price' %}", { product: pr_id, type: price_type }, function(data) {
+                const price = parseFloat(data['price']) || 0;
+                $('#sotuv_sotish_som').val(price); 
+                $('#sotuv_kelishilgan_som').val(price); 
             });
-        });
+        }
     }
 
-    // Add new product via modal
-    $('#newProductForm').on('submit', function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const quantity = parseFloat(form.find('[name="quantity"]').val()) || 1;
+    // Auto-update quantity when pack changes in modal
+    $('#pack_quantity_input').on('input', function() {
+        const packQty = parseFloat($(this).val()) || 0;
+        const packSize = parseFloat($(this).data('pack')) || 1;
+        $('#modal_quantity_input').val(packQty * packSize);
+    });
+
+    // Auto-update pack when quantity changes in modal
+    $('#modal_quantity_input').on('input', function() {
+        const quantity = parseFloat($(this).val()) || 0;
+        const packSize = parseFloat($('#pack_quantity_input').data('pack')) || 1;
+        $('#pack_quantity_input').val((quantity / packSize).toFixed(2));
+    });
+
+    // Add product to cart
+    $("#add_form").submit(function(event) {
+        event.preventDefault();
+        $('#modal_delete').click();
+
+        const productId = $("#recieve_item_add_product_id").val();
+        const productName = $("#recieve_item_add_product_name").text();
+        const barcode = $("#product_barcode").val();
+        const quantity = parseFloat($("#modal_quantity_input").val()) || 0;
+        const totalPack = parseFloat($("#pack_quantity_input").val()) || 0;
+        const product_pack = parseFloat($("#product_pack").val()) || 0;
+        const price = parseFloat($("#sotuv_sotish_som").val()) || 0;
+        const agreedPrice = parseFloat($("#sotuv_kelishilgan_som").val()) || 0;
+        const total = agreedPrice * quantity;
+        const orderId = $("#order_id").val();  
         
         $.ajax({
-            url: "{% url 'new_product_add' %}",
+            url: `/b2c_shop_cart_add/${orderId}`,
             type: "POST",
-            data: form.serialize(),
+            data: {
+                product_id: productId,
+                quantity: quantity,
+                total_pack: totalPack,
+                product_price: price,
+                agreed_price: agreedPrice,
+            },
             success: function(response) {
                 if (response.success) {
                     showAlert(response.message, "success");
-                    $('#new_product_add').modal('hide');
-                    form[0].reset();
+                    const newRow = `
+                        <tr data-id="${response.cart_id}">
+                            <td>${$("tbody tr").length + 1}</td>
+                            <td>${productName}</td>
+                            <td>${barcode}</td>
+                            <td>${product_pack}</td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="number" class="form-control pack-input" 
+                                           value="${totalPack.toFixed(2)}" min="0" step="1"
+                                           data-pack="${$('#product_pack').val()}"
+                                           onchange="updateQuantityFromPack(this)">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="number" class="form-control quantity-input" 
+                                           value="${quantity.toFixed(2)}" min="0" step="1"
+                                           onchange="updatePackFromQuantity(this)">
+                                </div>
+                            </td>
+                            <td>${formatNumber(price.toFixed(2))}</td>
+                            <td class="price">${formatNumber(agreedPrice.toFixed(2))}</td>
+                            <td class="total" data-value="${total.toFixed(2)}">${formatNumber(total.toFixed(2))}</td>
+                            <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
+                        </tr>`;
                     
-                    // Add the new product to cart
-                    $.get("{% url 'check_price' %}", { 
-                        product: response.product_id, 
-                        type: $('input[name="type_price"]:checked').val() 
-                    }, function(data) {
-                        const price = parseFloat(data['price']) || 0;
-                        addProductToTable(
-                            response.product_id, 
-                            response.product_name, 
-                            response.barcode, 
-                            response.pack, 
-                            price,
-                            quantity
-                        );
-                    });
+                    $("tbody").append(newRow);
+                    $("#modal_quantity_input").val("");
+                    $("#pack_quantity_input").val("");
+                    updateTotals();
                 } else {
                     showAlert(response.message, "danger");
                 }
@@ -921,36 +695,5 @@
             "pageLength": 15
         });
     });
-</script>
-
-
-
-    <script>
-$(document).ready(function () {
-    function handleFormSubmit(formId, url, selectId, modalId) {
-        $(formId).submit(function (e) {
-            e.preventDefault();
-            const formData = $(this).serialize();
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
-                success: function (data) {
-                    $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                    $(modalId).modal('hide');
-                    $(formId)[0].reset();
-                },
-                error: function () {
-                    alert("Xatolik yuz berdi!");
-                }
-            });
-        });
-    }
-
-    // Yangi obyektlar uchun AJAX
-    handleFormSubmit('#deliverForm', '{% url "create_deliver_new" %}', '#deliverSelect', '#deliverModal');
-    handleFormSubmit('#measurementForm', '{% url "create_measurement" %}', '#measurementSelect', '#measurementModal');
-    handleFormSubmit('#groupForm', '{% url "create_group" %}', '#groupSelect', '#groupModal');
-});
 </script>
 {% endblock js %}

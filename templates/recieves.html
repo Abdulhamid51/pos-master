@@ -112,6 +112,9 @@
                                                         <input type="number" name="kurs" class="form-control">
                                                         <label for="">Sana</label>
                                                         <input type="datetime-local" name="date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
+
+                                                        <label for="">To'lov sanasi</label>
+                                                        <input type="datetime-local" name="payment_date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
                                                       </div>
                                                       <div class="modal-footer d-flex justify-content-between">
                                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
@@ -175,7 +178,8 @@
                                                                 <h6 class="invoice-customer-name"><span>Summa:</span> {{ recieve.total_bring_price|intcomma }}</h6>
                                                                 <h6 class="invoice-customer-name"><span>Kurs:</span> {{ recieve.kurs|intcomma }}</h6>
                                                                 <!-- <p class="invoice-customer-name"><span>Dollar:</span> {{ recieve.dollar }}</p> -->
-                                                                <h6 class="invoice-generated-date">Sana: {{ recieve.date }}</h6>
+                                                                <h6 class="invoice-generated-date">Sana: {{ recieve.date|date:'d-m-Y H:i' }}</h6>
+                                                                <h6 class="invoice-generated-date">To'lov sanasi: {{ recieve.payment_date|date:'d-m-Y H:i' }}</h6>
                                                             </div>
                                                         </div>
                                                     </div>

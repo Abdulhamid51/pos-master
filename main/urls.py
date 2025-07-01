@@ -318,6 +318,7 @@ urlpatterns = [
     path('api/video-tutorial/check/', check_video_tutorial, name='check_video_tutorial'),
     path('api/video-tutorial/save/', save_video_tutorial, name='save_video_tutorial'),
     path('api/video-tutorial/delete/', delete_video_tutorial, name='delete_video_tutorial'),
+    path('check_product_quantity/', check_product_quantity, name='check_product_quantity'),
 
     path('expiring_shop/', expiring_shop, name='expiring_shop'),
     path('last_seen/', last_seen, name='last_seen'),

@@ -257,25 +257,11 @@
     /* Grid View Styles */
     .grid-view .content {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.6rem;
       padding: 0.6rem;
-    }
-
-    @media (min-width: 768px) {
-      .grid-view .content {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.8rem;
-        padding: 0.8rem;
-      }
-    }
-
-    @media (max-width: 400px) {
-      .grid-view .content {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-        padding: 0.6rem;
-      }
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .grid-view .product {
@@ -286,6 +272,8 @@
       padding: 0.6rem;
       border: 1px solid rgba(0, 0, 0, 0.1);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .grid-view .product img {
@@ -294,12 +282,6 @@
       object-fit: contain;
       margin-bottom: 0.4rem;
       border-radius: 6px;
-    }
-
-    @media (max-width: 350px) {
-      .grid-view .product img {
-        height: 80px;
-      }
     }
 
     .grid-view .product-info {
@@ -388,98 +370,113 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
+      background: white;
       z-index: 1001;
+      display: none;
+      flex-direction: column;
+    }
+
+    .modal.active {
+      display: flex;
     }
 
     .modal-content {
-      background: white;
-      border-radius: 10px;
-      width: 92%;
-      max-width: 380px;
-      padding: 1.2rem;
-      box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      padding: 0;
     }
 
     .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.8rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 1;
     }
 
     .modal-title {
-      font-size: 1.1rem;
+      font-size: 1.5rem;
       font-weight: bold;
       color: #001f3f;
     }
 
     .close-modal {
-      font-size: 1.4rem;
+      font-size: 1.8rem;
       cursor: pointer;
       color: #666;
     }
 
     .modal-body {
-      margin-bottom: 1.2rem;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .modal-product {
       display: flex;
-      gap: 0.8rem;
-      margin-bottom: 0.8rem;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 2rem;
     }
 
     .modal-product img {
-      width: 70px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 6px;
-      flex-shrink: 0;
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      border: 1px solid #eee;
     }
 
     .modal-product-info {
-      flex: 1;
+      width: 100%;
+      text-align: center;
     }
 
     .modal-product-name {
       font-weight: bold;
-      margin-bottom: 0.2rem;
-      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
     }
 
     .modal-product-price {
       color: #2b4eff;
       font-weight: bold;
-      margin-bottom: 0.4rem;
-      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      font-size: 1.2rem;
     }
 
     .modal-product-quantity {
-      font-size: 0.8rem;
+      font-size: 1rem;
       color: #666;
+      margin-bottom: 1.5rem;
     }
 
     .quantity-control {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin: 1rem 0;
+      gap: 1.5rem;
+      margin: 2rem 0;
       justify-content: center;
     }
 
     .quantity-btn {
-      width: 28px;
-      height: 28px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       background: white;
-      font-size: 0.9rem;
+      font-size: 2rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -487,31 +484,60 @@
     }
 
     .quantity-input {
-      width: 45px;
+      width: 120px;
       text-align: center;
-      padding: 0.2rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 0.9rem;
+      padding: 0.8rem;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .decimal-hint {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .decimal-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .decimal-btn {
+      padding: 0.5rem;
+      flex: 1;
+      background-color: #f0f0f0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .modal-actions {
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-top: 1px solid #eee;
+      position: sticky;
+      bottom: 0;
+      background: white;
     }
 
     .modal-btn {
       flex: 1;
-      padding: 0.7rem;
-      border-radius: 7px;
+      padding: 1.2rem;
+      border-radius: 10px;
       border: none;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
     }
 
     .cancel-btn {
-      background: #ff0000;
+      background: #ff4444;
       color: #ffffff;
     }
 
@@ -552,7 +578,6 @@
       font-size: 0.9rem;
     }
 
-    /* Simple Cart Modal Styles */
     .simple-cart-modal {
       position: fixed;
       top: 0;
@@ -681,6 +706,35 @@
       font-size: 0.8rem;
       color: #666;
     }
+    @media (max-width: 600px) {
+      .modal-product img {
+        width: 150px;
+        height: 150px;
+      }
+      
+      .quantity-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+      
+      .quantity-input {
+        width: 100px;
+        font-size: 1.2rem;
+      }
+      
+      .modal-title {
+        font-size: 1.3rem;
+      }
+      
+      .modal-product-name {
+        font-size: 1.1rem;
+      }
+      
+      .modal-product-price {
+        font-size: 1rem;
+      }
+    }
 
     @media (max-width: 350px) {
       html {
@@ -699,8 +753,24 @@
         padding: 0.5rem;
       }
       
-      .simple-cart-item {
-        padding: 0.7rem 0;
+      .grid-view .product img {
+        height: 70px;
+      }
+      
+      .modal-product img {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .quantity-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .quantity-input {
+        width: 80px;
+        font-size: 1rem;
       }
     }
 </style>
@@ -712,7 +782,7 @@
     <input type="text" placeholder="Mahsulot qidirish . . ." />
     <div class="view-toggle">
       <i class="fa-solid fa-list-ul" id="listIcon" onclick="toggleView()"></i>
-      <i class="material-icons" id="gridIcon" style="display: none;" onclick="toggleView()">apps</i>
+      <i class="material-icons" id="gridIcon" style="display: none; font-size: 23px;" onclick="toggleView()">apps</i>
     </div>
   </div>
 
@@ -722,10 +792,11 @@
     <div class="sidebar-header">
       <span class="close-btn" onclick="closeSidebar()">✕</span>
       <div class="username">{{customer.fio}}</div>
-      <div class="email">{{customer.phone1}}</div>
+      <div class="email">{{customer.phone1|default_if_none:''}}</div>
     </div>
     <ul>
       <li><a href="#" onclick="handlePlaceOrder()">➕ Buyurtma berish</a></li>
+      <li><a href="{% url 'debtor_orders' chat_id %}">🛒 Buyurtmalarim</a></li>
       <li><a href="#" onclick="handleLogout()">🔓 Chiqish</a></li>
     </ul>
   </div>
@@ -780,18 +851,17 @@
         </div>
         
         <div class="quantity-control">
-          <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
-          <input type="number" class="quantity-input" id="quantityInput" value="0" min="0">
+          <button class="quantity-btn" onclick="changeQuantity(1)">-</button>
+          <input type="text" class="quantity-input" id="quantityInput" value="0" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
           <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
         </div>
       </div>
       <div class="modal-actions">
-        <button class="modal-btn cancel-btn" onclick="DelModal()">Ochirish</button>
+        <button class="modal-btn cancel-btn" onclick="removeFromCart()">O'chirish</button>
         <button class="modal-btn add-to-cart-btn" onclick="addToCart()">Qo'shish</button>
       </div>
     </div>
   </div>
-
   <div class="simple-cart-modal" id="simpleCartModal">
     <div class="simple-cart-content">
       <div class="simple-cart-header">
@@ -812,39 +882,403 @@
       </div>
     </div>
   </div>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const data = [];
+    const cartData = JSON.parse('{{ initial_cart_data|escapejs }}') || [];
     let currentProductPrice = 0;
+    let currentProductMaxQuantity = 0;
     let isPlacingOrder = false;
     let isTelegram = {% if is_telegram %}true{% else %}false{% endif %};
     let tgWebApp = null;
     
-    // Initialize Telegram Web App if available
     if (isTelegram && window.Telegram && window.Telegram.WebApp) {
         tgWebApp = window.Telegram.WebApp;
         tgWebApp.expand();
         tgWebApp.enableClosingConfirmation();
         
-        // Set up back button behavior
         tgWebApp.BackButton.onClick(() => {
             handleBackButton();
         });
     }
 
-    function handleBackButton() {
-        if (document.getElementById('simpleCartModal').classList.contains('active')) {
-            closeSimpleCart();
-        }  else {
-            if (tgWebApp) {
-                tgWebApp.disableClosingConfirmation();
-                tgWebApp.close();
+    // Helper functions for decimal numbers
+    function parseQuantity(value) {
+        if (typeof value === 'string') {
+            value = value.replace(',', '.').replace(/[^\d.]/g, '');
+            if (value.startsWith('.')) value = '0' + value;
+            const parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
             }
+        }
+        const num = parseFloat(value);
+        return isNaN(num) ? 0 : num;
+    }
+
+    function formatQuantity(value) {
+        const num = parseQuantity(value);
+        return num % 1 === 0 ? num.toString() : num.toFixed(2);
+    }
+
+    // Initialize the view when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeView();
+        updateCartTotal();
+        
+        // Quantity input validation
+        const quantityInput = document.getElementById('quantityInput');
+        quantityInput.addEventListener('input', function() {
+            let value = this.value;
+            value = value.replace(/[^0-9.]/g, '');
+            
+            const decimalSplit = value.split('.');
+            if (decimalSplit.length > 2) {
+                value = decimalSplit[0] + '.' + decimalSplit.slice(1).join('');
+            }
+            
+            if (value.startsWith('.')) {
+                value = '0' + value;
+            }
+            
+            this.value = value;
+        });
+
+        quantityInput.addEventListener('blur', function() {
+            this.value = formatQuantity(this.value);
+        });
+
+        // Initialize product cards with cart data
+        initializeProductCards();
+    });
+
+    function initializeView() {
+      if (isTelegram && tgWebApp) {
+        document.documentElement.style.setProperty('--tg-viewport-height', `${tgWebApp.viewportHeight}px`);
+        tgWebApp.expand();
+      }
+      
+      document.getElementById('contentView').classList.add('list-view');
+      document.getElementById('listIcon').style.display = 'inline-block';
+      document.getElementById('gridIcon').style.display = 'none';
+    }
+
+    function initializeProductCards() {
+        const productCards = document.querySelectorAll('.product');
+        productCards.forEach(card => {
+            const cardProductId = card.querySelector('.product-id').textContent;
+            const cartItem = cartData.find(el => el.product_id == cardProductId);
+            const addButtonContainer = card.querySelector('.add-btn-container');
+            
+            if (addButtonContainer) {
+                addButtonContainer.innerHTML = '';
+                
+                if (cartItem && cartItem.quantity > 0) {
+                    const quantityDisplay = document.createElement('div');
+                    quantityDisplay.className = 'quantity-display';
+                    quantityDisplay.innerHTML = `
+                        <span class="quantity-text">${formatQuantity(cartItem.quantity)} ${cartItem.measurement}</span>
+                        <button class="edit-btn" onclick="openModal(this)">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    `;
+                    addButtonContainer.appendChild(quantityDisplay);
+                } else {
+                    const addButton = document.createElement('button');
+                    addButton.className = 'add-btn';
+                    addButton.onclick = function() { openModal(this); };
+                    addButton.innerHTML = "Savatchaga<br>qo'shish";
+                    addButtonContainer.appendChild(addButton);
+                }
+            }
+        });
+    }
+
+    function appendDecimal(value) {
+        const input = document.getElementById('quantityInput');
+        const current = parseQuantity(input.value);
+        const toAdd = parseQuantity(value);
+        const newValue = current + toAdd;
+        
+        if (newValue <= currentProductMaxQuantity) {
+            input.value = formatQuantity(newValue);
+        } else {
+            input.value = formatQuantity(currentProductMaxQuantity);
         }
     }
 
-    
+    function changeQuantity(change) {
+        const input = document.getElementById('quantityInput');
+        let currentValue = parseQuantity(input.value);
+        let newValue = currentValue + change;
+        
+        if (newValue < 0) newValue = 0;
+        if (newValue > currentProductMaxQuantity) newValue = currentProductMaxQuantity;
+        
+        input.value = formatQuantity(newValue);
+    }
+
+    function openModal(button) {
+        const product = button.closest('.product');
+        const name = product.querySelector('.product-title').textContent;
+        const priceText = product.querySelector('.product-price').textContent;
+        const price = parseFloat(priceText.replace(/[^\d.]/g, ''));
+        const quantityText = product.querySelector('.product-quantity').textContent;
+        const quantity = parseQuantity(quantityText.split(' ')[0]);
+        const measurement = product.querySelector('.product-measurement').textContent;
+        const image = product.querySelector('.product-image').src;
+        const id = product.querySelector('.product-id').textContent;
+        
+        const existingItem = cartData.find(el => el.product_id == id);
+        const initialQuantity = existingItem ? existingItem.quantity : 0;
+        
+        document.getElementById('modalProductName').textContent = name;
+        document.getElementById('modalProductID').textContent = id;
+        document.getElementById('modalProductPrice').textContent = priceText;
+        document.getElementById('modalProductQuantity').textContent = `${formatQuantity(quantity)} ${measurement} mavjud`;
+        document.getElementById('modalProductMeasurement').textContent = measurement;
+        document.getElementById('modalProductImage').src = image;
+        document.getElementById('quantityInput').value = formatQuantity(initialQuantity);
+        
+        document.getElementById('addToCartModal').classList.add('active');
+        
+        currentProductPrice = price;
+        currentProductMaxQuantity = quantity;
+        
+        if (isTelegram && tgWebApp) {
+            tgWebApp.BackButton.show();
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('addToCartModal').classList.remove('active');
+        
+        if (isTelegram && tgWebApp) {
+            if (!document.getElementById('simpleCartModal').classList.contains('active')) {
+                tgWebApp.BackButton.hide();
+            }
+        }
+    }
+    function openSimpleCart() {
+        const simpleCartModal = document.getElementById('simpleCartModal');
+        simpleCartModal.classList.add('active');
+        
+        const simpleCartBody = document.getElementById('simpleCartBody');
+        const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+        
+        if (cartData.length === 0) {
+            emptyCartMessage.style.display = 'block';
+            simpleCartBody.innerHTML = '';
+            simpleCartBody.appendChild(emptyCartMessage);
+            document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+        } else {
+            emptyCartMessage.style.display = 'none';
+            simpleCartBody.innerHTML = '';
+            
+            let totalPrice = 0;
+            
+            cartData.forEach(item => {
+                const itemTotal = item.quantity * item.price;
+                totalPrice += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'simple-cart-item';
+                
+                let productImage = '/static/default.png';
+                document.querySelectorAll('.product').forEach(card => {
+                    const cardProductId = card.querySelector('.product-id').textContent;
+                    if (cardProductId === item.product_id) {
+                        const img = card.querySelector('.product-image');
+                        if (img) {
+                            productImage = img.src;
+                        }
+                    }
+                });
+                
+                cartItem.innerHTML = `
+                    <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
+                    <div class="simple-cart-item-info">
+                        <div class="simple-cart-item-name">${item.name}</div>
+                        <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
+                        <div class="simple-cart-item-quantity">${formatQuantity(item.quantity)} ${item.measurement}</div>
+                    </div>
+                `;
+                
+                simpleCartBody.appendChild(cartItem);
+            });
+            
+            document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+        }
+        
+        if (isTelegram && tgWebApp) {
+            tgWebApp.BackButton.show();
+        }
+    }
+    function closeSimpleCart() {
+        document.getElementById('simpleCartModal').classList.remove('active');
+        
+        if (isTelegram && tgWebApp) {
+            if (!document.getElementById('addToCartModal').classList.contains('active')) {
+                tgWebApp.BackButton.hide();
+            }
+        }
+    }
+    function checkout() {
+        if (cartData.length === 0) {
+            alert("Savatchangiz bo'sh!");
+            return;
+        }
+        
+        isPlacingOrder = true;
+        
+        const orderData = cartData.map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price
+        }));
+        
+        $.ajax({
+            url: `/bot/mobile_done_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify(orderData),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.ok) {
+                    cartData.length = 0;
+                    updateCartTotal();
+                    
+                    if (tgWebApp) {
+                        tgWebApp.disableClosingConfirmation();
+                        tgWebApp.close();
+                    } else {
+                        window.location.href = "{% url 'debtor_orders' chat_id %}";
+                    }
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                    isPlacingOrder = false;
+                }
+            },
+            error: function (xhr, status, error) {
+                isPlacingOrder = false;
+            },
+        });
+    }
+    function addToCart() {
+        const quantity = parseQuantity(document.getElementById('quantityInput').value);
+        const productId = document.getElementById('modalProductID').textContent;
+        const productName = document.getElementById('modalProductName').textContent;
+        const measurement = document.getElementById('modalProductMeasurement').textContent;
+        
+        if (quantity <= 0) {
+            removeFromCart();
+            return;
+        }
+
+        const cartItem = {
+            product_id: productId,
+            quantity: quantity,
+            price: currentProductPrice,
+            measurement: measurement
+        };
+
+        $.ajax({
+            url: `/bot/add_to_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify(cartItem),
+            contentType: "application/json",
+            success: function(response) {
+                if (response.ok) {
+                    let productExists = cartData.find(el => el.product_id == productId);
+                    if (productExists) {
+                        productExists.quantity = quantity;
+                        productExists.measurement = measurement;
+                    } else {
+                        cartData.push({
+                            product_id: productId,
+                            name: productName,
+                            quantity: quantity,
+                            price: currentProductPrice,
+                            measurement: measurement
+                        });
+                    }
+                    updateCartTotal();
+                    closeModal();
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+
+    function removeFromCart() {
+        const productId = document.getElementById('modalProductID').textContent.trim();
+        
+        $.ajax({
+            url: `/bot/remove_from_cart/{{ chat_id }}`,
+            type: "POST",
+            data: JSON.stringify({ product_id: productId }),
+            contentType: "application/json",
+            success: function(response) {
+                if (response.ok) {
+                    const index = cartData.findIndex(el => el.product_id.toString() === productId.toString());
+                    if (index !== -1) {
+                        cartData.splice(index, 1);
+                    }
+                    
+                    updateCartTotal();
+                    
+                    const productCards = document.querySelectorAll('.product');
+                    productCards.forEach(card => {
+                        const cardProductId = card.querySelector('.product-id').textContent.trim();
+                        if (cardProductId === productId) {
+                            const addButtonContainer = card.querySelector('.add-btn-container');
+                            if (addButtonContainer) {
+                                addButtonContainer.innerHTML = `
+                                    <button class="add-btn" onclick="openModal(this)">Savatchaga<br>qo'shish</button>
+                                `;
+                            }
+                        }
+                    });
+                    
+                    closeModal();
+                } else {
+                    alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+      
+    function updateCartTotal() {
+        let total = 0;
+        cartData.forEach(item => {
+            total += item.quantity * item.price;
+        });
+        
+        const fixedCart = document.getElementById('fixedCart');
+        const cartTotalElement = document.querySelector('.cart-total');
+        
+        if (cartData.length > 0 && total > 0) {
+            fixedCart.style.display = 'flex';
+            cartTotalElement.textContent = `Jami: ${total.toLocaleString('ru-RU')} sum`;
+            
+            if (tgWebApp) {
+                tgWebApp.BackButton.show();
+            }
+        } else {
+            fixedCart.style.display = 'none';
+            
+            if (tgWebApp) {
+                tgWebApp.BackButton.hide();
+            }
+        }
+        
+        initializeProductCards();
+    }
 
     function toggleSidebar() {
         document.getElementById("sidebar").classList.add("active");
@@ -872,279 +1306,167 @@
             gridIcon.style.display = 'none';
             listIcon.style.display = 'inline-block';
         }
-        updateCartTotal();
     }
     
-    const searchInput = document.querySelector('.navbar input');
-    
-    searchInput.addEventListener('input', function(e) {
+    document.querySelector('.navbar input').addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
         const products = document.querySelectorAll('.product');
         
         products.forEach(product => {
             const productName = product.querySelector('.product-title').textContent.toLowerCase();
-            if (productName.includes(searchTerm)) {
-                product.style.display = 'flex';
-            } else {
-                product.style.display = 'none';
-            }
+            product.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
         });
     });
-    
-    function openModal(button) {
-        const product = button.closest('.product');
-        const name = product.querySelector('.product-title').textContent;
-        const priceText = product.querySelector('.product-price').textContent;
-        const price = parseInt(priceText.replace(' sum', '').replace(/\s/g, ''));
-        const quantity = product.querySelector('.product-quantity').textContent.split(' ')[0];
-        const measurement = product.querySelector('.product-measurement').textContent;
-        const image = product.querySelector('.product-image').src;
-        const id = product.querySelector('.product-id').textContent;
-        
-        const existingItem = data.find(el => el.product_id == id);
-        const initialQuantity = existingItem ? existingItem.quantity : 0;
-        
-        document.getElementById('modalProductName').textContent = name;
-        document.getElementById('modalProductID').textContent = id;
-        document.getElementById('modalProductPrice').textContent = priceText;
-        document.getElementById('modalProductQuantity').textContent = quantity + ' ' + measurement + ' mavjud';
-        document.getElementById('modalProductMeasurement').textContent = measurement;
-        document.getElementById('modalProductImage').src = image;
-        document.getElementById('quantityInput').max = quantity;
-        document.getElementById('quantityInput').value = initialQuantity; 
-        document.getElementById('addToCartModal').style.display = 'flex';
-        
-        currentProductPrice = price;
-    }
-    
-    function closeModal() {
-        document.getElementById('addToCartModal').style.display = 'none';
-    }
-    
-    function changeQuantity(change) {
-        const input = document.getElementById('quantityInput');
-        let newValue = parseInt(input.value) + change;
-        const max = parseInt(input.max);
-        
-        if (newValue < 0) newValue = 0;
-        if (newValue > max) newValue = max;
-        
-        input.value = newValue;
-    }
 
-    function addToCart() {
-        const quantity = parseInt(document.getElementById('quantityInput').value);
-        const productId = document.getElementById('modalProductID').textContent;
-        const productName = document.getElementById('modalProductName').textContent;
-        const measurement = document.getElementById('modalProductMeasurement').textContent;
-        
-        if (quantity <= 0) {
-            const index = data.findIndex(el => el.product_id == productId);
-            if (index !== -1) {
-                data.splice(index, 1);
-            }
+    function handleBackButton() {
+        if (document.getElementById('simpleCartModal').classList.contains('active')) {
+            closeSimpleCart();
+        } else if (document.getElementById('addToCartModal').classList.contains('active')) {
+            closeModal();
         } else {
-            let productExists = data.find(el => el.product_id == productId);
-            if (productExists) {
-                productExists.quantity = quantity;
-            } else {
-                data.push({
-                    product_id: productId,
-                    name: productName,
-                    quantity: quantity,
-                    price: currentProductPrice,
-                    measurement: measurement
-                });
+            if (tgWebApp) {
+                tgWebApp.disableClosingConfirmation();
+                tgWebApp.close();
             }
         }
-        
-        updateCartTotal();
-        closeModal();
     }
 
-    function DelModal() {
-        const productId = document.getElementById('modalProductID').textContent;
-        const index = data.findIndex(el => el.product_id == productId);
-        
-        if (index !== -1) {
-            data.splice(index, 1);
-        }
-        
-        updateCartTotal();
-        closeModal();
-    }
-      
-    function updateCartTotal() {
-        let total = 0;
-        data.forEach(item => {
-            total += item.quantity * item.price;
-        });
-        
-        const fixedCart = document.getElementById('fixedCart');
-        
-        if (data.length > 0 && total > 0) {
-            fixedCart.style.display = 'flex';
-            document.querySelector('.cart-total').textContent = `Jami: ${total.toLocaleString('ru-RU')} sum`;
-            
-            // Show back button in Telegram Web App when cart has items
-            if (tgWebApp) {
-                tgWebApp.BackButton.show();
-            }
-        } else {
-            fixedCart.style.display = 'none';
-            
-            // Hide back button in Telegram Web App when cart is empty
-            if (tgWebApp) {
-                tgWebApp.BackButton.hide();
-            }
-        }
-        
-        const productCards = document.querySelectorAll('.product');
-        productCards.forEach(card => {
-            const cardProductId = card.querySelector('.product-id').textContent;
-            const cartItem = data.find(el => el.product_id == cardProductId);
-            const addButtonContainer = card.querySelector('.add-btn-container');
-            
-            if (addButtonContainer) {
-                addButtonContainer.innerHTML = ''; // Clear container
-                
-                if (cartItem && cartItem.quantity > 0) {
-                    const quantityDisplay = document.createElement('div');
-                    quantityDisplay.className = 'quantity-display';
-                    quantityDisplay.innerHTML = `
-                        <span class="quantity-text">${cartItem.quantity} ${cartItem.measurement}</span>
-                        <button class="edit-btn" onclick="openModal(this)">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                    `;
-                    addButtonContainer.appendChild(quantityDisplay);
-                } else {
-                    const addButton = document.createElement('button');
-                    addButton.className = 'add-btn';
-                    addButton.onclick = function() { openModal(this); };
-                    addButton.innerHTML = "Savatchaga<br>qo'shish";
-                    addButtonContainer.appendChild(addButton);
-                }
-            }
-        });
-    }
-
+    
     function openSimpleCart() {
-        const simpleCartModal = document.getElementById('simpleCartModal');
-        simpleCartModal.classList.add('active');
+    const simpleCartModal = document.getElementById('simpleCartModal');
+    simpleCartModal.classList.add('active');
+    
+    const simpleCartBody = document.getElementById('simpleCartBody');
+    const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+    
+    if (cartData.length === 0) {
+        emptyCartMessage.style.display = 'block';
+        simpleCartBody.innerHTML = '';
+        simpleCartBody.appendChild(emptyCartMessage);
+        document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
+    } else {
+        emptyCartMessage.style.display = 'none';
+        simpleCartBody.innerHTML = '';
         
-        const simpleCartBody = document.getElementById('simpleCartBody');
-        const emptyCartMessage = simpleCartBody.querySelector('.empty-cart-message');
+        let totalPrice = 0;
         
-        if (data.length === 0) {
-            emptyCartMessage.style.display = 'block';
-            simpleCartBody.innerHTML = '';
-            simpleCartBody.appendChild(emptyCartMessage);
-            document.getElementById('simpleCartTotalPrice').textContent = '0 sum';
-        } else {
-            emptyCartMessage.style.display = 'none';
-            simpleCartBody.innerHTML = '';
+        cartData.forEach(item => {
+            const itemTotal = item.quantity * item.price;
+            totalPrice += itemTotal;
             
-            let totalPrice = 0;
+            const cartItem = document.createElement('div');
+            cartItem.className = 'simple-cart-item';
             
-            data.forEach(item => {
-                const itemTotal = item.quantity * item.price;
-                totalPrice += itemTotal;
-                
-                const cartItem = document.createElement('div');
-                cartItem.className = 'simple-cart-item';
-                
-                let productImage = '/static/default.png';
-                
-                const productCards = document.querySelectorAll('.product');
-                productCards.forEach(card => {
-                    const cardProductId = card.querySelector('.product-id').textContent;
-                    if (cardProductId === item.product_id) {
-                        const img = card.querySelector('.product-image');
-                        if (img) {
-                            productImage = img.src;
-                        }
+            let productImage = '/static/default.png';
+            document.querySelectorAll('.product').forEach(card => {
+                const cardProductId = card.querySelector('.product-id').textContent;
+                if (cardProductId === item.product_id) {
+                    const img = card.querySelector('.product-image');
+                    if (img) {
+                        productImage = img.src;
                     }
-                });
-                
-                cartItem.innerHTML = `
-                    <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
-                    <div class="simple-cart-item-info">
-                        <div class="simple-cart-item-name">${item.name}</div>
-                        <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
-                        <div class="simple-cart-item-quantity">${item.quantity} ${item.measurement}</div>
-                    </div>
-                `;
-                
-                simpleCartBody.appendChild(cartItem);
+                }
             });
             
-            document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+            cartItem.innerHTML = `
+                <img src="${productImage}" alt="${item.name}" class="simple-cart-item-image">
+                <div class="simple-cart-item-info">
+                    <div class="simple-cart-item-name">${item.name}</div>
+                    <div class="simple-cart-item-price">${item.price.toLocaleString('ru-RU')} sum</div>
+                    <div class="simple-cart-item-quantity">${formatQuantity(item.quantity)} ${item.measurement}</div>
+                </div>
+            `;
+            
+            simpleCartBody.appendChild(cartItem);
+        });
+        
+        document.getElementById('simpleCartTotalPrice').textContent = `${totalPrice.toLocaleString('ru-RU')} sum`;
+    }
+    
+    if (isTelegram && tgWebApp) {
+        tgWebApp.BackButton.show();
+    }
+}
+
+function closeSimpleCart() {
+    document.getElementById('simpleCartModal').classList.remove('active');
+    
+    if (isTelegram && tgWebApp) {
+        if (!document.getElementById('addToCartModal').classList.contains('active')) {
+            tgWebApp.BackButton.hide();
         }
     }
+}
 
-    function closeSimpleCart() {
-        const simpleCartModal = document.getElementById('simpleCartModal');
-        simpleCartModal.classList.remove('active');
+function checkout() {
+    if (cartData.length === 0) {
+        alert("Savatchangiz bo'sh!");
+        return;
     }
-
-    function checkout() {
-        if (data.length === 0) {
-            alert("Savatchangiz bo'sh!");
-            return;
-        }
-        
-        isPlacingOrder = true;
-        
-        $.ajax({
-            url: `/mobile_done_cart/{{ chat_id }}/`,
-            type: "POST",
-            data: JSON.stringify(data),
-            contentType: "application/json",
-            success: function (response) {
+    
+    isPlacingOrder = true;
+    
+    const orderData = cartData.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price
+    }));
+    
+    $.ajax({
+        url: `/bot/mobile_done_cart/{{ chat_id }}`,
+        type: "POST",
+        data: JSON.stringify(orderData),
+        contentType: "application/json",
+        success: function (response) {
+            if (response.ok) {
+                cartData.length = 0;
+                updateCartTotal();
+                
                 if (tgWebApp) {
                     tgWebApp.disableClosingConfirmation();
                     tgWebApp.close();
                 } else {
-                    window.location.replace('/login');
+                    window.location.href = "{% url 'debtor_orders' chat_id %}";
                 }
-            },
-            error: function (xhr, status, error) {
-                console.log('Xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring');
-                console.error(error);
+            } else {
+                alert('Xatolik yuz berdi: ' + (response.error || 'Noma\'lum xato'));
                 isPlacingOrder = false;
-            },
-        });
-        closeSimpleCart();
+            }
+        },
+        error: function (xhr, status, error) {
+            isPlacingOrder = false;
+        },
+    });
+}
+    function handleLogout() {
+        if (tgWebApp) {
+            tgWebApp.disableClosingConfirmation();
+            tgWebApp.close();
+        } else {
+            window.location.href = "/";
+        }
     }
 
-    function handleLogout() {
-            if (tgWebApp) {
-                tgWebApp.disableClosingConfirmation();
-                tgWebApp.close();
-            } else {
-                window.location.href = "{% url 'home' %}";
-            }
-        }
-
     function handlePlaceOrder() {
-        if (data.length > 0) {
+        if (cartData.length > 0) {
             openSimpleCart();
         } else {
             alert("Savatchangiz bo'sh! Iltimos, avval mahsulot qo'shing.");
         }
     }
 
-    updateCartTotal();
-
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
+    document.addEventListener('click', function(e) {
+        if (e.target === document.getElementById('addToCartModal')) {
+            closeModal();
+        }
+        if (e.target === document.getElementById('simpleCartModal')) {
             closeSimpleCart();
         }
     });
 
-    document.getElementById('simpleCartModal').addEventListener('click', function(e) {
-        if (e.target === this) {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
             closeSimpleCart();
         }
     });

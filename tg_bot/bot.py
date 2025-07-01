@@ -6,7 +6,6 @@ import requests
 from api.models import Wallet, Debtor, Cart, Shop, Kirim, MOrder
 import datetime
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.urls import reverse
 
 @csrf_exempt
 def webhook(request):
@@ -44,20 +43,7 @@ def webhook(request):
         elif text in ['buyurtmalar', '📝 buyurtmalar', '📝 buyurtmalar'.lower()]:
             send_order_period_menu(chat_id)
         elif text in ['buyurtma berish', '🛒 buyurtma berish', '🛒 buyurtma berish'.lower()]:
-            web_app_url = f"https://{settings.DOMAIN}/abot/{chat_id}"
-            keyboard = {
-                "inline_keyboard": [
-                    [{
-                        "text": "🛒 Buyurtma berish",
-                        "web_app": {"url": web_app_url}
-                    }]
-                ]
-            }
-            send_message(
-                chat_id,
-                "Buyurtma berish uchun pastdagi tugmani bosing:",
-                reply_markup=json.dumps(keyboard)
-            )
+            open_web_app_directly(chat_id)
         elif text == '30 kun':
             messages = get_order('bir oy', chat_id)
             for msg in messages:
@@ -74,6 +60,19 @@ def webhook(request):
         return JsonResponse({"status": "ok"})
     else:
         return JsonResponse({"message": "Webhook ishlayapti"}, status=200)
+
+def open_web_app_directly(chat_id):
+    web_app_url = f"https://ecomaruf.kabinett.uz/abot/abot_index/{chat_id}/"
+    return send_message(
+        chat_id,
+        " ",  # Empty message
+        reply_markup=json.dumps({
+            "inline_keyboard": [[{
+                "text": "🛒 Buyurtma berish",
+                "web_app": {"url": web_app_url}
+            }]]
+        })
+    )
 
 def send_message(chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -121,13 +120,18 @@ def send_kirim_message(chat_id, text, kirim_id):
     return response.json()
 
 def send_menu(chat_id):
+    web_app_url = f"https://ecomaruf.kabinett.uz/bot/abot_index/{chat_id}"
     url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': chat_id,
         'text': "Asosiy menyu:",
         'reply_markup': {
             'keyboard': [
-                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}, {'text':'🛒 Buyurtma berish'}]
+                [{'text': '💰 Balans'}, {'text': '📝 Buyurtmalar'}],
+                [{
+                    'text': '🛒 Buyurtma berish', 
+                    'web_app': {'url': web_app_url}
+                }]
             ],
             'resize_keyboard': True,
             'one_time_keyboard': False
