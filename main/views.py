@@ -4356,11 +4356,13 @@ def kirim_qilish(request):
                 text += f'💬 {kirim.izox}'
             chat_id = deb.tg_id
             send_kirim_message(chat_id, text, kirim.id)
+            RejaChiqim.objects.create(debtor_id=debtor, comment=izox, kassa=kassa.kassa, valyuta=valuta,kurs=kurs, plan_total=summa,is_confirmed=True)
         
         if deliver:
             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
             kirim.payhistory=pay
             Deliver.objects.get(id=deliver).refresh_debt()
+            RejaTushum.objects.create(deliver_id=deliver, kassa=kassa.kassa, comment=izox, valyuta=valuta, kurs=kurs, plan_total=summa,is_confirmed=True)
 
         if partner:
             pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
@@ -9402,7 +9404,6 @@ def b2b_shop_ajax(request, product_id):
         'customer':Debtor.objects.all(),
         'contract':Contract.objects.filter(is_active=True),
         'product':ProductFilial.objects.filter(quantity__gt=0).annotate(price_ty=Coalesce(Sum(fields, output_field=FloatField()), Value(0.0))),
-        # 'product':ProductFilial.objects.filter(quantity__gt=0, price_types__type=shop.type_price).annotate(price_ty=Coalesce(Sum(fields, output_field=FloatField()), Value(0.0))),
         'user_profile':UserProfile.objects.all(),
         'groups':Groups.objects.all(),
         'call_center':UserProfile.objects.filter(staff=6),
@@ -9418,7 +9419,6 @@ def b2b_shop_ajax(request, product_id):
         product_html = render_to_string('product_list.html',
          {'product': ProductFilial.objects.filter(price_types__type_id=type_id).annotate(price_ty=Coalesce(Sum('price_types__price', output_field=FloatField()), Value(0.0)))}, request)
         return JsonResponse({'product_html': product_html})
-    
     
     context['groups'] = Groups.objects.all()
 
