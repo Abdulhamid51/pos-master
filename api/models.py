@@ -1336,7 +1336,7 @@ class Cart(models.Model):
     total = models.FloatField(blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True)
     applied = models.BooleanField(default=False)
-    skidka_total = models.IntegerField(default=0)
+    skidka_total = models.FloatField(default=0)
     summa_total = models.FloatField(default=0)
 
     @property
@@ -1602,7 +1602,10 @@ class Wallet(models.Model):
     start_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
+        if self.customer:
+            return str(self.valyuta) + " " + str(self.start_summa) + " " + "Mijoz" + str(self.customer)
         return str(self.valyuta) + " " + str(self.start_summa)
+        
 
 
 
@@ -1679,12 +1682,12 @@ class PayHistory(models.Model):
     deliver_all_payment = models.ForeignKey(DeliverPaymentsAll, on_delete=models.CASCADE, null=True, blank=True)
     deliver_pay_History = models.ForeignKey(DeliverPayHistory, on_delete=models.CASCADE, null=True, blank=True)
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
-
+    payment_date = models.DateField(null=True, blank=True)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
     summa = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
-
+    is_debt = models.BooleanField(default=False)
     @property
     def kontr_agent(self):
         if self.debtor:

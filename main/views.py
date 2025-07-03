@@ -9398,7 +9398,20 @@ def b2b_shop_ajax(request, product_id):
     else :
         fields = 'price_types__price'
     kurs = Course.objects.last()
+
+    customer_info = {
+        'last_pay': Shop.objects.filter(debtor__isnull=False).last().date if Shop.objects.filter(debtor__isnull=False).exists() else None,
+        'valyuta': [
+            {
+                'summa': Wallet.objects.filter(customer=shop.debtor, valyuta=x).aggregate(all=Sum('summa'))['all'] or 0,
+                'name': x.name
+            }
+            for x in Valyuta.objects.all()
+        ]
+    }
+
     context = {
+        'customer_info':customer_info,
         'today':datetime.today(),
         'filial':Filial.objects.all(),
         'customer':Debtor.objects.all(),
@@ -9457,6 +9470,41 @@ def b2b_shop_ajax_add(request, product_id):
 def ajax_reja_tushum_list(request, shop_id):
     return JsonResponse({'reja_tushum': RejaTushum.objects.filter(shop_id=shop_id).count()})
 
+@csrf_exempt
+def payment_shop(request, shop_id):
+    if request.method == 'POST':
+        try:
+            shop = Shop.objects.get(id=shop_id)
+            kassa = request.POST.get('kassa_id')
+            valyuta = request.POST.get('valyuta_id')
+            comment = request.POST.get('comment')
+            payment_date = request.POST.get('payment_date')
+            print(payment_date)
+            summa = float(request.POST.get('summa', 0))
+            if kassa != 'qarz':
+                kassas = KassaMerge.objects.get(kassa_id=kassa, valyuta_id=valyuta)
+                PayHistory.objects.create(
+                    shop=shop,
+                    kassa=kassas,
+                    valyuta_id=valyuta,
+                    debtor=shop.debtor,
+                    summa = summa
+                )
+            else:
+                PayHistory.objects.create(
+                    shop=shop,
+                    debtor=shop.debtor,
+                    is_debt = True,
+                    comment = comment,
+                    summa = summa,
+                    payment_date=payment_date,
+                )
+            return JsonResponse({'success': True, 'message': 'Payment successful'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
 
 
 def b2b_shop_ajax_add_one(request, product_id):
