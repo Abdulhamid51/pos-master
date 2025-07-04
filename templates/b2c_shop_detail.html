@@ -73,7 +73,7 @@
             <div class="col-xl-8 col-lg-8 col-sm-12 layout-spacing">
                 <div class="row">
                     <div class="col-md-2">
-                        <select name="valyuta" class="form-control" required disabled>
+                        <select name="valyuta" id="valyuta_input" class="form-control" required disabled>
                             {% for i in valyuta %}
                                 <option value="{{i.id}}" {% if shop.valyuta == i %}selected{% endif %}>{{i.name}}</option>
                             {% endfor %}
@@ -95,10 +95,14 @@
                         </div>
                     </div>
                     <div class="btn-group col-md-5" role="group" aria-label="Price Types">
-                        <input type="radio" class="btn-check price_type_input" name="type_price" id="oddiy" value="" autocomplete="off" checked>
-                        <label class="btn btn-outline-primary" for="oddiy">Oddiy</label>
+                        <!-- <input type="radio" class="btn-check price_type_input" name="type_price" id="oddiy" value="" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="oddiy">Oddiy</label> -->
                         {% for i in price_types %}
-                            <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off">
+                            <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off" 
+                            {% if shop.debtor.price_type == i %}
+                                checked
+                            {% endif %}
+                                >
                             <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
                         {% endfor %}
                     </div>
@@ -418,11 +422,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
     <script>
         $('select.searchable').selectize({ normalize: true });
+        const products_input = $('#products')[0].selectize
     </script>
 
     <script>
         function products_focus() {
-            const selectize = $('#products')[0].selectize
+            const selectize = products_input
         selectize.focus()
         }
         products_focus()
@@ -592,7 +597,7 @@
         
         const [pr_id, pr_name, quantity, barcode, pack] = itemValue.split('&');
         const price_type = $('input[name="type_price"]:checked').val();
-
+        const valyuta = $('#valyuta_input').val()
         if (pr_id) {
             // Check if product already exists in cart
             const existingRow = $(`tr:contains('${pr_name}')`).first();
@@ -605,7 +610,7 @@
                 updateCartItem(existingRow);
             } else {
                 // Product doesn't exist - add new row
-                $.get("{% url 'check_price' %}", { product: pr_id, type: price_type }, function(data) {
+                $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                     const price = parseFloat(data['price']) || 0;
                     addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
                 });
@@ -681,12 +686,12 @@
                         updateTotals();
                         
                         // Add the new product to selectize dropdown
-                        const selectize = $('#products')[0].selectize;
-                        selectize.addOption({
+                        // const selectize = $('#products')[0].selectize;
+                        products_input.addOption({
                             value: `${productId}&${productName}&1&${barcode}&${pack}`,
                             text: `${productName} - ${barcode}`
                         });
-                        selectize.refreshOptions(false);
+                        products_input.refreshOptions(false);
                     } else {
                         showAlert(response.message, "danger");
                     }
@@ -717,7 +722,8 @@
                     // Add the new product to cart
                     $.get("{% url 'check_price' %}", { 
                         product: response.product_id, 
-                        type: $('input[name="type_price"]:checked').val() 
+                        type: $('input[name="type_price"]:checked').val(),
+                        valyuta: $('#valyuta_input').val()
                     }, function(data) {
                         const price = parseFloat(data['price']) || 0;
                         addProductToTable(

@@ -1329,7 +1329,7 @@ class Cart(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='cart', blank=True, null=True)
     bring_price = models.FloatField(default=0)
     after_cart = models.FloatField(default=0)
-    price_without_skidka = models.IntegerField(default=0)
+    price_without_skidka = models.FloatField(default=0)
     price = models.FloatField(default=0)
     total_pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)

@@ -7055,9 +7055,10 @@ def shop_nakladnoy(request, order_id):
 def check_price(request):
     price_type = request.GET.get('type')
     product = request.GET.get('product')
+    valyuta = request.GET.get('valyuta')
 
     if price_type and product:
-        price = ProductPriceType.objects.filter(type_id=price_type, product_id=product).last()
+        price = ProductPriceType.objects.filter(type_id=price_type, product_id=product, valyuta_id=valyuta).last()
         if price:
             return JsonResponse({
                 "price": price.price
