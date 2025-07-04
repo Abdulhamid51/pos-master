@@ -317,7 +317,6 @@
                                                             <div class="row">
                                                                 <div class="col-md-8">
                                                                     <h3 style="font-weight: bold;">Итого:</h3>
-                                                                    <!-- <p>Прибыль </p> -->
                                                                 </div>
                                                                 <div class="col-md-4">
                                                                     <h4 style="font-weight: bold;" id="summa_itog"></h4>
@@ -354,12 +353,11 @@
                                                
                                                 <div class="col-md-12">
                                                     <div class="row">
-                                                            <script>
+                                                        <script>
                                                                     document.addEventListener('DOMContentLoaded', function() {
                                                                         function formatNumber(num) {
                                                                             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                                                                         }
-
                                                                         function updateReceiptProducts() {
                                                                             const productList = document.getElementById('product_list');
                                                                             const receiptContainer = document.getElementById('chek_products');
@@ -711,7 +709,6 @@
 
                                                                         paymentSystem.init();
 
-                                                                        // Add submit button event listener
                                                                         document.getElementById('submit-payment').addEventListener('click', function() {
                                                                             paymentSystem.submitPayments({{ shop.id }});
                                                                         });
@@ -733,7 +730,7 @@
                                                                         `;
                                                                         document.head.appendChild(style);
                                                                     });
-                                                                    </script>
+                                                        </script>
                                                         <div class="col-md-3">
                                                             <style>
                                                                 .receipt-wrapper {
@@ -809,7 +806,7 @@
                                                                     margin: 5px 0;
                                                                 }
                                                             </style>
-                                                                <div class="receipt-wrapper">
+                                                            <div class="receipt-wrapper">
                                                                     <div class="zigzag"></div>
                                                                     <div class="receipt">
                                                                             <div class="section">
@@ -834,9 +831,9 @@
                                                                             <div class="center">Xaridingiz uchun rahmat</div>
                                                                     </div>
                                                                     <div class="zigzag"></div>
-                                                                </div>
                                                             </div>
-                                                            <style>
+                                                        </div>
+                                                        <style>
                                                             .method-box {
                                                                 display: flex;
                                                                 gap: 10px;
@@ -948,7 +945,6 @@
                                                                 border: 1px solid rgba(0, 0, 0, 0.277) !important;
                                                             }
                                                         </style>
-                                                        
                                                         
                                                         <div class="col-md-9">
                                                             <div class="row">

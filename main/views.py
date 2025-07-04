@@ -7151,6 +7151,7 @@ def b2c_shop_detail(request, id):
     }
     
     context = {
+        'today' : datetime.now().date(),
        'shop':shop,
        'cart':cart,
        'totals':totals,
@@ -7161,6 +7162,8 @@ def b2c_shop_detail(request, id):
        'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
        'valyuta':Valyuta.objects.all(),
        'filial':Filial.objects.filter(is_activate=True),
+        'kassa':KassaMerge.objects.filter(kassa__filial=shop.filial),
+
     }
 
     context['groups'] = Groups.objects.all()
