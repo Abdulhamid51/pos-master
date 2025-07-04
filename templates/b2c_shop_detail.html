@@ -34,7 +34,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 1050;
+            z-index: 9999;
             width: 30rem;
         }
 
@@ -105,7 +105,7 @@
                 </div>
                 <div class="widget-content widget-content-area br-6">
                     <div class="table-responsive mb-4 mt-4">
-                        <table id="zero-config" class="table table-hover non-hover" style="width:100%">
+                        <table id="product_list" class="table table-hover non-hover" style="width:100%">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -124,7 +124,7 @@
                                 {% for i in cart %}
                                     <tr data-id="{{i.id}}">
                                         <td>{{ forloop.counter }}</td>
-                                        <td>{{ i.product.name }}</td>
+                                        <td class="product_name">{{ i.product.name }}</td>
                                         <td>{{ i.product.barcode }}</td>
                                         <td>{{ i.product.pack }}</td>
                                         <td>
@@ -138,14 +138,14 @@
                                         <td>
                                             <div class="input-group">
                                                 <input type="text" class="form-control quantity-input" 
-                                                       value="{{ i.quantity|floatformat }}" min="0" step="0.01"
+                                                       value="{{ i.quantity|floatformat }}" name="quantity" min="0" step="0.01"
                                                        onkeyup="updatePackFromQuantity(this)" style="width: 6rem;">
                                             </div>
                                         </td>
                                         <td>{{ i.price_without_skidka|intcomma }}</td>
                                         <td>
                                             <div class="input-group">
-                                                <input type="text" class="form-control price-input" 
+                                                <input type="text" class="form-control price-input price_product_list" 
                                                        value="{{ i.price|floatformat }}" min="0" step="0.01"
                                                        onchange="updatePrice(this)">
                                             </div>
@@ -215,10 +215,10 @@
                                     <option value="{{i.id}}" {% if shop.filial == i or user.filial == i %}selected{% endif %}>{{ i.name }}</option>
                                 {% endfor %}
                             </select>
-                            <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button>
+                            <!-- <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button> -->
                             <br><hr style="color: black;">
 
-                            <label for="">Jami summa</label>
+                            <!-- <label for="">Jami summa</label>
                             <input type="text" class="form-control" id="all_total_2" name="all_total" value="{{ totals.total }}" disabled>
                             <br>
                             <label for="">Naqd berildi</label>
@@ -226,11 +226,754 @@
                             
                             <br><hr>
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
-                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
+                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled> -->
                             {% if shop.debtor.fio != "Naqd" %}
                             {% endif %}
                         </form>
                     </div>
+                    <div class="col-md-12">
+                        <br>
+                        <button class="btn btn-secondary" style="width: 100%;" id="fullscreenPaymentBtn">
+                            Tolovni amalga oshirish
+                        </button>
+                    </div>
+
+                    <div id="fullscreenPayment" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1050; overflow-y: auto; padding: 20px;">
+                        <div class="container-fluid">
+                            <div class="row mb-3">
+                                <div class="col-12 d-flex justify-content-between align-items-center">
+                                    <h3>To'lovni amalga oshirish</h3>
+                                    <button class="btn btn-danger" id="closeFullscreenBtn">
+                                        <i class="fas fa-times"></i> 
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <style>
+                                    .method-box {
+                                        display: flex;
+                                        gap: 10px;
+                                        align-items: center;
+                                        padding: 10px;
+                                        background-color: white !important;
+                                        border-radius: 5px;
+                                        box-shadow: 2px 5px 5px rgba(0,0,0,0.1) !important;
+                                        transition: all 0.3s ease;
+                                        border: 1px solid rgba(0, 0, 0, 0.129) !important;
+                                    }
+                                    .method-box:hover {
+                                        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                                    }
+                                    .method-box i {
+                                        color: #007bff !important;
+                                        font-size: 1.2em;
+                                    }
+                                    .method-box p {
+                                        margin: 0;
+                                        flex-grow: 1;
+                                        font-weight: 500;
+                                    }
+                                    .toggle-input {
+                                        color: #007bff !important;
+                                        background-color: white !important;
+                                        border: 1px solid #ffffff !important;
+                                        width: 25px;
+                                        height: 25px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 0;
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                    }
+                                    .toggle-input i {
+                                        font-size: 1.2em;
+                                    }
+                                    .input-fields {
+                                        background-color: #f8f9fa;
+                                        padding: 15px;
+                                        border-radius: 5px;
+                                        margin-top: 10px;
+                                        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+                                    }
+                                    .remove-field {
+                                        cursor: pointer;
+                                        font-size: 1.8em;
+                                        color: #dc3545;
+                                        background: none;
+                                        border: none;
+                                    }
+                                    .payment-table {
+                                        width: 100%;
+                                        border-collapse: collapse;
+                                    }
+                                    .payment-table th, .payment-table td {
+                                        border: 1px solid #ddd;
+                                        padding: 8px;
+                                        text-align: left;
+                                    }
+                                    .payment-table th {
+                                        background-color: #f8f9fa;
+                                    }
+                                    .card-balance {
+                                        text-align: right;
+                                        margin-top: 10px;
+                                        font-style: italic;
+                                        color: #666;
+                                    }
+                                    .inputkassa {
+                                        margin-top: 20px;
+                                        border-top: 1px solid #eee;
+                                        padding-top: 20px;
+                                    }
+                                    .input-box {
+                                        display: none;
+                                        position: relative;
+                                        border: 1px solid rgba(0, 0, 0, 0.401);
+                                        padding: 10px;
+                                        border-radius: 8px;
+                                        background-color: #fff;
+                                        margin-top: 10px;
+                                        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                                        transition: border 0.3s ease;
+                                        position: relative;
+                                        z-index: 10;
+                                    }
+                                    .input-box:hover {
+                                        border: 1px solid #007bff !important;
+                                    }
+                                    .box-header {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        font-weight: bold;
+                                        padding-bottom: 8px;
+                                        border-bottom: 1px solid #ddd;
+                                    }
+                                    .box-body {
+                                        margin-top: 10px;
+                                    }
+                                    .payment-input {
+                                        width: 100%;
+                                        border: 1px solid rgba(0, 0, 0, 0.277) !important;
+                                    }
+                                    .receipt-wrapper {
+                                        width: 100%;
+                                        background: #fff;
+                                        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                                        border-left: 1.8px solid rgba(192, 192, 192, 0.758);
+                                        border-right: 1.8px solid rgba(192, 192, 192, 0.758);
+                                        overflow: hidden; 
+                                    }
+                                    .zigzag {
+                                        width: calc(100% + 3.6px);
+                                        height: 15px;
+                                        margin-left: -1.8px; 
+                                        background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg"><polyline points="0,10 5,0 10,10 15,0 20,10 25,0 30,10 35,0 40,10 45,0 50,10 55,0 60,10 65,0 70,10 75,0 80,10 85,0 90,10 95,0 100,10" fill="white" stroke="lightgray" /></svg>') repeat-x;
+                                        background-size: contain;
+                                    }
+                                    .receipt {
+                                        padding: 20px;
+                                        font-size: 13px;
+                                        color: #000 !important;
+                                    }
+                                    .bold {
+                                        font-weight: bold;
+                                    }
+                                    .lines {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        margin: 3px 0;
+                                    }
+                                    hr {
+                                        border: none;
+                                        border-top: 1px solid #bbb;
+                                        margin: 8px 0;
+                                    }
+                                    .section {
+                                        margin-bottom: 8px;
+                                    }
+                                    .barcode {
+                                        height: 50px;
+                                        width: 100%;
+                                        background: repeating-linear-gradient(
+                                            to right,
+                                            #000 0px,
+                                            #000 2px,
+                                            #fff 2px,
+                                            #fff 4px
+                                        );
+                                        margin: 15px 0;
+                                    }
+                                    .center {
+                                        text-align: center;
+                                        font-weight: bold;
+                                        font-size: 14px;
+                                    }
+                                    .item-title {
+                                        font-weight: bold;
+                                        margin-bottom: 3px;
+                                    }
+                                    .subline {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        font-size: 12px;
+                                        margin-left: 10px;
+                                    }
+                                    .qarz-row {
+                                        font-weight: bold;
+                                        color: #dc3545;
+                                        border-top: 1px dashed #ccc;
+                                        border-bottom: 1px dashed #ccc;
+                                        padding: 5px 0;
+                                        margin: 5px 0;
+                                        background-color: #fff3f3;
+                                    }
+                                    .qarz-row span {
+                                        font-size: 14px;
+                                    }
+                                    .summary-card {
+                                        background: #f8f9fa;
+                                        border-radius: 8px;
+                                        padding: 15px;
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                        margin-bottom: 20px;
+                                    }
+                                    .summary-title {
+                                        font-weight: bold;
+                                        margin-bottom: 10px;
+                                        font-size: 16px;
+                                    }
+                                    .summary-value {
+                                        font-size: 18px;
+                                        font-weight: bold;
+                                    }
+                                    .summary-value.total {
+                                        color: green;
+                                    }
+                                </style>
+                                
+                                <div class="col-md-3">
+                                    <div class="receipt-wrapper">
+                                        <div class="zigzag"></div>
+                                        <div class="receipt">
+                                            <div class="section">
+                                                <div class="lines"><span class="bold">Tranzaksiya:</span> <span>#{{ shop.id }}</span></div>
+                                                <div class="bold">Store ecomarf-tekstil</div>
+                                                <div class="lines"><span class="bold">Sana:</span> <span>{{today|date:'Y-m-d'}}</span></div>
+                                                <div class="lines"><span class="bold">Sotuvchi:</span> <span>{{ shop.debtor}}</span></div>
+                                                <div class="bold">Maxsulotlar:</div>
+                                            </div>
+                                            <hr>
+                                            <div id="chek_products">
+                                            </div>
+                                            <hr>
+                                            <div class="section">
+                                                <div class="lines"><span>Oraliq jami</span><span id="chek_oraliq_jami">0 UZS</span></div>
+                                                <div class="lines"><span>Chegirma</span><span id="chek_chegirma">0 UZS</span></div>
+                                                <div class="lines bold"><span>JAMI</span><span  id="chek_total_jami">0 UZS</span></div>
+                                            </div>
+                                            <div class="section" id="check_tolovlar">
+                                            </div>
+                                            <div class="barcode"></div>
+                                            <div class="center">Xaridingiz uchun rahmat</div>
+                                        </div>
+                                        <div class="zigzag"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-9">
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <div class="summary-card">
+                                                <div class="summary-title">Jami:</div>
+                                                <div class="summary-value" id="total_jami">0 UZS</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="summary-card">
+                                                
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="summary-card">
+                                                <div class="summary-title">To'lash uchun:</div>
+                                                <div class="summary-value total" id="tolash_summasi">0 UZS</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h4>To'lov usullari</h4>
+                                            <hr>
+                                        </div>
+                                        
+                                        {% for mer in kassa %}
+                                        <div class="col-md-3 mb-3">
+                                            <div class="payment-method" data-kassa-id="{{ mer.kassa.id }}" data-valyuta-id="{{ mer.valyuta.id }}">
+                                                <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'">
+                                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                                    <p>{{ mer.kassa.name }} ({{ mer.valyuta }})</p>
+                                                    <button class="toggle-input">
+                                                        <i class="fa-solid fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="input-box" style="display: none;">
+                                                    <div class="box-header">
+                                                        <span>{{ mer.kassa.name }} ({{ mer.valyuta }})</span>
+                                                        <button class="remove-field">&times;</button>
+                                                    </div>
+                                                    <div class="box-body">
+                                                        <input type="number" step="any" class="form-control payment-input" placeholder="Summani kiriting">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        
+                                        <div class="col-md-3 mb-3">
+                                            <div class="payment-method" data-kassa-id="qarz" data-valyuta-id="">
+                                                <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'">
+                                                    <i class="fa-solid fa-money-bill-transfer"></i>
+                                                    <p>Qarzga</p>
+                                                    <button class="toggle-input" data-bs-toggle="modal" data-bs-target="#qarzModal">
+                                                        <i class="fa-solid fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-12 d-flex justify-content-end" style="gap: 10px;">
+                                            <button type="button" class="btn btn-danger me-2" id="cancelPaymentBtn">
+                                                <i class="fas fa-times"></i> Bekor qilish
+                                            </button>
+                                            <button type="button" class="btn btn-success" id="submit-payment">
+                                                <i class="fas fa-check"></i> To'lovni tasdiqlash
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="qarzModal" tabindex="-1" aria-labelledby="qarzModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content p-4">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="qarzModalLabel">Yangi qarz</h5>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row mb-3">
+                                        {% for i in customer_info.valyuta %}
+                                        <div class="col-4">
+                                            <label>Faol qarz ({{i.name}})</label>
+                                            <h6>{{ i.summa|intcomma }}</h6>
+                                        </div>
+                                        {% endfor %}
+                                        <div class="col-3">
+                                            <label>Oxirgi to'lov</label>
+                                            <h6>{{customer_info.last_pay|date:'Y-m-d'}}</h6>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Mijoz</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fa fa-user"></i></span>
+                                            <input type="text" class="form-control" value="{{shop.debtor}}" readonly 
+                                                style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
+                                        </div>
+                                        <small class="text-muted">Balans: 0 UZS</small>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col">
+                                            <label>Summa</label>
+                                            <input type="number" step="any" class="form-control" id="qarzSumma" 
+                                                style="border: 1px solid rgba(0, 0, 0, 0.214);" required>
+                                        </div>
+                                        <div class="col">
+                                            <label>To'lov muddati</label>
+                                            <input type="date" class="form-control" id="qarzDueDate" 
+                                                style="border: 1px solid rgba(0, 0, 0, 0.214);" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label>Izoh</label>
+                                        <textarea class="form-control" id="qarzComment" rows="3" placeholder="Izoh kiriting"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Bekor qilish</button>
+                                    <button type="button" class="btn btn-primary" id="confirmQarzButton">Qarz berish</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Toggle fullscreen payment
+                            const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
+                            const fullscreenPayment = document.getElementById('fullscreenPayment');
+                            const closeFullscreenBtn = document.getElementById('closeFullscreenBtn');
+                            const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+                            
+                            fullscreenPaymentBtn.addEventListener('click', function() {
+                                fullscreenPayment.style.display = 'block';
+                                document.body.style.overflow = 'hidden'; // Prevent scrolling
+                                paymentSystem.init();
+                            });
+                            
+                            function closeFullscreen() {
+                                fullscreenPayment.style.display = 'none';
+                                document.body.style.overflow = ''; // Re-enable scrolling
+                            }
+                            
+                            closeFullscreenBtn.addEventListener('click', closeFullscreen);
+                            cancelPaymentBtn.addEventListener('click', closeFullscreen);
+                            
+                            function formatNumber(num) {
+                                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            }
+                            
+                            function updateReceiptProducts() {
+                                const productList = document.getElementById('product_list');
+                                const receiptContainer = document.getElementById('chek_products');
+                                receiptContainer.innerHTML = '';
+                                let summaItog = 0;
+                                let oraliq_jami = 0;
+                                let chegirma = 0;
+                                const productRows = productList.querySelectorAll('tbody tr');
+                                
+                                productRows.forEach(row => {
+                                    const productName = row.querySelector('.product_name').textContent;
+                                    const quantityInput = row.querySelector('input[name="quantity"]');
+                                    const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
+                                    const priceText = row.querySelector('.price_product_list').value
+                                    const price = parseFloat(priceText.replace(/,/g, '')) || 0;
+                                    const qty = parseFloat(quantity.replace(/,/g, '')) || 0;
+                                    const totalWithoutDiscount = price * qty;
+                                    const totalWithDiscount = totalWithoutDiscount;
+                                    summaItog += totalWithDiscount;
+                                    oraliq_jami += totalWithoutDiscount;
+                                    chegirma += 0;
+                                    const formattedPrice = formatNumber(price);
+                                    const formattedQuantity = formatNumber(qty);
+                                    const formattedTotal = formatNumber(totalWithDiscount);
+                                    const formattedDiscount = 0
+                                    const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount);
+                                    
+                                    const receiptItem = `
+                                        <div class="section">
+                                            <div class="item-title">${productName}</div>
+                                            <div class="lines">
+                                                <span>${formattedQuantity} × ${formattedPrice}</span>
+                                                <span>${formattedTotalWithoutDiscount} UZS</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                    receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
+                                });
+                                
+                                const formattedSumma = formatNumber(summaItog);
+                                const formattedoraliq_jami = formatNumber(oraliq_jami);
+                                const formattedchegirma = formatNumber(chegirma);
+                                const totalJami = document.getElementById('chek_total_jami');
+                                const oraliqjami = document.getElementById('chek_oraliq_jami');
+                                const totalchegirma = document.getElementById('chek_chegirma');
+                                const total_jami = document.getElementById('total_jami');
+                                
+                                if (totalJami) {
+                                    totalJami.textContent = `${formattedSumma} UZS`;
+                                    total_jami.textContent = `${formattedSumma} UZS`;
+                                }
+                                if (oraliqjami) {
+                                    oraliqjami.textContent = `${formattedoraliq_jami} UZS`;
+                                }
+                                if (totalchegirma) {
+                                    totalchegirma.textContent = `${formattedchegirma} UZS`;
+                                }
+                                
+                                const mainTotalElement = document.getElementById('summa_itog');
+                                if (mainTotalElement) {
+                                    mainTotalElement.textContent = formattedSumma;
+                                }
+                                
+                                return summaItog;
+                            }
+                            
+                            const paymentSystem = {
+                                totalJami: 0,
+                                totalToPay: 0,
+                                paymentMethods: {},
+                                modalInstance: null,
+                                
+                                init: function() {
+                                    this.totalJami = updateReceiptProducts();
+                                    this.totalToPay = this.totalJami;
+                                    
+                                    document.querySelectorAll('.payment-method').forEach(method => {
+                                        const methodName = method.querySelector('p').textContent.trim();
+                                        this.paymentMethods[methodName] = 0;
+                                    });
+                                    
+                                    this.paymentMethods['Qarz'] = 0;
+                                    this.setupEventListeners();
+                                    this.initModal();
+                                    this.updatePaymentDisplay();
+                                    this.updateTolashText();
+                                },
+                                
+                                initModal: function() {
+                                    const qarzModal = document.getElementById('qarzModal');
+                                    if (!qarzModal) return;
+                                    
+                                    this.modalInstance = new bootstrap.Modal(qarzModal);
+                                    
+                                    const summaInput = qarzModal.querySelector('input[type="number"]');
+                                    const qarzButton = qarzModal.querySelector('.btn-primary');
+                                    const cancelButton = qarzModal.querySelector('.btn-danger');
+                                    
+                                    qarzModal.addEventListener('show.bs.modal', () => {
+                                        summaInput.value = this.paymentMethods['Qarz'] || this.totalToPay;
+                                        summaInput.select();
+                                    });
+                                    
+                                    qarzButton.addEventListener('click', () => {
+                                        const summa = parseFloat(summaInput.value) || 0;
+                                        if (summa > 0) {
+                                            if (this.addCreditPayment(summa)) {
+                                                this.modalInstance.hide();
+                                                document.querySelector('[data-bs-dismiss="modal"]').click();
+                                            }
+                                        } else {
+                                            showAlert("Iltimos, to'g'ri summa kiriting!", "success");
+                                            summaInput.focus();
+                                        }
+                                    });
+                                    
+                                    cancelButton.addEventListener('click', () => {
+                                        if (this.paymentMethods['Qarz'] > 0) {
+                                            this.totalToPay += this.paymentMethods['Qarz'];
+                                            this.paymentMethods['Qarz'] = 0;
+                                            this.updatePaymentDisplay();
+                                            this.updateTolashText();
+                                        }
+                                        this.modalInstance.hide();
+                                    });
+                                },
+                                
+                                showInputBox: function(button) {
+                                    const methodBox = button.closest('.payment-method');
+                                    const inputBox = methodBox.querySelector('.input-box');
+                                    if (inputBox) {
+                                        inputBox.style.display = 'block';
+                                        inputBox.querySelector('input').focus();
+                                    }
+                                },
+                                
+                                removeBox: function(button) {
+                                    const inputBox = button.closest('.input-box');
+                                    if (!inputBox) return;
+                                    const input = inputBox.querySelector('input');
+                                    const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                    const value = parseFloat(input.value) || 0;
+                                    
+                                    if (this.paymentMethods[methodName] !== undefined) {
+                                        this.totalToPay += this.paymentMethods[methodName];
+                                        this.paymentMethods[methodName] = 0;
+                                    }
+                                    input.value = '';
+                                    inputBox.style.display = 'none';
+                                    this.updatePaymentDisplay();
+                                    this.updateTolashText();
+                                },
+                                
+                                updateTolash: function(input) {
+                                    const inputBox = input.closest('.input-box');
+                                    const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                    const value = parseFloat(input.value) || 0;
+                                    const previousValue = this.paymentMethods[methodName] || 0;
+                                    const difference = value - previousValue;
+                                    this.paymentMethods[methodName] = value;
+                                    this.totalToPay -= difference;
+                                    this.updatePaymentDisplay();
+                                    this.updateTolashText();
+                                },
+                                
+                                updateTolashText: function() {
+                                    const tolashEl = document.getElementById('tolash_summasi');
+                                    const paidAmountEl = document.getElementById('paid_amount');
+                                    if (tolashEl) {
+                                        tolashEl.textContent = formatNumber(this.totalToPay) + ' UZS';
+                                    }
+                                    if (paidAmountEl) {
+                                        const paidAmount = this.totalJami - this.totalToPay;
+                                        paidAmountEl.textContent = formatNumber(paidAmount) + ' UZS';
+                                    }
+                                },
+                                
+                                updatePaymentDisplay: function() {
+                                    const paymentContainer = document.getElementById('check_tolovlar');
+                                    paymentContainer.innerHTML = '';
+                                    let totalPaid = 0;
+                                    
+                                    for (const [methodName, amount] of Object.entries(this.paymentMethods)) {
+                                        if (amount > 0) {
+                                            const paymentLine = document.createElement('div');
+                                            paymentLine.className = 'lines';
+                                            
+                                            if (methodName === 'Qarz') {
+                                                paymentLine.classList.add('qarz-row');
+                                            }
+                                            
+                                            paymentLine.innerHTML = `
+                                                <span>${methodName}</span>
+                                                <span>${formatNumber(amount)} UZS</span>
+                                            `;
+                                            paymentContainer.appendChild(paymentLine);
+                                            totalPaid += amount;
+                                        }
+                                    }
+                                },
+                                
+                                setupEventListeners: function() {
+                                    document.querySelectorAll('.payment-input').forEach(input => {
+                                        input.addEventListener('input', (e) => this.updateTolash(e.target));
+                                    });
+                                    
+                                    document.querySelectorAll('.toggle-input').forEach(button => {
+                                        button.addEventListener('click', (e) => this.showInputBox(e.target));
+                                    });
+                                    
+                                    document.querySelectorAll('.remove-field').forEach(button => {
+                                        button.addEventListener('click', (e) => this.removeBox(e.target));
+                                    });
+                                },
+                                
+                                addCreditPayment: function(amount) {
+                                    if (amount > 0 && amount <= this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
+                                        if (this.paymentMethods['Qarz'] > 0) {
+                                            this.totalToPay += this.paymentMethods['Qarz'];
+                                        }
+                                        this.paymentMethods['Qarz'] = amount;
+                                        this.totalToPay -= amount;
+                                        this.updatePaymentDisplay();
+                                        this.updateTolashText();
+                                        return true;
+                                    } else if (amount > this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
+                                        showAlert("Qarz summasi qolgan summadan katta bo\'lishi mumkin emas!", "warning");
+                                        return false;
+                                    }
+                                    return false;
+                                },
+                                
+                                submitPayments: function(shopId) {
+                                    const paymentInputs = document.querySelectorAll('.input-box:not([style*="display: none"]) .payment-input');
+                                    const qarzPayment = this.paymentMethods['Qarz'] || 0;
+                                    const qarzComment = document.querySelector('#qarzModal textarea') ? document.querySelector('#qarzModal textarea').value : '';
+                                    const qarzDueDate = document.querySelector('#qarzModal input[type="date"]') ? document.querySelector('#qarzModal input[type="date"]').value : '';
+                                    let payments = [];
+                                    
+                                    paymentInputs.forEach(input => {
+                                        const inputBox = input.closest('.input-box');
+                                        const paymentMethod = inputBox.closest('.payment-method');
+                                        const kassaId = paymentMethod.dataset.kassaId;
+                                        const valyutaId = paymentMethod.dataset.valyutaId;
+                                        const methodText = inputBox.querySelector('.box-header span').textContent.trim();
+                                        const summa = parseFloat(input.value) || 0;
+                                        
+                                        if (summa > 0) {
+                                            payments.push({
+                                                kassa_id: kassaId,
+                                                valyuta_id: valyutaId,
+                                                summa: summa,
+                                                comment: ''
+                                            });
+                                        }
+                                    });
+                                    
+                                    if (qarzPayment > 0) {
+                                        if (!qarzDueDate) {
+                                            showAlert("Iltimos, qarz uchun to\'lov muddatini kiriting!", "warning");
+                                            return false;
+                                        }
+                                        payments.push({
+                                            kassa: 'qarz',
+                                            valyuta: '',
+                                            summa: qarzPayment,
+                                            comment: qarzComment,
+                                            payment_date: qarzDueDate
+                                        });
+                                    }
+                                    
+                                    const totalPaid = payments.reduce((sum, payment) => sum + payment.summa, 0);
+                                    if (Math.abs(totalPaid - this.totalJami) > 1) {
+                                        showAlert("To\'lov summasi umumiy summagacha to\'liq emas!", "danger");
+                                        return false;
+                                    }
+                                    
+                                    let successCount = 0;
+                                    payments.forEach(payment => {
+                                        const formData = new URLSearchParams();
+                                        
+                                        if (payment.kassa === 'qarz') {
+                                            formData.append('kassa_id', 'qarz');
+                                            formData.append('summa', payment.summa);
+                                            formData.append('comment', payment.comment);
+                                            formData.append('payment_date', payment.payment_date);
+                                        } else {
+                                            formData.append('kassa_id', payment.kassa_id);
+                                            formData.append('valyuta_id', payment.valyuta_id);
+                                            formData.append('summa', payment.summa);
+                                        }
+                                        
+                                        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                                        
+                                        fetch(`/payment_shop/${shopId}`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/x-www-form-urlencoded',
+                                                'X-CSRFToken': '{{ csrf_token }}'
+                                            },
+                                            body: formData
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                successCount++;
+                                                if (successCount === payments.length) {
+                                                    window.location.replace('/b2b_shop');
+                                                }
+                                            } else {
+                                                throw new Error(data.message || 'To\'lovda xatolik yuz berdi');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Payment error:', error);
+                                            alert(error.message);
+                                        });
+                                    });
+                                    
+                                    return true;
+                                }
+                            };
+                            
+                            document.getElementById('submit-payment').addEventListener('click', function() {
+                                paymentSystem.submitPayments({{ shop.id }});
+                            });
+                        });
+                    </script>
+
+
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
                     <div class="col-md-4">
                         <br>
                         <a style="width: 100%;" class="btn btn-primary" onclick="Yakunlash()">Yakunlash</a>
