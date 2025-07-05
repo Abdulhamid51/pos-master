@@ -222,7 +222,7 @@
                             <!-- <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button> -->
                             <br><hr style="color: black;">
 
-                            <!-- <label for="">Jami summa</label>
+                            <label for="">Jami summa</label>
                             <input type="text" class="form-control" id="all_total_2" name="all_total" value="{{ totals.total }}" disabled>
                             <br>
                             <label for="">Naqd berildi</label>
@@ -230,7 +230,7 @@
                             
                             <br><hr>
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
-                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled> -->
+                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
                             {% if shop.debtor.fio != "Naqd" %}
                             {% endif %}
                         </form>
@@ -622,12 +622,11 @@
                     </div>
 
                     <script>
+                        const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
+                        const fullscreenPayment = document.getElementById('fullscreenPayment');
+                        const closeFullscreenBtn = document.getElementById('closeFullscreenBtn');
+                        const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
                         document.addEventListener('DOMContentLoaded', function() {
-                            // Toggle fullscreen payment
-                            const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
-                            const fullscreenPayment = document.getElementById('fullscreenPayment');
-                            const closeFullscreenBtn = document.getElementById('closeFullscreenBtn');
-                            const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
                             
                             fullscreenPaymentBtn.addEventListener('click', function() {
                                 fullscreenPayment.style.display = 'block';
@@ -657,7 +656,7 @@
                                 const productRows = productList.querySelectorAll('tbody tr');
                                 
                                 productRows.forEach(row => {
-                                    const productName = row.querySelector('.product_name').textContent;
+                                    const productName = row.querySelector('td:nth-child(2)').textContent.trim();
                                     const quantityInput = row.querySelector('input[name="quantity"]');
                                     const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
                                     const priceText = row.querySelector('.price_product_list').value
@@ -1170,8 +1169,8 @@
 
     <script>
         function products_focus() {
-            const selectize = products_input
-        selectize.focus()
+            // const selectize = products_input
+        // selectize.focus()
         }
         products_focus()
     </script>
@@ -1252,6 +1251,9 @@
                     row.find('.total').text(formatNumber(total.toFixed(2)));
                     row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
+                    if (fullscreenPayment.style.display === 'block') {
+                        paymentSystem.init();
+                    }
                 } else {
                     showAlert(response.message, "danger");
                 }
@@ -1427,14 +1429,17 @@
                         
                         $("tbody").append(newRow);
                         updateTotals();
-                        
+                        if (fullscreenPayment.style.display === 'block') {
+                            updateReceiptProducts()
+                            paymentSystem.init();
+                        }
                         // Add the new product to selectize dropdown
                         // const selectize = $('#products')[0].selectize;
-                        products_input.addOption({
-                            value: `${productId}&${productName}&1&${barcode}&${pack}`,
-                            text: `${productName} - ${barcode}`
-                        });
-                        products_input.refreshOptions(false);
+                        // products_input.addOption({
+                        //     value: `${productId}&${productName}&1&${barcode}&${pack}`,
+                        //     text: `${productName} - ${barcode}`
+                        // });
+                        // products_input.refreshOptions(false);
                     } else {
                         showAlert(response.message, "danger");
                     }
@@ -1501,6 +1506,9 @@
                     showAlert(response.message, "success");
                     tr_item.remove();
                     updateTotals();
+                    if (fullscreenPayment.style.display === 'block') {
+                        paymentSystem.init();
+                    }
                 } else {
                     showAlert(response.message, "danger");
                 }
