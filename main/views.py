@@ -2930,6 +2930,7 @@ class Recieves(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        last_part = Recieve.objects.last()
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['delivers'] = Deliver.objects.all().order_by('-id')
@@ -2946,6 +2947,7 @@ class Recieves(LoginRequiredMixin, TemplateView):
         context['valyutas'] = Valyuta.objects.filter()
         context['today'] = datetime.now()
         context['measurement_type'] = MeasurementType.objects.filter(is_active=True)
+        context['last_part'] = last_part.name+1 if last_part else '0001'
         context['measurements'] = [{
             "id": i[0],
             "name": i[1],

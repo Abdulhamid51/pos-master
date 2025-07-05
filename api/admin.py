@@ -220,8 +220,8 @@ class CartAdmin(admin.ModelAdmin):
 
 @admin.register(Recieve)
 class RecieveAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'som', 'dollar', 'status', 'date')
-    search_fields = ('id', 'name', 'som', 'dollar', 'status', 'date')
+    list_display = ('id', 'som', 'dollar', 'status', 'date')
+    search_fields = ('id', 'som', 'dollar', 'status', 'date')
     date_hierarchy = 'date'
 
 

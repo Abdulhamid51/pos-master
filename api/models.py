@@ -877,7 +877,7 @@ class ProductBarcode(models.Model):
     
 
 class Recieve(models.Model):
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.IntegerField(default=0)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
     payment_date = models.DateTimeField(blank=True, null=True)

@@ -707,8 +707,10 @@
                                                             };
 
                                                             document.addEventListener('DOMContentLoaded', function() {
+                                                                // Initialize payment system
                                                                 paymentSystem.init();
 
+                                                                // Delete button handler
                                                                 document.getElementById('product_list').addEventListener('click', function(e) {
                                                                     if (e.target.classList.contains('delete-btn')) {
                                                                         const row = e.target.closest('.row');
@@ -757,15 +759,18 @@
                                                                     }
                                                                 });
 
+                                                                // Submit payment button
                                                                 document.getElementById('submit-payment').addEventListener('click', function() {
                                                                     paymentSystem.submitPayments({{ shop.id }});
                                                                 });
                                                             });
 
+                                                            // Helper function to parse numbers
                                                             function parseNumber(text) {
                                                                 return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
                                                             }
 
+                                                            // Add CSS for qarz row
                                                             const style = document.createElement('style');
                                                             style.textContent = `
                                                                 .qarz-row {
