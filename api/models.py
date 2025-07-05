@@ -2642,7 +2642,7 @@ class RejaTushum(models.Model):
 
 class RejaChiqim(models.Model):
     date = models.DateField(default=timezone.now)
-    payment_date = models.DateField(null=True, blank=True)
+    payment_date = models.DateTimeField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
     total = models.IntegerField(default=0)
     plan_total = models.IntegerField(default=0)

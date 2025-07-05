@@ -311,7 +311,7 @@
                                                         <div class="col-md-7">
                                                             <textarea name="" style="width: 100%;" placeholder="Комментарий" rows="5" id="shop_textarea">{{ shop.comment }}</textarea>
 
-                                                            <button class="btn btn-success" id="shop_save" type="button">Savdoni yakunlash</button>
+                                                            <!-- <button class="btn btn-success" id="shop_save" type="button">Savdoni yakunlash</button> -->
                                                         </div>
                                                         <div class="col-md-5">
                                                             <div class="row">
@@ -354,383 +354,435 @@
                                                 <div class="col-md-12">
                                                     <div class="row">
                                                         <script>
-                                                                    document.addEventListener('DOMContentLoaded', function() {
-                                                                        function formatNumber(num) {
-                                                                            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                                                                        }
-                                                                        function updateReceiptProducts() {
-                                                                            const productList = document.getElementById('product_list');
-                                                                            const receiptContainer = document.getElementById('chek_products');
-                                                                            
-                                                                            receiptContainer.innerHTML = '';
-                                                                            let summaItog = 0;
-                                                                            let oraliq_jami = 0;
-                                                                            let chegirma = 0;
-                                                                            
-                                                                            const productRows = productList.querySelectorAll('.row');
-                                                                            
-                                                                            productRows.forEach(row => {
-                                                                                const productName = row.querySelector('.product_name').textContent;
-                                                                                const quantityInput = row.querySelector('input[name="quantity"]');
-                                                                                const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
-                                                                                
-                                                                                const priceText = row.querySelector('.price_product_list').textContent;
-                                                                                const skidkaInput = row.querySelector('.skidka_input');
-                                                                                const skidka = skidkaInput ? skidkaInput.value : row.querySelector('div.col-md-2').textContent.trim();
-                                                                                
-                                                                                const price = parseFloat(priceText.replace(/,/g, '')) || 0;
-                                                                                const qty = parseFloat(quantity.replace(/,/g, '')) || 0;
-                                                                                const discount = parseFloat(skidka.replace(/,/g, '')) || 0;
-                                                                                
-                                                                                const totalWithoutDiscount = price * qty;
-                                                                                const totalWithDiscount = totalWithoutDiscount - discount;
-                                                                                summaItog += totalWithDiscount;
-                                                                                oraliq_jami += totalWithoutDiscount;
-                                                                                chegirma += discount;
-                                                                                
-                                                                                const formattedPrice = formatNumber(price);
-                                                                                const formattedQuantity = formatNumber(qty);
-                                                                                const formattedTotal = formatNumber(totalWithDiscount);
-                                                                                const formattedDiscount = discount ? formatNumber(discount) : '';
-                                                                                const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount);
-                                                                                
-                                                                                const receiptItem = `
-                                                                                    <div class="section">
-                                                                                        <div class="item-title">${productName}</div>
-                                                                                        <div class="lines">
-                                                                                            <span>${formattedQuantity} × ${formattedPrice}</span>
-                                                                                            <span>${formattedTotalWithoutDiscount} UZS</span>
-                                                                                        </div>
-                                                                                        ${discount ? `
-                                                                                        <div class="subline">
-                                                                                            <span>⛓ Chegirma ${formattedDiscount}</span>
-                                                                                            <span>${formattedTotal} UZS</span>
-                                                                                        </div>` : ''}
-                                                                                    </div>
-                                                                                `;
-                                                                                
-                                                                                receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
-                                                                            });
-                                                                            
-                                                                            const formattedSumma = formatNumber(summaItog);
-                                                                            const formattedoraliq_jami = formatNumber(oraliq_jami);
-                                                                            const formattedchegirma = formatNumber(chegirma);
-                                                                            
-                                                                            const totalJami = document.getElementById('chek_total_jami');
-                                                                            const oraliqjami = document.getElementById('chek_oraliq_jami');
-                                                                            const totalchegirma = document.getElementById('chek_chegirma');
-                                                                            const total_jami = document.getElementById('total_jami');
-                                                                            
-                                                                            if (totalJami) {
-                                                                                totalJami.textContent = `${formattedSumma} UZS`;
-                                                                                total_jami.textContent = `${formattedSumma} UZS`;
-                                                                            }
-                                                                            if (oraliqjami) {
-                                                                                oraliqjami.textContent = `${formattedoraliq_jami} UZS`;
-                                                                            }
-                                                                            if (totalchegirma) {
-                                                                                totalchegirma.textContent = `${formattedchegirma} UZS`;
-                                                                            }
-                                                                            
-                                                                            const mainTotalElement = document.getElementById('summa_itog');
-                                                                            if (mainTotalElement) {
-                                                                                mainTotalElement.textContent = formattedSumma;
-                                                                            }
-                                                                            
-                                                                            return summaItog;
-                                                                        }
+                                                            function formatNumber(num) {
+                                                                const number = typeof num === 'string' ? parseFloat(num.replace(/\s/g, '').replace(',', '.')) : num;
+                                                                return number.toLocaleString('fr-FR', {maximumFractionDigits: 0});
+                                                            }
+                                                            function updateReceiptProducts() {
+                                                                const productList = document.getElementById('product_list');
+                                                                const receiptContainer = document.getElementById('chek_products');
+                                                                
+                                                                receiptContainer.innerHTML = '';
+                                                                let summaItog = 0;
+                                                                let oraliq_jami = 0;
+                                                                let chegirma = 0;
+                                                                
+                                                                const productRows = productList.querySelectorAll('.row');
+                                                                
+                                                                productRows.forEach(row => {
+                                                                    const productName = row.querySelector('.product_name').textContent;
+                                                                    const quantityInput = row.querySelector('input[name="quantity"]');
+                                                                    const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
+                                                                    
+                                                                    const priceText = row.querySelector('.price_product_list').textContent;
+                                                                    const skidkaInput = row.querySelector('.skidka_input');
+                                                                    const skidka = skidkaInput ? skidkaInput.value : row.querySelector('div.col-md-2').textContent.trim();
+                                                                    
+                                                                    const price = parseFloat(priceText.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                    const qty = parseFloat(quantity.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                    const discount = parseFloat(skidka.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                    console.log(priceText)
+                                                                    const totalWithoutDiscount = price * qty;
+                                                                    const totalWithDiscount = totalWithoutDiscount - discount;
+                                                                    summaItog += totalWithDiscount;
+                                                                    oraliq_jami += totalWithoutDiscount;
+                                                                    chegirma += discount;
+                                                                    
+                                                                    const formattedPrice = formatNumber(price);
+                                                                    console.log(formattedPrice, '1111')
 
-                                                                        const paymentSystem = {
-                                                                            totalJami: 0,
-                                                                            totalToPay: 0,
-                                                                            paymentMethods: {},
-                                                                            modalInstance: null,
-                                                                            
-                                                                            init: function() {
-                                                                                this.totalJami = updateReceiptProducts();
-                                                                                this.totalToPay = this.totalJami;
-                                                                                
-                                                                                document.querySelectorAll('.payment-method').forEach(method => {
-                                                                                    const methodName = method.querySelector('p').textContent.trim();
-                                                                                    this.paymentMethods[methodName] = 0;
-                                                                                });
-                                                                                
-                                                                                this.paymentMethods['Qarz'] = 0;
-                                                                                
-                                                                                this.setupEventListeners();
-                                                                                
-                                                                                this.initModal();
-                                                                                
-                                                                                this.updatePaymentDisplay();
-                                                                                this.updateTolashText();
-                                                                            },
-                                                                            
-                                                                            initModal: function() {
-                                                                                const qarzModal = document.getElementById('qarzModal');
-                                                                                if (!qarzModal) return;
-                                                                                
-                                                                                this.modalInstance = new bootstrap.Modal(qarzModal);
-                                                                                const summaInput = qarzModal.querySelector('input[type="number"]');
-                                                                                const qarzButton = qarzModal.querySelector('.btn-primary');
-                                                                                const cancelButton = qarzModal.querySelector('.btn-danger');
-                                                                                
-                                                                                qarzModal.addEventListener('show.bs.modal', () => {
-                                                                                    summaInput.value = this.paymentMethods['Qarz'] || this.totalToPay;
-                                                                                    summaInput.select();
-                                                                                });
+                                                                    const formattedQuantity = formatNumber(qty);
+                                                                    const formattedTotal = formatNumber(totalWithDiscount);
+                                                                    const formattedDiscount = discount ? formatNumber(discount) : '';
+                                                                    const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount);
+                                                                    
+                                                                    const receiptItem = `
+                                                                        <div class="section">
+                                                                            <div class="item-title">${productName}</div>
+                                                                            <div class="lines">
+                                                                                <span>${formattedQuantity} × ${formattedPrice}</span>
+                                                                                <span>${formattedTotalWithoutDiscount} UZS</span>
+                                                                            </div>
+                                                                            ${discount ? `
+                                                                            <div class="subline">
+                                                                                <span>⛓ Chegirma ${formattedDiscount}</span>
+                                                                                <span>${formattedTotal} UZS</span>
+                                                                            </div>` : ''}
+                                                                        </div>
+                                                                    `;
+                                                                    
+                                                                    receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
+                                                                });
+                                                                
+                                                                const formattedSumma = formatNumber(summaItog);
+                                                                const formattedoraliq_jami = formatNumber(oraliq_jami);
+                                                                const formattedchegirma = formatNumber(chegirma);
+                                                                
+                                                                const totalJami = document.getElementById('chek_total_jami');
+                                                                const oraliqjami = document.getElementById('chek_oraliq_jami');
+                                                                const totalchegirma = document.getElementById('chek_chegirma');
+                                                                const total_jami = document.getElementById('total_jami');
+                                                                
+                                                                if (totalJami) {
+                                                                    totalJami.textContent = `${formattedSumma} UZS`;
+                                                                    total_jami.textContent = `${formattedSumma} UZS`;
+                                                                }
+                                                                if (oraliqjami) {
+                                                                    oraliqjami.textContent = `${formattedoraliq_jami} UZS`;
+                                                                }
+                                                                if (totalchegirma) {
+                                                                    totalchegirma.textContent = `${formattedchegirma} UZS`;
+                                                                }
+                                                                
+                                                                const mainTotalElement = document.getElementById('summa_itog');
+                                                                if (mainTotalElement) {
+                                                                    mainTotalElement.textContent = formattedSumma;
+                                                                }
+                                                                
+                                                                return summaItog;
+                                                            }
 
-                                                                                qarzButton.addEventListener('click', () => {
-                                                                                    const summa = parseFloat(summaInput.value) || 0;
-                                                                                    
-                                                                                    if (summa > 0) {
-                                                                                        if (this.addCreditPayment(summa)) {
-                                                                                            this.modalInstance.hide();
-                                                                                            document.querySelector('[data-bs-dismiss="modal"]').click();
+                                                           
 
-                                                                                        }
-                                                                                    } else {
-                                                                                        showAlert("Iltimos, to\'g\'ri summa kiriting!", "success");
-                                                                                        summaInput.focus();
-                                                                                    }
-                                                                                });
-                                                                                
-                                                                                cancelButton.addEventListener('click', () => {
-                                                                                    if (this.paymentMethods['Qarz'] > 0) {
-                                                                                        this.totalToPay += this.paymentMethods['Qarz'];
-                                                                                        this.paymentMethods['Qarz'] = 0;
-                                                                                        this.updatePaymentDisplay();
-                                                                                        this.updateTolashText();
-                                                                                    }
-                                                                                    this.modalInstance.hide();
-                                                                                });
-                                                                            },
-                                                                            
-                                                                            showInputBox: function(button) {
-                                                                                const methodBox = button.closest('.payment-method');
-                                                                                const inputBox = methodBox.querySelector('.input-box');
-                                                                                if (inputBox) {
-                                                                                    inputBox.style.display = 'block';
-                                                                                    inputBox.querySelector('input').focus();
-                                                                                }
-                                                                            },
-                                                                                
-                                                                            removeBox: function(button) {
-                                                                                const inputBox = button.closest('.input-box');
-                                                                                if (!inputBox) return;
-
-                                                                                const input = inputBox.querySelector('input');
-                                                                                const methodName = inputBox.querySelector('.box-header span').textContent.trim();
-                                                                                const value = parseFloat(input.value) || 0;
-                                                                                
-                                                                                if (this.paymentMethods[methodName] !== undefined) {
-                                                                                    this.totalToPay += this.paymentMethods[methodName];
-                                                                                    this.paymentMethods[methodName] = 0;
-                                                                                }
-
-                                                                                input.value = '';
-                                                                                inputBox.style.display = 'none';
-                                                                                
-                                                                                this.updatePaymentDisplay();
-                                                                                this.updateTolashText();
-                                                                            },
-                                                                            
-                                                                            updateTolash: function(input) {
-                                                                                const inputBox = input.closest('.input-box');
-                                                                                const methodName = inputBox.querySelector('.box-header span').textContent.trim();
-                                                                                const value = parseFloat(input.value) || 0;
-                                                                                
-                                                                                const previousValue = this.paymentMethods[methodName] || 0;
-                                                                                const difference = value - previousValue;
-                                                                                
-                                                                                this.paymentMethods[methodName] = value;
-                                                                                this.totalToPay -= difference;
-                                                                                
-                                                                                this.updatePaymentDisplay();
-                                                                                this.updateTolashText();
-                                                                            },
-                                                                            
-                                                                            updateTolashText: function() {
-                                                                                const tolashEl = document.getElementById('tolash_summasi');
-                                                                                if (tolashEl) {
-                                                                                    tolashEl.textContent = formatNumber(this.totalToPay) + ' UZS';
-                                                                                }
-                                                                            },
-                                                                            
-                                                                            updatePaymentDisplay: function() {
-                                                                                const paymentContainer = document.getElementById('check_tolovlar');
-                                                                                paymentContainer.innerHTML = '';
-                                                                                
-                                                                                let totalPaid = 0;
-                                                                                
-                                                                                for (const [methodName, amount] of Object.entries(this.paymentMethods)) {
-                                                                                    if (amount > 0) {
-                                                                                        const paymentLine = document.createElement('div');
-                                                                                        paymentLine.className = 'lines';
-                                                                                        
-                                                                                        if (methodName === 'Qarz') {
-                                                                                            paymentLine.classList.add('qarz-row');
-                                                                                        }
-                                                                                        
-                                                                                        paymentLine.innerHTML = `
-                                                                                            <span>${methodName}</span>
-                                                                                            <span>${formatNumber(amount)} UZS</span>
-                                                                                        `;
-                                                                                        paymentContainer.appendChild(paymentLine);
-                                                                                        totalPaid += amount;
-                                                                                    }
-                                                                                }
-                                                                            },
-                                                                            
-                                                                            setupEventListeners: function() {
-                                                                                document.querySelectorAll('.payment-input').forEach(input => {
-                                                                                    input.addEventListener('input', (e) => this.updateTolash(e.target));
-                                                                                });
-                                                                                
-                                                                                document.querySelectorAll('.toggle-input').forEach(button => {
-                                                                                    button.addEventListener('click', (e) => this.showInputBox(e.target));
-                                                                                });
-                                                                                
-                                                                                document.querySelectorAll('.remove-field').forEach(button => {
-                                                                                    button.addEventListener('click', (e) => this.removeBox(e.target));
-                                                                                });
-                                                                            },
-                                                                            
-                                                                            addCreditPayment: function(amount) {
-                                                                                if (amount > 0 && amount <= this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
-                                                                                    if (this.paymentMethods['Qarz'] > 0) {
-                                                                                        this.totalToPay += this.paymentMethods['Qarz'];
-                                                                                    }
-                                                                                    
-                                                                                    this.paymentMethods['Qarz'] = amount;
-                                                                                    this.totalToPay -= amount;
-                                                                                    this.updatePaymentDisplay();
-                                                                                    this.updateTolashText();
-                                                                                    return true;
-                                                                                } else if (amount > this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
-                                                                                    showAlert("Qarz summasi qolgan summadan katta bo\'lishi mumkin emas!", "warning");
-
-                                                                                    return false;
-                                                                                }
-                                                                                return false;
-                                                                            },
-                                                                            
-                                                                            submitPayments: function(shopId) {
-                                                                                    const paymentInputs = document.querySelectorAll('.input-box:not([style*="display: none"]) .payment-input');
-                                                                                    const qarzPayment = this.paymentMethods['Qarz'] || 0;
-                                                                                    const qarzComment = document.querySelector('#qarzModal textarea') ? document.querySelector('#qarzModal textarea').value : '';
-                                                                                    const qarzDueDate = document.querySelector('#qarzModal input[type="date"]') ? document.querySelector('#qarzModal input[type="date"]').value : '';
-                                                                                    let payments = [];
-                                                                                    
-                                                                                    paymentInputs.forEach(input => {
-                                                                                        const inputBox = input.closest('.input-box');
-                                                                                        const paymentMethod = inputBox.closest('.payment-method');
-                                                                                        const kassaId = paymentMethod.dataset.kassaId;
-                                                                                        const valyutaId = paymentMethod.dataset.valyutaId;
-                                                                                        const methodText = inputBox.querySelector('.box-header span').textContent.trim();
-                                                                                        const summa = parseFloat(input.value) || 0;
-                                                                                        
-                                                                                        if (summa > 0) {
-                                                                                            payments.push({
-                                                                                                kassa_id: kassaId,
-                                                                                                valyuta_id: valyutaId,
-                                                                                                summa: summa,
-                                                                                                comment: ''
-                                                                                            });
-                                                                                        }
-                                                                                    });
-                                                                                    
-                                                                                    if (qarzPayment > 0) {
-                                                                                        if (!qarzDueDate) {
-                                                                                            showAlert("Iltimos, qarz uchun to\'lov muddatini kiriting!", "warning");
-
-                                                                                            return false;
-                                                                                        }
-                                                                                        
-                                                                                        payments.push({
-                                                                                            kassa: 'qarz',
-                                                                                            valyuta: '',
-                                                                                            summa: qarzPayment,
-                                                                                            comment: qarzComment,
-                                                                                            payment_date: qarzDueDate
-                                                                                        });
-                                                                                    }
-                                                                                    
-                                                                                    const totalPaid = payments.reduce((sum, payment) => sum + payment.summa, 0);
-                                                                                    if (Math.abs(totalPaid - this.totalJami) > 1) {
-                                                                                        showAlert("To\'lov summasi umumiy summagacha to\'liq emas!", "danger");
-                                                                                        return false;
-                                                                                    }
-                                                                                    
-                                                                                    let successCount = 0;
-                                                                                    payments.forEach(payment => {
-                                                                                        const formData = new URLSearchParams();
-                                                                                        
-                                                                                        if (payment.kassa === 'qarz') {
-                                                                                            formData.append('kassa_id', 'qarz');
-                                                                                            formData.append('summa', payment.summa);
-                                                                                            formData.append('comment', payment.comment);
-                                                                                            formData.append('payment_date', payment.payment_date);
-                                                                                        } else {
-                                                                                            formData.append('kassa_id', payment.kassa_id);
-                                                                                            formData.append('valyuta_id', payment.valyuta_id);
-                                                                                            formData.append('summa', payment.summa);
-                                                                                        }
-                                                                                        
-                                                                                        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-                                                                                        
-                                                                                        fetch(`/payment_shop/${shopId}`, {
-                                                                                            method: 'POST',
-                                                                                            headers: {
-                                                                                                'Content-Type': 'application/x-www-form-urlencoded',
-                                                                                                'X-CSRFToken': '{{ csrf_token }}'
-                                                                                            },
-                                                                                            body: formData
-                                                                                        })
-                                                                                        .then(response => response.json())
-                                                                                        .then(data => {
-                                                                                            if (data.success) {
-                                                                                                successCount++;
-                                                                                                if (successCount === payments.length) {
-                                                                                                    window.location.replace('/b2b_shop');
-                                                                                                }
-                                                                                            } else {
-                                                                                                throw new Error(data.message || 'To\'lovda xatolik yuz berdi');
-                                                                                            }
-                                                                                        })
-                                                                                        .catch(error => {
-                                                                                            console.error('Payment error:', error);
-                                                                                            alert(error.message);
-                                                                                        });
-                                                                                    });
-                                                                                    
-                                                                                    return true;
-                                                                                }
-                                                                        };
-
-                                                                        paymentSystem.init();
-
-                                                                        document.getElementById('submit-payment').addEventListener('click', function() {
-                                                                            paymentSystem.submitPayments({{ shop.id }});
-                                                                        });
-
-                                                                        const style = document.createElement('style');
-                                                                        style.textContent = `
-                                                                            .qarz-row {
-                                                                                font-weight: bold;
-                                                                                color: #dc3545;
-                                                                                border-top: 1px dashed #ccc;
-                                                                                border-bottom: 1px dashed #ccc;
-                                                                                padding: 5px 0;
-                                                                                margin: 5px 0;
-                                                                                background-color: #fff3f3;
-                                                                            }
-                                                                            .qarz-row span {
-                                                                                font-size: 14px;
-                                                                            }
-                                                                        `;
-                                                                        document.head.appendChild(style);
+                                                            const paymentSystem = {
+                                                                totalJami: 0,
+                                                                totalToPay: 0,
+                                                                paymentMethods: {},
+                                                                modalInstance: null,
+                                                                
+                                                                init: function() {
+                                                                    this.totalJami = updateReceiptProducts();
+                                                                    this.totalToPay = this.totalJami;
+                                                                    
+                                                                    document.querySelectorAll('.payment-method').forEach(method => {
+                                                                        const methodName = method.querySelector('p').textContent.trim();
+                                                                        this.paymentMethods[methodName] = 0;
                                                                     });
-                                                        </script>
+                                                                    
+                                                                    this.paymentMethods['Qarz'] = 0;
+                                                                    
+                                                                    this.setupEventListeners();
+                                                                    this.initModal();
+                                                                    this.updatePaymentDisplay();
+                                                                    this.updateTolashText();
+                                                                },
+                                                                
+                                                                initModal: function() {
+                                                                    const qarzModal = document.getElementById('qarzModal');
+                                                                    if (!qarzModal) return;
+                                                                    
+                                                                    this.modalInstance = new bootstrap.Modal(qarzModal);
+                                                                    const summaInput = qarzModal.querySelector('input[type="number"]');
+                                                                    const qarzButton = qarzModal.querySelector('.btn-primary');
+                                                                    const cancelButton = qarzModal.querySelector('.btn-danger');
+                                                                    
+                                                                    qarzModal.addEventListener('show.bs.modal', () => {
+                                                                        summaInput.value = this.paymentMethods['Qarz'] || this.totalToPay;
+                                                                        summaInput.select();
+                                                                    });
+
+                                                                    qarzButton.addEventListener('click', () => {
+                                                                        const summa = parseFloat(summaInput.value) || 0;
+                                                                        
+                                                                        if (summa > 0) {
+                                                                            if (this.addCreditPayment(summa)) {
+                                                                                this.modalInstance.hide();
+                                                                                document.querySelector('[data-bs-dismiss="modal"]').click();
+                                                                            }
+                                                                        } else {
+                                                                            showAlert("Iltimos, to'g'ri summa kiriting!", "success");
+                                                                            summaInput.focus();
+                                                                        }
+                                                                    });
+                                                                    
+                                                                    cancelButton.addEventListener('click', () => {
+                                                                        if (this.paymentMethods['Qarz'] > 0) {
+                                                                            this.totalToPay += this.paymentMethods['Qarz'];
+                                                                            this.paymentMethods['Qarz'] = 0;
+                                                                            this.updatePaymentDisplay();
+                                                                            this.updateTolashText();
+                                                                        }
+                                                                        this.modalInstance.hide();
+                                                                    });
+                                                                },
+                                                                
+                                                                showInputBox: function(button) {
+                                                                    const methodBox = button.closest('.payment-method');
+                                                                    const inputBox = methodBox.querySelector('.input-box');
+                                                                    if (inputBox) {
+                                                                        inputBox.style.display = 'block';
+                                                                        inputBox.querySelector('input').focus();
+                                                                    }
+                                                                },
+                                                                    
+                                                                removeBox: function(button) {
+                                                                    const inputBox = button.closest('.input-box');
+                                                                    if (!inputBox) return;
+
+                                                                    const input = inputBox.querySelector('input');
+                                                                    const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                                                    const value = parseFloat(input.value) || 0;
+                                                                    
+                                                                    if (this.paymentMethods[methodName] !== undefined) {
+                                                                        this.totalToPay += this.paymentMethods[methodName];
+                                                                        this.paymentMethods[methodName] = 0;
+                                                                    }
+
+                                                                    input.value = '';
+                                                                    inputBox.style.display = 'none';
+                                                                    
+                                                                    this.updatePaymentDisplay();
+                                                                    this.updateTolashText();
+                                                                },
+                                                                
+                                                                updateTolash: function(input) {
+                                                                    const inputBox = input.closest('.input-box');
+                                                                    const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                                                    const value = parseFloat(input.value) || 0;
+                                                                    
+                                                                    const previousValue = this.paymentMethods[methodName] || 0;
+                                                                    const difference = value - previousValue;
+                                                                    
+                                                                    this.paymentMethods[methodName] = value;
+                                                                    this.totalToPay -= difference;
+                                                                    
+                                                                    this.updatePaymentDisplay();
+                                                                    this.updateTolashText();
+                                                                },
+                                                                
+                                                                updateTolashText: function() {
+                                                                    const tolashEl = document.getElementById('tolash_summasi');
+                                                                    if (tolashEl) {
+                                                                        tolashEl.textContent = formatNumber(this.totalToPay) + ' UZS';
+                                                                    }
+                                                                },
+                                                                
+                                                                updatePaymentDisplay: function() {
+                                                                    const paymentContainer = document.getElementById('check_tolovlar');
+                                                                    paymentContainer.innerHTML = '';
+                                                                    
+                                                                    let totalPaid = 0;
+                                                                    
+                                                                    for (const [methodName, amount] of Object.entries(this.paymentMethods)) {
+                                                                        if (amount > 0) {
+                                                                            const paymentLine = document.createElement('div');
+                                                                            paymentLine.className = 'lines';
+                                                                            
+                                                                            if (methodName === 'Qarz') {
+                                                                                paymentLine.classList.add('qarz-row');
+                                                                            }
+                                                                            
+                                                                            paymentLine.innerHTML = `
+                                                                                <span>${methodName}</span>
+                                                                                <span>${formatNumber(amount)} UZS</span>
+                                                                            `;
+                                                                            paymentContainer.appendChild(paymentLine);
+                                                                            totalPaid += amount;
+                                                                        }
+                                                                    }
+                                                                },
+                                                                
+                                                                setupEventListeners: function() {
+                                                                    document.querySelectorAll('.payment-input').forEach(input => {
+                                                                        input.addEventListener('input', (e) => this.updateTolash(e.target));
+                                                                    });
+                                                                    
+                                                                    document.querySelectorAll('.toggle-input').forEach(button => {
+                                                                        button.addEventListener('click', (e) => this.showInputBox(e.target));
+                                                                    });
+                                                                    
+                                                                    document.querySelectorAll('.remove-field').forEach(button => {
+                                                                        button.addEventListener('click', (e) => this.removeBox(e.target));
+                                                                    });
+                                                                },
+                                                                
+                                                                addCreditPayment: function(amount) {
+                                                                    if (amount > 0 && amount <= this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
+                                                                        if (this.paymentMethods['Qarz'] > 0) {
+                                                                            this.totalToPay += this.paymentMethods['Qarz'];
+                                                                        }
+                                                                        
+                                                                        this.paymentMethods['Qarz'] = amount;
+                                                                        this.totalToPay -= amount;
+                                                                        this.updatePaymentDisplay();
+                                                                        this.updateTolashText();
+                                                                        return true;
+                                                                    } else if (amount > this.totalToPay + (this.paymentMethods['Qarz'] || 0)) {
+                                                                        showAlert("Qarz summasi qolgan summadan katta bo'lishi mumkin emas!", "warning");
+                                                                        return false;
+                                                                    }
+                                                                    return false;
+                                                                },
+                                                                
+                                                                submitPayments: function(shopId) {
+                                                                    const paymentInputs = document.querySelectorAll('.input-box:not([style*="display: none"]) .payment-input');
+                                                                    const qarzPayment = this.paymentMethods['Qarz'] || 0;
+                                                                    const qarzComment = document.querySelector('#qarzModal textarea') ? document.querySelector('#qarzModal textarea').value : '';
+                                                                    const qarzDueDate = document.querySelector('#qarzModal input[type="date"]') ? document.querySelector('#qarzModal input[type="date"]').value : '';
+                                                                    let payments = [];
+                                                                    
+                                                                    paymentInputs.forEach(input => {
+                                                                        const inputBox = input.closest('.input-box');
+                                                                        const paymentMethod = inputBox.closest('.payment-method');
+                                                                        const kassaId = paymentMethod.dataset.kassaId;
+                                                                        const valyutaId = paymentMethod.dataset.valyutaId;
+                                                                        const methodText = inputBox.querySelector('.box-header span').textContent.trim();
+                                                                        const summa = parseFloat(input.value) || 0;
+                                                                        
+                                                                        if (summa > 0) {
+                                                                            payments.push({
+                                                                                kassa_id: kassaId,
+                                                                                valyuta_id: valyutaId,
+                                                                                summa: summa,
+                                                                                comment: ''
+                                                                            });
+                                                                        }
+                                                                    });
+                                                                    
+                                                                    if (qarzPayment > 0) {
+                                                                        if (!qarzDueDate) {
+                                                                            showAlert("Iltimos, qarz uchun to'lov muddatini kiriting!", "warning");
+                                                                            return false;
+                                                                        }
+                                                                        
+                                                                        payments.push({
+                                                                            kassa: 'qarz',
+                                                                            valyuta: '',
+                                                                            summa: qarzPayment,
+                                                                            comment: qarzComment,
+                                                                            payment_date: qarzDueDate
+                                                                        });
+                                                                    }
+                                                                    
+                                                                    const totalPaid = payments.reduce((sum, payment) => sum + payment.summa, 0);
+                                                                    if (Math.abs(totalPaid - this.totalJami) > 1) {
+                                                                        showAlert("To'lov summasi umumiy summagacha to'liq emas!", "danger");
+                                                                        return false;
+                                                                    }
+                                                                    
+                                                                    let successCount = 0;
+                                                                    payments.forEach(payment => {
+                                                                        const formData = new URLSearchParams();
+                                                                        
+                                                                        if (payment.kassa === 'qarz') {
+                                                                            formData.append('kassa_id', 'qarz');
+                                                                            formData.append('summa', payment.summa);
+                                                                            formData.append('comment', payment.comment);
+                                                                            formData.append('payment_date', payment.payment_date);
+                                                                        } else {
+                                                                            formData.append('kassa_id', payment.kassa_id);
+                                                                            formData.append('valyuta_id', payment.valyuta_id);
+                                                                            formData.append('summa', payment.summa);
+                                                                        }
+                                                                        
+                                                                        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                                                                        
+                                                                        fetch(`/payment_shop/${shopId}`, {
+                                                                            method: 'POST',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/x-www-form-urlencoded',
+                                                                                'X-CSRFToken': '{{ csrf_token }}'
+                                                                            },
+                                                                            body: formData
+                                                                        })
+                                                                        .then(response => response.json())
+                                                                        .then(data => {
+                                                                            if (data.success) {
+                                                                                successCount++;
+                                                                                if (successCount === payments.length) {
+                                                                                    window.location.replace('/b2b_shop');
+                                                                                }
+                                                                            } else {
+                                                                                throw new Error(data.message || "To'lovda xatolik yuz berdi");
+                                                                            }
+                                                                        })
+                                                                        .catch(error => {
+                                                                            console.error('Payment error:', error);
+                                                                            alert(error.message);
+                                                                        });
+                                                                    });
+                                                                    
+                                                                    return true;
+                                                                }
+                                                            };
+
+                                                            document.addEventListener('DOMContentLoaded', function() {
+                                                                paymentSystem.init();
+
+                                                                document.getElementById('product_list').addEventListener('click', function(e) {
+                                                                    if (e.target.classList.contains('delete-btn')) {
+                                                                        const row = e.target.closest('.row');
+                                                                        if (row) {
+                                                                            const row_quantity = parseFloat(row.querySelector('input[name="quantity"]').value) || 0;
+                                                                            const total_row = parseNumber(row.querySelector('.summa_product_list').textContent.trim());
+                                                                            const product_id = row.querySelector('.id_product').textContent.trim();
+                                                                            
+                                                                            let summaItog = document.getElementById('summa_itog');
+                                                                            let oldValue = parseNumber(summaItog.textContent);
+                                                                            const summaCol = document.getElementById('summa_col');
+
+                                                                            if (total_row) {
+                                                                                summaItog.textContent = (oldValue - (total_row)).toLocaleString('fr-FR');
+                                                                            }
+
+                                                                            if (row_quantity) {
+                                                                                summaCol.textContent = (parseFloat(summaCol.textContent) - row_quantity).toFixed(0);
+                                                                            }
+
+                                                                            if (product_id) {
+                                                                                const index = data.findIndex(item => item.product_id == product_id);
+                                                                                data = data.filter(item => item.product_id !== product_id);
+                                                                            }
+                                                                            row.remove();
+                                                                            const select = document.getElementById('shop_select_product');
+                                                                            select.selectedIndex = 0;
+
+                                                                            $.ajax({
+                                                                                url: "{% url 'b2b_shop_ajax_cart_delete' product_id %}",
+                                                                                type: "POST",
+                                                                                data:JSON.stringify({'product_id':product_id}),
+                                                                                headers: {
+                                                                                    "X-CSRFToken": csrfToken
+                                                                                },
+                                                                                success: function(response) {
+                                                                                    showAlert("Cart ochirildi!", "success");
+                                                                                    updateReceiptProducts();
+                                                                                    paymentSystem.init();
+                                                                                },
+                                                                                error: function() {
+                                                                                    showAlert("Server bilan bog'lanishda xatolik1", "danger");
+                                                                                }
+                                                                            });
+                                                                        }
+                                                                    }
+                                                                });
+
+                                                                document.getElementById('submit-payment').addEventListener('click', function() {
+                                                                    paymentSystem.submitPayments({{ shop.id }});
+                                                                });
+                                                            });
+
+                                                            function parseNumber(text) {
+                                                                return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                            }
+
+                                                            const style = document.createElement('style');
+                                                            style.textContent = `
+                                                                .qarz-row {
+                                                                    font-weight: bold;
+                                                                    color: #dc3545;
+                                                                    border-top: 1px dashed #ccc;
+                                                                    border-bottom: 1px dashed #ccc;
+                                                                    padding: 5px 0;
+                                                                    margin: 5px 0;
+                                                                    background-color: #fff3f3;
+                                                                }
+                                                                .qarz-row span {
+                                                                    font-size: 14px;
+                                                                }
+                                                            `;
+                                                            document.head.appendChild(style);
+                                                            </script>
                                                         <div class="col-md-3">
                                                             <style>
                                                                 .receipt-wrapper {
@@ -1055,7 +1107,7 @@
                                                                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
                                                                 <div class="col-md-12 mt-3">
                                                                     <button id="submit-payment" class="btn btn-success btn-lg w-100">
-                                                                        <i class="fa fa-check-circle"></i> To'lovni tasdiqlash
+                                                                        <i class="fa fa-check-circle"></i> To'lovni tasdiqlash va Savdoni yakunlash
                                                                     </button>
                                                                 </div>
                                                                 <div class="col-md-12 inputkassa"></div>
@@ -1063,70 +1115,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <script> 
-                                                        const kurs = parseFloat(document.getElementById('shop_last_kurs').textContent.trim()) || 1;
-                                                        console.log(kurs)
-                                                        const kassa_data = [];
-                                                        const shop_is_valyuta = "{{ shop.valyuta.is_dollar|yesno:'true,false' }}";
-                                                        function updateTotals() {
-                                                            kassa_data.length = 0; 
-                                                            const inputs = document.querySelectorAll('[data-kassa_id]');
-                                                            let jami = 0;
-
-                                                            inputs.forEach(input => {
-                                                                let kassa_id = input.getAttribute('data-kassa_id');
-                                                                let valyuta_is_dollar = input.getAttribute('data-valyuta') === 'true';
-                                                                let amount = parseFloat(input.value) || 0;
-                                                                if (shop_is_valyuta === 'false' && valyuta_is_dollar) {
-                                                                    console.log(111)
-                                                                    amount *= kurs;
-                                                                } else if (shop_is_valyuta === 'true' && !valyuta_is_dollar) {
-                                                                    amount /= kurs;
-                                                                    console.log(222)
-                                                                }
-                                                                if (amount > 0) {
-                                                                    console.log(333)
-                                                                    kassa_data.push({ kassa_id, amount: amount.toFixed(0) });
-                                                                    jami += amount;
-                                                                }
-                                                            });
-
-                                                            document.getElementById('recipient-jami').value = jami.toFixed(0);
-
-                                                            let summa_itogo = parseInt(document.getElementById('summa_itog').textContent.trim().replace(/\s+/g, ''), 10) || 0;
-                                                            let nasiya = summa_itogo - jami;
-                                                            document.getElementById('recipient-nasiya').value = nasiya > 0 ? nasiya.toFixed(0) : 0;
-                                                            if (nasiya > 0) {
-                                                                kassa_data.push({ nasiya: nasiya.toFixed(0) });
-                                                            }
-
-                                                            console.log(kassa_data);
-                                                        }
-
-
-                                                        function pushAmountBack() {
-                                                            $.ajax({
-                                                                url: "{% url 'payment_shop_ajax' product_id %}",
-                                                                type: "POST",
-                                                                contentType: "application/json",
-                                                                data: JSON.stringify(kassa_data),
-                                                                headers: {
-                                                                    "X-CSRFToken": csrfToken
-                                                                },
-                                                                success: function(response) {
-                                                                    showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                                                                    kassa_data.length = 0; 
-                                                                },
-                                                                error: function () {
-                                                                    showAlert("Server bilan bog'lanishda xatolik", "danger");
-                                                                }
-                                                            });
-                                                        }
-
-                                                        document.addEventListener('DOMContentLoaded', function () {
-                                                            updateTotals();
-                                                        });
-                                                </script>
+                                                
                                             </div>
                                         </div>
                                 </div>
@@ -1516,7 +1505,9 @@
                                 "X-CSRFToken": csrfToken
                             },
                             success: function(response) {
-                                
+                                updateReceiptProducts()
+                                paymentSystem.init(); // Payment system ni yangilash
+
                             },
                             error: function () {
                             }
@@ -1684,12 +1675,15 @@
                             }
                 });
             }
-            $("#shop_save").click(pushAmountBack);
-            $("#shop_save").click(addShop);
-            $("#shop_save").click(addCart);
+            $("#submit-payment").click(addShop);
+            $("#submit-payment").click(addCart);
         });
 
         
+    </script>
+    <script> 
+            const kurs = parseFloat(document.getElementById('shop_last_kurs').textContent.trim()) || 1;
+            console.log(kurs)
     </script>
     <script>
       
