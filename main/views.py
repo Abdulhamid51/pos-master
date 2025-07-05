@@ -5406,7 +5406,7 @@ def add_recieve(request):
 
     obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs, payment_date=payment_date)
 
-    RejaChiqim.objects.create(payment_date=payment_date, total=0, kurs=kurs, valyuta_id=valyuta)
+    RejaChiqim.objects.create(payment_date=payment_date, kurs=kurs, valyuta_id=valyuta)
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
     query = dict(parse_qsl(url_parts.query))
@@ -5690,14 +5690,14 @@ def new_product_add(request):
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
-    pack = request.POST.get('pack')
+    pack = str(request.POST.get('pack')).replace(',', '.')
     season = request.POST.get('season')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
     filial_id = request.POST.get('filial_id')
     ready = request.POST.get('ready')
-    quantity = request.POST.get('quantity')
+    quantity = str(request.POST.get('quantity')).replace(',', '.')
     valyuta = request.POST.get('valyuta')
     shelf_code = request.POST.get('shelf_code')
     pr = ProductFilial.objects.create(
@@ -7148,8 +7148,18 @@ def b2c_shop_detail(request, id):
         'quantity':cart.aggregate(all=Coalesce(Sum('quantity'), 0, output_field=FloatField()))['all'],
         'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=FloatField()))['all'],
     }
-    
+    customer_info = {
+        'last_pay': Shop.objects.filter(debtor__isnull=False).last().date if Shop.objects.filter(debtor__isnull=False).exists() else None,
+        'valyuta': [
+            {
+                'summa': Wallet.objects.filter(customer=shop.debtor, valyuta=x).aggregate(all=Sum('summa'))['all'] or 0,
+                'name': x.name
+            }
+            for x in Valyuta.objects.all()
+        ]
+    }
     context = {
+        'customer_info':customer_info,
         'today' : datetime.now().date(),
        'shop':shop,
        'cart':cart,
