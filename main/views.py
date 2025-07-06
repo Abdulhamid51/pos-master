@@ -2067,7 +2067,10 @@ class ProductFilialView(LoginRequiredMixin, TemplateView):
         context['product'] = 'active'
         context['product_t'] = 'true'
         context['delivers'] = delivers
-        context['dollar_kurs'] = Course.objects.last().som
+        dollar_kurs = Course.objects.last()
+        context['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
+
+        
         context['debtors'] = Debtor.objects.all().order_by('fio')
 
         context['filters'] = {
@@ -2716,12 +2719,12 @@ class OmborQabul(LoginRequiredMixin, TemplateView):
             recieve = recieve.filter(date__date__gte=datetime.now().date().replace(day=1))
         if deliver:
             recieve = recieve.filter(deliver_id=deliver)
-
+        dollar_kurs = Course.objects.last()
         valyutas = Valyuta.objects.all()
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['wares'] = recieve
-        context['dollar_kurs'] = Course.objects.last().som
+        context['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
         context['total_som'] = sum([i.som for i in context['wares']])
         context['total_som_sotish'] = sum([i.sum_sotish_som for i in context['wares']])
         context['total_quantity'] = sum([i.total_quantity if i.total_quantity else 0 for i in context['wares']])
@@ -2903,13 +2906,13 @@ class OmborMinus(LoginRequiredMixin, TemplateView):
                 dt['valyuta'].append({'summa': summa})
             data.append(dt)
 
-
+        dollar_kurs = Course.objects.last()
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
         context['valyuta'] = valyutas
         context['ombors'] = data
         context['total_soni'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
-        context['dollar_kurs'] = Course.objects.last().som
+        context['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
         return context
 
 class Fakturas(LoginRequiredMixin, TemplateView):
@@ -3223,7 +3226,8 @@ def debtor_detail(request, id):
     pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     shop = Shop.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
-
+    print(pay)
+    print(shop)
     infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
@@ -3254,6 +3258,7 @@ def debtor_detail(request, id):
                 dt['give_summa'] = i.summa
 
         data.append(dt)
+    print(data)
     summa_total_for_valyuta = []
     for val in valyuta:
         pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
@@ -3423,8 +3428,6 @@ def income_user_detail(request):
 
 class Delivers(LoginRequiredMixin, TemplateView):
     template_name = 'deliver.html'
-
-
 
     def get_context_data(self, **kwargs):
         delivers = Deliver.objects.all()
@@ -3611,9 +3614,10 @@ def Login(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
-
-        user = User.objects.filter(username=username).last()
-        if user and user.check_password(password):
+        print(password)
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            print(user)
             profile = getattr(user, 'userprofile', None)
 
             if user.userprofile.staff == 4:
@@ -3901,7 +3905,8 @@ def kassa(request):
             'debtor': debtor
         }
     }
-    content['dollar_kurs'] = Course.objects.last().som
+    dollar_kurs = Course.objects.last()
+    content['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
     return render(request, 'kassa.html', content)
 
     
@@ -6161,7 +6166,8 @@ def kassa_is_approved(request):
             'expanse_category': int(expanse_category) if expanse_category else 0
         }
     }
-    content['dollar_kurs'] = Course.objects.last().som
+    dollar_kurs = Course.objects.last()
+    content['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
     return render(request, 'kassa_is_approved.html', content)
 
 
@@ -7376,9 +7382,6 @@ def analysis_costs(request):
         }
 
         data.append(dt)
-
-
-    
 
     context = {
         'data':data,
@@ -8846,6 +8849,7 @@ def majburiyat_fin(request):
     today = datetime.now().date()
     reja = RejaChiqim.objects.filter(is_active=True, is_majburiyat=True)
     reja_conf = RejaChiqim.objects.filter(is_active=True, is_majburiyat=True, is_confirmed=True)
+    kurs = Course.objects.last()
     context = {
         'today':today,
         'reja':reja,
@@ -8854,7 +8858,8 @@ def majburiyat_fin(request):
         'money_circulation':MoneyCirculation.objects.all(),
         'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
-        'kurs':Course.objects.last().som or 0,
+        'kurs':kurs.som if kurs else 0,
+        
     }
     return render(request, 'fin/majburiyat_fin.html', context)
 
@@ -8972,6 +8977,8 @@ def reja_tushum_fin(request):
     if kassa:
         reja = reja.filter(money_circulation_id=kassa)
 
+    kurs = Course.objects.last()
+    
     context = {
         'today':today,
         'reja':reja,
@@ -8982,7 +8989,8 @@ def reja_tushum_fin(request):
         'valyuta':Valyuta.objects.all(),
         'money_circulation':MoneyCirculation.objects.filter(is_delete=False),
         'kassa':KassaNew.objects.all(),
-        'kurs':Course.objects.last().som or 0,
+        'kurs':kurs.som if kurs else 0,
+
     }
     return render(request, 'fin/reja_tushum_fin.html', context)
 
@@ -9058,6 +9066,8 @@ def reja_chiqim_fin(request):
     }
     if year and month:
         reja = reja.filter(date__year=year, date__month=month)
+    
+    kurs = Course.objects.last()
     context = {
         'today':today,
         'reja':reja,
@@ -9067,7 +9077,8 @@ def reja_chiqim_fin(request):
 
         'valyuta':Valyuta.objects.all(),
         'user_profile':UserProfile.objects.all(),
-        'kurs':Course.objects.last().som or 0,
+        'kurs':kurs.som if kurs else 0,
+
     }
     return render(request, 'fin/reja_chiqim_fin.html', context)
 
@@ -9511,11 +9522,11 @@ def payment_shop(request, shop_id):
                     debtor=shop.debtor,
                     is_debt = True,
                     comment = comment,
+                    valyuta_id=valyuta,
                     summa = summa,
                     payment_date=payment_date,
                 )
             return JsonResponse({'success': True, 'message': 'Payment successful'})
-        
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     
@@ -9627,8 +9638,8 @@ def add_product_list(request, id):
 def nds_view(request):
     nds = NDS.objects.last()
     if request.method == 'POST':
+        perecent = request.POST.get('perecent')
         if nds:
-            perecent = request.POST.get('perecent')
             nds.perecent = perecent
             nds.save()
         else :
@@ -9655,20 +9666,12 @@ def filial_list(request):
 def filial_add(request):
     name = request.POST.get('name')
     address = request.POST.get('address')
-    qarz_som = request.POST.get('qarz_som')
-    qarz_dol = request.POST.get('qarz_dol')
-    savdo_puli_som = request.POST.get('savdo_puli_som')
-    savdo_puli_dol = request.POST.get('savdo_puli_dol')
     valyuta = request.POST.get('valyuta')
     main_warehouse = request.POST.get('main_warehouse') == 'on'
 
     Filial.objects.create(
         name=name,
         address=address,
-        qarz_som=qarz_som,
-        qarz_dol=qarz_dol,
-        savdo_puli_som=savdo_puli_som,
-        savdo_puli_dol=savdo_puli_dol,
         valyuta_id=valyuta,
         main_warehouse=main_warehouse,
     )
@@ -9678,19 +9681,11 @@ def filial_add(request):
 def filial_edit(request, id):
     name = request.POST.get('name')
     address = request.POST.get('address')
-    qarz_som = request.POST.get('qarz_som')
-    qarz_dol = request.POST.get('qarz_dol')
-    savdo_puli_som = request.POST.get('savdo_puli_som')
-    savdo_puli_dol = request.POST.get('savdo_puli_dol')
     valyuta = request.POST.get('valyuta')
     main_warehouse = request.POST.get('main_warehouse') == 'on'
     filial = Filial.objects.get(id=id)
     filial.name=name
     filial.address=address
-    filial.qarz_som=qarz_som
-    filial.qarz_dol=qarz_dol
-    filial.savdo_puli_som=savdo_puli_som
-    filial.savdo_puli_dol=savdo_puli_dol
     filial.main_warehouse=main_warehouse
     filial.valyuta_id=valyuta
     filial.save()

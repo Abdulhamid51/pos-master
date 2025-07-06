@@ -225,14 +225,14 @@
                             <label for="">Jami summa</label>
                             <input type="text" class="form-control" id="all_total_2" name="all_total" value="{{ totals.total }}" disabled>
                             <br>
-                            <label for="">Naqd berildi</label>
+                            <!-- <label for="">Naqd berildi</label>
                             <input onclick="calculateRemaining()" type="text" class="form-control" id="naqd_summa" value="{{shop.total_pay}}" name="naqd_summa">
                             
                             <br><hr>
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
                             <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled>
                             {% if shop.debtor.fio != "Naqd" %}
-                            {% endif %}
+                            {% endif %} -->
                         </form>
                     </div>
                     <div class="col-md-12">
@@ -1319,27 +1319,25 @@
         $("#pack_total").text(formatNumber(totalPack.toFixed(2)));
         $("#all_total").text(formatNumber(totalSum.toFixed(2)));
         $("#all_total_2").val(formatNumber(totalSum.toFixed(2)));
-        calculateRemaining();
+        // calculateRemaining();
     }
 
     // Calculate remaining payment
-    function calculateRemaining() {
-        const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
-        const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
-        const remaining = Math.max(total - naqd_summa, 0);
-        $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
-    }
-    calculateRemaining()
-    // Finalize order
+    // function calculateRemaining() {
+    //     const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
+    //     const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
+    //     const remaining = Math.max(total - naqd_summa, 0);
+    //     $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
+    // }
+    // calculateRemaining()
     function Yakunlash() {
-        const summa = parseFloat($('#naqd_summa').val()) || 0;
+        // const summa = parseFloat($('#naqd_summa').val()) || 0;
         const orderId = $("#order_id").val();  
         
         if (summa > 0) {
             $.ajax({
                 url: `/b2c_shop_finish/${orderId}`,
                 type: "POST",
-                data: { summa: summa },
                 success: function(response) {
                     if (response.success) {
                         showAlert(response.message, "success");
@@ -1389,7 +1387,6 @@
                 updatePackFromQuantity(existingRow.find('.quantity-input'));
                 updateCartItem(existingRow);
             } else {
-                // Product doesn't exist - add new row
                 $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                     const price = parseFloat(data['price']) || 0;
                     addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
@@ -1555,9 +1552,9 @@
         });
     });
 
-    $("#naqd_summa").on("input change", function() {
-        calculateRemaining();
-    });
+    // $("#naqd_summa").on("input change", function() {
+    //     calculateRemaining();
+    // });
 
     // Generate receipt
     async function fetchReceipt() {

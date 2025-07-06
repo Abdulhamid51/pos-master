@@ -177,6 +177,7 @@
                                         </tr>
                                     </thead>
                                     <tbody> 
+                                        
                                         <tr>
                                             <td>1</td>
                                             <td>{{ nds.perecent }}</th>
@@ -193,12 +194,13 @@
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                                <button type="submit" class="btn btn-primary"><a href="{% url 'nds_del' nds.id %}" style="color: white !important;">Saqlash</a></button>
+                                                                <button type="submit" class="btn btn-primary">{% if nds %}<a href="{% url 'nds_del' nds.id %}" style="color: white !important;">Saqlash</a> {% endif %}</button>
                                                             </div>
                                                         </div>
                                                     </div>
                                             </div>
                                         </tr>
+                                       
                                     </tbody>
                                     <tfoot>
                                         <tr>

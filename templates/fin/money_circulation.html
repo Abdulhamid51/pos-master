@@ -235,12 +235,12 @@
                                             {% for money in money %}
                                                 <tr>
                                                     <td>{{ forloop.counter }}</td>
-                                                    <th>{{ money.name }}</th>
+                                                    <th>{{ money.name|default_if_none:''  }}</th>
                                                     <th>{{ money.manba }}</th>
-                                                    <th>{{ money.manba_turi }}</th>
-                                                    <th>{{ money.sub_manba }}</th>
-                                                    <th>{{ money.xarajat_turi }}</th>
-                                                    <th>{{ money.chiqim_turi }}</th>
+                                                    <th>{{ money.manba_turi|default_if_none:''  }}</th>
+                                                    <th>{{ money.sub_manba|default_if_none:''  }}</th>
+                                                    <th>{{ money.xarajat_turi|default_if_none:''  }}</th>
+                                                    <th>{{ money.chiqim_turi|default_if_none:'' }}</th>
                                                     <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ money.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
                                                     <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ money.id }}"><i class="fa-solid fa-trash"></i></button></th>
                                                 </tr>
