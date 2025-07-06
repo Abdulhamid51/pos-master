@@ -153,7 +153,7 @@ def ChartHome(request):
             valuta_result['summas'].append(summa)
 
         valutas_data.append(valuta_result)
-
+    print(valutas_data)
     return JsonResponse({'valutas': valutas_data})
 
 
@@ -372,6 +372,8 @@ def DataHome(request):
                 gte, lte),
         }
     )
+    print(filials)
+    print(salers)
     shops = Shop.objects.filter(date__gte=gte, date__lte=lte)
     naqd_som = 0
     naqd_dollar = 0
@@ -1868,7 +1870,7 @@ class Products(LoginRequiredMixin, TemplateView):
         context['groups'] = Groups.objects.all()
         context['price_types'] = PriceType.objects.all()
         context['delivers'] = Deliver.objects.all()
-        # context['viloyatlar'] = Viloyat.objects.all()
+        context['filial'] = Filial.objects.filter(is_activate=True)
 
 
 
@@ -2205,8 +2207,6 @@ class Filials(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         gte, lte = daily_data()
-        # lte = timezone.now()
-        # gte = lte - timedelta(days=1)
         som = 0
         dollar = 0
         
@@ -3168,7 +3168,7 @@ def tg_id_filter(request):
 
 
 def debtor_edit(request, id):
-    type = request.POST.get('type')
+    type = request.POST.get('debtor_type')
     teritory = request.POST.get('teritory')
     agent = request.POST.get('agent')
     image = request.FILES.get('image')
@@ -3301,7 +3301,9 @@ def deliver_detail(request, id):
     recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
 
-
+    print(pay)
+    print(recieve)
+    print(bonus)
     infos = sorted(chain(pay, recieve, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
@@ -5712,12 +5714,11 @@ def new_product_add(request):
         pack=pack,
         valyuta_id=valyuta,
         ready=ready,
-        # barcode=barcode,
         group_id=group,
         measurement_type_id=measurement_type,
         min_count=min_count,
         season=season,
-        filial_id=filial_id if filial_id else 4,
+        filial_id=filial_id,
         shelf_code=shelf_code,
     )
     if quantity:
@@ -7275,28 +7276,16 @@ def b2c_shop_finish(request, id):
 
 def today_sales(request):
     today = datetime.now().date()
-    cart = Cart.objects.all()
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
+    end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
+    cart = Cart.objects.filter(shop__date__date__range=(start_date, end_date))
     client = request.GET.getlist('client')
     deliver = request.GET.getlist('deliver')
     search = request.GET.get('search')
     filters = {
-        start_date: '',
-        end_date: '',
+        start_date: start_date,
+        end_date: end_date,
     }
-
-
-    if start_date and end_date:
-        cart = cart.filter(shop__date__range=(start_date, end_date))
-        filters['start_date'] = start_date
-        filters['end_date'] = end_date
-    else:
-        cart = cart.filter(shop__date=today)
-        filters['start_date'] = today.strftime('%Y-%m-%d')
-        filters['end_date'] = today.strftime('%Y-%m-%d')
-
-
     if search:
         cart = cart.filter(product__name__icontains=search)
 
@@ -10756,9 +10745,123 @@ def product_filail_zero(request):
     }
     return render(request, 'product_filail_zero.html',context)
 
-
-
-
 def savdo(request):
     context = {}
     return render(request, 'savdo.html', context)
+
+
+
+def debtor_type(request):
+    db_type = DebtorType.objects.filter(is_active=True)
+    context = {
+        'db_type':db_type
+    }
+    return render(request, 'debtor_type.html', context)
+
+def debtor_type_add(request):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    DebtorType.objects.create(name=name, number=number)
+    return redirect(request.META['HTTP_REFERER'])
+
+def debtor_type_edit(request,id):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    valyuta = DebtorType.objects.get(id=id)
+    valyuta.name=name
+    valyuta.number=number
+    valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+def debtor_type_del(request, id):
+    DebtorType.objects.filter(id=id).update(is_active=True)
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+
+def region(request):
+    reg = Region.objects.filter(is_active=True)
+    context = {
+        'db_type':reg
+    }
+    return render(request, 'region.html', context)
+
+def region_add(request):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    Region.objects.create(name=name, number=number)
+    return redirect(request.META['HTTP_REFERER'])
+
+def region_edit(request,id):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    valyuta = Region.objects.get(id=id)
+    valyuta.name=name
+    valyuta.number=number
+    valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+def region_del(request, id):
+    Region.objects.filter(id=id).update(is_active=True)
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def teritory(request):
+    reg = Teritory.objects.filter(is_active=True)
+    context = {
+        'db_type':reg,
+        'region':Region.objects.filter(is_active=True),
+    }
+    return render(request, 'teritory.html', context)
+
+def teritory_add(request):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    region = request.POST.get('region')
+    Teritory.objects.create(name=name, number=number, region_id=region)
+    return redirect(request.META['HTTP_REFERER'])
+
+def teritory_edit(request,id):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    region = request.POST.get('region')
+    valyuta = Teritory.objects.get(id=id)
+    valyuta.name=name
+    valyuta.number=number
+    valyuta.region_id=region
+    valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+def teritory_del(request, id):
+    Teritory.objects.filter(id=id).update(is_active=True)
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def groups(request):
+    reg = Groups.objects.filter(is_active=True)
+    context = {
+        'db_type':reg
+    }
+    return render(request, 'groups.html', context)
+
+def groups_add(request):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    Groups.objects.create(name=name, number=number)
+    return redirect(request.META['HTTP_REFERER'])
+
+def groups_edit(request,id):
+    name = request.POST.get('name')
+    number = request.POST.get('number')
+    valyuta = Groups.objects.get(id=id)
+    valyuta.name=name
+    valyuta.number=number
+    valyuta.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+def groups_del(request, id):
+    Groups.objects.filter(id=id).update(is_active=True)
+    return redirect(request.META['HTTP_REFERER'])

@@ -133,7 +133,7 @@
                                                         <td>{{ py.debt_new }}</td>
                                                         <td></td>
                                                     {% endif %}
-                                                    <td>{{ py.comment }}</td>
+                                                    <td>{{ py.comment|default_if_none:'' }}</td>
                                                 </tr>
                                             {%endif%}
                                         {% endfor %}

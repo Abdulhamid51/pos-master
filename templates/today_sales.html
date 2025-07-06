@@ -83,7 +83,7 @@
                                                     <tr>
                                                         <td>{{ forloop.counter }}</td>
                                                         <td>{{ i.product }}</td>
-                                                        <td>{{ i.product.deliver1|default_if_none:'' }}</td>
+                                                        <td>{{ i.shop.deliver1|default_if_none:'' }}</td>
                                                         <td>{{ i.price }}</td>
                                                         <td>{{ i.quantity }}</td>
                                                         <td>{{ i.total_price }}</td>

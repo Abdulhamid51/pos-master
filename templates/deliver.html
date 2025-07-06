@@ -20,14 +20,41 @@
                 <div class="row layout-top-spacing" id="cancel-row">
                     <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
                         <div class="widget-content widget-content-area br-6">
-                            <form method="get">
-                                <div class="col-md-4 d-flex">
-                                    <input style="margin-left: 1rem;" value="{{start_date}}" type="date" class="form-control" name="start_date">
-                                    <input style="margin-left: 1rem;" value="{{end_date}}" type="date" class="form-control" name="end_date">
-
-                                    <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
+                           
+                             <div class="row mb-2">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#add_taminotchi">
+                                        Yaratish
+                                    </button>
                                 </div>
-                            </form>
+                            </div>
+                            <div class="modal fade" id="add_taminotchi" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                <form action="{% url 'create_deliver' %}" class="modal-content" method="post">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLongTitle">Taminotchi qoshish</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    </div>
+                                    <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="">Nomi</label>
+                                        <input type="text" class="form-control" name="name" required>
+                                        <label for="">Telefon 1</label>
+                                        <input type="text" class="form-control" name="phone1" required>
+                                        <label for="">Telefon 2</label>
+                                        <input type="text" class="form-control" name="phone2" >
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-between">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                    </div>
+                                    </div>
+                                </form>
+                                </div>
+                            </div>
                             <div class="table-responsive mb-4 mt-4">
                                 <table id="html5-extension" class="table table-hover non-hover" style="width:100%">
                                     <thead>

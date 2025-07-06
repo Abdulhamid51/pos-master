@@ -329,5 +329,23 @@ urlpatterns = [
     path('savdo/', savdo, name='savdo'),
     path('payment_shop/<int:shop_id>', payment_shop, name='payment_shop'),
     
+    path('debtor_type', debtor_type, name='debtor_type'),
+    path('debtor_type_add', debtor_type_add, name='debtor_type_add'),
+    path('debtor_type_edit/<int:id>', debtor_type_edit, name='debtor_type_edit'),
+    path('debtor_type_del/<int:id>', debtor_type_del, name='debtor_type_del'),
 
+    path('region', region, name='region'),
+    path('region_add',region_add, name='region_add'),
+    path('region_edit/<int:id>', region_edit, name='region_edit'),
+    path('region_del/<int:id>', region_del, name='region_del'),
+
+    path('teritory', teritory, name='teritory'),
+    path('teritory_add',teritory_add, name='teritory_add'),
+    path('teritory_edit/<int:id>', teritory_edit, name='teritory_edit'),
+    path('teritory_del/<int:id>', teritory_del, name='teritory_del'),
+
+    path('groups', groups, name='groups'),
+    path('groups_add',groups_add, name='groups_add'),
+    path('groups_edit/<int:id>', groups_edit, name='groups_edit'),
+    path('groups_del/<int:id>', groups_del, name='groups_del'),
 ]
