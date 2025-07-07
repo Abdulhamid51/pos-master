@@ -2970,6 +2970,110 @@ class Recieves(LoginRequiredMixin, TemplateView):
             context['active_one'] = Recieve.objects.get(id=active_id)
         return context
 
+import openpyxl
+
+@csrf_exempt
+def import_recieve_items_from_excel(request, recieve_id):
+    if request.method == "POST":
+        excel_file = request.FILES.get("file")
+        if not excel_file:
+            return JsonResponse({"error": "File not found"}, status=400)
+
+        wb = openpyxl.load_workbook(excel_file)
+        ws = wb.active
+
+        recieve = get_object_or_404(Recieve, id=recieve_id)
+        headers = [cell.value for cell in ws[1]]
+
+        idx = {header: headers.index(header) for header in headers}
+
+        # PriceType’larni oldindan olish yoki yaratib qo‘yish
+        price_types = {}
+        for type_name in ['Standart', 'Premium', 'Exclusive']:
+            price_types[type_name], _ = PriceType.objects.get_or_create(name=type_name)
+
+        valyuta_som = Valyuta.objects.get_or_create(name='Som')[0]
+        valyuta_dollar = Valyuta.objects.get_or_create(name='Dollar')[0]
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row[idx['name']]:
+                continue  # bo'sh qatorni o'tkazib yuborish
+
+            name = row[idx['name']]
+            barcode = row[idx['barcode']]
+            quantity = float(row[idx['quantity']] or 0)
+
+            kelish_som = float(row[idx['kelish_som']] or 0)
+            kelish_dollar = float(row[idx['kelish_dollar']] or 0)
+
+            sotish_som_standart = float(row[idx['sotish_som_standart']] or 0)
+            sotish_som_premium = float(row[idx['sotish_som_premium']] or 0)
+            sotish_som_exclusive = float(row[idx['sotish_som_exclusive']] or 0)
+
+            sotish_dollar_standart = float(row[idx['sotish_dollar_standart']] or 0)
+            sotish_dollar_premium = float(row[idx['sotish_dollar_premium']] or 0)
+            sotish_dollar_exclusive = float(row[idx['sotish_dollar_exclusive']] or 0)
+
+            # Product yaratish yoki olish
+            product, _ = ProductFilial.objects.get_or_create(
+                name=name,
+                barcode=barcode,
+                filial=UserProfile.objects.filter(user=request.user).last().filial if UserProfile.objects.filter(user=request.user) else None
+            )
+
+            # RecieveItem yaratish
+            recieve_item = RecieveItem.objects.create(
+                recieve=recieve,
+                product=product,
+                quantity=quantity,
+                som=kelish_som,
+                dollar=kelish_dollar,
+                sotish_som=sotish_som_standart,
+                sotish_dollar=sotish_dollar_standart,
+                valyuta=valyuta_som if kelish_som > 0 else valyuta_dollar
+            )
+
+            # Kelish narxlari ProductBringPrice
+            if kelish_som > 0:
+                ProductBringPrice.objects.create(
+                    recieveitem=recieve_item,
+                    product=product,
+                    valyuta=valyuta_som,
+                    price=kelish_som
+                )
+            if kelish_dollar > 0:
+                ProductBringPrice.objects.create(
+                    recieveitem=recieve_item,
+                    product=product,
+                    valyuta=valyuta_dollar,
+                    price=kelish_dollar
+                )
+
+            # Sotish narxlari ProductPriceType
+            for price_type, price_value, valyuta in [
+                (price_types['Standart'], sotish_som_standart, valyuta_som),
+                (price_types['Premium'], sotish_som_premium, valyuta_som),
+                (price_types['Exclusive'], sotish_som_exclusive, valyuta_som),
+                (price_types['Standart'], sotish_dollar_standart, valyuta_dollar),
+                (price_types['Premium'], sotish_dollar_premium, valyuta_dollar),
+                (price_types['Exclusive'], sotish_dollar_exclusive, valyuta_dollar),
+            ]:
+                if price_value > 0:
+                    pt, _ = ProductPriceType.objects.get_or_create(
+                        type=price_type,
+                        product=product,
+                        valyuta=valyuta
+                    )
+                    pt.price=Decimal(price_value)
+                    pt.save()
+            
+            messages.success(request, "Muvaffaqilyatli saqlandi")
+
+    #     return JsonResponse({"success": True})
+
+    # return JsonResponse({"error": "Only POST allowed"}, status=405)
+    return redirect(request.META['HTTP_REFERER'])
+
 def recieve_completion(request, id):
     re = Recieve.objects.get(id=id)
     re.status = 2
@@ -5415,7 +5519,7 @@ def add_recieve(request):
 
     obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs, payment_date=payment_date)
 
-    RejaChiqim.objects.create(payment_date=payment_date, kurs=kurs, valyuta_id=valyuta)
+    RejaChiqim.objects.create(payment_date=str(payment_date)[:10], total=0, kurs=kurs, valyuta_id=valyuta,)
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
     query = dict(parse_qsl(url_parts.query))

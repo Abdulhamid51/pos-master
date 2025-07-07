@@ -126,6 +126,9 @@
                                               </div>
 
 
+                                              
+
+
                                               <div class="modal fade" id="add_taminotchi" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                                                 <div class="modal-dialog modal-dialog-centered" role="document">
                                                   <form action="{% url 'create_deliver' %}" class="modal-content" method="post">
@@ -235,6 +238,9 @@
                                                         </div>
                                                         <div class="col-sm-6 col-6 d-flex justify-content-end text-right" style="gap: 10px;">
                                                             <!-- <p class="inv-due-date"><span class="inv-title">Sana : </span> <span class="inv-date">{{ recieve.date }}</span></p> -->
+                                                             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#excel_import{{recieve.id}}" id="" onclick="">
+                                                                Excel import 
+                                                            </button>
                                                             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_product_add" id="" onclick="">
                                                                 Yangi 
                                                             </button>
@@ -410,6 +416,39 @@
 
                                                 </div>
                                             </div>
+
+
+                                            <div class="modal fade" id="excel_import{{ recieve.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <form class="modal-content" method="post" action="{% url 'import_recieve_items_from_excel' recieve.id %}" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Excel import</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <label>Excel file</label>
+
+                                                            <div class="input-group mb-3">
+                                                                <input type="file" name="file" class="form-control" required>
+                                                                <div class="input-group-append">
+                                                                    <a href="{% static 'recieve_items_template.xlsx' %}" download class="btn btn-success">
+                                                                        <i class="fa fa-download"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="modal-footer d-flex justify-content-between">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         {% endfor %}
                                     </div>
 
@@ -491,6 +530,7 @@
                       </form>
                     </div>
                   </div>
+
 
 
 
