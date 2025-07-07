@@ -5713,27 +5713,29 @@ def new_product_add(request):
     quantity = str(request.POST.get('quantity')).replace(',', '.')
     valyuta = request.POST.get('valyuta')
     shelf_code = request.POST.get('shelf_code')
-    pr = ProductFilial.objects.create(
-        name=name,
-        pack=pack,
-        valyuta_id=valyuta,
-        ready=ready,
-        # barcode=barcode,
-        group_id=group,
-        measurement_type_id=measurement_type,
-        min_count=min_count,
-        season=season,
-        filial_id=filial_id if filial_id else 4,
-        shelf_code=shelf_code,
-    )
-    if quantity:
-        pr.quantity = quantity
-    if deliver:
-        pr.deliver.add(Deliver.objects.get(id=deliver))
-    pr.save()
-    for barcode in barcode_list:
-        if barcode:
-            ProductBarcode.objects.create(barcode=barcode, product=pr)
+    other_filials = Filial.objects.all()
+    for filial in other_filials:
+        pr = ProductFilial.objects.create(
+            name=name,
+            pack=pack,
+            valyuta_id=valyuta,
+            ready=ready,
+            # barcode=barcode,
+            group_id=group,
+            measurement_type_id=measurement_type,
+            min_count=min_count,
+            season=season,
+            filial=filial,
+            shelf_code=shelf_code,
+        )
+        if quantity:
+            pr.quantity = quantity
+        if deliver:
+            pr.deliver.add(Deliver.objects.get(id=deliver))
+        pr.save()
+        for barcode in barcode_list:
+            if barcode:
+                ProductBarcode.objects.create(barcode=barcode, product=pr)
     messages.success(request, "Muvaffaqiyatli saqlandi")
 
     return redirect(request.META['HTTP_REFERER'])
@@ -7089,21 +7091,28 @@ def check_price(request):
 from django.core.paginator import Paginator
 
 def b2c_shop_view(request):
-    price_types = PriceType.objects.all()
-    products = ProductFilial.objects.all()
-    customers = Debtor.objects.all()
-    call_center = UserProfile.objects.filter(staff=6)
+    debtor = Debtor.objects.filter(fio="Naqd").last() or Debtor.objects.create(fio="Naqd")
+    user = UserProfile.objects.get(user=request.user)
+    filial = user.filial
+    if user.staff == 1:
+        filial = Filial.objects.first()
+    order = Shop.objects.create(debtor=debtor, filial=filial)
+    return redirect('b2c_shop_detail', order.id)
+    # price_types = PriceType.objects.all()
+    # products = ProductFilial.objects.all()
+    # customers = Debtor.objects.all()
+    # call_center = UserProfile.objects.filter(staff=6)
 
-    context = {
-       'price_types': price_types,
-       'products': products,
-       'call_center': call_center,
-       'customers': customers,
-       'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
-       'valyuta':Valyuta.objects.all(),
-       'filial':Filial.objects.filter(is_activate=True),
-    }
-    return render(request, 'b2c_shop.html', context)
+    # context = {
+    #    'price_types': price_types,
+    #    'products': products,
+    #    'call_center': call_center,
+    #    'customers': customers,
+    #    'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
+    #    'valyuta':Valyuta.objects.all(),
+    #    'filial':Filial.objects.filter(is_activate=True),
+    # }
+    # return render(request, 'b2c_shop.html', context)
 
 def b2c_naqd_add(request):
     debtor = Debtor.objects.filter(fio="Naqd").first() or Debtor.objects.create(fio="Naqd")
@@ -7151,9 +7160,11 @@ def b2c_shop_edit(request):
     return redirect(request.META['HTTP_REFERER'])
 
 def b2c_shop_detail(request, id):
+    user = UserProfile.objects.get(user=request.user)
     shop = Shop.objects.get(id=id)
     price_types = PriceType.objects.all()
-    products = ProductFilial.objects.all()
+    products = ProductFilial.objects.filter(filial=shop.filial)
+    
     customers = Debtor.objects.all()
     call_center = UserProfile.objects.filter(staff=6)
     cart = Cart.objects.filter(shop=shop)
@@ -9523,6 +9534,7 @@ def payment_shop(request, shop_id):
                     debtor=shop.debtor,
                     is_debt = True,
                     comment = comment,
+                    valyuta_id=valyuta,
                     summa = summa,
                     payment_date=payment_date,
                 )
