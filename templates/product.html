@@ -110,9 +110,9 @@
                                                 <td class="quantity" data-quantity="{{ productfilial.quantity|floatformat:0 }}">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
                                                 <!-- <td class="allprice" data-all="{{ productfilial.som|mul:productfilial.quantity|floatformat:0 }}">{{ productfilial.som|mul:productfilial.quantity|floatformat:0|intcomma }}</td> -->
                                                 <!-- <td class="dollar" data-dollar="{{ productfilial.dollar }}">{{ productfilial.dollar|intcomma }}</td> -->
-                                                <td>{{ productfilial.product.min_count|floatformat:0|intcomma }}</td>
+                                                <td>{{ productfilial.min_count|floatformat:0|intcomma }}</td>
                                                 <td>{{ productfilial.filial }}</td>
-                                                <td>{{ productfilial.barcode }}</td>
+                                                <td>{{ productfilial.group }}</td>
                                                 <td>
                                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{ productfilial.id }}" onclick="SaveBarcode({{ productfilial.id }})">
                                                         Barcode
@@ -341,12 +341,21 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
+                                    <label for="">Filial</label>
+                                    <select name="filial_id" class="form-control" id="" required>
+                                        <option value="">- - - - - - - </option>
+                                        {% for i in filial %}
+                                            <option value="{{i.id}}">{{ i.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="">Polka kodi</label>
                                     <input type="text" class="form-control" name="shelf_code">
                                 </div>
                                 <div class="col-md-6">
                                         <label for="">Miqdori</label>
-                                        <input type="number" step="any" class="form-control" name="quantity">
+                                        <input type="number" step="any" class="form-control" name="quantity" required>
                                 </div>
                                 <div class="col-md-12">
                                     <label for="">Barcode</label>

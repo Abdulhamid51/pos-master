@@ -275,7 +275,7 @@
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
                             <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled> -->
                             {% if shop.debtor.fio != "Naqd" %}
-                            {% endif %}
+                            {% endif %} -->
                         </form>
                     </div>
                     <div class="col-md-12">
@@ -1582,7 +1582,6 @@ $(document).ready(function() {
                 updatePackFromQuantity(existingRow.find('.quantity-input'));
                 updateCartItem(existingRow);
             } else {
-                // Product doesn't exist - add new row
                 $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                     const price = parseFloat(data['price']) || 0;
                     addProductToTable(pr_id, pr_name, barcode, pack, price, 1);

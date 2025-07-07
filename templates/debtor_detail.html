@@ -118,26 +118,6 @@
                                     </thead>
                                     {% for v in valyuta %}
                                     <tbody>
-                                        <!-- <tr style="background-color: rgb(255, 255, 255) !important;">
-                                            <th></th>
-                                            <th>Boshlangich qoldiq {{data_start_sum}}</th>
-                                            {% for x in data_start_sum %}
-                                                {% if x.valyuta == v %}
-                                                    <th>{{ x.start|intcomma }}</th>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <th style="text-align: center;"></th>
-                                            {% for sm in summa_total_for_valyuta %}
-                                                {% if sm.valyuta == v.id %}
-                                                    <th></th>
-                                                    <th></th>
-                                                    <th></th>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                        </tr> -->
                                         <tr style="background-color: beige !important;">
                                             <th></th>
                                             <th></th>
@@ -195,7 +175,7 @@
                                                         <td>{{ py.debt_new }}</td>
                                                         <td></td>
                                                     {% endif %}
-                                                    <td>{{ py.comment }}</td>
+                                                    <td>{{ py.comment|default_if_none:'' }}</td>
                                                 </tr>
                                             {%endif%}
                                         {% endfor %}

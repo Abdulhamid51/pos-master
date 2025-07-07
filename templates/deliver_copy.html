@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}
+    <title>Nasiyachi </title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'plugins/jquery-ui/jquery-ui.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/apps/contacts.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END PAGE LEVEL STYLES -->
+    <!-- BEGIN THEME GLOBAL STYLES -->
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/animate/animate.css'%}" rel="stylesheet" type="text/css" />
+    <script src="{% static 'plugins/sweetalerts/promise-polyfill.js'%}"></script>
+    <link href="{% static 'plugins/sweetalerts/sweetalert2.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/sweetalerts/sweetalert.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/components/custom-sweetalert.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END THEME GLOBAL STYLES -->
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">                
+                <div class="row layout-top-spacing" >
+                    <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+
+                            <!-- <div class="row">
+                                <div class="col-12 filtered-list-search layout-spacing align-self-center">
+                                    <form class="form-inline my-2 my-lg-0">
+                                        <div class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                            <input type="text" class="form-control product-search" id="input-search" placeholder="Nasiyachilardan izlash">
+                                        </div>
+                                    </form>
+                                </div>
+
+                            </div> -->
+
+                            <table id="excel" class="table table-bordered" style="margin-top: 2rem;">
+                                <thead>
+                                    <tr>
+                                        <th>№</th>
+                                        <th>FI</th>
+                                        <th>Pul olish</th>
+                                        <th>Pul berish</th>
+                                        <th>Telefon 1</th>
+                                        <th>Telefon 2</th>
+                                        {% for v in valyuta %}
+                                            <th>{{v}} (Haqqimiz)</th>
+                                        {% endfor %}
+                                        {% for v in valyuta %}
+                                            <th>{{v}} (Qarzimiz)</th>
+                                        {% endfor %}
+                                        <th>Bonus</th>
+                                        <th>Boshlang'ich qoldiq</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for debtor in delivers %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <a href="{% url 'deliverhistory' debtor.id  %}">
+                                                {{ debtor.name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <button  type="button" class="btn btn-warning"
+                                                data-toggle="modal" data-target="#exampleModalPay{{ debtor.id }}" data-whatever="@getbootstrap">
+                                                <i class="fa-solid fa-download"></i>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning"
+                                                data-toggle="modal" data-target="#exampleModalGive{{ debtor.id }}" data-whatever="@getbootstrap">
+                                                <i class="fa-solid fa-upload"></i>
+                                            </button>
+                                        </td>
+                                        <td>{{ debtor.phone1 }}</td>
+                                        <td>{{ debtor.phone2 }}</td>
+
+                                        {% for d in debtor.debt_haqimiz %}             
+                                            <td>{{d.summa|default_if_none:'0'|intcomma}}</td>
+                                        {% endfor %}
+
+                                        {% for d in debtor.debt_qarzimiz %}
+                                            <td>{{d.summa|default_if_none:'0'|intcomma}}</td>
+                                        {% endfor %}
+                                        <td>
+                                            <center>
+                                                <button data-toggle="modal" class="form-control" data-target="#bonus{{debtor.id}}">
+                                                    Bonus
+                                                </button>
+                                            </center>
+                                        </td>
+                                        <td>
+                                            <center>
+                                                <button data-toggle="modal" class="form-control" data-target="#start_debt{{debtor.id}}">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                            </center>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td><strong>Jami:</strong></td>
+                                        <td colspan="5"></td>
+                                        {% for w in total_haq %}
+                                            <td class="text-left">{{w.summa|floatformat:'2'|intcomma}}</td>
+                                        {% endfor %}
+
+                                        {% for w in total_qarz %}
+                                            <td class="text-left">{{w.summa|floatformat:'2'|intcomma}}</td>
+                                        {% endfor %}
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            
+                            {% for debtor in delivers %}
+                                <div class="modal fade" id="exampleModalPay{{debtor.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form action="{% url 'kirim_qilish' %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="modal-content">
+                                                <input type="hidden" name="deliver" value="{{debtor.id}}">
+                                                <div class="modal-header">
+                                                <h5 class="modal-title" id="KirimModalLabel">Pul olish</h5>
+                                            
+                                                </div>
+                                                <div class="modal-body">
+                                                    <label for="">Valyuta</label>
+                                                    <select name="valuta" id="" class="form-control">
+                                                        <option value="">- - - - - - - </option>
+                                                        {% for v in valyuta %}
+                                                            <option value="{{ v.id }}">{{ v.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <br>
+                                                    <label for="">Kassa</label>
+                                                    <select name="kassa" id="" class="form-control">
+                                                        <option value="">- - - - - - - </option>
+                                                        {% for k in cashes %}
+                                                            <option value="{{ k.id }}">{{ k.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <br>
+                                                    <label for="">Summa</label>
+                                                    <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+                        
+                                                    <label for="">Kurs</label>
+                                                    <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
+                                                    <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                                                    
+                                                </div>
+                                                <div class="modal-footer">
+                                                    
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="modal fade" id="exampleModalGive{{debtor.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form action="{% url 'chiqim_qilsih' %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                <h5 class="modal-title" id="ChiqimModalLabel">Pul berish</h5>
+                                            
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="deliver" value="{{debtor.id}}">
+                        
+                        
+                                                    <label for="">Valyuta</label>
+                                                    <select name="valuta" id="" class="form-control">
+                                                        <option value="">- - - - - - - </option>
+                                                        {% for v in valyuta %}
+                                                            <option value="{{ v.id }}">{{ v.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <br>
+                                                    <label for="">Kassa</label>
+                                                    <select name="kassa" id="" class="form-control">
+                                                        <option value="">- - - - - - - </option>
+                                                        {% for k in cashes %}
+                                                            <option value="{{ k.id }}">{{ k.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <br>
+                                                    <label for="">Summa</label>
+                                                    <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+                        
+                                                    <label for="">Kurs</label>
+                                                    <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
+                                                    <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                                                    
+                                                </div>
+                                                <div class="modal-footer">
+                                                    
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="modal fade" id="bonus{{ debtor.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        
+                                        <div class="modal-header">
+                                        <h5 class="modal-title">Bonus berish</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Yopish">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                
+                                        <form method="post" action="{% url 'add_bonus' %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <input type="hidden" name="deliver" value="{{ debtor.id }}">
+                                
+                                            <div class="form-group">
+                                            <label for="valuta">Valuta</label>
+                                            <select class="form-control" name="valuta" id="valuta">
+                                                <option value="">- - - - - - - - </option>
+                                                {% for v in valyuta %}
+                                                <option value="{{ v.id }}">{{ v.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                
+                                            <div class="form-group">
+                                            <label for="date">Vaqt</label>
+                                            <input type="datetime-local" class="form-control" name="date" id="date">
+                                            </div>
+                                
+                                            <div class="form-group">
+                                            <label for="summa">Summa</label>
+                                            <input type="text" class="form-control" name="summa" id="summa" onkeyup="format(this)">
+                                            </div>
+                                
+                                            <div class="form-group">
+                                            <label for="comment">Comment</label>
+                                            <textarea class="form-control" name="comment" id="comment"></textarea>
+                                            </div>
+                                        </div>
+                                
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <button type="button" class="btn btn-rounded btn-secondary" data-dismiss="modal">Yopish</button>
+                                            <button type="submit" class="btn btn-rounded btn-primary">Tasdiqlash</button>
+                                        </div>
+                                        </form>
+                                
+                                    </div>
+                                    </div>
+                                </div>
+                                <div class="modal fade" id="start_debt{{ debtor.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        
+                                        <div class="modal-header">
+                                        <h5 class="modal-title">Boshlang'ich qoldiq tayinlash</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Yopish">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                
+                                        <form method="post" action="{% url 'set_start_summa' %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <input type="hidden" name="deliver" value="{{ debtor.id }}">
+                                
+                                            <div class="form-group">
+                                            <label for="valuta">Valuta</label>
+                                            <select class="form-control" name="valuta" id="valuta">
+                                                <option value="">- - - - - - - - </option>
+                                                {% for v in valyuta %}
+                                                <option value="{{ v.id }}">{{ v.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                
+                                            <div class="form-group">
+                                            <label for="date">Vaqt</label>
+                                            <input type="datetime-local" class="form-control" name="date" id="date">
+                                            </div>
+                                
+                                            <div class="form-group">
+                                            <label for="summa">Summa</label>
+                                            <input type="text" class="form-control" name="summa" id="summa" onkeyup="format(this)">
+                                            </div>
+                                
+                                        </div>
+                                
+                                        <div class="modal-footer d-flex justify-content-between">
+                                            <button type="button" class="btn btn-rounded btn-secondary" data-dismiss="modal">Yopish</button>
+                                            <button type="submit" class="btn btn-rounded btn-primary">Tasdiqlash</button>
+                                        </div>
+                                        </form>
+                                
+                                    </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                                
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                var classic = document.querySelectorAll('.naqd_som_money').length
+                console.log(classic)
+                for (let i = 0; i < document.querySelectorAll('.naqd_som_money').length; i++) {
+                    let cash_number = document.querySelectorAll('.naqd_som_money')[i];
+                    let cash = Number(cash_number.innerText).toFixed(1).replace(/\d(?=(\d{3})+\.)/g, '$& ');
+                    cash_number.innerText = cash.slice(0,cash.length-2);
+                }
+        
+            </script>
+{% endblock content %}
+{% block js %}
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+    <script src="{% static 'plugins/jquery-ui/jquery-ui.min.js'%}"></script>
+    <script src="{% static 'assets/js/apps/contact.js'%}"></script>
+    <script src="{% static 'plugins/highlight/highlight.pack.js'%}"></script>
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!-- BEGIN THEME GLOBAL STYLE -->
+    <script src="{% static 'assets/js/scrollspyNav.js'%}"></script>
+    <script src="{% static 'plugins/sweetalerts/sweetalert2.min.js'%}"></script>
+    <script src="{% static 'plugins/sweetalerts/custom-sweetalert.js'%}"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.flash.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    
+
+
+    <script>
+        $('#excel').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+            "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15,
+            "paging": false,
+            "scrollY": true
+        } );
+    </script>
+
+    <!-- END THEME GLOBAL STYLE -->
+{% endblock js %}

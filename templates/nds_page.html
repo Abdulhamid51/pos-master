@@ -135,6 +135,30 @@
                                         <span>Oxirgi ko'rilgan</span>
                                     </a>
                                 </li>
+                                 <li class="nav-item">
+                                    <a href="{% url 'debtor_type' %}" class="nav-link {% if request.resolver_match.url_name == 'debtor_type' %}active{% endif %}">
+                                        <i class="fa-solid fa-quote-left"></i>
+                                        <span>Mijoz Turi</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'region' %}" class="nav-link {% if request.resolver_match.url_name == 'region' %}active{% endif %}">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                        <span>Mintaqa</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'teritory' %}" class="nav-link {% if request.resolver_match.url_name == 'teritory' %}active{% endif %}">
+                                        <i class="fa-solid fa-location-dot"></i>    
+                                        <span>Hudud</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'groups' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
+                                       <i class="fa-solid fa-layer-group"></i>   
+                                        <span>Maxsulot guruhi</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -177,6 +201,7 @@
                                         </tr>
                                     </thead>
                                     <tbody> 
+                                        
                                         <tr>
                                             <td>1</td>
                                             <td>{{ nds.perecent }}</th>
@@ -193,12 +218,13 @@
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                                <button type="submit" class="btn btn-primary"><a href="{% url 'nds_del' nds.id %}" style="color: white !important;">Saqlash</a></button>
+                                                                <button type="submit" class="btn btn-primary">{% if nds %}<a href="{% url 'nds_del' nds.id %}" style="color: white !important;">Saqlash</a> {% endif %}</button>
                                                             </div>
                                                         </div>
                                                     </div>
                                             </div>
                                         </tr>
+                                       
                                     </tbody>
                                     <tfoot>
                                         <tr>

@@ -469,6 +469,5 @@ class LogRequestMiddleware:
             what_did = gete(path)
             if user and what_did != 'Noma\'lum yo\'l':
                 LastSeen.objects.create(device=device, what_did=what_did, user=user)
-            print(f"[{time}] 👤 {user} | {method} {path} | IP: {ip} | Agent: {agent}")
 
         return self.get_response(request)

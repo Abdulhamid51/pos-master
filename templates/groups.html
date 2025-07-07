@@ -12,8 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
-    
-     <style>
+    <style>
         .nxl-content-sidebar-item {
             padding: 0;
             list-style: none;
@@ -136,7 +135,7 @@
                                         <span>Oxirgi ko'rilgan</span>
                                     </a>
                                 </li>
-                                 <li class="nav-item">
+                                <li class="nav-item">
                                     <a href="{% url 'debtor_type' %}" class="nav-link {% if request.resolver_match.url_name == 'debtor_type' %}active{% endif %}">
                                         <i class="fa-solid fa-quote-left"></i>
                                         <span>Mijoz Turi</span>
@@ -176,23 +175,15 @@
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-body">
-                                            <form action="{% url 'users_add' %}" method="post" enctype="multipart/form-data">
+                                            <form action="{% url 'groups_add' %}" method="post" enctype="multipart/form-data">
                                                 {% csrf_token %}
                                                 <div class="form-group">
-                                                    <label for="recipient-username" class="col-form-label">Foydalanuvchi nomi</label>
-                                                    <input type="text" class="form-control" id="recipient-username" name="username" required>
+                                                    <label for="recipient-name" class="col-form-label">Nomi</label>
+                                                    <input type="text" class="form-control" id="recipient-name" name="name" >
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="recipient-first_name" class="col-form-label">Ism</label>
-                                                    <input type="text" class="form-control" id="recipient-first_name" name="first_name" >
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="recipient-last_name" class="col-form-label">Familiya</label>
-                                                    <input type="text" class="form-control" id="recipient-last_name" name="last_name" >
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="recipient-password" class="col-form-label">Parol</label>
-                                                    <input type="password" class="form-control" id="recipient-password" name="password" required>
+                                                    <label class="col-form-label">Kodi</label>
+                                                    <input type="number" class="form-control"  name="number" required>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
@@ -204,51 +195,39 @@
                                 </div>
                             </div>
                             <div class="table-responsive mb-4 mt-4">
-                                <table id="html5-extension" class="table table-hover non-hover" style="width:100%">
+                                <table class="table table-hover non-hover" style="width:100%">
                                     <thead>
                                         <tr>
                                             <th class="">№</th>
                                             <th>Nomi</th>
-                                            <th>Ismi</th>
-                                            <th>Familiyasi</th>
+                                            <th>Kodi</th>
                                             <th>Tahrirlash</th>
-                                            <th>Imkoniyat</th>
-                                            <!-- <th>Ochirish</th> -->
+                                            <th>Ochirish</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
-                                        {% for use in use %}
+                                        {% for valyuta in db_type %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <th>{{ use.username }}</th>
-                                                <th>{{ use.first_name }}</th>
-                                                <th>{{ use.last_name }}</th>
-                                                <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ use.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
-                                                <th><button class="btn btn-primary" type="button" data-toggle="modal" data-target="#exampleModalLimit{{ use.id }}"><a href="{% url 'users_restrictions_limit' use.id %}"><i class="fa-solid fa-file-circle-plus" style="color: white !important;"></i></a> </button></th>
-                                                <!-- <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ use.id }}"><i class="fa-solid fa-trash"></i></button></th> -->
+                                                <td>{{ valyuta.name }}</td>
+                                                <td>{{ valyuta.number }}</td>
+                                                <td><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ valyuta.id }}"><i class="fa-solid fa-pen-to-square"></i></button></td>
+                                                <td><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ valyuta.id }}"><i class="fa-solid fa-trash"></i></button></th>
+
                                             </tr>
-                                           
-                                            <div class="modal fade" id="exampleModalEdit{{ use.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="exampleModalEdit{{ valyuta.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <div class="modal-body">
-                                                            <form action="{% url 'users_change' use.id %}" method="post" enctype="multipart/form-data">
+                                                            <form action="{% url 'groups_edit' valyuta.id %}" method="post" enctype="multipart/form-data">
                                                                 {% csrf_token %}
                                                                 <div class="form-group">
-                                                                    <label for="recipient-username" class="col-form-label">Foydalanuvchi nomi</label>
-                                                                    <input type="text" class="form-control" id="recipient-username" name="username" value="{{ use.username }}">
+                                                                    <label for="recipient-name" class="col-form-label">Nomi</label>
+                                                                    <input type="text" class="form-control" id="recipient-name" value="{{ valyuta.name }}" name="name" required>
                                                                 </div>
                                                                 <div class="form-group">
-                                                                    <label for="recipient-first_name" class="col-form-label">Ismi</label>
-                                                                    <input type="text" class="form-control" id="recipient-first_name" name="first_name" value="{{ use.first_name }}">
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="recipient-last_name" class="col-form-label">Familiyasi</label>
-                                                                    <input type="text" class="form-control" id="recipient-last_name" name="last_name" value="{{ use.last_name}}">
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="recipient-password" class="col-form-label">Yangi Parol</label>
-                                                                    <input type="password" class="form-control" id="recipient-password" name="password">
+                                                                    <label class="col-form-label">Kodi</label>
+                                                                    <input type="number" class="form-control"  name="number" value="{{ valyuta.number }}" >
                                                                 </div>
                                                                 <div class="modal-footer">
                                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
@@ -259,25 +238,23 @@
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <div class="modal fade" id="exampleModalDelete{{ use.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-body">
-                                                           <h5>Siz ma’lumotni ochirmoqchimisiz</h5>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                            <button type="submit" class="btn btn-primary"><a href="{% url 'users_delete' use.id %}" style="color: white !important;">Saqlash</a></button>
+                                              <div class="modal fade" id="exampleModalDelete{{ valyuta.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-body">
+                                                            <h5>Siz ma’lumotni ochirmoqchimisiz</h5>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                <button type="submit" class="btn btn-primary"><a href="{% url 'groups_del' valyuta.id %}" style="color: white !important;">Saqlash</a></button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
                                             </div>
                                         {% endfor %}
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <th></th>
                                             <th></th>
                                             <th></th>
                                             <th></th>
@@ -317,7 +294,7 @@
             },
             "stripeClasses": [],
             "lengthMenu": [10, 20, 50, 100],
-            "pageLength": 10
+            "pageLength": 15
         } );
 
         let data = []
