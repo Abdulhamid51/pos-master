@@ -3618,8 +3618,8 @@ def Login(request):
         password = request.POST.get('password')
         print(password)
         user = authenticate(request, username=username, password=password)
+        print(user)
         if user is not None:
-            print(user)
             profile = getattr(user, 'userprofile', None)
 
             if user.userprofile.staff == 4:
@@ -6474,6 +6474,7 @@ def detail_top_debtors(request, id):
 def users_restrictions(request):
     context = {
         'use':UserProfile.objects.all().order_by('-id'),
+        'filial':Filial.objects.filter(is_activate=True)
     }
     return render(request, 'users_restrictions.html', context)
 
@@ -6598,6 +6599,9 @@ def users_add(request):
     first_name = request.POST.get('first_name')
     last_name = request.POST.get('last_name')
     password = request.POST.get('password')
+    staff = request.POST.get('staff')
+    filial = request.POST.get('filial')
+    
     use = User.objects.create_superuser(
         username=username,
         first_name=first_name,
@@ -6609,7 +6613,9 @@ def users_add(request):
         first_name=first_name,
         last_name=last_name,
         password=password,
-        user=use
+        user=use,
+        staff=staff,
+        filial_id=filial,
     )
     return redirect(request.META['HTTP_REFERER'])
 
@@ -6620,6 +6626,9 @@ def users_change(request, id):
     first_name = request.POST.get('first_name')
     last_name = request.POST.get('last_name')
     password = request.POST.get('password')
+    staff = request.POST.get('staff')
+    filial = request.POST.get('filial')
+
     if username:
         user_profile.username = username
     if first_name:
@@ -6627,7 +6636,11 @@ def users_change(request, id):
     if last_name:
         user_profile.last_name = last_name
     if password:
-        user_profile = password
+        user_profile.password = password
+    if staff:
+        user_profile.staff = staff
+    if filial:
+        user_profile.filial_id=filial
     user_profile.save()
     if user_profile.user:
         use = User.objects.get(id=user_profile.user.id)
