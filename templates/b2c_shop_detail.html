@@ -198,7 +198,7 @@
                                     <td class="text-center" id="quantity_total">{{ totals.quantity|floatformat|intcomma }}</td>
                                     <td></td>
                                     <td></td>
-                                    <td id="all_total">{{ totals.total|intcomma }}</td>
+                                    <td></td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -211,7 +211,8 @@
                     <div class="col-md-12">
                         <form method="post" action="{% url 'b2c_shop_edit' %}" class="widget-content widget-content-area br-6">
                             {% csrf_token %}
-
+                            <h4 class="text-success" style="font-size: 50px;" id="all_total">{{ totals.total|intcomma }}</h4>
+                            <br>
                             <div class="btn-group" role="group" aria-label="Price Types" style="width: 100%;">
                                 {% for i in price_types %}
                                     <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off" 
@@ -1582,22 +1583,27 @@ $(document).ready(function() {
         if (pr_id) {
             // Check if product already exists in cart
             const existingRow = $(`tr:contains('${pr_name}')`).first();
-            // if (existingRow.length > 0) {
-            //     // Product exists - increment quantity
-            //     const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
+            if (existingRow.length > 0) {
+                // Product exists - increment quantity
+                const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
                 
-            //     const newQty = currentQty + 1;
-            //     existingRow.find('.quantity-input').val(newQty);
-            //     updatePackFromQuantity(existingRow.find('.quantity-input'));
-            //     updateCartItem(existingRow, add=true, quantity_add=1);
+                const newQty = currentQty + 1;
+                existingRow.find('.quantity-input').val(newQty);
+                updateCartItem(existingRow, add=true, quantity_add=1);
+                updatePackFromQuantity(existingRow.find('.quantity-input'));
 
-            //     // const existingRow = $(`tr:contains('${pr_name}')`).first();
-            // } else {
+                // const existingRow = $(`tr:contains('${pr_name}')`).first();
+            } else {
             $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                 const price = parseFloat(data['price']) || 0;
                 addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
+
+                updatePackFromQuantity(existingRow.find('.quantity-input'));
+                // updateCartItem(existingRow, add=true, quantity_add=1);
             });
-            // }
+            
+            $('#productSearchInput').val('')
+            }
         }
         
         // Reset select

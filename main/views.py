@@ -7397,29 +7397,74 @@ def b2c_shop_cart_add(request, id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f"Xatolik: {str(e)}"})
 
+# @csrf_exempt
+# def b2c_shop_cart_edit(request, id):
+#     quantity = request.POST.get('quantity')  
+#     total_pack = request.POST.get('total_pack')  
+#     agreed_price = request.POST.get('agreed_price')  
+#     cart_item = Cart.objects.get(id=id)
+#     product = cart_item.product
+#     pr_qty = product.quantity
+#     product.quantity += cart_item.quantity
+#     product.quantity -= float(quantity)
+#     # print(cart_item.quantity, product.quantity)
+#     # quantity_change = True if float(old_quantity) != float(quantity) else False
+#     if product.quantity < 0:
+#         Cart.objects.filter(id=id).update(quantity=pr_qty+cart_item.quantity)
+#         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas', 'max_quantity': pr_qty+cart_item.quantity, 'from_quantity': True})
+#     cart_item.quantity = quantity
+#     cart_item.total_pack = total_pack
+#     cart_item.price = float(agreed_price)
+#     cart_item.total = float(quantity) * cart_item.price
+#     cart_item.save()
+#     product.save()
+#     print(quantity, 'uuu')
+#     print(product.quantity, 'oooo')
+#     return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi', 'rest': product.quantity})
+
 @csrf_exempt
 def b2c_shop_cart_edit(request, id):
-    quantity = request.POST.get('quantity')  
-    total_pack = request.POST.get('total_pack')  
-    agreed_price = request.POST.get('agreed_price')  
-    cart_item = Cart.objects.get(id=id)
-    product = cart_item.product
-    pr_qty = product.quantity
-    product.quantity += cart_item.quantity
-    product.quantity -= float(quantity)
-    # print(cart_item.quantity, product.quantity)
-    # quantity_change = True if float(old_quantity) != float(quantity) else False
-    if product.quantity < 0:
-        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas', 'max_quantity': pr_qty+cart_item.quantity, 'from_quantity': True})
-    cart_item.quantity = quantity
-    cart_item.total_pack = total_pack
-    cart_item.price = float(agreed_price)
-    cart_item.total = float(quantity) * cart_item.price
-    cart_item.save()
-    product.save()
-    print(quantity, 'uuu')
-    print(product.quantity, 'oooo')
-    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi', 'rest': product.quantity})
+    quantity = request.POST.get('quantity')
+    total_pack = request.POST.get('total_pack')
+    agreed_price = request.POST.get('agreed_price')
+
+    try:
+        with transaction.atomic():
+            cart_item = Cart.objects.select_for_update().get(id=id)
+            product = ProductFilial.objects.select_for_update().get(id=cart_item.product.id)
+
+            pr_qty = product.quantity
+            product.quantity += cart_item.quantity  # eski quantity qaytarib qo'yiladi
+            product.quantity -= float(quantity)     # yangi quantity ayiriladi
+
+            if product.quantity < 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Qoldiq yetarli emas',
+                    'max_quantity': pr_qty + cart_item.quantity,
+                    'from_quantity': True
+                })
+
+            cart_item.quantity = quantity
+            cart_item.total_pack = total_pack
+            cart_item.price = float(agreed_price)
+            cart_item.total = float(quantity) * cart_item.price
+
+            cart_item.save()
+            product.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Maxsulot o\'zgartirildi',
+                'rest': product.quantity
+            })
+
+    except Cart.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Cart topilmadi'})
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Mahsulot topilmadi'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Xatolik: {str(e)}'})
 
 
 
