@@ -777,12 +777,58 @@ class ProductFilial(models.Model):
     ]
     ready = models.IntegerField(choices=status_ready, default='1')
 
+    # def save(self, *args, **kwargs):
+    #     creating = self._state.adding
+    #     super().save(*args, **kwargs)
+        
+        # if creating:
+        #     # boshqa barcha filiallar uchun avtomatik nusxa yaratish
+        #     other_filials = Filial.objects.exclude(id=self.filial_id)
+        #     for filial in other_filials:
+        #         exists = ProductFilial.objects.filter(
+        #             filial=filial,
+        #             name=self.name,
+        #         ).exists()
+
+        #         if not exists:
+        #             ProductFilial.objects.create(
+        #                 name=self.name,
+        #                 measurement_type=self.measurement_type,
+        #                 preparer=self.preparer,
+        #                 som=self.som,
+        #                 sotish_som=self.sotish_som,
+        #                 dollar=self.dollar,
+        #                 sotish_dollar=self.sotish_dollar,
+        #                 kurs=self.kurs,
+        #                 barcode=self.barcode,
+        #                 barcode_image=self.barcode_image,
+        #                 group=self.group,
+        #                 deliver1=self.deliver1,
+        #                 measurement=self.measurement,
+        #                 season=self.season,
+        #                 min_count=self.min_count,
+        #                 filial=filial,
+        #                 pack=self.pack,
+        #                 start_quantity=self.start_quantity,
+        #                 start_date=self.start_date,
+        #                 image=self.image,
+        #                 distributsiya=self.distributsiya,
+        #                 category=self.category,
+        #                 valyuta=self.valyuta,
+        #                 shelf_code=self.shelf_code,
+        #                 ready=self.ready,
+        #             )
+
+
     def __str__(self):
         return self.name 
     
     class Meta:
         verbose_name_plural = '3.1) Product Filial'
 
+    @property
+    def get_barcodes(self):
+        return ','.join([i.barcode for i in self.product_barcode.all()])
     @property
     def cost(self):
         last = RecieveItem.objects.filter(product=self).last()
@@ -811,11 +857,18 @@ class ProductFilial(models.Model):
                 dt['summas'].append({
                     "id": pr.id,
                     "summa": str(pr.price).replace(',', '.'),
+                    "price_type": pr.type.id
                     # "sell_summa": str(pr.sell_price).replace(',', '.'),
                 })
 
             data.append(dt)
         return data
+    
+    @property
+    def pricetypevaluta_prices_json(self):
+        import json
+        return json.dumps(self.pricetypevaluta_prices)
+
 
     @property
     def bring_prices(self):
@@ -868,11 +921,84 @@ class ProductFilial(models.Model):
             )
         )['foo']
         return total
+
+
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=ProductFilial)
+def update_product_in_other_filials(sender, instance: ProductFilial, created, **kwargs):
+    if not created:
+        # Signalni vaqtincha o‘chirish
+        post_save.disconnect(update_product_in_other_filials, sender=ProductFilial)
+        
+        # O‘sha mahsulotning boshqa filiallardagi obyektlarini topish
+        other_products = ProductFilial.objects.filter(name=instance.name).exclude(id=instance.id)
+        other_products.update(
+            name=instance.name,
+            measurement_type=instance.measurement_type,
+            preparer=instance.preparer,
+            som=instance.som,
+            sotish_som=instance.sotish_som,
+            dollar=instance.dollar,
+            sotish_dollar=instance.sotish_dollar,
+            kurs=instance.kurs,
+            barcode=instance.barcode,
+            barcode_image=instance.barcode_image,
+            group=instance.group,
+            deliver1=instance.deliver1,
+            measurement=instance.measurement,
+            season=instance.season,
+            min_count=instance.min_count,
+            pack=instance.pack,
+            start_quantity=instance.start_quantity,
+            start_date=instance.start_date,
+            image=instance.image,
+            distributsiya=instance.distributsiya,
+            category=instance.category,
+            valyuta=instance.valyuta,
+            shelf_code=instance.shelf_code,
+            ready=instance.ready,
+        )
+        
+        # Signalni qayta ulash
+        post_save.connect(update_product_in_other_filials, sender=ProductFilial)
+
+        # for product in other_products:
+        #     # quantity ni saqlab qolib, qolganlarini yangilash
+        #     product.name = instance.name
+        #     product.measurement_type = instance.measurement_type
+        #     product.preparer = instance.preparer
+        #     product.som = instance.som
+        #     product.sotish_som = instance.sotish_som
+        #     product.dollar = instance.dollar
+        #     product.sotish_dollar = instance.sotish_dollar
+        #     product.kurs = instance.kurs
+        #     product.barcode = instance.barcode
+        #     product.barcode_image = instance.barcode_image
+        #     product.group = instance.group
+        #     product.deliver1 = instance.deliver1
+        #     product.measurement = instance.measurement
+        #     product.season = instance.season
+        #     product.min_count = instance.min_count
+        #     product.pack = instance.pack
+        #     product.start_quantity = instance.start_quantity
+        #     product.start_date = instance.start_date
+        #     product.image = instance.image
+        #     product.distributsiya = instance.distributsiya
+        #     product.category = instance.category
+        #     product.valyuta = instance.valyuta
+        #     product.shelf_code = instance.shelf_code
+        #     product.ready = instance.ready
+        #     product.save()
+
     
 
 class ProductBarcode(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
-    barcode = models.CharField(max_length=255, unique=True)
+    barcode = models.CharField(max_length=255)
 
 
     
@@ -1330,7 +1456,7 @@ class Cart(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='cart', blank=True, null=True)
     bring_price = models.FloatField(default=0)
     after_cart = models.FloatField(default=0)
-    price_without_skidka = models.IntegerField(default=0)
+    price_without_skidka = models.FloatField(default=0)
     price = models.FloatField(default=0)
     total_pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
