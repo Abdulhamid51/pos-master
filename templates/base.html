@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     {% block css %}
     {% endblock css %}
-</head>
+    
 
 <style>
 .video-tutorial-container {
@@ -92,6 +92,31 @@
         background: #555;
     }
 </style>
+
+<style>
+    .header-container {
+        height: 50px;
+        min-height: 50px;
+    }
+
+    .header {
+        height: 100%;
+        padding: 7rem 4rem;
+        align-items: center;
+    }
+    /* faqat sahifa collapsed bo‘lsa, qizil */
+body.sidebar-collapsed .sidebar-toggle svg {
+    color: red;
+    transform: rotate(180deg);
+}
+
+    #div_one_1, #div_one_2 {
+        margin-top: -2rem;
+    }
+
+
+</style>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <body class="sidebar-noneoverflow">
@@ -107,81 +132,17 @@
 
 <!--  BEGIN NAVBAR  -->
 <div class="header-container fixed-top">
-    <header class="header navbar navbar-expand-sm">
-        <a href="javascript:void(0);" class="sidebarCollapse" data-placement="bottom">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="feather feather-menu">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </a>
-
+    <header class="header navbar navbar-expand-sm expand-header">
         <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
             
         </ul>
-        <div style="margin-right: 3rem; margin-top: -2rem; position: relative;">
+        <div style="margin-right: 3rem;  position: relative;" id="div_one_1">
             <input type="text" placeholder="Check" oninput="search(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
             <div id="dropdown" style="position: absolute; top: 35px; left: 0; right: 0; background: white; border: 1px solid #ccc; display: none; z-index: 1000;"></div>
         </div>
 
-
-
-        <script>
-            function search(item) {
-                let value = item.value;
-
-                if (value.trim() === '') {
-                    $('#dropdown').hide();
-                    return;
-                }
-
-                $.ajax({
-                    url: "{% url 'search_barcode' %}",
-                    type: "GET",
-                    data: { 'search': value },
-                    success: function(response) {
-                        const dropdown = $('#dropdown');
-                        dropdown.empty();
-
-                        if (response.data.length > 0) {
-                            response.data.forEach(function(shop) {
-                                dropdown.append(
-                                    `<div style="padding: 5px; cursor: pointer; color: blue;" onclick="goToShop(${shop.id})">
-                                        Check: ${shop.id}
-                                    </div>`
-                                );
-                            });
-                        } else {
-                            dropdown.append('<div style="padding: 5px; color: red;">Shtrix-kod yo‘q</div>');
-                        }
-
-                        dropdown.show();
-                    },
-                    error: function () {
-                        console.log("Xatolik yuz berdi");
-                    }
-                });
-            }
-
-            function goToShop(id) {
-                window.open(`/shop_nakladnoy/${id}`, '_blank');
-            }
-
-            document.addEventListener('click', function(event) {
-                const input = document.getElementById('barcode-input');
-                const dropdown = document.getElementById('dropdown');
-                if (!input.contains(event.target) && !dropdown.contains(event.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
-        </script>
-
-
-
-    
-        <div class="" style="margin-right: 3rem;margin-top: -2rem;">
+      
+        <div style="margin-right: 3rem;"  id="div_one_2">
             <div class="video-tutorial-container" style="display: none;">
                 <a href="#" class="video-tutorial-link" target="_blank">
                     <i class="fas fa-video"></i> Video qo'llanma
@@ -202,7 +163,7 @@
     <div class="search-overlay"></div>
 
     <!--  BEGIN SIDEBAR  -->
-    <div class="sidebar-wrapper sidebar-theme">
+    <div class="sidebar-wrapper sidebar-theme collapsed" >
         {% if request.user.userprofile.staff == 4 %}
         <nav id="sidebar">
             <div class="shadow-bottom"></div>
@@ -259,6 +220,19 @@
         </nav>
         {% else %}
         <nav id="sidebar">
+           <div class="navbar-nav theme-brand flex-row  text-center">
+                <div class="nav-logo">
+                    <div class="nav-item theme-logo">
+                    </div>
+                    <div class="nav-item theme-text">
+                    </div>
+                </div>
+                <div class="nav-item sidebar-toggle" style="margin-right: 12px;">
+                        <div class="btn-toggle sidebarCollapse">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-left"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+                        </div>
+                </div>
+            </div>
 
             <div class="shadow-bottom"></div>
                 <ul class="list-unstyled menu-categories" id="accordionExample">
@@ -300,10 +274,11 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'mobile_order_list' %}active{% elif url_name == 'mobile_order_detail' %}active{% elif url_name == 'todays_practices' %}active{% elif url_name == 'today_sales' %}active{% elif url_name == 'shops' %}active{% elif url_name == 'b2b_shop' %}active{% elif url_name == 'b2b_shop_ajax' %}active{% elif url_name == 'b2c_shop' %}active{% elif url_name == 'b2c_shop_detail' %}active{% endif %}">
                             <a href="#narx-sotuvlar" data-toggle="collapse" aria-expanded="{% if url_name == 'mobile_order_list' %}true{% elif url_name == 'mobile_order_detail' %}true{% elif url_name == 'todays_practices' %}true{% elif url_name == 'today_sales' %}true{% elif url_name == 'b2c_shop' %}true{% elif url_name == 'b2c_shop_detail' %}true{% elif url_name == 'shops' %}true{% elif url_name == 'b2b_shop' %}true{% elif url_name == 'b2b_shop_ajax' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-cart-shopping" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Sotuvlar</span>
+                               <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-cart-shopping" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">Sotuvlar</span>
                                 </div>
+
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -349,10 +324,11 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'reviziya' %}active{% elif url_name == 'revision_detail' %}active{% elif url_name == 'revision_complate' %}active{% elif url_name == 'revision_complate_items' %}active{% endif %}">
                             <a href="#narx-Inventarizatsiya" data-toggle="collapse" aria-expanded="{% if url_name == 'reviziya' %}true{% elif url_name == 'revision_detail' %}true{% elif url_name == 'revision_complate' %}true{% elif url_name == 'revision_complate_items' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-truck-moving" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Inventarizatsiya</span>
+                                <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-truck-moving" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">Inventarizatsiya</span>
                                 </div>
+                                
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -382,9 +358,9 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'deliver' %}active{% elif url_name == 'debtor_account' %}active{% elif url_name == 'expiring_shop' %}active{% elif url_name == 'debtor' %}active{% elif url_name == 'externalincomeuser' %}active{% endif %}">
                             <a href="#narx-hamkorlar" data-toggle="collapse" aria-expanded="{% if url_name == 'deliver' %}true{% elif url_name == 'debtor_account' %}true{% elif url_name == 'expiring_shop' %}true{% elif url_name == 'debtor' %}true{% elif url_name == 'externalincomeuser' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-handshake" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Hamkorlar</span>
+                                <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-handshake" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">Hamkorlar</span>
                                 </div>
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -428,9 +404,9 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'ombor' %}active{% elif url_name == 'omborqabul' %}active{% elif url_name == 'product_filail_zero' %}active{% elif url_name == 'omborminus' %}active{% elif url_name == 'product_filial' %}active{% elif url_name == 'product_editing_page' %}active{% elif url_name == 'product' %}active{% elif url_name == 'tovar_prixod' %}active{% elif url_name == 'tovar_prixod_tarix' %}active{% elif url_name == 'write_off' %}active{% elif url_name == 'write_off_tarix' %}active{% elif url_name == 'recieve' %}active{% elif url_name == 'deliver_return' %}active{% elif url_name == 'deliver_return_item_detail' %}active{% elif url_name == 'deliver_return_tarix' %}active{% endif %}">
                             <a href="#components" data-toggle="collapse" aria-expanded="{% if url_name == 'ombor' %}true{% elif url_name == 'product_filail_zero' %}true{% elif url_name == 'omborqabul' %}true{% elif url_name == 'omborminus' %}true{% elif url_name == 'product_filial' %}true{% elif url_name == 'product_editing_page' %}true{% elif url_name == 'product' %}true{% elif url_name == 'tovar_prixod' %}true{% elif url_name == 'tovar_prixod_tarix' %}true{% elif url_name == 'write_off' %}true{% elif url_name == 'write_off_tarix' %}true{% elif url_name == 'recieve' %}true{% elif url_name == 'deliver_return' %}true{% elif url_name == 'deliver_return_item_detail' %}true{% elif url_name == 'deliver_return_tarix' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-warehouse" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Ombor</span>
+                                <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-warehouse" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">Ombor</span>
                                 </div>
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -521,9 +497,9 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'analysis_costs' %}active{% elif url_name == 'kassa' %}active{% elif url_name == 'desktop_kassa' %}active{% elif url_name == 'allFilter' %}active{% elif url_name == 'fin_report' %}active{% elif url_name == 'kassa_fin' %}active{% elif url_name == 'data_fin' %}active{% elif url_name == 'debet_kredit_fin' %}active{% elif url_name == 'cf_fin' %}active{% elif url_name == 'daily_cf_fin' %}active{% elif url_name == 'xarid_fin' %}active{% elif url_name == 'sotuv_fin' %}active{% elif url_name == 'pl_fin' %}active{% elif url_name == 'balans_fin' %}active{% elif url_name == 'majburiyat_fin' %}active{% elif url_name == 'tolov_kalendar_fin' %}active{% elif url_name == 'reja_tushum_fin' %}active{% elif url_name == 'reja_chiqim_fin' %}active{% elif url_name == 'asosiy_vosita_fin' %}active{% elif url_name == 'ombor_fin' %}active{% elif url_name == 'kassa_is_approved' %}active{% elif url_name == 'filial_kassalar' %}active{% endif %}">
                             <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name == 'analysis_costs' %}true{% elif url_name == 'kassa' %}true{% elif url_name == 'desktop_kassa' %}true{% elif url_name == 'allFilter' %}true{% elif url_name == 'fin_report' %}true{% elif url_name == 'kassa_fin' %}true{% elif url_name == 'data_fin' %}true{% elif url_name == 'debet_kredit_fin' %}true{% elif url_name == 'cf_fin' %}true{% elif url_name == 'daily_cf_fin' %}true{% elif url_name == 'xarid_fin' %}true{% elif url_name == 'sotuv_fin' %}true{% elif url_name == 'pl_fin' %}true{% elif url_name == 'balans_fin' %}true{% elif url_name == 'majburiyat_fin' %}true{% elif url_name == 'tolov_kalendar_fin' %}true{% elif url_name == 'reja_tushum_fin' %}true{% elif url_name == 'reja_chiqim_fin' %}true{% elif url_name == 'asosiy_vosita_fin' %}true{% elif url_name == 'ombor_fin' %}true{% elif url_name == 'kassa_is_approved' %}true{% elif url_name == 'filial_kassalar' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-money-bill-trend-up" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">Moliya</span>
+                                <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-money-bill-trend-up" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">Moliya</span>
                                 </div>
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -576,9 +552,9 @@
                     {% with url_name=request.resolver_match.url_name %}
                         <li class="menu {% if url_name == 'one_day_price' %}active{% elif url_name == 'employee' %}active{% elif url_name == 'mobile_order' %}active{% elif url_name == 'call_center_payment' %}active{% elif url_name == 'user_detail_chiqim' %}active{% endif %}">
                             <a href="#narx-hrm" data-toggle="collapse" aria-expanded="{% if url_name == 'one_day_price' %}true{% elif url_name == 'employee' %}true{% elif url_name == 'mobile_order' %}true{% elif url_name == 'call_center_payment' %}true{% elif url_name == 'user_detail_chiqim' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                                <div style="display: flex; align-items: center;">
-                                    <i class="fa-solid fa-user-tie" style="font-size: 17px;"></i>
-                                    <span style="margin-left: 10px;">HRM</span>
+                                <div style="white-space: nowrap;">
+                                    <i class="fa-solid fa-user-tie" style="font-size: 17px; vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; vertical-align: middle;">HRM</span>
                                 </div>
                                 <div>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -622,9 +598,9 @@
 
                     <li class="menu {% if request.resolver_match.url_name == 'top_products' %}active{% elif request.resolver_match.url_name == 'top_debtors' %}active{% elif request.resolver_match.url_name == 'top_delivers' %}active{% endif %}">
                         <a href="#components1" data-toggle="collapse" aria-expanded="{% if request.resolver_match.url_name == 'top_products' %}true{% elif request.resolver_match.url_name == 'top_debtors' %}true{% elif request.resolver_match.url_name == 'top_delivers' %}true{% else %}false{% endif %}" class="dropdown-toggle">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fa-solid fa-chart-simple" style="font-size: 17px;"></i>
-                                <span style="margin-left: 10px;">Hisobot</span>
+                            <div style="white-space: nowrap;">
+                                <i class="fa-solid fa-chart-simple" style="font-size: 17px; vertical-align: middle;"></i>
+                                <span style="margin-left: 10px; vertical-align: middle;">Hisobot</span>
                             </div>
                             <div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -660,9 +636,9 @@
                     
                     <li class="menu ">
                         <a href="{% url 'measurement_type_list' %}"   class="dropdown-toggle">
-                            <div style="display: flex; align-items: center;">
-                                <i class="fa-solid fa-gear" style="font-size: 17px;"></i>
-                                <span style="margin-left: 10px;">Sozlamalar</span>
+                            <div style="white-space: nowrap;">
+                                <i class="fa-solid fa-gear" style="font-size: 17px; vertical-align: middle;"></i>
+                                <span style="margin-left: 10px; vertical-align: middle;">Sozlamalar</span>
                             </div>
                             <div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -908,6 +884,99 @@ $(document).ready(function() {
     checkVideoTutorial();
 });
 </script>
+<script>
+$(document).ready(function() {
+    $('.sidebarCollapse').on('click', function() {
+        $('.sidebar-wrapper').toggleClass('collapsed');
+        localStorage.setItem('sidebarCollapsed', 
+            $('.sidebar-wrapper').hasClass('collapsed'));
+    });
+    
+    // Initialize state
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        $('.sidebar-wrapper').addClass('collapsed');
+    } else {
+        $('.sidebar-wrapper').removeClass('collapsed');
+    }
+});
+</script>
+  <script>
+            function search(item) {
+                let value = item.value;
+
+                if (value.trim() === '') {
+                    $('#dropdown').hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'search_barcode' %}",
+                    type: "GET",
+                    data: { 'search': value },
+                    success: function(response) {
+                        const dropdown = $('#dropdown');
+                        dropdown.empty();
+
+                        if (response.data.length > 0) {
+                            response.data.forEach(function(shop) {
+                                dropdown.append(
+                                    `<div style="padding: 5px; cursor: pointer; color: blue;" onclick="goToShop(${shop.id})">
+                                        Check: ${shop.id}
+                                    </div>`
+                                );
+                            });
+                        } else {
+                            dropdown.append('<div style="padding: 5px; color: red;">Shtrix-kod yo‘q</div>');
+                        }
+
+                        dropdown.show();
+                    },
+                    error: function () {
+                        console.log("Xatolik yuz berdi");
+                    }
+                });
+            }
+
+            function goToShop(id) {
+                window.open(`/shop_nakladnoy/${id}`, '_blank');
+            }
+
+            document.addEventListener('click', function(event) {
+                const input = document.getElementById('barcode-input');
+                const dropdown = document.getElementById('dropdown');
+                if (!input.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleBtn = document.querySelector('.sidebar-toggle');
+        const divs = [
+            document.getElementById('div_one_1'),
+            document.getElementById('div_one_2')
+        ];
+
+        toggleBtn.addEventListener('click', function () {
+            const body = document.body;
+            const isCollapsed = body.classList.contains('sidebar-collapsed');
+
+            body.classList.toggle('sidebar-collapsed');
+
+            if (isCollapsed) {
+                divs.forEach(div => div.style.marginTop = "-2rem");
+                console.log("Sidebar expanded: margin-top = -2rem");
+            } else {
+                divs.forEach(div => div.style.marginTop = "0");
+                console.log("Sidebar collapsed: margin-top = 0");
+            }
+        });
+    });
+</script>
+
+
+
+
 
 <script src="{% static 'assets/js/custom.js' %}"></script>
 <!-- END GLOBAL MANDATORY SCRIPTS -->

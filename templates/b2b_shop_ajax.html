@@ -114,7 +114,7 @@
                                                             <div class="col-md-2">
                                                                 <br>
                                                                 <button class="btn btn-warning" style="border: 1px solid silver !important; width: 100%; margin-top: 10px;">
-                                                                    <a href="{% url 'shop_nakladnoy' product_id %}" target="_blank" rel="noopener noreferrer" style="color:white !important;">Печать ▼</a> 
+                                                                    <a href="{% url 'shop_nakladnoy' product_id %}" target="_blank" rel="noopener noreferrer" style="color:white !important;">Muhr ▼</a> 
                                                                 </button>
                                                             </div>
                                                             <!-- <div class="col-md-2">
@@ -125,59 +125,53 @@
                                                                 </button>
                                                             </div> -->
                                                             <div class="col-md-2">
-                                                                <label for="">Отгрузка №</label>
+                                                                <label for="">Yuk jo‘natish № </label>
                                                                 <input type="text" style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; text-align: center;" value="{{ shop.id }}">
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label for="">От</label>
+                                                                <label for="">Dan</label>
                                                                 <input type="datetime-local" value="{{today|date:'Y-m-d H:i'}}" style="border: 1px solid #ddd; border-radius: 5px; padding: 5px; width: 100%;" id="shop_input_date">
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label>* Колл-центр</label>
+                                                                <label>* Qo'ng'iroqlar markazi</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_call_center">
-                                                                    <option value="" disabled selected>Колл-центр</option>
+                                                                    <option value="" disabled selected>Qo'ng'iroqlar markazi</option>
                                                                     {% for i in call_center %}
                                                                     <option value="{{i.id}}"   {% if i == shop.saler %} selected {% endif %}>{{ i.first_name }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label>* Склад</label>
+                                                                <label>* Filial</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" id="shop_select_filial">
-                                                                    <option value="">Выберите склад</option>
+                                                                    <option value="">Filial tanlang</option>
                                                                     {% for i in filial %}
                                                                     <option value="{{i.id}}" {% if  i == shop.filial %} selected {% endif %}>{{ i.name }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
                                                          
-                                                            <div class="col-md-12"><br></div>
                                                             <div class="col-md-2">
-                                                                <label>* Контрагент</label>
+                                                                <label>* Mijoz</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_customer">
-                                                                    <option value="">Выберите контрагента</option>
+                                                                    <option value="">Mijoz-ni tanlang</option>
                                                                     {% for i in customer %}
                                                                     <option value="{{i.id}}" {% if shop.debtor == i %} selected {% endif %}>{{ i.fio }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
+                                                            <div class="col-md-12"><br></div>
                                                             <div class="col-md-2">
-                                                                <label>* Договор</label>
+                                                                <label>* Shartnoma</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_contract">
-                                                                    <option value="">Выберите договор</option>
+                                                                    <option value="">Shartnoma tanlang</option>
                                                                     {% for i in contract %}
                                                                     <option value="{{i.id}}" {% if shop.contract == i %} selected {% endif %}>{{ i.name }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label>* Тип</label>
-                                                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_is_savdo">
-                                                                    <option value="True"> {% if shop.is_savdo %} Sotuv {% else%} Mijozdan Qaytuv {% endif %} </option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <label>* Валюта</label>
+                                                                <label>* Valyuta</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_valyuta">
                                                                     {% for i in valyuta %}
                                                                     <option value="{{i.id}}" {% if shop.valyuta == i %} selected {% endif %}>{{ i.name }}</option>
@@ -185,16 +179,16 @@
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label>* Тип цены</label>
+                                                                <label>* Narx turi</label>
                                                                 <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" id="shop_select_type_price">
-                                                                    <option value="" selected disabled>Выберите Тип цены</option>
+                                                                    <option value="" selected disabled>Narx turini tanlang</option>
                                                                     {% for i in price_type %}
                                                                         <option value="{{i.id}}" {% if shop.type_price == i %} selected {% endif %}>{{ i.name }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-2">
-                                                                <label>* Дата платежа</label>
+                                                                <label>* To'lov sanasi</label>
                                                                 <input type="date" value="{{today|date:'Y-m-d'}}" style="border: 1px solid #ddd; border-radius: 5px; padding: 5px; width: 100%;" id="shop_input_payment_date">
 
                                                             </div>
@@ -208,41 +202,41 @@
                                         
                                         <div class="col-md-12">
                                             <div class="tab">
-                                                <button class="active" onclick="switchTab(event)">Главная</button>
-                                                <button onclick="switchTab(event)">Оплата</button>
+                                                <button class="active" onclick="switchTab(event)">Asosiy</button>
+                                                <button onclick="switchTab(event)">Tolov</button>
                                             </div>
                                             <div class="row home">
                                                 <div class="col-md-12">
                                                     <div class="row">
                                                         <div class="col-md-2">
                                                             <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%;">
-                                                                <option>Наименование</option>
+                                                                <option>Mahsulot nomi</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-1"></div>
                                                         <div class="col-md-2">
-                                                            <h6>Пакет</h6>
+                                                            <h6>Paket</h6>
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <h6>Kол-ва</h6>
+                                                            <h6>Miqdor</h6>
                                                         </div>
                                                         <div class="col-md-1">
-                                                            <h6>Остаток </h6>
+                                                            <h6>Qoldik </h6>
                                                         </div>
                                                         <div class="col-md-1">
                                                             <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%;">
-                                                                <option>Цена</option>
+                                                                <option>Narxi</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-2" style="display: flex; gap: 7px;">
                                                             <label for=""></label>
                                                             <select style="border: 1px solid #ddd;border-radius: 4px; width: 100%; height: 24px;">
-                                                                <option>Скидка </option>
+                                                                <option>Skidka </option>
                                                             </select>
                                                         </div>
                                                         <div class="col-md-1">
                                                             <select style="border: 1px solid #ffffff;border-radius: 4px; width: 100%;">
-                                                                <option>Сумма</option>
+                                                                <option>Jami</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -270,15 +264,18 @@
                                                     <br>
                                                     {% endfor %}
                                                 </div>
+                                                
                                                 <div class="col-md-12">
                                                     <form action="">
                                                         <div class="row">
                                                             <div class="col-md-5">
                                                                 <div class="input-group">
                                                                     <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" class="searchable" id="shop_select_product">
-                                                                        <option value="">Добавить позицию — введите наименование, код, штрихкод или артикул</option>
+                                                                        <option value="">Pozitsiya qo‘shish — nomi, kodi, shtrixkodi yoki artikulini kiriting</option>
                                                                         {% for i in product %}
-                                                                            <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}|{{i.pack}}">{{ i.name }} - {{ i.get_season_display|default_if_none:'' }}</option>
+                                                                            <option value="{{ i.id }}|{{ i.price_ty }}|{{ i.quantity }}|{{i.pack}}">
+                                                                                {{ i.name }} 
+                                                                            </option>
                                                                         {% endfor %}
                                                                     </select>
                                                                     <div class="input-group-append">
@@ -292,7 +289,6 @@
                                                                 <button type="button" class="btn btn-success exampleModal_modal" data-toggle="modal" data-target="#exampleModal"  data-whatever="@mdo" style="display: none;">+</button>
                                                             </div>
                                                             <div class="col-md-1">
-                                                                <!-- <button class="btn-light" type="button">Остатки</button> -->
                                                             </div>
                                                             <div class="col-md-2"></div>
                                                             <div class="col-md-2">
@@ -309,14 +305,14 @@
                                                     <br>
                                                     <div class="row">
                                                         <div class="col-md-7">
-                                                            <textarea name="" style="width: 100%;" placeholder="Комментарий" rows="5" id="shop_textarea">{{ shop.comment }}</textarea>
+                                                            <textarea name="" style="width: 100%;" placeholder="Izoh" rows="5" id="shop_textarea">{{ shop.comment|default_if_none:'' }}</textarea>
 
                                                             <!-- <button class="btn btn-success" id="shop_save" type="button">Savdoni yakunlash</button> -->
                                                         </div>
                                                         <div class="col-md-5">
                                                             <div class="row">
                                                                 <div class="col-md-8">
-                                                                    <h3 style="font-weight: bold;">Итого:</h3>
+                                                                    <h3 style="font-weight: bold;">Jami:</h3>
                                                                 </div>
                                                                 <div class="col-md-4">
                                                                     <h4 style="font-weight: bold;" id="summa_itog"></h4>
@@ -325,8 +321,8 @@
                                                                 </div>
     
                                                                 <div class="col-md-8">
-                                                                    <label><input type="checkbox" id="nds_checkbox" onchange="addNDS()"> НДС:</label><br>
-                                                                    <label><input type="checkbox" onchange="addItogNDS(this)"> Цена включает НДС</label>
+                                                                    <label><input type="checkbox" id="nds_checkbox" onchange="addNDS()"> NDS:</label><br>
+                                                                    <label><input type="checkbox" onchange="addItogNDS(this)"> NDS bilan narx</label>
                                                                 </div>
                                                                
                                                                 <div class="col-md-4">
@@ -335,7 +331,7 @@
                                                                 </div>
                                                                 <div class="col-md-12">
                                                                     <br><br>
-                                                                    <h6 id="summa_col">Koл-вo: </h6>
+                                                                    <h6 id="summa_col">Miqdori: </h6>
                                                                     <div class="line"></div>
                                                                 </div>
     
@@ -752,7 +748,7 @@
                                                                                     paymentSystem.init();
                                                                                 },
                                                                                 error: function() {
-                                                                                    showAlert("Server bilan bog'lanishda xatolik1", "danger");
+                                                                                    
                                                                                 }
                                                                             });
                                                                         }
@@ -1423,7 +1419,6 @@
                             showAlert("Cart ochirildi!", "success");
                         },
                         error: function() {
-                            showAlert("Server bilan bog'lanishda xatolik1", "danger");
                         }
                     });
                 }
@@ -1724,7 +1719,7 @@
         function switchTab(event) {
            document.querySelectorAll('.tab button').forEach(btn => btn.classList.remove('active'));
            event.target.classList.add('active');
-           const isRelatedDocs = event.target.innerText === "Оплата";
+           const isRelatedDocs = event.target.innerText === "Tolov";
            document.querySelector('.home').style.display = isRelatedDocs ? 'none' : 'block';
            document.querySelector('.document').style.display = isRelatedDocs ? 'block' : 'none';
        }

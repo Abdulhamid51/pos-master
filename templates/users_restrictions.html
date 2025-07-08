@@ -187,6 +187,25 @@
                                                     <input type="text" class="form-control" id="recipient-first_name" name="first_name" >
                                                 </div>
                                                 <div class="form-group">
+                                                    <label for="recipient-first_name" class="col-form-label">Lavozimi</label>
+                                                    <select name="staff" class="form-control" required>
+                                                        <option value="3">Sotuvchi</option>
+                                                        <option value="2">Menejer</option>
+                                                        <option value="4">Omborchi</option>
+                                                        <option value="5">Agent</option>
+                                                        <option value="6">Qo'ng'iroq markazi</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-first_name" class="col-form-label">Filial</label>
+                                                    <select name="filial" class="form-control" required>
+                                                        <option value="">------</option>
+                                                        {% for i in filial %}
+                                                        <option value="{{ i.id }}">{{i.name}}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
                                                     <label for="recipient-last_name" class="col-form-label">Familiya</label>
                                                     <input type="text" class="form-control" id="recipient-last_name" name="last_name" >
                                                 </div>
@@ -211,9 +230,10 @@
                                             <th>Nomi</th>
                                             <th>Ismi</th>
                                             <th>Familiyasi</th>
+                                            <th>Lavozimi</th>
+                                            <th>Filial</th>
                                             <th>Tahrirlash</th>
                                             <th>Imkoniyat</th>
-                                            <!-- <th>Ochirish</th> -->
                                         </tr>
                                     </thead>
                                     <tbody> 
@@ -223,6 +243,8 @@
                                                 <th>{{ use.username }}</th>
                                                 <th>{{ use.first_name }}</th>
                                                 <th>{{ use.last_name }}</th>
+                                                <th>{{ use.get_staff_display }}</th>
+                                                <th>{{ use.filial|default_if_none:'-' }}</th>
                                                 <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ use.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
                                                 <th><button class="btn btn-primary" type="button" data-toggle="modal" data-target="#exampleModalLimit{{ use.id }}"><a href="{% url 'users_restrictions_limit' use.id %}"><i class="fa-solid fa-file-circle-plus" style="color: white !important;"></i></a> </button></th>
                                                 <!-- <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ use.id }}"><i class="fa-solid fa-trash"></i></button></th> -->
@@ -241,6 +263,28 @@
                                                                 <div class="form-group">
                                                                     <label for="recipient-first_name" class="col-form-label">Ismi</label>
                                                                     <input type="text" class="form-control" id="recipient-first_name" name="first_name" value="{{ use.first_name }}">
+                                                                </div>
+                                                                 <div class="form-group">
+                                                                    <label for="recipient-first_name" class="col-form-label">Lavozimi</label>
+                                                                    <select name="staff" class="form-control" required>
+                                                                        {% if use.staff == 1 %}
+                                                                        <option value="3" {% if use.staff == 1 %} selected {% endif %}>Direktor</option>
+                                                                        {% endif %}
+                                                                        <option value="3" {% if use.staff == 3 %} selected {% endif %}>Sotuvchi</option>
+                                                                        <option value="2" {% if use.staff == 2 %} selected {% endif %}>Menejer</option>
+                                                                        <option value="4" {% if use.staff == 4 %} selected {% endif %}>Omborchi</option>
+                                                                        <option value="5" {% if use.staff == 5 %} selected {% endif %}>Agent</option>
+                                                                        <option value="6" {% if use.staff == 6 %} selected {% endif %}>Qo'ng'iroq markazi</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="recipient-first_name" class="col-form-label">Filial</label>
+                                                                    <select name="filial" class="form-control" required>
+                                                                        <option value="">------</option>
+                                                                        {% for i in filial %}
+                                                                        <option value="{{ i.id }}" {% if use.filial == i %} selected {% endif %}>{{i.name}}</option>
+                                                                        {% endfor %}
+                                                                    </select>
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label for="recipient-last_name" class="col-form-label">Familiyasi</label>

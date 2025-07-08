@@ -1319,7 +1319,7 @@ class Shop(models.Model):
     skidka_dollar = models.IntegerField(default=0)
     skidka_som = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
-    filial = models.ForeignKey(Filial, on_delete=models.CASCADE)
+    filial = models.ForeignKey(Filial, on_delete=models.CASCADE, blank=True, null=True)
     saler = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name='seller_orders')
     call_center = models.CharField(max_length=200, blank=True, null=True)
     # call_center = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name='call_center_orders')
