@@ -7329,29 +7329,73 @@ def b2c_shop_detail(request, id):
 
     return render(request, 'b2c_shop_detail.html', context)
 
+# @csrf_exempt
+# def b2c_shop_cart_add(request, id):
+#     product_id = request.POST.get('product_id')  
+#     quantity = float(request.POST.get('quantity'))  
+#     total_pack = float(request.POST.get('total_pack'))  
+#     agreed_price = request.POST.get('agreed_price')  
+#     product_price = request.POST.get('product_price')  
+#     shop = Shop.objects.get(id=id)
+#     product = ProductFilial.objects.get(id=product_id)
+#     if product.quantity < float(quantity):
+#         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+#     cart_item = Cart.objects.create(
+#         shop=shop,
+#         product=product,
+#         quantity=quantity,
+#         total_pack=total_pack,
+#         price=float(agreed_price),
+#         price_without_skidka = product_price,
+#         total=float(quantity) * float(agreed_price)
+#     )
+#     product.quantity -= quantity
+#     product.save()
+#     return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+
 @csrf_exempt
 def b2c_shop_cart_add(request, id):
-    product_id = request.POST.get('product_id')  
-    quantity = float(request.POST.get('quantity'))  
-    total_pack = float(request.POST.get('total_pack'))  
-    agreed_price = request.POST.get('agreed_price')  
-    product_price = request.POST.get('product_price')  
-    shop = Shop.objects.get(id=id)
-    product = ProductFilial.objects.get(id=product_id)
-    if product.quantity < float(quantity):
-        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
-    cart_item = Cart.objects.create(
-        shop=shop,
-        product=product,
-        quantity=quantity,
-        total_pack=total_pack,
-        price=float(agreed_price),
-        price_without_skidka = product_price,
-        total=float(quantity) * float(agreed_price)
-    )
-    product.quantity -= quantity
-    product.save()
-    return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+    try:
+        product_id = request.POST.get('product_id')  
+        quantity = float(request.POST.get('quantity'))  
+        total_pack = float(request.POST.get('total_pack'))  
+        agreed_price = float(request.POST.get('agreed_price'))  
+        product_price = float(request.POST.get('product_price'))  
+
+        with transaction.atomic():
+            shop = Shop.objects.select_for_update().get(id=id)
+            product = ProductFilial.objects.select_for_update().get(id=product_id)
+
+            if product.quantity < quantity:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Qoldiq yetarli emas, mavjud qoldiq: {product.quantity}'
+                })
+
+            cart_item = Cart.objects.create(
+                shop=shop,
+                product=product,
+                quantity=quantity,
+                total_pack=total_pack,
+                price=agreed_price,
+                price_without_skidka=product_price,
+                total=quantity * agreed_price
+            )
+
+            product.quantity -= quantity
+            product.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': "Mahsulot qo'shildi",
+            'cart_id': cart_item.id
+        })
+
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({'success': False, 'message': "Mahsulot topilmadi"})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f"Xatolik: {str(e)}"})
 
 @csrf_exempt
 def b2c_shop_cart_edit(request, id):
@@ -7360,29 +7404,59 @@ def b2c_shop_cart_edit(request, id):
     agreed_price = request.POST.get('agreed_price')  
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
+    pr_qty = product.quantity
     product.quantity += cart_item.quantity
     product.quantity -= float(quantity)
+    # print(cart_item.quantity, product.quantity)
+    # quantity_change = True if float(old_quantity) != float(quantity) else False
     if product.quantity < 0:
-        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas', 'max_quantity': pr_qty+cart_item.quantity, 'from_quantity': True})
     cart_item.quantity = quantity
     cart_item.total_pack = total_pack
     cart_item.price = float(agreed_price)
     cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
-    print(quantity)
-    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi'})
+    print(quantity, 'uuu')
+    print(product.quantity, 'oooo')
+    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi', 'rest': product.quantity})
 
 
+
+# @csrf_exempt
+# def b2c_shop_cart_del(request, id):
+#     if Cart.objects.filter(id=id):
+#         cart = Cart.objects.get(id=id)
+#         product = cart.product
+#         product.quantity += cart.quantity
+#         product.save()
+#         cart.delete()
+#     return JsonResponse({'success': True, 'message': 'Maxsulot o\'chirildi'})
 
 @csrf_exempt
 def b2c_shop_cart_del(request, id):
-    cart = Cart.objects.get(id=id)
-    product = cart.product
-    product.quantity += cart.quantity
-    product.save()
-    cart.delete()
-    return JsonResponse({'success': True, 'message': 'Maxsulot o\'chirildi'})
+    try:
+        with transaction.atomic():
+            # Qulf bilan olish
+            cart = Cart.objects.select_for_update().get(id=id)
+            product = ProductFilial.objects.select_for_update().get(id=cart.product_id)
+
+            # Qoldiqni qaytarib qo'yish
+            product.quantity += cart.quantity
+            product.save()
+
+            # Cartni o'chirish
+            cart.delete()
+
+        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi"})
+    
+    except Cart.DoesNotExist:
+        # Cart allaqachon o'chgan bo'lsa, yana ishlamasligi uchun
+        return JsonResponse({'success': False, 'message': "Mahsulot allaqachon o'chirilgan"})
+
+    except Exception as e:
+        # Boshqa xatoliklar
+        return JsonResponse({'success': False, 'message': str(e)})
 
 @csrf_exempt
 def b2c_shop_finish(request, id):
