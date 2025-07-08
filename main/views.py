@@ -7032,9 +7032,10 @@ from django.core.serializers.json import DjangoJSONEncoder
 def create_check(request, order_id):
     shop = Shop.objects.get(id=order_id)
     cart = Cart.objects.filter(shop=shop)
+    saller = shop.saler
     data = {
         'chek':order_id,
-        'seller':shop.saler.first_name,
+        'seller':saller.first_name if saller else '',
         'date':shop.date.strftime('%Y-%m-%d %H:%M:%S'),
         'valyuta':shop.valyuta.name if shop.valyuta else '',
         'items':[
