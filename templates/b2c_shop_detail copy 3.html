@@ -275,7 +275,7 @@
                             <label for="">Nasiya {{ shop.valyuta.name }}</label>
                             <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled> -->
                             {% if shop.debtor.fio != "Naqd" %}
-                            {% endif %}
+                            {% endif %} -->
                         </form>
                     </div>
                     <div class="col-md-12">
@@ -1457,7 +1457,7 @@ $(document).ready(function() {
     // Update cart item on server
     function updateCartItem(row) {
         const cart_id = row.data('id');
-        let quantity = parseFloat(row.find('.quantity-input').val()) || 0;
+        const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
         const totalPack = parseFloat(row.find('.pack-input').val()) || 0;
         const price = parseFloat(row.find('.price-input').val()) || 0;
         const pr_name = parseFloat(row.find('.product_name').text());
@@ -1473,12 +1473,14 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    // console.log(pr_name)
-
-                    // if (add == true && response.success) {
-                    //     const newQty = currentQty + 1;
-                    //     existingRow.find('.quantity-input').val(newQty);
-                    // }
+                    console.log(pr_name)
+                    const existingRow = $(`tr:contains('${pr_name}')`).first();
+                    const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
+                    
+                    if (response.quantity_change) {
+                        const newQty = currentQty + 1;
+                        existingRow.find('.quantity-input').val(newQty);
+                    }
                     row.find('.total').text(formatNumber(total.toFixed(2)));
                     row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
@@ -1487,16 +1489,11 @@ $(document).ready(function() {
                         paymentSystem.init();
                     }
                 } else {
+                    console.log('bbbbbbb')
                     showAlert(response.message, "danger");
-                    const existingRow = $(`tr:contains('${pr_name}')`).first();
-                    const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
-                    console.log(response.from_quantity, 'iiiiiii')
-                    if (response.from_quantity) {
-                        existingRow.find('.quantity-input').val(response.max_quantity);
-                    }
                 }
             },
-            error: function(response) {
+            error: function() {
                 showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
             }
         });
@@ -1582,22 +1579,16 @@ $(document).ready(function() {
         if (pr_id) {
             // Check if product already exists in cart
             const existingRow = $(`tr:contains('${pr_name}')`).first();
-            // if (existingRow.length > 0) {
-            //     // Product exists - increment quantity
-            //     const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
-                
-            //     const newQty = currentQty + 1;
-            //     existingRow.find('.quantity-input').val(newQty);
-            //     updatePackFromQuantity(existingRow.find('.quantity-input'));
-            //     updateCartItem(existingRow, add=true, quantity_add=1);
-
-            //     // const existingRow = $(`tr:contains('${pr_name}')`).first();
-            // } else {
-            $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
-                const price = parseFloat(data['price']) || 0;
-                addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
-            });
-            // }
+            if (existingRow.length > 0) {
+                // Product exists - increment quantity
+                updatePackFromQuantity(existingRow.find('.quantity-input'));
+                updateCartItem(existingRow);
+            } else {
+                $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
+                    const price = parseFloat(data['price']) || 0;
+                    addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
+                });
+            }
         }
         
         // Reset select

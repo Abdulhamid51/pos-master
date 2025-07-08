@@ -2970,6 +2970,110 @@ class Recieves(LoginRequiredMixin, TemplateView):
             context['active_one'] = Recieve.objects.get(id=active_id)
         return context
 
+import openpyxl
+
+@csrf_exempt
+def import_recieve_items_from_excel(request, recieve_id):
+    if request.method == "POST":
+        excel_file = request.FILES.get("file")
+        if not excel_file:
+            return JsonResponse({"error": "File not found"}, status=400)
+
+        wb = openpyxl.load_workbook(excel_file)
+        ws = wb.active
+
+        recieve = get_object_or_404(Recieve, id=recieve_id)
+        headers = [cell.value for cell in ws[1]]
+
+        idx = {header: headers.index(header) for header in headers}
+
+        # PriceType’larni oldindan olish yoki yaratib qo‘yish
+        price_types = {}
+        for type_name in ['Standart', 'Premium', 'Exclusive']:
+            price_types[type_name], _ = PriceType.objects.get_or_create(name=type_name)
+
+        valyuta_som = Valyuta.objects.get_or_create(name='Som')[0]
+        valyuta_dollar = Valyuta.objects.get_or_create(name='Dollar')[0]
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row[idx['name']]:
+                continue  # bo'sh qatorni o'tkazib yuborish
+
+            name = row[idx['name']]
+            barcode = row[idx['barcode']]
+            quantity = float(row[idx['quantity']] or 0)
+
+            kelish_som = float(row[idx['kelish_som']] or 0)
+            kelish_dollar = float(row[idx['kelish_dollar']] or 0)
+
+            sotish_som_standart = float(row[idx['sotish_som_standart']] or 0)
+            sotish_som_premium = float(row[idx['sotish_som_premium']] or 0)
+            sotish_som_exclusive = float(row[idx['sotish_som_exclusive']] or 0)
+
+            sotish_dollar_standart = float(row[idx['sotish_dollar_standart']] or 0)
+            sotish_dollar_premium = float(row[idx['sotish_dollar_premium']] or 0)
+            sotish_dollar_exclusive = float(row[idx['sotish_dollar_exclusive']] or 0)
+
+            # Product yaratish yoki olish
+            product, _ = ProductFilial.objects.get_or_create(
+                name=name,
+                barcode=barcode,
+                filial=UserProfile.objects.filter(user=request.user).last().filial if UserProfile.objects.filter(user=request.user) else None
+            )
+
+            # RecieveItem yaratish
+            recieve_item = RecieveItem.objects.create(
+                recieve=recieve,
+                product=product,
+                quantity=quantity,
+                som=kelish_som,
+                dollar=kelish_dollar,
+                sotish_som=sotish_som_standart,
+                sotish_dollar=sotish_dollar_standart,
+                valyuta=valyuta_som if kelish_som > 0 else valyuta_dollar
+            )
+
+            # Kelish narxlari ProductBringPrice
+            if kelish_som > 0:
+                ProductBringPrice.objects.create(
+                    recieveitem=recieve_item,
+                    product=product,
+                    valyuta=valyuta_som,
+                    price=kelish_som
+                )
+            if kelish_dollar > 0:
+                ProductBringPrice.objects.create(
+                    recieveitem=recieve_item,
+                    product=product,
+                    valyuta=valyuta_dollar,
+                    price=kelish_dollar
+                )
+
+            # Sotish narxlari ProductPriceType
+            for price_type, price_value, valyuta in [
+                (price_types['Standart'], sotish_som_standart, valyuta_som),
+                (price_types['Premium'], sotish_som_premium, valyuta_som),
+                (price_types['Exclusive'], sotish_som_exclusive, valyuta_som),
+                (price_types['Standart'], sotish_dollar_standart, valyuta_dollar),
+                (price_types['Premium'], sotish_dollar_premium, valyuta_dollar),
+                (price_types['Exclusive'], sotish_dollar_exclusive, valyuta_dollar),
+            ]:
+                if price_value > 0:
+                    pt, _ = ProductPriceType.objects.get_or_create(
+                        type=price_type,
+                        product=product,
+                        valyuta=valyuta
+                    )
+                    pt.price=Decimal(price_value)
+                    pt.save()
+            
+            messages.success(request, "Muvaffaqilyatli saqlandi")
+
+    #     return JsonResponse({"success": True})
+
+    # return JsonResponse({"error": "Only POST allowed"}, status=405)
+    return redirect(request.META['HTTP_REFERER'])
+
 def recieve_completion(request, id):
     re = Recieve.objects.get(id=id)
     re.status = 2
@@ -5415,7 +5519,7 @@ def add_recieve(request):
 
     obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs, payment_date=payment_date)
 
-    RejaChiqim.objects.create(payment_date=payment_date, kurs=kurs, valyuta_id=valyuta)
+    RejaChiqim.objects.create(payment_date=str(payment_date)[:10], total=0, kurs=kurs, valyuta_id=valyuta,)
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
     query = dict(parse_qsl(url_parts.query))
@@ -7239,29 +7343,73 @@ def b2c_shop_detail(request, id):
 
     return render(request, 'b2c_shop_detail.html', context)
 
+# @csrf_exempt
+# def b2c_shop_cart_add(request, id):
+#     product_id = request.POST.get('product_id')  
+#     quantity = float(request.POST.get('quantity'))  
+#     total_pack = float(request.POST.get('total_pack'))  
+#     agreed_price = request.POST.get('agreed_price')  
+#     product_price = request.POST.get('product_price')  
+#     shop = Shop.objects.get(id=id)
+#     product = ProductFilial.objects.get(id=product_id)
+#     if product.quantity < float(quantity):
+#         return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+#     cart_item = Cart.objects.create(
+#         shop=shop,
+#         product=product,
+#         quantity=quantity,
+#         total_pack=total_pack,
+#         price=float(agreed_price),
+#         price_without_skidka = product_price,
+#         total=float(quantity) * float(agreed_price)
+#     )
+#     product.quantity -= quantity
+#     product.save()
+#     return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+
 @csrf_exempt
 def b2c_shop_cart_add(request, id):
-    product_id = request.POST.get('product_id')  
-    quantity = float(request.POST.get('quantity'))  
-    total_pack = float(request.POST.get('total_pack'))  
-    agreed_price = request.POST.get('agreed_price')  
-    product_price = request.POST.get('product_price')  
-    shop = Shop.objects.get(id=id)
-    product = ProductFilial.objects.get(id=product_id)
-    if product.quantity < float(quantity):
-        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
-    cart_item = Cart.objects.create(
-        shop=shop,
-        product=product,
-        quantity=quantity,
-        total_pack=total_pack,
-        price=float(agreed_price),
-        price_without_skidka = product_price,
-        total=float(quantity) * float(agreed_price)
-    )
-    product.quantity -= quantity
-    product.save()
-    return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+    try:
+        product_id = request.POST.get('product_id')  
+        quantity = float(request.POST.get('quantity'))  
+        total_pack = float(request.POST.get('total_pack'))  
+        agreed_price = float(request.POST.get('agreed_price'))  
+        product_price = float(request.POST.get('product_price'))  
+
+        with transaction.atomic():
+            shop = Shop.objects.select_for_update().get(id=id)
+            product = ProductFilial.objects.select_for_update().get(id=product_id)
+
+            if product.quantity < quantity:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Qoldiq yetarli emas, mavjud qoldiq: {product.quantity}'
+                })
+
+            cart_item = Cart.objects.create(
+                shop=shop,
+                product=product,
+                quantity=quantity,
+                total_pack=total_pack,
+                price=agreed_price,
+                price_without_skidka=product_price,
+                total=quantity * agreed_price
+            )
+
+            product.quantity -= quantity
+            product.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': "Mahsulot qo'shildi",
+            'cart_id': cart_item.id
+        })
+
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({'success': False, 'message': "Mahsulot topilmadi"})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f"Xatolik: {str(e)}"})
 
 @csrf_exempt
 def b2c_shop_cart_edit(request, id):
@@ -7270,29 +7418,59 @@ def b2c_shop_cart_edit(request, id):
     agreed_price = request.POST.get('agreed_price')  
     cart_item = Cart.objects.get(id=id)
     product = cart_item.product
+    pr_qty = product.quantity
     product.quantity += cart_item.quantity
     product.quantity -= float(quantity)
+    # print(cart_item.quantity, product.quantity)
+    # quantity_change = True if float(old_quantity) != float(quantity) else False
     if product.quantity < 0:
-        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas, {product.quantity}'})
+        return JsonResponse({'success': False, 'message': f'Qoldiq yetarli emas', 'max_quantity': pr_qty+cart_item.quantity, 'from_quantity': True})
     cart_item.quantity = quantity
     cart_item.total_pack = total_pack
     cart_item.price = float(agreed_price)
     cart_item.total = float(quantity) * cart_item.price
     cart_item.save()
     product.save()
-    print(quantity)
-    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi'})
+    print(quantity, 'uuu')
+    print(product.quantity, 'oooo')
+    return JsonResponse({'success': True, 'message': 'Maxsulot ozgartirildi', 'rest': product.quantity})
 
 
+
+# @csrf_exempt
+# def b2c_shop_cart_del(request, id):
+#     if Cart.objects.filter(id=id):
+#         cart = Cart.objects.get(id=id)
+#         product = cart.product
+#         product.quantity += cart.quantity
+#         product.save()
+#         cart.delete()
+#     return JsonResponse({'success': True, 'message': 'Maxsulot o\'chirildi'})
 
 @csrf_exempt
 def b2c_shop_cart_del(request, id):
-    cart = Cart.objects.get(id=id)
-    product = cart.product
-    product.quantity += cart.quantity
-    product.save()
-    cart.delete()
-    return JsonResponse({'success': True, 'message': 'Maxsulot o\'chirildi'})
+    try:
+        with transaction.atomic():
+            # Qulf bilan olish
+            cart = Cart.objects.select_for_update().get(id=id)
+            product = ProductFilial.objects.select_for_update().get(id=cart.product_id)
+
+            # Qoldiqni qaytarib qo'yish
+            product.quantity += cart.quantity
+            product.save()
+
+            # Cartni o'chirish
+            cart.delete()
+
+        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi"})
+    
+    except Cart.DoesNotExist:
+        # Cart allaqachon o'chgan bo'lsa, yana ishlamasligi uchun
+        return JsonResponse({'success': False, 'message': "Mahsulot allaqachon o'chirilgan"})
+
+    except Exception as e:
+        # Boshqa xatoliklar
+        return JsonResponse({'success': False, 'message': str(e)})
 
 @csrf_exempt
 def b2c_shop_finish(request, id):

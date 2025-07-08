@@ -755,7 +755,7 @@ class ProductFilial(models.Model):
     kurs = models.IntegerField(default=0)
     barcode = models.CharField(max_length=255, null=True, blank=True)
     barcode_image = models.ImageField(upload_to="barcode_product/", null=True, blank=True)
-    group = models.ForeignKey(Groups, on_delete=models.CASCADE)
+    group = models.ForeignKey(Groups, on_delete=models.CASCADE, blank=True, null=True)
     deliver1 = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     measurement = models.CharField(choices=measure, default='dona', max_length=4)
     season = models.CharField(choices=season_select, blank=True, null=True, max_length=20)

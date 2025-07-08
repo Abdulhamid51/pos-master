@@ -328,6 +328,9 @@ urlpatterns = [
 
     path('savdo/', savdo, name='savdo'),
     path('payment_shop/<int:shop_id>', payment_shop, name='payment_shop'),
+
+    path('recieve/<recieve_id>/import_excel/', import_recieve_items_from_excel, name='import_recieve_items_from_excel'),
+
     
     path('debtor_type', debtor_type, name='debtor_type'),
     path('debtor_type_add', debtor_type_add, name='debtor_type_add'),
