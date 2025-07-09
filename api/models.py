@@ -183,7 +183,7 @@ class OylikTolov(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE,null=True,blank=True)
+    user = models.OneToOneField(User,on_delete=models.CASCADE,null=True,blank=True, related_name='userprofile')
     
     staffs = [
         (1, 'director'),
@@ -194,7 +194,7 @@ class UserProfile(models.Model):
         (6, 'call_center'),
     ]
     username = models.CharField(max_length=255)
-    password = models.CharField(max_length=255, unique=True)
+    password = models.CharField(max_length=255)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=255, null=True, blank=True)
