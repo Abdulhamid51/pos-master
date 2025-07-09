@@ -117,13 +117,6 @@
                                                                     <a href="{% url 'shop_nakladnoy' product_id %}" target="_blank" rel="noopener noreferrer" style="color:white !important;">Muhr ▼</a> 
                                                                 </button>
                                                             </div>
-                                                            <!-- <div class="col-md-2">
-                                                                <br>
-                                                               
-                                                                <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModalTolov"  data-whatever="@mdo" type="button" style="border: 1px solid silver !important; width: 100%; margin-top: 10px;">
-                                                                    Tolov
-                                                                </button>
-                                                            </div> -->
                                                             <div class="col-md-2">
                                                                 <label for="">Yuk jo‘natish № </label>
                                                                 <input type="text" style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; text-align: center;" value="{{ shop.id }}">
@@ -255,7 +248,7 @@
                                                         <div class="col-md-1"><p class="price_product_list">{{i.price}}</p></div>
                                                         <div class="col-md-2" style="display: flex; gap: 7px;">
                                                             <label for=""></label>
-                                                            <input type="text"  class="skidka_input" placeholder="Скидка" oninput="pushData(this)" value="{{i.skidka_total}}" style="height:22px">
+                                                            <input type="text"  class="skidka_input" placeholder="Chegirma" oninput="pushData(this)" value="{{i.skidka_total}}" style="height:22px">
                                                         </div>
                                                         <div class="col-md-1" style="display:flex; gap:15px;" >
                                                             <h6 class="summa_product_list">{{ i.total }}</h6>
@@ -263,6 +256,7 @@
                                                     </div>
                                                     <br>
                                                     {% endfor %}
+                                                    <input type="hidden" class="skidka_input" id="hidden_skidka">
                                                 </div>
                                                 
                                                 <div class="col-md-12">
@@ -330,16 +324,151 @@
                                                                     <p id="nds_itog">0</p>
                                                                 </div>
                                                                 <div class="col-md-12">
+                                                                    <style>
+                                                                        .discount-input-group {
+                                                                            display: flex;
+                                                                        }
+                                                                        .discount-toggle button {
+                                                                            border: 1px solid #ccc;
+                                                                            height: 38px;
+                                                                            background-color: #f2f2f2;
+                                                                            border-radius: 10px;
+                                                                            font-weight: bold;
+                                                                            min-width: 50px;
+                                                                        }
+                                                                        .discount-toggle button.active {
+                                                                            background-color: #007bff;
+                                                                            color: white;
+                                                                        }
+                                                                        .quick-discount button {
+                                                                            border: 1px solid #ccc;
+                                                                            border-radius: 20px;
+                                                                            background-color: #f2f2f2;
+                                                                            font-weight: bold;
+                                                                            padding: 6px 20px;
+                                                                            min-width: 70px;
+                                                                        }
+                                                                        .quick-discount button:hover {
+                                                                            background-color: #e0e0e0;
+                                                                        }
+                                                                    </style>
+                                                                    <div class="row">
+                                                                        <div class="col-md-9 discount-input-group">
+                                                                            <input type="number" id="discountInput" oninput="changeDiscount(this)" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
+                                                                        </div>
+                                                                        <div class="col-md-3 discount-toggle d-flex justify-content-end">
+                                                                            <button id="percentBtn" class="me-1 active">%</button>
+                                                                            <button id="uzsBtn">{{shop_valyuta_name}}</button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <br>
+                                                                    <div class="row quick-discount  g-2">
+                                                                        <div class="col-auto">
+                                                                            <button onclick="setDiscount(15)">15%</button>
+                                                                        </div>
+                                                                        <div class="col-auto">
+                                                                            <button onclick="setDiscount(30)">30%</button>
+                                                                        </div>
+                                                                        <div class="col-auto">
+                                                                            <button onclick="setDiscount(50)">50%</button>
+                                                                        </div>
+                                                                        <div class="col-auto">
+                                                                            <button onclick="setDiscount(75)">75%</button>
+                                                                        </div>
+                                                                    </div>
+                                                                 <script>
+                                                                    const percentBtn = document.getElementById('percentBtn');
+                                                                    const uzsBtn = document.getElementById('uzsBtn');
+                                                                    const discountInput = document.getElementById('discountInput');
+                                                                    const summaEl = document.getElementById('summa_itog');
+                                                                    
+                                                                    function safeParse(text) {
+                                                                        try {
+                                                                            let cleaned = String(text).replace(/\s/g, '');
+                                                                            cleaned = cleaned.replace(/,/g, '.');
+                                                                            cleaned = cleaned.replace(/[^\d.]/g, '');
+                                                                            return parseFloat(cleaned) || 0;
+                                                                        } catch (e) {
+                                                                            return 0;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    function getCurrentTotal() {
+                                                                        const productList = document.getElementById('product_list');
+                                                                        let total = 0;
+                                                                        productList.querySelectorAll('.summa_product_list').forEach(el => {
+                                                                            total += safeParse(el.textContent);
+                                                                        });
+                                                                        return total;
+                                                                    }
+                                                                    
+                                                                    let originalSumma = getCurrentTotal();
+                                                                    
+                                                                    function updateOriginalSumma() {
+                                                                        originalSumma = getCurrentTotal();
+                                                                    }
+                                                                    
+                                                                    percentBtn.addEventListener('click', () => {
+                                                                        percentBtn.classList.add('active');
+                                                                        uzsBtn.classList.remove('active');
+                                                                        updateOriginalSumma();
+                                                                        discountInput.value = '';
+                                                                        changeDiscount(discountInput); 
+                                                                    });
+
+                                                                    uzsBtn.addEventListener('click', () => {
+                                                                        uzsBtn.classList.add('active');
+                                                                        percentBtn.classList.remove('active');
+                                                                        updateOriginalSumma();
+                                                                        discountInput.value = '';
+                                                                        changeDiscount(discountInput); 
+                                                                    });
+
+                                                                    function setDiscount(value) {
+                                                                        discountInput.value = 0;
+                                                                        percentBtn.classList.add('active');
+                                                                        uzsBtn.classList.remove('active');
+                                                                        updateOriginalSumma();
+                                                                        changeDiscount(discountInput); 
+                                                                    }
+
+                                                                    function changeDiscount(element) {
+                                                                        const val = parseFloat(element.value);
+                                                                        const hidden_skidka = document.getElementById('hidden_skidka');
+
+                                                                        if (isNaN(val)) {
+                                                                            summaEl.textContent = originalSumma.toLocaleString('ru-RU', {minimumFractionDigits: 2});
+                                                                            hidden_skidka.value = 0; 
+                                                                            updateReceiptProducts();
+                                                                            return;
+                                                                        }
+
+                                                                        let result;
+                                                                        if (percentBtn.classList.contains('active')) {
+                                                                            let discount = (originalSumma * val / 100);
+                                                                            result = originalSumma - discount;
+                                                                            hidden_skidka.value = discount; 
+                                                                        } else {
+                                                                            result = originalSumma - val;
+                                                                            hidden_skidka.value = val;
+                                                                        }
+                                                                        updateReceiptProducts();
+                                                                        summaEl.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 2});
+                                                                    }
+                                                                </script>
+
+
+
+                                                                </div>
+                                                                <div class="col-md-12">
                                                                     <br><br>
                                                                     <h6 id="summa_col">Miqdori: </h6>
                                                                     <div class="line"></div>
                                                                 </div>
-    
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                              
                                             </div>
                                             <div class="row document">
                                                 <div class="col-md-12">
@@ -355,91 +484,94 @@
                                                                 return number.toLocaleString('fr-FR', {maximumFractionDigits: 0});
                                                             }
                                                             function updateReceiptProducts() {
-                                                                const productList = document.getElementById('product_list');
-                                                                const receiptContainer = document.getElementById('chek_products');
-                                                                
-                                                                receiptContainer.innerHTML = '';
-                                                                let summaItog = 0;
-                                                                let oraliq_jami = 0;
-                                                                let chegirma = 0;
-                                                                
-                                                                const productRows = productList.querySelectorAll('.row');
-                                                                
-                                                                productRows.forEach(row => {
-                                                                    const productName = row.querySelector('.product_name').textContent;
-                                                                    const quantityInput = row.querySelector('input[name="quantity"]');
-                                                                    const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
+                                                                    const productList = document.getElementById('product_list');
+                                                                    const receiptContainer = document.getElementById('chek_products');
+                                                                    const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
+                                                                    receiptContainer.innerHTML = '';
                                                                     
-                                                                    const priceText = row.querySelector('.price_product_list').textContent;
-                                                                    const skidkaInput = row.querySelector('.skidka_input');
-                                                                    const skidka = skidkaInput ? skidkaInput.value : row.querySelector('div.col-md-2').textContent.trim();
+                                                                    let subtotal = 0;  
+                                                                    let totalDiscount = 0; 
+                                                                    let grandTotal = 0; 
                                                                     
-                                                                    const price = parseFloat(priceText.replace(/\s/g, '').replace(',', '.')) || 0;
-                                                                    const qty = parseFloat(quantity.replace(/\s/g, '').replace(',', '.')) || 0;
-                                                                    const discount = parseFloat(skidka.replace(/\s/g, '').replace(',', '.')) || 0;
-                                                                    console.log(priceText)
-                                                                    const totalWithoutDiscount = price * qty;
-                                                                    const totalWithDiscount = totalWithoutDiscount - discount;
-                                                                    summaItog += totalWithDiscount;
-                                                                    oraliq_jami += totalWithoutDiscount;
-                                                                    chegirma += discount;
+                                                                    const productRows = productList.querySelectorAll('.row');
                                                                     
-                                                                    const formattedPrice = formatNumber(price);
-                                                                    console.log(formattedPrice, '1111')
-
-                                                                    const formattedQuantity = formatNumber(qty);
-                                                                    const formattedTotal = formatNumber(totalWithDiscount);
-                                                                    const formattedDiscount = discount ? formatNumber(discount) : '';
-                                                                    const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount);
+                                                                    productRows.forEach(row => {
+                                                                        const priceText = row.querySelector('.price_product_list').textContent;
+                                                                        const quantityInput = row.querySelector('input[name="quantity"]');
+                                                                        const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
+                                                                        const skidkaInput = row.querySelector('.skidka_input');
+                                                                        const skidka = skidkaInput ? skidkaInput.value : '0';
+                                                                        const price = parseFloat(priceText.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        const qty = parseFloat(quantity.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        totalDiscount += parseFloat(skidka.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        subtotal += price * qty;
+                                                                    });
                                                                     
-                                                                    const receiptItem = `
-                                                                        <div class="section">
-                                                                            <div class="item-title">${productName}</div>
-                                                                            <div class="lines">
-                                                                                <span>${formattedQuantity} × ${formattedPrice}</span>
-                                                                                <span>${formattedTotalWithoutDiscount} UZS</span>
+                                                                    totalDiscount += hidden_skidka;
+                                                                    console.log(totalDiscount)
+                                                                    grandTotal = subtotal - totalDiscount;
+                                                                    
+                                                                    productRows.forEach(row => {
+                                                                        const productName = row.querySelector('.product_name').textContent;
+                                                                        const quantityInput = row.querySelector('input[name="quantity"]');
+                                                                        const quantity = quantityInput ? quantityInput.value : row.querySelector('h6').textContent;
+                                                                        
+                                                                        const priceText = row.querySelector('.price_product_list').textContent;
+                                                                        const skidkaInput = row.querySelector('.skidka_input');
+                                                                        const skidka = skidkaInput ? skidkaInput.value : '0';
+                                                                        
+                                                                        const price = parseFloat(priceText.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        const qty = parseFloat(quantity.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        const discount = parseFloat(skidka.replace(/\s/g, '').replace(',', '.')) || 0;
+                                                                        const totalWithoutDiscount = price * qty;
+                                                                        const totalWithDiscount = totalWithoutDiscount - discount;
+                                                                        
+                                                                        const formattedPrice = formatNumber(price);
+                                                                        const formattedQuantity = formatNumber(qty);
+                                                                        const formattedTotal = formatNumber(totalWithDiscount);
+                                                                        const formattedDiscount = discount ? formatNumber(discount) : '';
+                                                                        const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount);
+                                                                        
+                                                                        const receiptItem = `
+                                                                            <div class="section">
+                                                                                <div class="item-title">${productName}</div>
+                                                                                <div class="lines">
+                                                                                    <span>${formattedQuantity} × ${formattedPrice}</span>
+                                                                                    <span>${formattedTotalWithoutDiscount} ${shop_valyuta_name}</span>
+                                                                                </div>
+                                                                                ${discount ? `
+                                                                                <div class="subline">
+                                                                                    <span>⛓ Chegirma ${formattedDiscount}</span>
+                                                                                    <span>${formattedTotal} ${shop_valyuta_name}</span>
+                                                                                </div>` : ''}
                                                                             </div>
-                                                                            ${discount ? `
-                                                                            <div class="subline">
-                                                                                <span>⛓ Chegirma ${formattedDiscount}</span>
-                                                                                <span>${formattedTotal} UZS</span>
-                                                                            </div>` : ''}
-                                                                        </div>
-                                                                    `;
+                                                                        `;
+                                                                        receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
+                                                                    });
                                                                     
-                                                                    receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
-                                                                });
-                                                                
-                                                                const formattedSumma = formatNumber(summaItog);
-                                                                const formattedoraliq_jami = formatNumber(oraliq_jami);
-                                                                const formattedchegirma = formatNumber(chegirma);
-                                                                
-                                                                const totalJami = document.getElementById('chek_total_jami');
-                                                                const oraliqjami = document.getElementById('chek_oraliq_jami');
-                                                                const totalchegirma = document.getElementById('chek_chegirma');
-                                                                const total_jami = document.getElementById('total_jami');
-                                                                
-                                                                if (totalJami) {
-                                                                    totalJami.textContent = `${formattedSumma} UZS`;
-                                                                    total_jami.textContent = `${formattedSumma} UZS`;
+                                                                    const formattedSubtotal = formatNumber(subtotal);
+                                                                    const formattedTotalDiscount = formatNumber(totalDiscount);
+                                                                    const formattedGrandTotal = formatNumber(grandTotal);
+                                                                    
+                                                                    document.getElementById('chek_oraliq_jami').textContent = `${formattedSubtotal} ${shop_valyuta_name}`;
+                                                                    document.getElementById('chek_chegirma').textContent = `${formattedTotalDiscount} ${shop_valyuta_name}`;
+                                                                    document.getElementById('chek_total_jami').textContent = `${formattedGrandTotal} ${shop_valyuta_name}`;
+                                                                    document.getElementById('total_jami').textContent = `${formattedGrandTotal} ${shop_valyuta_name}`;
+                                                                    document.getElementById('summa_itog').textContent = formattedGrandTotal;
+                                                                    
+                                                                    return grandTotal;
                                                                 }
-                                                                if (oraliqjami) {
-                                                                    oraliqjami.textContent = `${formattedoraliq_jami} UZS`;
-                                                                }
-                                                                if (totalchegirma) {
-                                                                    totalchegirma.textContent = `${formattedchegirma} UZS`;
-                                                                }
-                                                                
-                                                                const mainTotalElement = document.getElementById('summa_itog');
-                                                                if (mainTotalElement) {
-                                                                    mainTotalElement.textContent = formattedSumma;
-                                                                }
-                                                                
-                                                                return summaItog;
-                                                            }
-
+                                                            
                                                            
-
+                                                            function parseShopNumber(text) {
+                                                                if (!text) return 0;
+                                                                let cleaned = String(text).replace(/\s/g, '').replace(/,/g, '.');
+                                                                if ((cleaned.match(/\./g) || []).length > 1) {
+                                                                    cleaned = cleaned.replace(/\./g, '');
+                                                                }
+                                                                const parsed = parseFloat(cleaned);
+                                                                return isNaN(parsed) ? 0 : parsed;
+                                                            }
                                                             const paymentSystem = {
                                                                 totalJami: 0,
                                                                 totalToPay: 0,
@@ -549,7 +681,7 @@
                                                                 updateTolashText: function() {
                                                                     const tolashEl = document.getElementById('tolash_summasi');
                                                                     if (tolashEl) {
-                                                                        tolashEl.textContent = formatNumber(this.totalToPay) + ' UZS';
+                                                                        tolashEl.textContent = `${formatNumber(this.totalToPay)} ${shop_valyuta_name}`;
                                                                     }
                                                                 },
                                                                 
@@ -570,7 +702,7 @@
                                                                             
                                                                             paymentLine.innerHTML = `
                                                                                 <span>${methodName}</span>
-                                                                                <span>${formatNumber(amount)} UZS</span>
+                                                                                <span>${formatNumber(amount)} ${shop_valyuta_name}</span>
                                                                             `;
                                                                             paymentContainer.appendChild(paymentLine);
                                                                             totalPaid += amount;
@@ -755,18 +887,15 @@
                                                                     }
                                                                 });
 
-                                                                // Submit payment button
                                                                 document.getElementById('submit-payment').addEventListener('click', function() {
                                                                     paymentSystem.submitPayments({{ shop.id }});
                                                                 });
                                                             });
 
-                                                            // Helper function to parse numbers
                                                             function parseNumber(text) {
                                                                 return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
                                                             }
 
-                                                            // Add CSS for qarz row
                                                             const style = document.createElement('style');
                                                             style.textContent = `
                                                                 .qarz-row {
@@ -783,9 +912,9 @@
                                                                 }
                                                             `;
                                                             document.head.appendChild(style);
-                                                            </script>
+                                                        </script>
                                                         <div class="col-md-3">
-                                                            <style>
+                                                        <style>
                                                                 .receipt-wrapper {
                                                                     width: 100%;
                                                                     background: #fff;
@@ -874,9 +1003,9 @@
                                                                             </div>
                                                                             <hr>
                                                                             <div class="section">
-                                                                                <div class="lines"><span>Oraliq jami</span><span id="chek_oraliq_jami">0 UZS</span></div>
-                                                                                <div class="lines"><span>Chegirma</span><span id="chek_chegirma">0 UZS</span></div>
-                                                                                <div class="lines bold"><span>JAMI</span><span  id="chek_total_jami">0 UZS</span></div>
+                                                                                <div class="lines"><span>Oraliq jami</span><span id="chek_oraliq_jami">0 {{shop_valyuta_name}}</span></div>
+                                                                                <div class="lines"><span>Chegirma</span><span id="chek_chegirma">0 {{shop_valyuta_name}}</span></div>
+                                                                                <div class="lines bold"><span>JAMI</span><span  id="chek_total_jami">0 {{shop_valyuta_name}}</span></div>
                                                                             </div>
                                                                             <div class="section" id="check_tolovlar">
                                                                             </div>
@@ -1005,12 +1134,12 @@
                                                                     <div class="row">
                                                                         <div class="col-md-3">
                                                                             <h6>Jami:</h6>
-                                                                            <h5 id="total_jami" style="display: flex; font-weight: bold;">855 000 UZS</h5>
+                                                                            <h5 id="total_jami" style="display: flex; font-weight: bold;">0 {{shop_valyuta_name}}</h5>
                                                                         </div>
                                                                         <div class="col-md-6"></div>
                                                                         <div class="col-md-3">
                                                                             <h6 style="color: green !important;">Tolash uchun:</h6>
-                                                                            <h5 id="tolash_summasi" style="display: flex; font-weight: bold; color: green !important;">855 000 UZS</h5>
+                                                                            <h5 id="tolash_summasi" style="display: flex; font-weight: bold; color: green !important;">0 {{shop_valyuta_name}}</h5>
                                                                         </div>
                                                                     </div>
                                                                     <br>
@@ -1078,7 +1207,7 @@
                                                                                         <input type="text" class="form-control" value="{{shop.debtor}}" readonly 
                                                                                             style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
                                                                                         </div>
-                                                                                        <small class="text-muted">Balans: 0 UZS</small>
+                                                                                        <small class="text-muted">Balans: 0 {{shop_valyuta_name}}</small>
                                                                                     </div>
 
                                                                                     <div class="row mb-3">
@@ -1288,13 +1417,14 @@
   </div>
 </div>
 
+<p style="display: none;" id="shop_valyuta_name">{{ shop.valyuta.name }}</p>
+
 {% endblock content %}
 {% block js %}
-<!-- Barcha HTML tugaydi -->
-<!-- Bu yerda JavaScript kelsin -->
-
-
     <script>
+        const shop_valyuta_name = document.getElementById('shop_valyuta_name').textContent
+
+
         function addNDS() {
             const checkbox = document.getElementById('nds_checkbox');
             const ndsSpan = document.getElementById('nds_p');
@@ -1487,7 +1617,7 @@
                             price:price,
                         });
                     }
-                    console.log(data)
+                    // console.log(data)
                     const one_data = {
                         quantity: quantity,
                         total_pack: pack,
@@ -1533,21 +1663,21 @@
             const queryText = document.getElementById('query_select_product_name');
             const recipient_name = document.getElementById('recipient-name');
             
-            console.log(modalButton)
+            // console.log(modalButton)
             let lastQuery = ""; 
 
             selectizeInstance.on('type', function (query) {
                 lastQuery = query;
-                console.log(lastQuery, 'eeeeeeee')
+                // console.log(lastQuery, 'eeeeeeee')
                 if (query && selectizeInstance.currentResults.items.length === 0) {
-                    console.log("🆕 Hech nima topilmadi, tugma ochildi!");
+                    // console.log("🆕 Hech nima topilmadi, tugma ochildi!");
                     modalButton.style.display = 'block';
                     queryText.style.display = 'block';
                     queryText.textContent = `🛒 "${query}" maxsulotni qo'shmoqchimisiz? + tugmasini bosing`;
                     recipient_name.value = lastQuery
 
                 } else {
-                    console.log("✅ Natija topildi, tugma yashirildi!");
+                    // console.log("✅ Natija topildi, tugma yashirildi!");
                     modalButton.style.display = 'none';
                     queryText.style.display = 'none';
 
@@ -1643,7 +1773,6 @@
                         },
                         success: function(response) {
                             showAlert("Ma'lumot muvaffaqiyatli saqlandi!", "success");
-                            window.location.replace('/b2b_shop');
                         },
                         error: function () {
                             showAlert("Server bilan bog'lanishda xatolik3", "danger");
@@ -1667,7 +1796,6 @@
                                 "X-CSRFToken": csrfToken
                             },
                             success: function(response) {
-                                window.location.replace('/b2b_shop');
 
                             },
                             error: function () {
@@ -1683,7 +1811,7 @@
     </script>
     <script> 
             const kurs = parseFloat(document.getElementById('shop_last_kurs').textContent.trim()) || 1;
-            console.log(kurs)
+            // console.log(kurs)
     </script>
     <script>
       

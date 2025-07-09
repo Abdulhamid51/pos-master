@@ -3326,9 +3326,8 @@ def debtor_detail(request, id):
         'start_date': str(start_date),
         'end_date': str(end_date),
     }
-   
-    pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
-    shop = Shop.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
+    pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date), shop__status__in=[1,2])
+    shop = Shop.objects.filter(status__in=[1,2],debtor_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     print(pay)
     print(shop)
@@ -9622,7 +9621,6 @@ def b2b_shop_ajax(request, product_id):
     type_id = request.GET.get('type_id')
     carts = Cart.objects.filter(shop=shop)
     user_profile = UserProfile.objects.filter(user=request.user,staff=6).last()
-
     fields = ''
     if shop.valyuta and shop.valyuta.is_dollar:
         fields = 'price_types__price_dollar'
@@ -9640,9 +9638,10 @@ def b2b_shop_ajax(request, product_id):
             for x in Valyuta.objects.all()
         ]
     }
-
+    shop_valyuta_name = shop.valyuta
     context = {
         'customer_info':customer_info,
+        'shop_valyuta_name':shop_valyuta_name.name if shop_valyuta_name else '',
         'today':datetime.today(),
         'filial':Filial.objects.all(),
         'customer':Debtor.objects.all(),
@@ -9756,7 +9755,6 @@ def b2b_shop_ajax_add_one(request, product_id):
         obj.price=data['price']
         obj.skidka_total=data['skidka']
         obj.save()
-        sh.is_finished = True
         sh.save()
     sh.debtor.refresh_debt()
     return JsonResponse({'success': True})
@@ -9786,6 +9784,7 @@ def b2b_shop_ajax_edit(request, id):
         sh.nds_count=nds_count
     if debt_return:
         sh.debt_return=debt_return
+    sh.is_finished = True
     sh.save()
     return JsonResponse({'success': True})
 
@@ -10920,7 +10919,7 @@ def last_seen(request):
 @csrf_exempt
 def search_barcode(request):
     search = request.GET.get('search')
-    shop = Shop.objects.filter(id__icontains=search, cart__isnull=False).values('id')  
+    shop = Shop.objects.filter(id__icontains=search, cart__isnull=False).values('id', 'debtor__fio')  
     return JsonResponse({'data': list(shop)})
 
 
@@ -10928,12 +10927,15 @@ def search_barcode(request):
 
 def return_shop(request, id):
     shop = Shop.objects.get(id=id)
-    cart = Cart.objects.filter(shop=shop)
-    for loop in cart:
-        loop.product.quantity += loop.quantity
-        loop.product.save()
-    shop.status = 3
-    shop.save()
+    if shop.status != 3:
+        cart = Cart.objects.filter(shop=shop)
+        for loop in cart:
+            loop.product.quantity += loop.quantity
+            loop.product.save()
+        if shop.debtor:
+            shop.debtor.refresh_debt()
+        shop.status = 3
+        shop.save()
     return redirect(request.META['HTTP_REFERER'])
 
 

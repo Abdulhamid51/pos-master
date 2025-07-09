@@ -1379,7 +1379,11 @@ class Shop(models.Model):
                 if self.date:
                     text += f"📅 Buyurtma vaqti: {self.date.strftime('%Y-%m-%d %H:%M')}\n"
                 if self.debt_return:
-                    text += f"🚚 Yetkazib berish vaqti: {self.debt_return.strftime('%Y-%m-%d')}\n"
+                    try:
+                        text += f"🚚 Yetkazib berish vaqti: {self.debt_return.strftime('%Y-%m-%d')}\n"
+                    except AttributeError:
+                        date_obj = datetime.datetime.strptime(self.debt_return, '%Y-%m-%d').date()
+                        text += f"🚚 Yetkazib berish vaqti: {date_obj.strftime('%Y-%m-%d')}\n"
                 for x in Cart.objects.filter(shop=self):
                     text += f"\t 📦 {x.product.name} \n"
                     text += f"\t\t\t\t\t    {intcomma(x.quantity)} x {intcomma(x.price)} = {intcomma(x.total_price)}\n"
@@ -1626,7 +1630,7 @@ class Debtor(models.Model):
 
         # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
         pay_history_qs = list(
-            PayHistory.objects.filter(debtor=customer)
+            PayHistory.objects.filter(debtor=customer, shop__status__in=[1,2])
             .select_related('valyuta')
             .order_by('date')
         )
@@ -1638,7 +1642,7 @@ class Debtor(models.Model):
         )
 
         shop_qs = list(
-            Shop.objects.filter(debtor=customer)
+            Shop.objects.filter(debtor=customer, status__in=[1,2])
             .select_related('valyuta')
             .order_by('date')
         )

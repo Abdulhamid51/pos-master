@@ -921,7 +921,7 @@ $(document).ready(function() {
                             response.data.forEach(function(shop) {
                                 dropdown.append(
                                     `<div style="padding: 5px; cursor: pointer; color: blue;" onclick="goToShop(${shop.id})">
-                                        Check: ${shop.id}
+                                        #${shop.id} - ${shop.debtor__fio}
                                     </div>`
                                 );
                             });
