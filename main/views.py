@@ -9689,7 +9689,7 @@ def b2b_shop_ajax(request, product_id):
     shop_valyuta_name = shop.valyuta
     context = {
         'customer_info':customer_info,
-        'shop_valyuta_name':shop_valyuta_name.name if shop_valyuta_name else '',
+        'shop_valyuta_name':shop_valyuta_name.name if shop_valyuta_name else 'Som',
         'today':datetime.today(),
         'filial':Filial.objects.all(),
         'customer':Debtor.objects.all(),
