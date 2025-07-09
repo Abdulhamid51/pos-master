@@ -155,7 +155,7 @@
                             </thead>
                             <tbody> 
                                 {% for i in cart %}
-                                    <tr data-id="{{i.id}}">
+                                    <tr data-id="{{i.id}}" id="row_{{i.product.id}}">
                                         <td>{{ forloop.counter }}</td>
                                         <td class="product_name">{{ i.product.name }}</td>
                                         <!-- <td>{{ i.product.barcode }}</td> -->
@@ -1263,6 +1263,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Qidiruv filtrlash
     searchInput.addEventListener('input', function () {
+        if (!searchInput.value) {return}
         const filter = this.value.toLowerCase();
         const items = dropdown.querySelectorAll('.select-product-item');
         items.forEach(item => {
@@ -1489,7 +1490,7 @@ $(document).ready(function() {
                     }
                 } else {
                     showAlert(response.message, "danger");
-                    const existingRow = $(`tr:contains('${pr_name}')`).first();
+                    const existingRow = $(`#row_${pr_id}`).first();
                     const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
                     console.log(response.from_quantity, 'iiiiiii')
                     if (response.from_quantity) {
@@ -1575,14 +1576,16 @@ $(document).ready(function() {
     // Add product directly to table when selected
     $('#products').on('change', function() {
         const itemValue = $(this).val();
+        console.log(itemValue)
         if (!itemValue) return;
         
         const [pr_id, pr_name, quantity, barcode, pack, price] = itemValue.split('&');
+        console.log(pr_id, 'oooooo')
         const price_type = $('input[name="type_price"]:checked').val();
         const valyuta = $('#valyuta_input').val()
         if (pr_id) {
             // Check if product already exists in cart
-            const existingRow = $(`tr:contains('${pr_name}')`).first();
+            const existingRow = $(`#row_${pr_id}`).first();
             if (existingRow.length > 0) {
                 // Product exists - increment quantity
                 const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
@@ -1592,22 +1595,33 @@ $(document).ready(function() {
                 updateCartItem(existingRow, add=true, quantity_add=1);
                 updatePackFromQuantity(existingRow.find('.quantity-input'));
 
+                $('#productSearchInput').off('change').off('input');
+
+                // 2. qiymatni o'zgartirish
+                $('#productSearchInput').val('');
+                $('#productSearchInput').on('change').on('input');
+
+
                 // const existingRow = $(`tr:contains('${pr_name}')`).first();
             } else {
             $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                 const price = parseFloat(data['price']) || 0;
                 addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
 
-                updatePackFromQuantity(existingRow.find('.quantity-input'));
                 // updateCartItem(existingRow, add=true, quantity_add=1);
             });
             
-            $('#productSearchInput').val('')
+            $('#productSearchInput').off('change').off('input');
+
+            // 2. qiymatni o'zgartirish
+            $('#productSearchInput').val('');
+            $('#productSearchInput').on('change').on('input');
+
             }
         }
         
         // Reset select
-        $('#products').val('');
+        // $('#products').val('');
         // $('#products').selectize()[0].selectize.clear();
         //products_focus()
     });
@@ -1637,9 +1651,9 @@ $(document).ready(function() {
                 },
                 success: function(response) {
                     if (response.success) {
-                        showAlert(response.message, "success");
+                        // showAlert(response.message, "success");
                         const newRow = `
-                            <tr data-id="${response.cart_id}">
+                            <tr data-id="${response.cart_id}" id="row_${response.product_id}">
                                 <td>${$("tbody tr").length + 1}</td>
                                 <td class="product_name">${productName}</td>
                                 <td>${pack}</td>
@@ -1677,6 +1691,14 @@ $(document).ready(function() {
                             updateReceiptProducts()
                             paymentSystem.init();
                         }
+
+                        const addedRow = $("tbody tr").last();
+                        const quantityInput = addedRow.find('.quantity-input')[0];
+                        updatePackFromQuantity(quantityInput);
+
+
+
+                        // updatePackFromQuantity(existingRow.find('.quantity-input'));
                         // Add the new product to selectize dropdown
                         // const selectize = $('#products')[0].selectize;
                         // products_input.addOption({
@@ -1707,7 +1729,7 @@ $(document).ready(function() {
             data: form.serialize(),
             success: function(response) {
                 if (response.success) {
-                    showAlert(response.message, "success");
+                    // showAlert(response.message, "success");
                     $('#new_product_add').modal('hide');
                     form[0].reset();
                     
@@ -1747,7 +1769,7 @@ $(document).ready(function() {
             type: "POST",
             success: function(response) {
                 if (response.success) {
-                    showAlert(response.message, "success");
+                    // showAlert(response.message, "success");
                     tr_item.remove();
                     updateTotals();
                     if (fullscreenPayment.style.display === 'block') {

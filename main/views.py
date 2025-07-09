@@ -6759,6 +6759,7 @@ def users_change(request, id):
         user_profile.staff = staff
     if filial:
         user_profile.filial_id=filial
+    user_profile.user = User.objects.filter(username=username).last() or User.objects.create(username=username, password=password if password else user_profile.password)
     user_profile.save()
     if user_profile.user:
         use = User.objects.get(id=user_profile.user.id)
@@ -7402,7 +7403,8 @@ def b2c_shop_cart_add(request, id):
         return JsonResponse({
             'success': True,
             'message': "Mahsulot qo'shildi",
-            'cart_id': cart_item.id
+            'cart_id': cart_item.id,
+            'product_id': cart_item.product.id
         })
 
     except ProductFilial.DoesNotExist:
