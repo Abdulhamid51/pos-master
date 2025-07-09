@@ -354,7 +354,7 @@
                                                                     </style>
                                                                     <div class="row">
                                                                         <div class="col-md-9 discount-input-group">
-                                                                            <input type="number" id="discountInput" oninput="changeDiscount(this)" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
+                                                                            <input type="number" id="discountInput" oninput="changeDiscount()" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
                                                                         </div>
                                                                         <div class="col-md-3 discount-toggle d-flex justify-content-end">
                                                                             <button id="percentBtn" class="me-1 active">%</button>
@@ -413,7 +413,7 @@
                                                                         uzsBtn.classList.remove('active');
                                                                         updateOriginalSumma();
                                                                         discountInput.value = '';
-                                                                        changeDiscount(discountInput); 
+                                                                        changeDiscount(); 
                                                                     });
 
                                                                     uzsBtn.addEventListener('click', () => {
@@ -421,19 +421,19 @@
                                                                         percentBtn.classList.remove('active');
                                                                         updateOriginalSumma();
                                                                         discountInput.value = '';
-                                                                        changeDiscount(discountInput); 
+                                                                        changeDiscount(); 
                                                                     });
 
                                                                     function setDiscount(value) {
-                                                                        discountInput.value = 0;
+                                                                        discountInput.value = value;
                                                                         percentBtn.classList.add('active');
                                                                         uzsBtn.classList.remove('active');
                                                                         updateOriginalSumma();
-                                                                        changeDiscount(discountInput); 
+                                                                        changeDiscount(); 
                                                                     }
 
-                                                                    function changeDiscount(element) {
-                                                                        const val = parseFloat(element.value);
+                                                                    function changeDiscount() {
+                                                                        const val = parseFloat(discountInput.value) || 0;
                                                                         const hidden_skidka = document.getElementById('hidden_skidka');
 
                                                                         if (isNaN(val)) {
@@ -456,8 +456,6 @@
                                                                         summaEl.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 2});
                                                                     }
                                                                 </script>
-
-
 
                                                                 </div>
                                                                 <div class="col-md-12">
@@ -1573,6 +1571,9 @@
             
             document.getElementById('summa_itog').textContent = summa_itog.toLocaleString('fr-FR');
             document.getElementById('summa_col').textContent = summa_col;
+            updateOriginalSumma();
+            changeDiscount();
+
         }
 
 

@@ -77,6 +77,8 @@
 {% endblock css %}
 
 {% block content %}
+<p style="display: none;" id="shop_valyuta_name">{{ shop_valyuta_name }}</p>
+
 <div id="content" class="main-content">
     <div class="layout-px-spacing">
         <div class="row layout-top-spacing" id="cancel-row">
@@ -187,6 +189,8 @@
                                         <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
                                     </tr>
                                 {% endfor %}
+                                <input type="hidden" class="skidka_input" id="hidden_skidka">
+
                             </tbody>
                             <tfoot>
                                 <tr>
@@ -208,8 +212,8 @@
             </div>
             <div class="col-xl-4 col-lg-4 col-sm-12 layout-spacing">
                 <div class="row">
-                    <div class="col-md-12">
-                        <form method="post" action="{% url 'b2c_shop_edit' %}" class="widget-content widget-content-area br-6">
+                    <div class="col-md-12 widget-content widget-content-area br-6">
+                        <form method="post" action="{% url 'b2c_shop_edit' %}">
                             {% csrf_token %}
                             <h4 class="text-success" style="font-size: 50px;" id="all_total">{{ totals.total|intcomma }}</h4>
                             <br>
@@ -278,7 +282,132 @@
                             {% if shop.debtor.fio != "Naqd" %}
                             {% endif %}
                         </form>
+                            <style>
+                                .discount-input-group {
+                                    display: flex;
+                                }
+                                .discount-toggle button {
+                                    border: 1px solid #ccc;
+                                    height: 38px;
+                                    background-color: #f2f2f2;
+                                    border-radius: 10px;
+                                    font-weight: bold;
+                                    min-width: 50px;
+                                }
+                                .discount-toggle button.active {
+                                    background-color: #007bff;
+                                    color: white;
+                                }
+                                .quick-discount button {
+                                    border: 1px solid #ccc;
+                                    border-radius: 20px;
+                                    background-color: #f2f2f2;
+                                    font-weight: bold;
+                                    padding: 6px 20px;
+                                    min-width: 70px;
+                                }
+                                .quick-discount button:hover {
+                                    background-color: #e0e0e0;
+                                }
+                            </style>
+                            <div class="row">
+                                <div class="col-md-9 discount-input-group">
+                                    <input type="number" id="discountInput" oninput="changeDiscount()" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
+                                </div>
+                                <div class="col-md-3 discount-toggle d-flex justify-content-end">
+                                    <button id="percentBtn" class="me-1 active">%</button>
+                                    <button id="uzsBtn">{{shop_valyuta_name}}</button>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row quick-discount  g-2">
+                                <div class="col-auto">
+                                    <button onclick="setDiscount(15)">15%</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button onclick="setDiscount(30)">30%</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button onclick="setDiscount(50)">50%</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button onclick="setDiscount(75)">75%</button>
+                                </div>
+                            </div>
+                         <script>
+                            const percentBtn = document.getElementById('percentBtn');
+                            const uzsBtn = document.getElementById('uzsBtn');
+                            const discountInput = document.getElementById('discountInput');
+                            const all_total = document.getElementById('all_total');
+                            const all_total_two = document.getElementById('all_total_2');
+
+
+                            function safeParse(text) {
+                                try {
+                                    let cleaned = String(text).replace(/\s/g, '');
+                                    cleaned = cleaned.replace(/,/g, '.');
+                                    cleaned = cleaned.replace(/[^\d.]/g, '');
+                                    return parseFloat(cleaned, 1) || 0;
+                                } catch (e) {
+                                    return 0;
+                                }
+                            }
+                            // let originlaTotal = parseFloat(safeParse(all_total.textContent), 1)
+                            
+                            percentBtn.addEventListener('click', () => {
+                                percentBtn.classList.add('active');
+                                uzsBtn.classList.remove('active');
+                                discountInput.value = '';
+                                changeDiscount(); 
+
+                            });
+                            uzsBtn.addEventListener('click', () => {
+                                uzsBtn.classList.add('active');
+                                percentBtn.classList.remove('active');
+                                discountInput.value = '';
+                                changeDiscount(); 
+                            });
+                            function setDiscount(value) {
+                                discountInput.value = value;
+                                percentBtn.classList.add('active');
+                                uzsBtn.classList.remove('active');
+                                changeDiscount(); 
+                            }
+                            function changeDiscount() {
+                                console.log(111, 'loggoel')
+                                const val = parseFloat(discountInput.value) || 0;
+                                const hidden_skidka = document.getElementById('hidden_skidka');
+                                let originlaTotal = 0;
+                                $("tbody tr").each(function() {
+                                    const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+                                    const price = parseFloat($(this).find('.price-input').val()) || 0;
+                                    originlaTotal += quantity * price;
+                                });
+                                if (isNaN(val)) {
+                                    all_total.textContent = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                                    all_total_two.value = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                                    hidden_skidka.value = 0; 
+                                    updateReceiptProducts();
+                                    return;
+                                }
+                                let result;
+                                if (percentBtn.classList.contains('active')) {
+                                    let discount = (originlaTotal * val / 100);
+                                    result = originlaTotal - discount;
+                                    hidden_skidka.value = discount; 
+
+                                } else {
+                                    result = originlaTotal - val;
+                                    hidden_skidka.value = val;
+
+                                }
+                                updateReceiptProducts();
+                                all_total.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                                all_total_two.value = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                            }
+                        </script>
                     </div>
+
                     <div class="col-md-12">
                         <br>
                         <button class="btn btn-secondary" style="width: 100%;" id="fullscreenPaymentBtn">
@@ -522,9 +651,9 @@
                                             </div>
                                             <hr>
                                             <div class="section">
-                                                <div class="lines"><span>Oraliq jami</span><span id="chek_oraliq_jami">0 UZS</span></div>
-                                                <div class="lines"><span>Chegirma</span><span id="chek_chegirma">0 UZS</span></div>
-                                                <div class="lines bold"><span>JAMI</span><span  id="chek_total_jami">0 UZS</span></div>
+                                                <div class="lines"><span>Oraliq jami</span><span id="chek_oraliq_jami">0 {{shop_valyuta_name}}</span></div>
+                                                <div class="lines"><span>Chegirma</span><span id="chek_chegirma">0 {{shop_valyuta_name}}</span></div>
+                                                <div class="lines bold"><span>JAMI</span><span  id="chek_total_jami">0 {{shop_valyuta_name}}</span></div>
                                             </div>
                                             <div class="section" id="check_tolovlar">
                                             </div>
@@ -540,7 +669,7 @@
                                         <div class="col-md-4">
                                             <div class="summary-card">
                                                 <div class="summary-title">Jami:</div>
-                                                <div class="summary-value" id="total_jami">0 UZS</div>
+                                                <div class="summary-value" id="total_jami">0 {{shop_valyuta_name}}</div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -551,7 +680,7 @@
                                         <div class="col-md-4">
                                             <div class="summary-card">
                                                 <div class="summary-title">To'lash uchun:</div>
-                                                <div class="summary-value total" id="tolash_summasi">0 UZS</div>
+                                                <div class="summary-value total" id="tolash_summasi">0 {{shop_valyuta_name}}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -642,7 +771,7 @@
                                             <input type="text" class="form-control" value="{{shop.debtor}}" readonly 
                                                 style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
                                         </div>
-                                        <small class="text-muted">Balans: 0 UZS</small>
+                                        <small class="text-muted">Balans: 0 {{shop_valyuta_name}}</small>
                                     </div>
                                     <div class="row mb-3">
                                         <div class="col">
@@ -670,6 +799,8 @@
                     </div>
 
                     <script>
+                        const shop_valyuta_name = document.getElementById('shop_valyuta_name').textContent
+
                         const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
                         const fullscreenPayment = document.getElementById('fullscreenPayment');
                         const closeFullscreenBtn = document.getElementById('closeFullscreenBtn');
@@ -718,30 +849,29 @@
                             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                         }
                             
-                            function updateReceiptProducts() {
+                        function updateReceiptProducts() {
                                 const productList = document.getElementById('product_list');
                                 const receiptContainer = document.getElementById('chek_products');
+                                const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
                                 
                                 if (!productList || !receiptContainer) return 0;
                                 
                                 receiptContainer.innerHTML = '';
                                 let summaItog = 0;
                                 let oraliq_jami = 0;
-                                let chegirma = 0;
+                                let chegirma = hidden_skidka;
                                 const productRows = productList.querySelectorAll('tbody tr');
                                 
                                 productRows.forEach(row => {
                                     const nameCell = row.querySelector('td:nth-child(2)');
                                     const productName = nameCell ? nameCell.textContent.trim() : 'Unknown Product';
                                     
-                                    // Miqdorni olish - .quantity-input classidagi inputdan
                                     let quantity = 1;
                                     const quantityInput = row.querySelector('.quantity-input');
                                     if (quantityInput) {
                                         quantity = parseFloat(quantityInput.value) || 1;
                                     }
                                     
-                                    // Narxni olish - .price-input classidagi inputdan
                                     let price = 0;
                                     const priceInput = row.querySelector('.price-input');
                                     if (priceInput) {
@@ -752,6 +882,10 @@
                                     summaItog += totalWithoutDiscount;
                                     oraliq_jami += totalWithoutDiscount;
                                     
+                                    if (chegirma >0){
+                                        summaItog -= chegirma
+                                        oraliq_jami -= chegirma
+                                    }
                                     const formattedPrice = formatNumber(price.toFixed(2));
                                     const formattedQuantity = formatNumber(quantity.toFixed(2));
                                     const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount.toFixed(2));
@@ -761,7 +895,7 @@
                                             <div class="item-title">${productName}</div>
                                             <div class="lines">
                                                 <span>${formattedQuantity} × ${formattedPrice}</span>
-                                                <span>${formattedTotalWithoutDiscount} UZS</span>
+                                                <span>${formattedTotalWithoutDiscount} ${shop_valyuta_name}</span>
                                             </div>
                                         </div>
                                     `;
@@ -771,14 +905,14 @@
                                 const formattedSumma = formatNumber(summaItog.toFixed(2));
                                 const formattedoraliq_jami = formatNumber(oraliq_jami.toFixed(2));
                                 
-                                document.getElementById('chek_total_jami').textContent = `${formattedSumma} UZS`;
-                                document.getElementById('total_jami').textContent = `${formattedSumma} UZS`;
-                                document.getElementById('chek_oraliq_jami').textContent = `${formattedoraliq_jami} UZS`;
-                                document.getElementById('chek_chegirma').textContent = `0 UZS`;
+                                document.getElementById('chek_total_jami').textContent = `${formattedSumma} `;
+                                document.getElementById('total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
+                                document.getElementById('chek_oraliq_jami').textContent = `${formattedoraliq_jami} ${shop_valyuta_name}`;
+                                document.getElementById('chek_chegirma').textContent = `${chegirma} ${shop_valyuta_name}`;
                                 
                                 return summaItog;
                             }
-                            
+                            console.log(shop_valyuta_name)
                             const paymentSystem = {
                                 totalJami: 0,
                                 totalToPay: 0,
@@ -890,11 +1024,11 @@
                                     const tolashEl = document.getElementById('tolash_summasi');
                                     const paidAmountEl = document.getElementById('paid_amount');
                                     if (tolashEl) {
-                                        tolashEl.textContent = formatNumber(this.totalToPay) + ' UZS';
+                                        tolashEl.textContent = `${formatNumber(this.totalToPay)}  ${shop_valyuta_name}`
                                     }
                                     if (paidAmountEl) {
                                         const paidAmount = this.totalJami - this.totalToPay;
-                                        paidAmountEl.textContent = formatNumber(paidAmount) + ' UZS';
+                                        paidAmountEl.textContent = `${formatNumber(paidAmount)} ${shop_valyuta_name}`;
                                     }
                                 },
                                 
@@ -914,7 +1048,7 @@
                                             
                                             paymentLine.innerHTML = `
                                                 <span>${methodName}</span>
-                                                <span>${formatNumber(amount)} UZS</span>
+                                                <span>${formatNumber(amount)} ${shop_valyuta_name}</span>
                                             `;
                                             paymentContainer.appendChild(paymentLine);
                                             totalPaid += amount;
@@ -1484,11 +1618,13 @@ $(document).ready(function() {
                     row.find('.total').text(formatNumber(total.toFixed(2)));
                     row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
+                    changeDiscount();
                     updateReceiptProducts();
                     if (fullscreenPayment.style.display === 'block') {
                         paymentSystem.init();
                     }
                 } else {
+                    changeDiscount();
                     showAlert(response.message, "danger");
                     const existingRow = $(`#row_${pr_id}`).first();
                     const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
@@ -1524,7 +1660,8 @@ $(document).ready(function() {
         $("#pack_total").text(formatNumber(totalPack.toFixed(2)));
         $("#all_total").text(formatNumber(totalSum.toFixed(2)));
         $("#all_total_2").val(formatNumber(totalSum.toFixed(2)));
-         calculateRemaining();
+        changeDiscount();
+        calculateRemaining();
     }
 
     // Calculate remaining payment

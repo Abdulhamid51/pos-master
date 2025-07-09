@@ -7340,7 +7340,8 @@ def b2c_shop_detail(request, id):
 
     context['measurements'] = MeasurementType.objects.filter(is_active=True)
     context['delivers'] = Deliver.objects.filter()
-
+    shop_valyuta_name = shop.valyuta
+    context['shop_valyuta_name'] = shop_valyuta_name.name if shop_valyuta_name else 'Som'
     return render(request, 'b2c_shop_detail.html', context)
 
 # @csrf_exempt
