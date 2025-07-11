@@ -10175,7 +10175,8 @@ def kassa_merge_add(request):
     obj , created =  KassaMerge.objects.get_or_create(kassa_id=kassa,valyuta_id=valyuta)
     obj.start_summa+=start_summa
     obj.summa+=summa
-    obj.start_date=start_date
+    if start_date:
+        obj.start_date=start_date
     obj.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -11130,4 +11131,81 @@ def groups_edit(request,id):
 
 def groups_del(request, id):
     Groups.objects.filter(id=id).update(is_active=True)
+    return redirect(request.META['HTTP_REFERER'])
+
+
+
+def close_cash(request):
+    today = datetime.now().date()
+    filial = request.user.userprofile.filial
+    valyuta = Valyuta.objects.filter(is_activate=True)
+    new_kass = KassaNew.objects.filter(filial=filial, is_active=True, is_main=False).values('id', 'name')
+
+    kirim = ( 
+            Kirim.objects.filter(kassa__isnull=False, qachon__date=today)
+             .values('kassa__kassa_id', 'valyuta_id')
+             .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+    )
+    chiqim = (
+            Chiqim.objects.filter(kassa__isnull=False, qachon__date=today)
+             .values('kassa__kassa_id', 'valyuta_id')
+             .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+    )
+    
+    kassa_merge = (
+            KassaMerge.objects.filter(is_active=True)
+            .values('kassa_id', 'valyuta_id')
+            .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+    )
+
+    data = []
+
+    kirim_dict = {(item['kassa__kassa_id'], item['valyuta_id']): item for item in kirim}
+
+    chiqim_dict = {(item['kassa__kassa_id'], item['valyuta_id']): item for item in chiqim}
+
+    kassa_merge_dict = {(item['kassa_id'], item['valyuta_id']): item for item in kassa_merge}
+
+    for i in new_kass:
+        dt = {
+            'kassa_id':i['id'],
+            'kassa_name':i['name'],
+            'valyuta':[],
+        }
+        for x in valyuta:
+            valyuta_items = {
+                'valyuta_id':x.id,
+                'valyuta_name':x.name,
+                'kirim_sum':kirim_dict.get((i['id'], x.id),{}).get('summa',0),
+                'chiqim_sum':chiqim_dict.get((i['id'], x.id),{}).get('summa',0),
+                'merge_sum':kassa_merge_dict.get((i['id'], x.id),{}).get('summa',0),
+            }
+            dt['valyuta'].append(valyuta_items)
+        data.append(dt)
+    context = {
+        'data':data,
+        'valyuta':valyuta,
+    }
+    return render(request, 'close_cash.html', context)
+
+
+@csrf_exempt
+def close_cash_add(request):
+    today = datetime.now().date()
+    data = json.loads(request.body)
+    for lop in data:
+        CloseCash.objects.create(kassa_id=lop['kassa_id'],valyuta_id=lop['valyuta_id'], summa=lop['summa'])
+    return JsonResponse({'messages':'ok'})
+
+
+
+def close_cash_list(request):
+    close = CloseCash.objects.filter(is_confirmed=False)
+    context = {
+        'close':close,
+    }
+    return render(request, 'close_cash_list.html', context)
+
+def close_cash_confirmed(request, id):
+    CloseCash.objects.filter(id=id).update(is_confirmed=True)
     return redirect(request.META['HTTP_REFERER'])

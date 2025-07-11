@@ -140,7 +140,6 @@ body.sidebar-collapsed .sidebar-toggle svg {
             <input type="text" placeholder="Check" oninput="search(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
             <div id="dropdown" style="position: absolute; top: 35px; left: 0; right: 0; background: white; border: 1px solid #ccc; display: none; z-index: 1000;"></div>
         </div>
-
       
         <div style="margin-right: 3rem;"  id="div_one_2">
             <div class="video-tutorial-container" style="display: none;">
@@ -495,8 +494,8 @@ body.sidebar-collapsed .sidebar-toggle svg {
                   
                     
                     {% with url_name=request.resolver_match.url_name %}
-                        <li class="menu {% if url_name == 'analysis_costs' %}active{% elif url_name == 'kassa' %}active{% elif url_name == 'desktop_kassa' %}active{% elif url_name == 'allFilter' %}active{% elif url_name == 'fin_report' %}active{% elif url_name == 'kassa_fin' %}active{% elif url_name == 'data_fin' %}active{% elif url_name == 'debet_kredit_fin' %}active{% elif url_name == 'cf_fin' %}active{% elif url_name == 'daily_cf_fin' %}active{% elif url_name == 'xarid_fin' %}active{% elif url_name == 'sotuv_fin' %}active{% elif url_name == 'pl_fin' %}active{% elif url_name == 'balans_fin' %}active{% elif url_name == 'majburiyat_fin' %}active{% elif url_name == 'tolov_kalendar_fin' %}active{% elif url_name == 'reja_tushum_fin' %}active{% elif url_name == 'reja_chiqim_fin' %}active{% elif url_name == 'asosiy_vosita_fin' %}active{% elif url_name == 'ombor_fin' %}active{% elif url_name == 'kassa_is_approved' %}active{% elif url_name == 'filial_kassalar' %}active{% endif %}">
-                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name == 'analysis_costs' %}true{% elif url_name == 'kassa' %}true{% elif url_name == 'desktop_kassa' %}true{% elif url_name == 'allFilter' %}true{% elif url_name == 'fin_report' %}true{% elif url_name == 'kassa_fin' %}true{% elif url_name == 'data_fin' %}true{% elif url_name == 'debet_kredit_fin' %}true{% elif url_name == 'cf_fin' %}true{% elif url_name == 'daily_cf_fin' %}true{% elif url_name == 'xarid_fin' %}true{% elif url_name == 'sotuv_fin' %}true{% elif url_name == 'pl_fin' %}true{% elif url_name == 'balans_fin' %}true{% elif url_name == 'majburiyat_fin' %}true{% elif url_name == 'tolov_kalendar_fin' %}true{% elif url_name == 'reja_tushum_fin' %}true{% elif url_name == 'reja_chiqim_fin' %}true{% elif url_name == 'asosiy_vosita_fin' %}true{% elif url_name == 'ombor_fin' %}true{% elif url_name == 'kassa_is_approved' %}true{% elif url_name == 'filial_kassalar' %}true{% else %}false{% endif %}" class="dropdown-toggle">
+                        <li class="menu {% if url_name == 'analysis_costs' %}active{% elif url_name == 'kassa' %}active{% elif url_name == 'desktop_kassa' %}active{% elif url_name == 'close_cash' %}active{% elif url_name == 'allFilter' %}active{% elif url_name == 'fin_report' %}active{% elif url_name == 'kassa_fin' %}active{% elif url_name == 'data_fin' %}active{% elif url_name == 'debet_kredit_fin' %}active{% elif url_name == 'cf_fin' %}active{% elif url_name == 'daily_cf_fin' %}active{% elif url_name == 'xarid_fin' %}active{% elif url_name == 'sotuv_fin' %}active{% elif url_name == 'pl_fin' %}active{% elif url_name == 'balans_fin' %}active{% elif url_name == 'majburiyat_fin' %}active{% elif url_name == 'tolov_kalendar_fin' %}active{% elif url_name == 'reja_tushum_fin' %}active{% elif url_name == 'reja_chiqim_fin' %}active{% elif url_name == 'asosiy_vosita_fin' %}active{% elif url_name == 'ombor_fin' %}active{% elif url_name == 'close_cash_list' %}active{% elif url_name == 'filial_kassalar' %}active{% endif %}">
+                            <a href="#filial-moliya" data-toggle="collapse" aria-expanded="{% if url_name == 'analysis_costs' %}true{% elif url_name == 'close_cash' %}true{% elif url_name == 'kassa' %}true{% elif url_name == 'desktop_kassa' %}true{% elif url_name == 'allFilter' %}true{% elif url_name == 'fin_report' %}true{% elif url_name == 'kassa_fin' %}true{% elif url_name == 'data_fin' %}true{% elif url_name == 'debet_kredit_fin' %}true{% elif url_name == 'cf_fin' %}true{% elif url_name == 'daily_cf_fin' %}true{% elif url_name == 'xarid_fin' %}true{% elif url_name == 'sotuv_fin' %}true{% elif url_name == 'pl_fin' %}true{% elif url_name == 'balans_fin' %}true{% elif url_name == 'majburiyat_fin' %}true{% elif url_name == 'tolov_kalendar_fin' %}true{% elif url_name == 'reja_tushum_fin' %}true{% elif url_name == 'reja_chiqim_fin' %}true{% elif url_name == 'asosiy_vosita_fin' %}true{% elif url_name == 'ombor_fin' %}true{% elif url_name == 'close_cash_list' %}true{% elif url_name == 'filial_kassalar' %}true{% else %}false{% endif %}" class="dropdown-toggle">
                                 <div style="white-space: nowrap;">
                                     <i class="fa-solid fa-money-bill-trend-up" style="font-size: 17px; vertical-align: middle;"></i>
                                     <span style="margin-left: 10px; vertical-align: middle;">Moliya</span>
@@ -509,7 +508,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name == 'analysis_costs' %}show{% elif url_name == 'kassa' %}show{% elif url_name == 'desktop_kassa' %}show{% elif url_name == 'allFilter' %}show{% elif url_name == 'fin_report' %}show{% elif url_name == 'kassa_fin' %}show{% elif url_name == 'data_fin' %}show{% elif url_name == 'debet_kredit_fin' %}show{% elif url_name == 'cf_fin' %}show{% elif url_name == 'daily_cf_fin' %}show{% elif url_name == 'xarid_fin' %}show{% elif url_name == 'sotuv_fin' %}show{% elif url_name == 'pl_fin' %}show{% elif url_name == 'balans_fin' %}show{% elif url_name == 'majburiyat_fin' %}show{% elif url_name == 'tolov_kalendar_fin' %}show{% elif url_name == 'reja_tushum_fin' %}show{% elif url_name == 'reja_chiqim_fin' %}show{% elif url_name == 'asosiy_vosita_fin' %}show{% elif url_name == 'ombor_fin' %}show{% elif url_name == 'kassa_is_approved' %}show{% elif url_name == 'filial_kassalar' %}show{% endif %}"
+                            <ul class="collapse submenu list-unstyled {% if url_name == 'analysis_costs' %}show{% elif url_name == 'close_cash' %}show{% elif url_name == 'kassa' %}show{% elif url_name == 'desktop_kassa' %}show{% elif url_name == 'allFilter' %}show{% elif url_name == 'fin_report' %}show{% elif url_name == 'kassa_fin' %}show{% elif url_name == 'data_fin' %}show{% elif url_name == 'debet_kredit_fin' %}show{% elif url_name == 'cf_fin' %}show{% elif url_name == 'daily_cf_fin' %}show{% elif url_name == 'xarid_fin' %}show{% elif url_name == 'sotuv_fin' %}show{% elif url_name == 'pl_fin' %}show{% elif url_name == 'balans_fin' %}show{% elif url_name == 'majburiyat_fin' %}show{% elif url_name == 'tolov_kalendar_fin' %}show{% elif url_name == 'reja_tushum_fin' %}show{% elif url_name == 'reja_chiqim_fin' %}show{% elif url_name == 'asosiy_vosita_fin' %}show{% elif url_name == 'ombor_fin' %}show{% elif url_name == 'close_cash_list' %}show{% elif url_name == 'filial_kassalar' %}show{% endif %}"
                                 id="filial-moliya" data-parent="#accordionExample">
                                     {% if custom_user_profile.is_kassa %} 
                                         <li class="menu {% if request.resolver_match.url_name == 'kassa' %}active{% endif %}">
@@ -537,13 +536,15 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                                 <a href="{% url 'fin_report' %}"> Fin hisobiti </a>
                                             </li>
                                     {% endif %}
-                                   
                                     {% if custom_user_profile.is_kassa_tasdiklanmagan %} 
-
-                                        <li class="menu {% if request.resolver_match.url_name == 'kassa_is_approved' %}active{% endif %}">
-                                            <a href="{% url 'kassa_is_approved' %}">Kassa Tasdiklanmagan </a>
+                                        <li class="menu {% if request.resolver_match.url_name == 'close_cash_list' %}active{% endif %}">
+                                            <a href="{% url 'close_cash_list' %}">Kassa Tasdiklanmagan </a>
                                         </li>
                                     {% endif %}
+                                    <li class="menu {% if request.resolver_match.url_name == 'close_cash' %}active{% endif %}">
+                                            <a href="{% url 'close_cash' %}">Kassani yopish</a>
+                                    </li>
+                                    
                              </ul>
                         </li>
                     {% endwith %}

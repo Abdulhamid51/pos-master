@@ -351,4 +351,8 @@ urlpatterns = [
     path('groups_add',groups_add, name='groups_add'),
     path('groups_edit/<int:id>', groups_edit, name='groups_edit'),
     path('groups_del/<int:id>', groups_del, name='groups_del'),
+    path('close_cash', close_cash, name='close_cash'),
+    path('close_cash_add', close_cash_add, name='close_cash_add'),
+    path('close_cash_list', close_cash_list, name='close_cash_list'),
+    path('close_cash_confirmed/<int:id>', close_cash_confirmed, name='close_cash_confirmed'),
 ]

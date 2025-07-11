@@ -3063,6 +3063,10 @@ class LastSeen(models.Model):
 
     
 
-
-
+class CloseCash(models.Model):
+    kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
+    summa = models.FloatField()
+    date = models.DateField(default=timezone.now)
+    is_confirmed = models.BooleanField(default=False)
 
