@@ -110,7 +110,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
     transform: rotate(180deg);
 }
 
-    #div_one_1, #div_one_2 {
+    #div_one_1, #div_one_2, #div_one_3 {
         margin-top: -2rem;
     }
 
@@ -140,7 +140,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
             <input type="text" placeholder="Check" oninput="search(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
             <div id="dropdown" style="position: absolute; top: 35px; left: 0; right: 0; background: white; border: 1px solid #ccc; display: none; z-index: 1000;"></div>
         </div>
-      
+        <div style="margin-right: 3rem;  position: relative;" id="div_one_3">
+            <input type="number" step="any" placeholder="Kurs" value="{{kurs_dollar}}" oninput="addKurs(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
+        </div>
         <div style="margin-right: 3rem;"  id="div_one_2">
             <div class="video-tutorial-container" style="display: none;">
                 <a href="#" class="video-tutorial-link" target="_blank">
@@ -937,6 +939,19 @@ $(document).ready(function() {
                     }
                 });
             }
+             function addKurs(item) {
+                let value = item.value;
+                $.ajax({
+                    url: "{% url 'add_dollar_kursi' %}",
+                    type: "POST",
+                    data: { 'som': value },
+                    success: function(response) {
+                    },
+                    error: function () {
+                        console.log("Xatolik yuz berdi");
+                    }
+                });
+            }
 
             function goToShop(id) {
                 window.open(`/shop_nakladnoy/${id}`, '_blank');
@@ -955,7 +970,8 @@ $(document).ready(function() {
         const toggleBtn = document.querySelector('.sidebar-toggle');
         const divs = [
             document.getElementById('div_one_1'),
-            document.getElementById('div_one_2')
+            document.getElementById('div_one_2'),
+            document.getElementById('div_one_3')
         ];
 
         toggleBtn.addEventListener('click', function () {

@@ -4728,7 +4728,7 @@ def schedular_sms_send_alert():
         print(e)
 
 
-
+@csrf_exempt
 def add_dollar_kursi(request):
     som = float(request.POST.get('som'))
     print(som)
@@ -4738,7 +4738,7 @@ def add_dollar_kursi(request):
         course.save()
     else:
         course = Course.objects.create(som=som) 
-    return redirect(request.META['HTTP_REFERER'])
+    return JsonResponse({'ok':'ok'})
 
 
 def add_payment_comment(request):

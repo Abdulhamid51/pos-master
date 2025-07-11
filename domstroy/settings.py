@@ -63,6 +63,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 'main.context_processors.add_custom_data',
+                'main.context_processors.course_context',
 
             ],
         },
