@@ -1252,6 +1252,7 @@ class Shop(models.Model):
     is_finished = models.BooleanField(default=False)
     som_after = models.FloatField(default=0)
     dollar_after = models.FloatField(default=0)
+    chegirma = models.FloatField(default=0)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     b2c = models.BooleanField(default=True)
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, blank=True)
@@ -1512,35 +1513,6 @@ class Debtor(models.Model):
         for val in Valyuta.objects.all():
             Wallet.objects.get_or_create(customer=self, valyuta=val)
 
-    # def refresh_debt(self):
-    #     customer = self
-    #     pay_history = PayHistory.objects.filter(debtor=customer).order_by('-id')
-    #     shop = Shop.objects.filter(debtor=customer).order_by('-id')
-    #     infos = sorted(chain(pay_history, shop), key=lambda instance: instance.date)
-    #     customer_debt = Wallet.objects.filter(customer=customer)
-
-    #     for valyuta in Valyuta.objects.all():
-    #         customer_debt = Wallet.objects.filter(valyuta=valyuta).last() or Wallet.objects.create(customer=customer, valyuta=valyuta)
-    #         if customer_debt:
-    #             customer_debt.summa = customer_debt.start_summa
-    #             customer_debt.save()
-
-    #             for i in infos:
-    #                 if i.valyuta == valyuta:
-    #                     if i._meta.model_name == 'payhistory':
-    #                         i.debt_old = customer_debt.summa
-    #                         if i.type_pay == 1:
-    #                             customer_debt.summa += i.summa
-    #                         else:
-    #                             customer_debt.summa -= i.summa
-    #                         i.debt_new = customer_debt.summa
-    #                     elif i._meta.model_name == 'shop':
-    #                         i.debt_old = customer_debt.summa
-    #                         customer_debt.summa += i.baskets_total_price
-    #                         i.debt_new = customer_debt.summa
-
-    #                     i.save()
-    #                     customer_debt.save()
 
     def refresh_debt(self):
         customer = self

@@ -193,7 +193,7 @@ class ProductFilialAdmin(ExportActionMixin, admin.ModelAdmin):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    list_display = ('id', 'debtor', 'desktop_id', 'naqd_som', 'call_center', 'all_count', 'naqd_dollar', 'plastik', 'click', 'nasiya_som', 'nasiya_dollar', 'transfer', 'skidka_som', 'skidka_dollar', 'date', 'saler', 'filial',)
+    list_display = ('id', 'debtor', 'desktop_id', 'naqd_som', 'call_center', 'all_count', 'status', 'naqd_dollar', 'plastik', 'click', 'nasiya_som', 'nasiya_dollar', 'transfer', 'skidka_som', 'skidka_dollar', 'date', 'saler', 'filial',)
     search_fields = ('id', 'debtor__fio', 'desktop_id')
     list_filter = ('filial', 'saler', 'debtor')
     date_hierarchy = 'date'

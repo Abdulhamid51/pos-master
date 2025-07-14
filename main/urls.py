@@ -328,6 +328,8 @@ urlpatterns = [
 
     path('savdo/', savdo, name='savdo'),
     path('payment_shop/<int:shop_id>', payment_shop, name='payment_shop'),
+    path('shop_chegirma/<int:shop_id>', shop_chegirma, name='shop_chegirma'),
+    path('shop_change_valyuta/<int:shop_id>', shop_change_valyuta, name='shop_change_valyuta'),
 
     path('recieve/<recieve_id>/import_excel/', import_recieve_items_from_excel, name='import_recieve_items_from_excel'),
 

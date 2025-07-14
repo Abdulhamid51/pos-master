@@ -3329,8 +3329,6 @@ def debtor_detail(request, id):
     pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date), shop__status__in=[1,2])
     shop = Shop.objects.filter(status__in=[1,2],debtor_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
-    print(pay)
-    print(shop)
     infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
@@ -7224,7 +7222,8 @@ def b2c_shop_view(request):
     filial = user.filial
     if user.staff == 1:
         filial = Filial.objects.first()
-    order = Shop.objects.create(debtor=debtor, filial=filial)
+    valyuta = Valyuta.objects.first()
+    order = Shop.objects.create(debtor=debtor, filial=filial, valyuta=valyuta if valyuta else None)
     return redirect('b2c_shop_detail', order.id)
     # price_types = PriceType.objects.all()
     # products = ProductFilial.objects.all()
@@ -7369,6 +7368,14 @@ def b2c_shop_detail(request, id):
 #     product.quantity -= quantity
 #     product.save()
 #     return JsonResponse({'success': True, 'message': 'Maxsulot qo\'shildi', 'cart_id': cart_item.id})
+
+@csrf_exempt
+def shop_change_valyuta(request, shop_id):
+    shop = Shop.objects.get(id=shop_id)
+    shop.valyuta_id=request.POST.get('valyuta')
+    shop.save()
+    return JsonResponse({'ok':'ok'})
+
 
 @csrf_exempt
 def b2c_shop_cart_add(request, id):
@@ -9788,11 +9795,21 @@ def payment_shop(request, shop_id):
                     summa = summa,
                     payment_date=payment_date,
                 )
+            shop.debtor.refresh_debt()
             return JsonResponse({'success': True, 'message': 'Payment successful'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def shop_chegirma(request, shop_id):
+    shop = Shop.objects.get(id=shop_id)
+    chegirma = request.POST.get('chegirma')
+    shop.chegirma = chegirma
+    shop.save()
+    return JsonResponse({'success': True, 'message': 'Payment successful'})
+
 
 
 def b2b_shop_ajax_add_one(request, product_id):

@@ -73,6 +73,10 @@
 #productListDropdown .dropdown-item {
     line-height: 1.4;
 }
+.hide-important {
+    display: none !important;
+}
+
 </style>
 {% endblock css %}
 
@@ -86,12 +90,45 @@
             <div class="col-xl-8 col-lg-8 col-sm-12 layout-spacing">
                 <div class="row">
                     <div class="col-md-2">
-                        <select name="valyuta" id="valyuta_input" class="form-control" required disabled>
+                        <select name="valyuta" id="valyuta_input" class="form-control" required disabled oninput="saveValyutaShop(this)">
                             {% for i in valyuta %}
-                                <option value="{{i.id}}" {% if shop.valyuta == i %}selected{% endif %}>{{i.name}}</option>
+                                <option value="{{i.id}}" {% if shop.valyuta == i %}selected{% endif %} >{{i.name}}</option>
                             {% endfor %}
                         </select>
                     </div>
+                   <script>
+                        function toggleValyutaDisabled() {
+                            const valyutaInput = document.getElementById('valyuta_input');
+                            const productNames = document.querySelectorAll('.product_name');
+
+                            let hasProduct = false;
+                            productNames.forEach(function (td) {
+                                if (td.textContent.trim() !== '') {
+                                    hasProduct = true;
+                                }
+                            });
+
+                            if (hasProduct) {
+                                valyutaInput.setAttribute('disabled', 'disabled');
+                            } else {
+                                valyutaInput.removeAttribute('disabled');
+                            }
+                        }
+                        function saveValyutaShop(val) {
+                            const valyuta_id = val.value
+                            $.ajax({
+                                url: `/shop_change_valyuta/{{shop.id}}`,
+                                type: "POST",
+                                data:{'valyuta':valyuta_id},
+                                success: function(response) {
+                                },
+                                error: function() {
+                                    showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+                                }
+                            });
+                        }
+                        window.addEventListener('DOMContentLoaded', toggleValyutaDisabled);
+                    </script>
                     <div class="col-md-10">
                         <div class="input-group">
                             <!-- <select class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
@@ -311,20 +348,20 @@
                                 }
                             </style>
                             <div class="row">
-                                <div class="col-md-9 discount-input-group">
+                                <div class="col-md-10 discount-input-group">
                                     <input type="number" id="discountInput" oninput="changeDiscount()" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
                                 </div>
-                                <div class="col-md-3 discount-toggle d-flex justify-content-end">
-                                    <button id="percentBtn" class="me-1 active">%</button>
+                                <div class="col-md-2 discount-toggle d-flex justify-content-end">
+                                    <!-- <button id="percentBtn" class="me-1 active">%</button> -->
                                     <button id="uzsBtn">{{shop_valyuta_name}}</button>
                                 </div>
                             </div>
                             <br>
-                            <div class="row quick-discount  g-2">
+                            <div class="row quick-discount  g-2" >
                                 <div class="col-auto">
-                                    <button onclick="setDiscount(15)">15%</button>
+                                    <button id="disc_button" style="display: none;">0%</button>
                                 </div>
-                                <div class="col-auto">
+                                <!-- <div class="col-auto">
                                     <button onclick="setDiscount(30)">30%</button>
                                 </div>
                                 <div class="col-auto">
@@ -332,15 +369,18 @@
                                 </div>
                                 <div class="col-auto">
                                     <button onclick="setDiscount(75)">75%</button>
-                                </div>
+                                </div> -->
                             </div>
                          <script>
-                            const percentBtn = document.getElementById('percentBtn');
+
+
+
+                            // const percentBtn = document.getElementById('percentBtn');
                             const uzsBtn = document.getElementById('uzsBtn');
                             const discountInput = document.getElementById('discountInput');
                             const all_total = document.getElementById('all_total');
                             const all_total_two = document.getElementById('all_total_2');
-
+                            const disc_button = document.getElementById('disc_button');
 
                             function safeParse(text) {
                                 try {
@@ -353,27 +393,26 @@
                                 }
                             }
                             
-                            percentBtn.addEventListener('click', () => {
-                                percentBtn.classList.add('active');
-                                uzsBtn.classList.remove('active');
-                                discountInput.value = '';
-                                changeDiscount(); 
+                            // percentBtn.addEventListener('click', () => {
+                            //     percentBtn.classList.add('active');
+                            //     uzsBtn.classList.remove('active');
+                            //     discountInput.value = '';
+                            //     changeDiscount(); 
 
-                            });
-                            uzsBtn.addEventListener('click', () => {
-                                uzsBtn.classList.add('active');
-                                percentBtn.classList.remove('active');
-                                discountInput.value = '';
-                                changeDiscount(); 
-                            });
-                            function setDiscount(value) {
-                                discountInput.value = value;
-                                percentBtn.classList.add('active');
-                                uzsBtn.classList.remove('active');
-                                changeDiscount(); 
-                            }
+                            // });
+                            // uzsBtn.addEventListener('click', () => {
+                            //     uzsBtn.classList.add('active');
+                            //     percentBtn.classList.remove('active');
+                            //     discountInput.value = '';
+                            //     changeDiscount(); 
+                            // });
+                            // function setDiscount(value) {
+                            //     discountInput.value = value;
+                            //     percentBtn.classList.add('active');
+                            //     uzsBtn.classList.remove('active');
+                            //     changeDiscount(); 
+                            // }
                             function changeDiscount() {
-                                console.log(111, 'loggoel')
                                 const val = parseFloat(discountInput.value) || 0;
                                 const hidden_skidka = document.getElementById('hidden_skidka');
                                 let originlaTotal = 0;
@@ -382,24 +421,21 @@
                                     const price = parseFloat($(this).find('.price-input').val()) || 0;
                                     originlaTotal += quantity * price;
                                 });
-                                if (isNaN(val)) {
+                                if (0 >= val) {
                                     all_total.textContent = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
                                     all_total_two.value = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
-                                    hidden_skidka.value = 0; 
+                                    hidden_skidka.value = 0;
+                                    disc_button.textContent = '';
+                                    disc_button.style.display = 'none';
                                     updateReceiptProducts();
                                     return;
                                 }
                                 let result;
-                                if (percentBtn.classList.contains('active')) {
-                                    let discount = (originlaTotal * val / 100);
-                                    result = originlaTotal - discount;
-                                    hidden_skidka.value = discount; 
-
-                                } else {
-                                    result = originlaTotal - val;
-                                    hidden_skidka.value = val;
-
-                                }
+                                result = originlaTotal - val;
+                                hidden_skidka.value = val;
+                                let percent = val / originlaTotal * 100
+                                disc_button.textContent = `${percent.toFixed(2)}%`
+                                disc_button.style.display = 'block';
                                 updateReceiptProducts();
                                 all_total.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
                                 all_total_two.value = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
@@ -1095,7 +1131,22 @@
                                     const qarzComment = document.querySelector('#qarzModal textarea') ? document.querySelector('#qarzModal textarea').value : '';
                                     const qarzDueDate = document.querySelector('#qarzModal input[type="date"]') ? document.querySelector('#qarzModal input[type="date"]').value : '';
                                     let payments = [];
-                                    
+                                    const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
+
+                                    if (hidden_skidka > 0){
+                                        $.ajax({
+                                            url: `/shop_chegirma/${shopId}`,
+                                            type: "POST",
+                                            data:{'chegirma':hidden_skidka},
+                                            success: function(response) {
+                                                
+                                            },
+                                            error: function() {
+                                                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+                                            }
+                                        });
+                                    }
+
                                     paymentInputs.forEach(input => {
                                         const inputBox = input.closest('.input-box');
                                         const paymentMethod = inputBox.closest('.payment-method');
@@ -1113,7 +1164,10 @@
                                             });
                                         }
                                     });
-                                    
+
+
+
+
                                     if (qarzPayment > 0) {
                                         if (!qarzDueDate) {
                                             showAlert("Iltimos, qarz uchun to\'lov muddatini kiriting!", "warning");
@@ -1134,6 +1188,8 @@
                                         return false;
                                     }
                                     
+                                    
+
                                     let successCount = 0;
                                     payments.forEach(payment => {
                                         const formData = new URLSearchParams();
@@ -1845,6 +1901,7 @@ $(document).ready(function() {
                         //     text: `${productName} - ${barcode}`
                         // });
                         // products_input.refreshOptions(false);
+                        toggleValyutaDisabled();
                     } else {
                         showAlert(response.message, "danger");
                     }
@@ -1914,6 +1971,8 @@ $(document).ready(function() {
                     if (fullscreenPayment.style.display === 'block') {
                         paymentSystem.init();
                     }
+                    toggleValyutaDisabled();
+
                 } else {
                     showAlert(response.message, "danger");
                 }
