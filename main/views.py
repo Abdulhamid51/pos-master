@@ -3403,10 +3403,12 @@ def deliver_detail(request, id):
     pay = PayHistory.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
-
-    print(pay)
-    print(recieve)
-    print(bonus)
+    return_product = ReturnProductToDeliver.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    for ret in return_product:
+        dt_ret = {
+            'id':ret.id,
+        }
+   
     infos = sorted(chain(pay, recieve, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
@@ -7922,7 +7924,7 @@ def write_off(request):
 def write_off_add(request):
     number = request.POST.get('number')
     date_time = request.POST.get('date_time')
-    kurs =Course.objects.last()
+    kurs = Course.objects.last()
     money_type = request.POST.get('money_type')
     product_filial = request.POST.get('product_filial')
     izoh = request.POST.get('izoh')
@@ -8056,36 +8058,43 @@ def deliver_return_add(request):
 
 def deliver_return_item_add(request):
     returnproduct = request.POST.get('returnproduct')
+    obj = ReturnProductToDeliver.objects.get(id=returnproduct)
     product = request.POST.get('product_filial')
     quantity = int(request.POST.get('quantity'))
-    som = int(request.POST.get('som') or 0)
-    dollar = int(request.POST.get('dollar') or 0)
-    ReturnProductToDeliverItem.objects.create(
+    valyuta = request.POST.get('valyuta')
+    summa = float(request.POST.get('summa') or 0)
+    ret =ReturnProductToDeliverItem.objects.create(
         returnproduct_id=returnproduct,
         product_id=product,
         summa=summa,
-        # dollar=dollar,
         quantity=quantity,
         valyuta_id=valyuta
     )
     pr = ProductFilial.objects.get(id=product)
     pr.quantity -= int(quantity)
     pr.save()
+    obj.deliver.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def deliver_return_del(request, id):
-    ReturnProductToDeliver.objects.get(id=id).delete()
+    obj =ReturnProductToDeliver.objects.get(id=id)
+    deliver = Deliver.objects.get(id=obj.deliver.id)
+    obj.delete()
+    deliver.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def deliver_return_item_del(request, id):
-    ReturnProductToDeliverItem.objects.get(id=id).delete()
+    obj = ReturnProductToDeliverItem.objects.get(id=id)
+    deliver = Deliver.objects.get(id=obj.returnproduct.deliver.id)
+    obj.delete()
+    deliver.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def deliver_return_item_edit(request, id):
     item = ReturnProductToDeliverItem.objects.get(id=id)
     quantity = int(request.POST.get('quantity'))
-    som = int(request.POST.get('som'))
-    dollar = int(request.POST.get('dollar'))
+    summa = float(request.POST.get('summa'))
+    valyuta = request.POST.get('valyuta')
     sum = quantity - item.quantity 
     pr = ProductFilial.objects.get(id=item.product.id)
     pr.quantity -= int(sum)
@@ -8094,6 +8103,7 @@ def deliver_return_item_edit(request, id):
     item.summa = summa
     item.valyuta_id = valyuta
     item.save()
+    item.returnproduct.deliver.refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
 def deliver_return_tarix(request):

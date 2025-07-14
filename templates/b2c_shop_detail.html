@@ -352,7 +352,6 @@
                                     return 0;
                                 }
                             }
-                            // let originlaTotal = parseFloat(safeParse(all_total.textContent), 1)
                             
                             percentBtn.addEventListener('click', () => {
                                 percentBtn.classList.add('active');
@@ -850,69 +849,72 @@
                         }
                             
                         function updateReceiptProducts() {
-                                const productList = document.getElementById('product_list');
-                                const receiptContainer = document.getElementById('chek_products');
-                                const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
+                            const productList = document.getElementById('product_list');
+                            const receiptContainer = document.getElementById('chek_products');
+                            const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
+                            
+                            if (!productList || !receiptContainer) return 0;
+                            
+                            receiptContainer.innerHTML = '';
+                            let summaItog = 0;
+                            let oraliq_jami = 0;
+                            let perecnt = 0;
+                            let chegirma = hidden_skidka;
+                            const productRows = productList.querySelectorAll('tbody tr');
+                            
+                            productRows.forEach(row => {
+                                const nameCell = row.querySelector('td:nth-child(2)');
+                                const productName = nameCell ? nameCell.textContent.trim() : 'Unknown Product';
                                 
-                                if (!productList || !receiptContainer) return 0;
+                                let quantity = 1;
+                                const quantityInput = row.querySelector('.quantity-input');
+                                if (quantityInput) {
+                                    quantity = parseFloat(quantityInput.value) || 1;
+                                }
                                 
-                                receiptContainer.innerHTML = '';
-                                let summaItog = 0;
-                                let oraliq_jami = 0;
-                                let chegirma = hidden_skidka;
-                                const productRows = productList.querySelectorAll('tbody tr');
+                                let price = 0;
+                                const priceInput = row.querySelector('.price-input');
+                                if (priceInput) {
+                                    price = parseFloat(priceInput.value) || 0;
+                                } 
                                 
-                                productRows.forEach(row => {
-                                    const nameCell = row.querySelector('td:nth-child(2)');
-                                    const productName = nameCell ? nameCell.textContent.trim() : 'Unknown Product';
-                                    
-                                    let quantity = 1;
-                                    const quantityInput = row.querySelector('.quantity-input');
-                                    if (quantityInput) {
-                                        quantity = parseFloat(quantityInput.value) || 1;
-                                    }
-                                    
-                                    let price = 0;
-                                    const priceInput = row.querySelector('.price-input');
-                                    if (priceInput) {
-                                        price = parseFloat(priceInput.value) || 0;
-                                    } 
-                                    
-                                    const totalWithoutDiscount = price * quantity;
-                                    summaItog += totalWithoutDiscount;
-                                    oraliq_jami += totalWithoutDiscount;
-                                    
-                                    if (chegirma >0){
-                                        summaItog -= chegirma
-                                        oraliq_jami -= chegirma
-                                    }
-                                    const formattedPrice = formatNumber(price.toFixed(2));
-                                    const formattedQuantity = formatNumber(quantity.toFixed(2));
-                                    const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount.toFixed(2));
-                                    
-                                    const receiptItem = `
-                                        <div class="section">
-                                            <div class="item-title">${productName}</div>
-                                            <div class="lines">
-                                                <span>${formattedQuantity} × ${formattedPrice}</span>
-                                                <span>${formattedTotalWithoutDiscount} ${shop_valyuta_name}</span>
-                                            </div>
+                                const totalWithoutDiscount = price * quantity;
+                                summaItog += totalWithoutDiscount;
+                                oraliq_jami += totalWithoutDiscount;
+                                
+                                const formattedPrice = formatNumber(price.toFixed(2));
+                                const formattedQuantity = formatNumber(quantity.toFixed(2));
+                                const formattedTotalWithoutDiscount = formatNumber(totalWithoutDiscount.toFixed(2));
+                                
+                                const receiptItem = `
+                                    <div class="section">
+                                        <div class="item-title">${productName}</div>
+                                        <div class="lines">
+                                            <span>${formattedQuantity} × ${formattedPrice}</span>
+                                            <span>${formattedTotalWithoutDiscount} ${shop_valyuta_name}</span>
                                         </div>
-                                    `;
-                                    receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
-                                });
-                                
-                                const formattedSumma = formatNumber(summaItog.toFixed(2));
-                                const formattedoraliq_jami = formatNumber(oraliq_jami.toFixed(2));
-                                
-                                document.getElementById('chek_total_jami').textContent = `${formattedSumma} `;
-                                document.getElementById('total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
-                                document.getElementById('chek_oraliq_jami').textContent = `${formattedoraliq_jami} ${shop_valyuta_name}`;
-                                document.getElementById('chek_chegirma').textContent = `${chegirma} ${shop_valyuta_name}`;
-                                
-                                return summaItog;
+                                    </div>
+                                `;
+                                receiptContainer.insertAdjacentHTML('beforeend', receiptItem);
+                            });
+
+                            let discountPercentage = 0;
+                            if (chegirma > 0 && oraliq_jami > 0) {
+                                discountPercentage = (chegirma / oraliq_jami * 100).toFixed(2);
+                                summaItog = oraliq_jami - chegirma;
                             }
-                            console.log(shop_valyuta_name)
+                            
+                            const formattedSumma = formatNumber(summaItog.toFixed(2));
+                            const formattedoraliq_jami = formatNumber(oraliq_jami.toFixed(2));
+                            
+                            document.getElementById('chek_total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
+                            document.getElementById('total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
+                            document.getElementById('chek_oraliq_jami').textContent = `${formattedoraliq_jami} ${shop_valyuta_name}`;
+                            document.getElementById('chek_chegirma').textContent = `${formatNumber(chegirma)} ${shop_valyuta_name} (${discountPercentage}%)`;
+                            
+                            return summaItog;
+                        }
+                            
                             const paymentSystem = {
                                 totalJami: 0,
                                 totalToPay: 0,

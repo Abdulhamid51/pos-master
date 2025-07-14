@@ -328,88 +328,6 @@ class Deliver(models.Model):
     def __str__(self):
         return self.name
 
-
-    # def refresh_debt(self):
-    #     deliver = self
-    #     valyutalar = Valyuta.objects.all()
-
-    #     # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
-    #     pay_history_qs = list(
-    #         PayHistory.objects.filter(deliver=deliver)
-    #         .select_related('valyuta')
-    #         .order_by('date')
-    #     )
-
-    #     bonus_qs = list(
-    #         Bonus.objects.filter(deliver=deliver)
-    #         .select_related('valyuta')
-    #         .order_by('date')
-    #     )
-        
-
-    #     recieve_qs = list(
-    #         Recieve.objects.filter(deliver=deliver)
-    #         .select_related('valyuta')
-    #         .order_by('date')
-    #     )
-
-    #     return_qs = list(
-    #         ReturnProductToDeliver.objects.filter(deliver=deliver)
-    #         .order_by('date')
-    #     )
-
-    #     # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
-    #     valyuta_events = defaultdict(list)
-    #     for event in chain(pay_history_qs, recieve_qs, bonus_qs):
-    #         valyuta_events[event.valyuta_id].append(event)
-
-    #     wallets_to_update = []
-    #     payhistory_to_update = []
-    #     shop_to_update = []
-    #     bonus_to_update = []
-
-    #     for valyuta in valyutalar:
-    #         events = valyuta_events.get(valyuta.id, [])
-
-    #         # So'nggi Wallet yoki yangisini topamiz
-    #         wallet, _ = Wallet.objects.get_or_create(deliver=deliver, valyuta=valyuta)
-    #         summa = wallet.start_summa
-
-    #         for event in events:
-    #             if isinstance(event, PayHistory):
-    #                 event.debt_old = summa
-    #                 summa += event.summa if event.type_pay == 1 else -event.summa
-    #                 event.debt_new = summa
-    #                 payhistory_to_update.append(event)
-
-    #             elif isinstance(event, Recieve):
-    #                 event.debt_old = summa
-    #                 summa += event.total_bring_price
-    #                 event.debt_new = summa
-    #                 shop_to_update.append(event)
-                
-    #             elif isinstance(event, Bonus):
-    #                 event.debt_old = summa
-    #                 summa += event.summa
-    #                 event.debt_new = summa
-    #                 bonus_to_update.append(event)
-
-    #         wallet.summa = summa
-    #         wallets_to_update.append(wallet)
-
-    #     # Hammasini bir marta yangilaymiz
-    #     if wallets_to_update:
-    #         Wallet.objects.bulk_update(wallets_to_update, ['summa'])
-
-    #     if payhistory_to_update:
-    #         PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
-
-    #     if shop_to_update:
-    #         Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
-
-    #     if bonus_to_update:
-    #                 Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
-
     def refresh_debt(self):
         deliver = self
         valyutalar = Valyuta.objects.all()
@@ -445,6 +363,7 @@ class Deliver(models.Model):
         # ReturnProductToDeliver hodisalarini valyuta bo‘yicha ajratamiz
         for return_event in return_qs:
             items = return_event.returnproducttodeliver.all()
+            print(items)
             # Har bir valyutaga to‘plangan summalarni hisoblab chiqamiz
             valyuta_summalari = defaultdict(float)
             for item in items:
@@ -493,7 +412,6 @@ class Deliver(models.Model):
                     bonus_to_update.append(event)
 
                 elif isinstance(event, ReturnProductToDeliver):
-                    # Biz qo‘shgan return_event_copy
                     event.debt_old = summa
                     summa -= event.total_summa
                     event.debt_new = summa
@@ -1734,7 +1652,7 @@ class Wallet(models.Model):
 
     def __str__(self):
         if self.customer:
-            return str(self.valyuta) + " " + str(self.start_summa) + " " + "Mijoz" + str(self.customer)
+            return str(self.valyuta) + " " + str(self.start_summa) + " " + " Mijoz " + str(self.customer)
         return str(self.valyuta) + " " + str(self.start_summa)
         
 
@@ -2038,7 +1956,6 @@ class ReturnProductToDeliver(models.Model):
     dollar = models.IntegerField(default=0)
     kurs = models.IntegerField(null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    # valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     is_activate = models.BooleanField(default=True)
 
     def __str__(self):

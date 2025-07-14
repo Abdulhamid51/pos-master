@@ -59,15 +59,6 @@
                                                         </select>
                                                       </div>
                                                       <div class="form-group">
-                                                        <label for="">Valyuta</label>
-                                                        <select name="valyuta" class="form-control" required>
-                                                            <option value="">------</option>
-                                                            {% for valyuta in valyuta %}
-                                                                <option value="{{valyuta.id }}">{{valyuta.name}}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                      </div>
-                                                      <div class="form-group">
                                                         <label for="">Sana</label>
                                                         <input type="datetime-local" class="form-control" name="date_time" value="{{ today|date:'Y-m-d H:i' }}">
                                                       </div>
@@ -271,13 +262,8 @@
                             <div class="form-group" id="recieve_item_add_product_div">
                               <input type="hidden" name="returnproduct" class="form-control" value="{{ active_id }}">
                               <input type="hidden" name="product_filial" id="recieve_item_add_product_id" class="form-control">
-
                               <label for="">Miqdori</label>
                               <input type="number" name="quantity" class="form-control" required>
-                              <!-- <label for="">Som</label>
-                              <input type="number" id="recieve_item_add_som" name="som" class="form-control"> -->
-                              <!-- <label for="">Valyuta</label>
-                              <input type="text" class="form-control" name=""> -->
                               <div class="form-group">
                                 <label for="">Valyuta</label>
                                 <select name="valyuta" class="form-control" required>
