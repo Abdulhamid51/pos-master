@@ -739,6 +739,7 @@
                                                 <div class="input-box" style="display: none;">
                                                     <div class="box-header">
                                                         <span>{{ mer.kassa.name }} ({{ mer.valyuta }})</span>
+                                                        <p style="display: none;" class="box-header-valyuta-name">{{ mer.valyuta.name }}</p>
                                                         <button class="remove-field">&times;</button>
                                                     </div>
                                                     <div class="box-body">
@@ -834,6 +835,7 @@
                     </div>
 
                     <script>
+                        console.log(document.getElementById('dollar-kurs-base'))
                         const shop_valyuta_name = document.getElementById('shop_valyuta_name').textContent
 
                         const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
@@ -1026,6 +1028,7 @@
                                     if (!inputBox) return;
                                     const input = inputBox.querySelector('input');
                                     const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                  
                                     const value = parseFloat(input.value) || 0;
                                     if (value > 0) {
                                         input.value = '';
@@ -1042,10 +1045,39 @@
                                 updateTolash: function(input) {
                                     const inputBox = input.closest('.input-box');
                                     const methodName = inputBox.querySelector('.box-header span').textContent.trim();
+                                    const methodValyutaName = inputBox.querySelector('.box-header-valyuta-name').textContent.trim();
+                                    const dollar_kurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
                                     const value = parseFloat(input.value) || 0;
                                     const previousValue = this.paymentMethods[methodName] || 0;
-                                    const difference = value - previousValue;
-                                    this.paymentMethods[methodName] = value;
+                                    
+                                    const isSom = (currency) => ['Som', 'Sum', 'SOM', 'SUM', 'UZS', 'Samon', 'SAMON'].includes(currency);
+                                    const isDollar = (currency) => ['Dollar', 'DOLLAR', 'DOl', '$'].includes(currency);
+                                    
+                                    let convertedValue = value;
+                                    let difference = 0;
+                                    
+                                    if (isSom(shop_valyuta_name)) {
+                                        if (isSom(methodValyutaName)) {
+                                            difference = value - previousValue;
+                                            convertedValue = value;
+                                        } else if (isDollar(methodValyutaName)) {
+                                            convertedValue = value * dollar_kurs;
+                                            difference = convertedValue - previousValue;
+                                        }
+                                    } else if (isDollar(shop_valyuta_name)) {
+                                        if (isDollar(methodValyutaName)) {
+                                            difference = value - previousValue;
+                                            convertedValue = value;
+                                        } else if (isSom(methodValyutaName)) {
+                                            convertedValue = value / dollar_kurs;
+                                            difference = convertedValue - previousValue;
+                                        }
+                                    } else {
+                                        difference = value - previousValue;
+                                        convertedValue = value;
+                                    }
+                                    
+                                    this.paymentMethods[methodName] = convertedValue;
                                     this.totalToPay -= difference;
                                     
                                     if (value > 0) {

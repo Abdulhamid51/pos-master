@@ -3402,6 +3402,7 @@ def deliver_detail(request, id):
     recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     return_product = ReturnProductToDeliver.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    returh_item = ReturnProductToDeliverItem.objects.filter(returnproduct__in=return_product)
     for ret in return_product:
         dt_ret = {
             'id':ret.id,
@@ -3439,6 +3440,7 @@ def deliver_detail(request, id):
         data.append(dt)
 
     summa_total_for_valyuta = []
+
     for val in valyuta:
         pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
         pay_recieve_summa = sum([i.total_bring_price for i in recieve.filter(valyuta=val)])
@@ -8032,23 +8034,23 @@ def deliver_return(request):
         'filial':Filial.objects.filter(is_activate=True),
         'deliver': Deliver.objects.all(),
         'valyuta': Valyuta.objects.all(),
-        'products': ProductFilial.objects.all(),
         'returen_item': ReturnProductToDeliverItem.objects.all(),
     }
     active_id = request.GET.get('active')
     if active_id and ReturnProductToDeliver.objects.filter(id=active_id):
-        context['active_one'] = ReturnProductToDeliver.objects.get(id=active_id)
+        obj = ReturnProductToDeliver.objects.get(id=active_id)
+        context['active_one'] = obj 
         context['active_id'] = active_id
+        prouduct_id = RecieveItem.objects.filter(deliver=obj.deliver, )
+        context['products']= ProductFilial.objects.all()
+        
   
     return render(request, 'deliver_return.html', context)
 
 def deliver_return_add(request):
     deliver = request.POST.get('deliver') 
     filial = request.POST.get('filial')
-    # som = request.POST.get('som')
-    # dollar = request.POST.get('dollar')
     date = request.POST.get('date')
-    # valyuta = request.POST.get('valyuta')
     kurs =Course.objects.last()
 
     ReturnProductToDeliver.objects.create(
