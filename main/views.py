@@ -10806,6 +10806,8 @@ def import_product_filial_from_excel(file_path, request):
         elif image_path:
             print(f"⚠️ Rasm topilmadi: media/{image_path}")
 
+        if not product.start_date:
+            product.start_date = timezone.now()
         product.save()
         print(f"✅ Yaratildi: {product.name}")
 

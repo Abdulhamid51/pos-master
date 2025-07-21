@@ -682,7 +682,7 @@ class ProductFilial(models.Model):
     pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     start_quantity = models.FloatField(default=0)
-    start_date = models.DateTimeField(default=timezone.now)
+    start_date = models.DateTimeField(default=timezone.now, blank=True)
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     distributsiya = models.IntegerField(default=0)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, blank=True, null=True)
