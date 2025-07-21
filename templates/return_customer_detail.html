@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+{% load custom_filters %}
+
+    <title>Product </title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+        
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .line {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #071af2;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 30rem;
+        }
+    </style>
+    <style>
+        .tab {
+            display: flex;
+            gap: 10px;
+            /* border-bottom: 2px solid #ddd; */
+            margin-bottom: 10px;
+        }
+        .tab button {
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+        .tab button.active {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+        .tab button:hover {
+            color: #0056b3;
+        }
+        .document {
+            display: none;
+        }
+    </style>
+      <style>
+        .delete-btn {
+              color: red;
+              cursor: pointer;
+              font-weight: bold;
+              transition: transform 0.2s ease;
+          }
+          .delete-btn:hover {
+              transform: scale(1.2);
+              color: darkred;
+          }
+  </style>
+   <style>
+    .document h2 {
+        margin-bottom: 25px;
+        color: #333;
+        font-size: 24px;
+        border-bottom: 2px solid #007bff;
+        display: inline-block;
+        padding-bottom: 5px;
+    }
+    .document label {
+        color: black !important;
+    }
+    .document input {
+        border: 1px solid black;
+    }
+    .document .total {
+        font-size: 18px;
+        font-weight: bold;
+        background-color: #f0f0f0;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        }
+</style>
+{% endblock css %}
+{% block content %}
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-lg-12">
+                        <div id="alert-container"></div>
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-content widget-content-area">
+                                <div class="row">
+                                        <div class="col-md-12">
+                                            <form >
+                                                <div class="row">
+                                                    <div class="col-md-1">
+                                                        <button class="btn btn-success" id="shop_save" type="submit">Saqlash</button>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <h5>Yuk jo‘natish №</h5>
+                                                            <input type="text" style="width: 60px; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" value="{{return_obj.id}}">
+                                                            <h5>dan</h5>
+                                                            <input type="datetime-local" name="date" value="{{return_obj.date|date:'Y-m-d H:i'}}" style="border: 1px solid #ddd; border-radius: 5px; padding: 5px;" id="shop_input_date">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <br>
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <label>* Filial</label>
+                                                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" name="filial" required>
+                                                                   
+                                                                <option value="{{i.id}}">{{ return_obj.filial.name }}</option>
+                                                                    
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label>* Mijoz</label>
+                                                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px;" name="debtor" class="searchable" required>
+                                                                    <option value="{{i.id}}">{{ return_obj.debtor.fio }}</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label>* Valyuta</label>
+                                                                <select style="width: 100%; border: 1px solid #ddd; border-radius: 5px; padding: 5px; height: 35px;" name="valyuta" required>
+                                                                    <option value="{{i.id}}">{{ return_obj.valyuta.name }}</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-12"><br><br><br></div>
+                                        <div class="col-md-12">
+                                            <div class="row home">
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-2">
+                                                            <h6>Maxsulot</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <h6>Qoldiq</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <h6>Narxi</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <h6>Jami</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <h6>Miqdori</h6>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <h6>Umumiy</h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12"><div class="line" ></div></div>
+                                                <div class="col-md-12">
+                                                    {% for i in product %}
+                                                        <div class="row">
+                                                            <div class="col-md-2">
+                                                                <h6 class="product_name">{{ i.name }}</h6>
+                                                                <p class="product_id" style="display:none">{{ i.id }}</p>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <h6 class="product_qoldik">{{i.quantity|intcomma}}</h6> 
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <h6 class="product_price">1 000</h6>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                {{ i.total_price|intcomma }}
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <input type="number" step="any" class="form-control" style="width: 50%; height: 30px;" oninput="pushData(this)">
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <h6 class="total">0</h6>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="line"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+{% endblock content %}
+{% block js %}
+<script>
+    const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                </div>
+            `);
+
+            $("#alert-container").append(alertElement);
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000);
+    };
+    const data = [];
+
+    function pushData(element) {
+        const quantity = parseFloat(element.value) || 0;
+        const row = element.closest('.row');
+        const product_id = parseInt(row.querySelector('.product_id').textContent);
+        const product_price = parseFloat(row.querySelector('.product_price').textContent.replace(/\s/g, '')) || 0;
+        const product_qoldik = parseFloat(row.querySelector('.product_qoldik').textContent.replace(/\s/g, '')) || 0;
+        const totalElement = row.querySelector('.total');
+        if (quantity > 0) {
+            if (product_qoldik < quantity) {
+                showAlert('Maxsulot etarli emas', 'warning');
+                element.value = '';
+                totalElement.textContent = '0';
+                const index = data.findIndex(item => item.product_id === product_id);
+                if (index !== -1) {
+                    data.splice(index, 1);
+                }
+                return;
+            }
+            const existingItem = data.find(item => item.product_id === product_id);
+            if (existingItem) {
+                existingItem.quantity = quantity;
+            } else {
+                data.push({
+                    product_id: product_id,
+                    quantity: quantity,
+                    price: product_price
+                });
+            }
+            const total = product_price * quantity;
+            totalElement.textContent = total.toLocaleString('fr-FR');
+        } else {
+            const index = data.findIndex(item => item.product_id === product_id);
+            if (index !== -1) {
+                data.splice(index, 1);
+            }
+            totalElement.textContent = '0';
+            }
+        console.log(data)
+    }
+
+    let isNavigating = false;
+
+    window.addEventListener('beforeunload', function (e) {
+        if (data.length > 0 && !isNavigating) {
+            const message = "Sizda tanlangan mahsulotlar mavjud. Ularni o‘chirib yubormoqchimisiz?";
+            e.preventDefault(); 
+            e.returnValue = message; 
+            return message;
+        }
+    });
+    document.addEventListener('click', function (e) {
+        const target = e.target.closest('a'); 
+        if (target && data.length > 0 && !target.hasAttribute('data-ignore-confirm')) {
+            e.preventDefault();
+            const confirmLeave = confirm("Tanlangan ma'lumotlar o‘chib ketadi. Davom etasizmi?");
+            if (confirmLeave) {
+                data.length = 0; 
+                isNavigating = true;
+                window.location.href = target.href;
+            }
+        }
+    });
+</script>
+{% endblock js %}

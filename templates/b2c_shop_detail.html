@@ -1762,29 +1762,38 @@ $(document).ready(function() {
          $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
      }
     calculateRemaining()
-    function Yakunlash() {
-        // const summa = parseFloat($('#naqd_summa').val()) || 0;
-        const orderId = $("#order_id").val();  
+    function validatePayments() {
+        const totalJami = parseFloat(document.getElementById('all_total_2').value.replace(/,/g, '')) || 0;
+        const totalPaid = Object.values(paymentSystem.paymentMethods).reduce((sum, amount) => sum + amount, 0);
+        const remaining = totalJami - totalPaid;
         
-        if (summa > 0) {
-            $.ajax({
-                url: `/b2c_shop_finish/${orderId}`,
-                type: "POST",
-                success: function(response) {
-                    if (response.success) {
-                        showAlert(response.message, "success");
-                        window.location.replace('/b2c_shop');
-                    } else {
-                        showAlert(response.message, "danger");
-                    }
-                },
-                error: function() {
-                    showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
-                }
-            });
-        } else {
-            showAlert("Summa kiriting", "warning");
+        if (remaining > 1) { // Allowing small rounding differences
+            // showAlert(`To'lov etarli emas! Qolgan summa: ${formatNumber(remaining)} ${shop_valyuta_name}`, "warning");
+            return false;
         }
+        return true;
+    }
+    function Yakunlash() {
+        if (!validatePayments()) {
+            return;
+        }
+        
+        const orderId = $("#order_id").val();  
+        $.ajax({
+            url: `/b2c_shop_finish/${orderId}`,
+            type: "POST",
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, "success");
+                    window.location.replace('/b2c_shop');
+                } else {
+                    showAlert(response.message, "danger");
+                }
+            },
+            error: function() {
+                showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+            }
+        });
     }
 
     // Check if product already exists in cart

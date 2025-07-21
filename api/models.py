@@ -695,48 +695,6 @@ class ProductFilial(models.Model):
     ]
     ready = models.IntegerField(choices=status_ready, default='1')
 
-    # def save(self, *args, **kwargs):
-    #     creating = self._state.adding
-    #     super().save(*args, **kwargs)
-        
-        # if creating:
-        #     # boshqa barcha filiallar uchun avtomatik nusxa yaratish
-        #     other_filials = Filial.objects.exclude(id=self.filial_id)
-        #     for filial in other_filials:
-        #         exists = ProductFilial.objects.filter(
-        #             filial=filial,
-        #             name=self.name,
-        #         ).exists()
-
-        #         if not exists:
-        #             ProductFilial.objects.create(
-        #                 name=self.name,
-        #                 measurement_type=self.measurement_type,
-        #                 preparer=self.preparer,
-        #                 som=self.som,
-        #                 sotish_som=self.sotish_som,
-        #                 dollar=self.dollar,
-        #                 sotish_dollar=self.sotish_dollar,
-        #                 kurs=self.kurs,
-        #                 barcode=self.barcode,
-        #                 barcode_image=self.barcode_image,
-        #                 group=self.group,
-        #                 deliver1=self.deliver1,
-        #                 measurement=self.measurement,
-        #                 season=self.season,
-        #                 min_count=self.min_count,
-        #                 filial=filial,
-        #                 pack=self.pack,
-        #                 start_quantity=self.start_quantity,
-        #                 start_date=self.start_date,
-        #                 image=self.image,
-        #                 distributsiya=self.distributsiya,
-        #                 category=self.category,
-        #                 valyuta=self.valyuta,
-        #                 shelf_code=self.shelf_code,
-        #                 ready=self.ready,
-        #             )
-
 
     def __str__(self):
         return self.name 
@@ -747,6 +705,7 @@ class ProductFilial(models.Model):
     @property
     def get_barcodes(self):
         return ','.join([i.barcode for i in self.product_barcode.all()])
+    
     @property
     def cost(self):
         last = RecieveItem.objects.filter(product=self).last()
@@ -2959,3 +2918,20 @@ class CloseCash(models.Model):
     date = models.DateField(default=timezone.now)
     is_confirmed = models.BooleanField(default=False)
 
+
+class ReturnCustomer(models.Model):
+    debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE)
+    date = models.DateTimeField(default=timezone.now)
+    filial = models.ForeignKey(Filial, on_delete=models.PROTECT)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.PROTECT)
+    debt_new = models.FloatField(default=0)
+    debt_old = models.FloatField(default=0)
+    comment = models.TextField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+
+
+class ReturnCustomerItems(models.Model):
+    return_customer = models.ForeignKey(ReturnCustomer, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    quantity = models.FloatField(default=0)
+    price = models.FloatField(default=0)

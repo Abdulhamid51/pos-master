@@ -170,9 +170,9 @@
                                                     <td></td> 
                                                     {% if py.debt_new > 0 %}
                                                         <td></td>
-                                                        <td>{{ py.debt_new }}</td>
+                                                        <td>{{ py.debt_new|intcomma }}</td>
                                                     {% else %}
-                                                        <td>{{ py.debt_new }}</td>
+                                                        <td>{{ py.debt_new|intcomma }}</td>
                                                         <td></td>
                                                     {% endif %}
                                                     <td>{{ py.comment|default_if_none:'' }}</td>
