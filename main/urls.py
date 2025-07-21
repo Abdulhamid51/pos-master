@@ -357,4 +357,9 @@ urlpatterns = [
     path('close_cash_add', close_cash_add, name='close_cash_add'),
     path('close_cash_list', close_cash_list, name='close_cash_list'),
     path('close_cash_confirmed/<int:id>', close_cash_confirmed, name='close_cash_confirmed'),
+
+    path('return_customer', return_customer, name='return_customer'),
+    path('return_customer_add', return_customer_add, name='return_customer_add'),
+    path('return_customer_detail/<int:id>', return_customer_detail, name='return_customer_detail'),
+
 ]

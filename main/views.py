@@ -3327,7 +3327,7 @@ def debtor_detail(request, id):
         'end_date': str(end_date),
     }
     pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date), shop__status__in=[1,2])
-    shop = Shop.objects.filter(status__in=[1,2],debtor_id=id, date__date__range=(start_date, end_date))
+    shop = Shop.objects.filter(status__in=[1,2],debtor_id=id, date__date__range=(start_date, end_date), is_finished=True)
     bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
     infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
     data = []
@@ -3340,15 +3340,18 @@ def debtor_detail(request, id):
             'debt_new': i.debt_new,
         }
         if i._meta.model_name == 'payhistory':
-            if i.type_pay == 1:
+            if i.type_pay == 1 and i.is_debt == False:
                 dt['type_payment'] = 'Pul olindi'
+                dt['pay_summa'] = i.summa
+            elif i.is_debt:
+                dt['type_payment'] = 'Qarzga berildi'
                 dt['pay_summa'] = i.summa
             else:
                 dt['type_payment'] = 'Pul Berildi'
                 dt['give_summa'] = i.summa
             
         elif i._meta.model_name == 'shop':
-            dt['type_payment'] = 'Maxsulot sotildi'
+            dt['type_payment'] = f'Maxsulot sotildi - {i.id} check'
             dt['pay_summa'] = i.baskets_total_price
         
         elif i._meta.model_name == 'bonus':
@@ -3359,7 +3362,6 @@ def debtor_detail(request, id):
                 dt['give_summa'] = i.summa
 
         data.append(dt)
-    print(data)
     summa_total_for_valyuta = []
     for val in valyuta:
         pay_summa = pay.filter(valyuta=val, type_pay=1).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']
@@ -7533,18 +7535,11 @@ def b2c_shop_cart_del(request, id):
 @csrf_exempt
 def b2c_shop_finish(request, id):
     shop = Shop.objects.get(id=id)
-    summa = request.POST.get('summa')
     shop.is_finished = True
-    PayHistory.objects.create(
-        shop=shop,
-        debtor=shop.debtor,
-        filial=shop.filial,
-        valyuta=shop.valyuta,
-        summa=summa,
-    )
     debtor = Debtor.objects.get(id=shop.debtor.id)
     debtor.refresh_debt()
     shop.save()
+    print('Yakunlandi')
     return JsonResponse({'success': True, 'message': 'Yakunlandi'})
 
 
@@ -9793,7 +9788,7 @@ def payment_shop(request, shop_id):
                     debtor=shop.debtor,
                     is_debt = True,
                     comment = comment,
-                    valyuta_id=valyuta,
+                    valyuta=shop.valyuta,
                     summa = summa,
                     payment_date=payment_date,
                 )
@@ -11240,3 +11235,39 @@ def close_cash_list(request):
 def close_cash_confirmed(request, id):
     CloseCash.objects.filter(id=id).update(is_confirmed=True)
     return redirect(request.META['HTTP_REFERER'])
+
+
+
+def return_customer(request):
+    debtor = Debtor.objects.all()
+    filial = Filial.objects.filter(is_activate=True)
+    valyuta = Valyuta.objects.filter(is_activate=True)
+    context = {
+        'debtor':debtor,
+        'filial':filial,
+        'valyuta':valyuta,
+    }
+    return render(request, 'return_customer.html', context)
+
+
+def return_customer_add(request):
+    debtor = request.POST.get('debtor')
+    date = request.POST.get('date')
+    filial = request.POST.get('filial')
+    valyuta = request.POST.get('valyuta')
+    obj = ReturnCustomer.objects.create(
+        debtor_id=debtor,
+        date=date,
+        filial_id=filial,
+        valyuta_id=valyuta,
+    )
+    return redirect('return_customer_detail', obj.id)
+
+
+def return_customer_detail(request, id):
+    return_obj = ReturnCustomer.objects.get(id=id)
+    context = {
+        'return_obj':return_obj,
+        'product':ProductFilial.objects.all(),
+    }
+    return render(request, 'return_customer_detail.html', context)
