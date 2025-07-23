@@ -11353,7 +11353,3 @@ def return_customer_detail(request, id):
         'product':ProductFilial.objects.all(),
     }
     return render(request, 'return_customer_detail.html', context)
-
-
-print(111)
-print(111)

@@ -1426,7 +1426,7 @@ class DebtorType(models.Model):
         return self.name
 
 class Debtor(models.Model):
-    tg_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    tg_id = models.CharField(max_length=255, null=True, blank=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     type = models.ForeignKey(DebtorType, on_delete=models.PROTECT, blank=True, null=True)
     teritory = models.ForeignKey('Teritory', on_delete=models.PROTECT, blank=True, null=True)
@@ -2452,8 +2452,6 @@ class MobilPayment(models.Model):
     flex_price = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     is_status = models.BooleanField(default=True)
     
-print(2222)
-print(2222)
 
 class DesktopKassa(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
