@@ -7414,7 +7414,7 @@ def ajax_filter_groups(request, group_id):
     products = ProductFilial.objects.filter(
         group_id=group_id
     ).values('id', 'name', 'pack')
-    
+
     if valyuta_id and price_type:
         price = ProductPriceType.objects.filter(
             type_id=price_type,
@@ -11353,3 +11353,7 @@ def return_customer_detail(request, id):
         'product':ProductFilial.objects.all(),
     }
     return render(request, 'return_customer_detail.html', context)
+
+
+
+print(1222)
