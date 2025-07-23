@@ -74,7 +74,7 @@
         position: fixed;
         width: 260px;
     }
-
+    
     .sidebar-wrapper::-webkit-scrollbar {
         width: 5px;
     }
@@ -116,7 +116,6 @@ body.sidebar-collapsed .sidebar-toggle svg {
 
 
 </style>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <body class="sidebar-noneoverflow">
@@ -748,8 +747,11 @@ body.sidebar-collapsed .sidebar-toggle svg {
 
         }
     }, 3000);
-    // Timeout is 1 sec, you can change it
 </script>
+
+
+
+
 
 <script>
     console.log('aaaaaaa')
@@ -887,23 +889,8 @@ $(document).ready(function() {
     checkVideoTutorial();
 });
 </script>
+
 <script>
-$(document).ready(function() {
-    $('.sidebarCollapse').on('click', function() {
-        $('.sidebar-wrapper').toggleClass('collapsed');
-        localStorage.setItem('sidebarCollapsed', 
-            $('.sidebar-wrapper').hasClass('collapsed'));
-    });
-    
-    // Initialize state
-    if (localStorage.getItem('sidebarCollapsed') === 'true') {
-        $('.sidebar-wrapper').addClass('collapsed');
-    } else {
-        $('.sidebar-wrapper').removeClass('collapsed');
-    }
-});
-</script>
-  <script>
             function search(item) {
                 let value = item.value;
 
@@ -989,6 +976,12 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('.sidebarCollapse').click(function() {
+        console.log('Toggle bosildi');
+        console.log('Current state:', $('.sidebar-wrapper').hasClass('collapsed'));
+    });
+   
 </script>
 
 

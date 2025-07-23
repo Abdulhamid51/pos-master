@@ -1927,6 +1927,18 @@ def create_group(request):
         return JsonResponse({'id': obj.id, 'name': obj.name})
 
 
+@csrf_exempt
+def edit_shop_ajax(request, shop_id):
+    obj = Shop.objects.get(id=shop_id)
+    debtor_id = request.POST.get('debtor')
+    filial_id = request.POST.get('filial')
+    if debtor_id:
+        obj.debtor_id = debtor_id  
+    if filial_id:
+        obj.filial_id = filial_id
+    obj.save()
+    return JsonResponse({'messages': 'ok'})
+
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import barcode
@@ -3261,6 +3273,30 @@ def create_region(request):
         region = Region.objects.create(name=name, number=number)
         return JsonResponse({"id": region.id, "name": region.name})
 
+@csrf_exempt
+def create_debtor(request):
+    type = request.POST.get('type')
+    teritory = request.POST.get('teritory')
+    agent = request.POST.get('agent')
+    image = request.FILES.get('image')
+    fio = request.POST.get('fio')
+    phone1 = request.POST.get('phone1')
+    phone2 = request.POST.get('phone2')
+    tg_id = request.POST.get('tg_id')
+    price_type = request.POST.get('price_type')
+
+    debtor = Debtor.objects.create(
+        type_id=type,
+        teritory_id=teritory,
+        agent_id=agent,
+        image=image,
+        fio=fio,
+        phone1=phone1,
+        phone2=phone2,
+        tg_id=tg_id,
+        price_type_id=price_type,
+    )
+    return JsonResponse({"id": debtor.id, "name": debtor.fio, "fio":debtor.fio})
 
 @csrf_exempt
 def tg_id_filter(request):
@@ -7305,7 +7341,7 @@ def b2c_shop_detail(request, id):
         'total':cart.aggregate(all=Coalesce(Sum('total'), 0, output_field=FloatField()))['all'],
     }
     customer_info = {
-        'last_pay': Shop.objects.filter(debtor__isnull=False).last().date if Shop.objects.filter(debtor__isnull=False).exists() else None,
+        'last_pay': PayHistory.objects.filter(debtor__isnull=False).last().date if PayHistory.objects.filter(debtor__isnull=False).exists() else None,
         'valyuta': [
             {
                 'summa': Wallet.objects.filter(customer=shop.debtor, valyuta=x).aggregate(all=Sum('summa'))['all'] or 0,
@@ -7327,11 +7363,15 @@ def b2c_shop_detail(request, id):
        'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
        'valyuta':Valyuta.objects.all(),
        'filial':Filial.objects.filter(is_activate=True),
-        'kassa':KassaMerge.objects.filter(kassa__filial=shop.filial),
+       'kassa':KassaMerge.objects.filter(kassa__filial=shop.filial),
+       'debtor_type' : DebtorType.objects.all(),
+       'regions': Region.objects.all(),
+       'teritory': Teritory.objects.all(),
+       'price_type' : PriceType.objects.filter(is_activate=True),
 
     }
 
-    context['groups'] = Groups.objects.all()
+    context['groups'] = Groups.objects.filter(is_active=True)
 
     context['ready_types'] = [
             {"id": i[0], "name": i[1]}
@@ -7348,6 +7388,46 @@ def b2c_shop_detail(request, id):
     shop_valyuta_name = shop.valyuta
     context['shop_valyuta_name'] = shop_valyuta_name.name if shop_valyuta_name else 'Som'
     return render(request, 'b2c_shop_detail.html', context)
+
+
+@csrf_exempt 
+def ajax_customer_info(request, debtor_id):
+    last_payment = PayHistory.objects.filter(debtor_id=debtor_id).order_by('-date').first()
+    customer_info = {
+        'last_pay': last_payment.date.strftime('%Y-%m-%d') if last_payment else None,
+        'valyuta': [
+            {
+                'summa': Wallet.objects.filter(customer_id=debtor_id, valyuta=x).aggregate(all=Sum('summa'))['all'] or 0,
+                'name': x.name
+            }
+            for x in Valyuta.objects.all()
+        ]
+    }
+    return JsonResponse({'data': customer_info})
+
+from django.views.decorators.http import require_GET
+
+@require_GET
+def ajax_filter_groups(request, group_id):
+    valyuta_id = request.GET.get('valyuta_id')
+    price_type = request.GET.get('price_type')
+    products = ProductFilial.objects.filter(
+        group_id=group_id
+    ).values('id', 'name', 'pack')
+    
+    if valyuta_id and price_type:
+        price = ProductPriceType.objects.filter(
+            type_id=price_type,
+            valyuta_id=valyuta_id
+        ).values('product_id', 'price')
+
+        price_dict = {item['product_id']: item['price'] for item in price}
+
+        for i in products:
+            i['price'] = price_dict.get(i['id'], 0)
+
+    return JsonResponse({'data': list(products)})
+
 
 # @csrf_exempt
 # def b2c_shop_cart_add(request, id):
@@ -9691,7 +9771,7 @@ def b2b_shop_ajax(request, product_id):
     kurs = Course.objects.last()
 
     customer_info = {
-        'last_pay': Shop.objects.filter(debtor__isnull=False).last().date if Shop.objects.filter(debtor__isnull=False).exists() else None,
+        'last_pay': PayHistory.objects.filter(debtor__isnull=False).last().date if PayHistory.objects.filter(debtor__isnull=False).exists() else None,
         'valyuta': [
             {
                 'summa': Wallet.objects.filter(customer=shop.debtor, valyuta=x).aggregate(all=Sum('summa'))['all'] or 0,
@@ -11141,13 +11221,17 @@ def groups(request):
 def groups_add(request):
     name = request.POST.get('name')
     number = request.POST.get('number')
-    Groups.objects.create(name=name, number=number)
+    image = request.FILES.get('image')
+    Groups.objects.create(name=name, number=number, image=image)
     return redirect(request.META['HTTP_REFERER'])
 
 def groups_edit(request,id):
     name = request.POST.get('name')
     number = request.POST.get('number')
+    image = request.FILES.get('image')
     valyuta = Groups.objects.get(id=id)
+    if image:
+        valyuta.image = image
     valyuta.name=name
     valyuta.number=number
     valyuta.save()

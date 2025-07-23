@@ -140,6 +140,7 @@ urlpatterns = [
     #>>>>>>>>>>>>>>
     path('create_order/', create_order, name='create_order'),
     path('check_price/', check_price, name='check_price'),
+    path('ajax_filter_groups/<int:group_id>', ajax_filter_groups, name='ajax_filter_groups'),
     path('create_order_ajax/', create_order_ajax, name='create_order_ajax'),
     path('finish_order/<id>/', finish_order, name='finish_order'),
     path('order_detail_ajax/<order_id>/', order_detail_ajax, name='order_detail_ajax'),
@@ -309,11 +310,14 @@ urlpatterns = [
     path('create-price-type/', create_price_type, name='create_price_type'),
     path('create-teritory/', create_teritory, name='create_teritory'),
     path('create-region/', create_region, name='create_region'),
+    path('create-debtor/', create_debtor, name='create_debtor'),
 
     path('create-deliver-new/', create_deliver_new, name='create_deliver_new'),
     path('create-measurement/', create_measurement, name='create_measurement'),
     path('create-group/', create_group, name='create_group'),
     path('b2c_shop_edit/', b2c_shop_edit, name='b2c_shop_edit'),
+    path('edit_shop_ajax/<int:shop_id>', edit_shop_ajax, name='edit_shop_ajax'),
+    path('ajax_customer_info/<int:debtor_id>', ajax_customer_info, name='ajax_customer_info'),
 
     path('api/video-tutorial/check/', check_video_tutorial, name='check_video_tutorial'),
     path('api/video-tutorial/save/', save_video_tutorial, name='save_video_tutorial'),

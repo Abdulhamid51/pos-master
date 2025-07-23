@@ -44,37 +44,10 @@
                                                     <div class="modal-body">
                                                         <form action="{% url 'debtor_add' %}" method="post" enctype="multipart/form-data">
                                                             {% csrf_token %}
-                                                            <!-- <div class="form-group">
+                                                           
+                                                            <div class="form-group">
                                                                 <label for="recipient-debtor_type" class="col-form-label">Turi</label>
-                                                                <select name="type" id="recipient-debtor_type" class="form-control" >
-                                                                    <option value="">---------</option>
-                                                                    {% for debtor_type in debtor_type%}
-                                                                        <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
-                                                                <select name="teritory" id="recipient-teritory" class="form-control" >
-                                                                    <option value="">---------</option>
-                                                                    {% for teritory in teritory %}
-                                                                        <option value="{{ teritory.id }}">{{ teritory.name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                              <div class="form-group">
-                                                                <label  class="col-form-label">Narx Turi</label>
-                                                                <select name="price_type"  class="form-control" >
-                                                                    <option value="">---------</option>
-                                                                    {% for price_type in price_type %}
-                                                                        <option value="{{ price_type.id }}">{{ price_type.name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div> -->
-                                                            <!-- Debtor Type -->
-                                                            <div class="form-group">
                                                                 <div class="input-group">
-                                                                    <label for="recipient-debtor_type" class="col-form-label">Turi</label>
                                                                     <select name="type" id="recipient-debtor_type" class="form-control">
                                                                         <option value="">---------</option>
                                                                         {% for debtor_type in debtor_type %}
@@ -86,7 +59,6 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-
                                                             <!-- Teritoriya -->
                                                             <div class="form-group">
                                                                 <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
@@ -691,12 +663,10 @@ $(document).ready(function () {
         });
     }
 
-    // Mavjud submitlar
     handleFormSubmit('#debtorTypeForm', '{% url "create_debtor_type" %}', '#recipient-debtor_type', '#debtorTypeModal');
     handleFormSubmit('#teritoryForm', '{% url "create_teritory" %}', '#recipient-teritory', '#teritoryModal');
     handleFormSubmit('#priceTypeForm', '{% url "create_price_type" %}', '#recipient-price_type', '#priceTypeModal');
 
-    // Yangi: Region
     handleFormSubmit('#regionForm', '{% url "create_region" %}', '#regionSelect', '#regionModal');
 });
 </script>

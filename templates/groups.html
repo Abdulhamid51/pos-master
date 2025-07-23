@@ -182,6 +182,10 @@
                                                     <input type="text" class="form-control" id="recipient-name" name="name" >
                                                 </div>
                                                 <div class="form-group">
+                                                    <label class="col-form-label">Rasim</label>
+                                                    <input type="file" class="form-control" name="image">
+                                                </div>
+                                                <div class="form-group">
                                                     <label class="col-form-label">Kodi</label>
                                                     <input type="number" class="form-control"  name="number" required>
                                                 </div>
@@ -201,6 +205,7 @@
                                             <th class="">№</th>
                                             <th>Nomi</th>
                                             <th>Kodi</th>
+                                            <th>Rasim</th>
                                             <th>Tahrirlash</th>
                                             <th>Ochirish</th>
                                         </tr>
@@ -211,6 +216,11 @@
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ valyuta.name }}</td>
                                                 <td>{{ valyuta.number }}</td>
+                                                <td>
+                                                    {% if valyuta.image %}
+                                                        <img src="{{ valyuta.image.url }}" width="160">
+                                                    {% endif %}
+                                                </td>
                                                 <td><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ valyuta.id }}"><i class="fa-solid fa-pen-to-square"></i></button></td>
                                                 <td><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ valyuta.id }}"><i class="fa-solid fa-trash"></i></button></th>
 
@@ -224,6 +234,10 @@
                                                                 <div class="form-group">
                                                                     <label for="recipient-name" class="col-form-label">Nomi</label>
                                                                     <input type="text" class="form-control" id="recipient-name" value="{{ valyuta.name }}" name="name" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label class="col-form-label">Rasim</label>
+                                                                    <input type="file" class="form-control" name="image">
                                                                 </div>
                                                                 <div class="form-group">
                                                                     <label class="col-form-label">Kodi</label>
