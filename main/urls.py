@@ -366,5 +366,6 @@ urlpatterns = [
     path('return_customer_add', return_customer_add, name='return_customer_add'),
     path('return_customer_detail/<int:id>', return_customer_detail, name='return_customer_detail'),
     # path(),
+    # path(),
 
 ]

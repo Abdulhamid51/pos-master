@@ -2453,6 +2453,7 @@ class MobilPayment(models.Model):
     is_status = models.BooleanField(default=True)
     
 print(2222)
+print(2222)
 
 class DesktopKassa(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
