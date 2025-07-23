@@ -11355,7 +11355,4 @@ def return_customer_detail(request, id):
     return render(request, 'return_customer_detail.html', context)
 
 
-
-print(1222)
-print(1222)
-print(1222)
+print(111)
