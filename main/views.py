@@ -11357,3 +11357,4 @@ def return_customer_detail(request, id):
 
 
 print(1222)
+print(1222)
