@@ -1340,9 +1340,21 @@
                                     this.totalJami = updateReceiptProducts();
                                     this.totalToPay = this.totalJami;
                                     
+                                    // Avvalgi to'lov usullarini tozalash
+                                    this.paymentMethods = {};
+                                    
+                                    // Barcha to'lov usullarini ishga tushirish
                                     document.querySelectorAll('.payment-method').forEach(method => {
                                         const methodName = method.querySelector('p').textContent.trim();
                                         this.paymentMethods[methodName] = 0;
+                                        
+                                        // Agar input box ochiq bo'lsa, unga to'lov summasi yoziladi
+                                        const inputBox = method.querySelector('.input-box');
+                                        if (inputBox) {
+                                            const input = inputBox.querySelector('input');
+                                            input.value = this.totalToPay.toFixed(2);
+                                            this.updateTolash(input);
+                                        }
                                     });
                                     
                                     this.paymentMethods['Qarz'] = 0;
@@ -2588,15 +2600,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
     $(document).ready(function () {
-    // Ikkala select uchun ham change eventi
     $('#mainSelectDebtor, #modalSelectDebtor').on('change', function() {
         const selectedValue = $(this).val();
         const selectedText = $(this).find('option:selected').text();
         
-        // Ikkala selectni ham yangilash
         $('#mainSelectDebtor, #modalSelectDebtor').val(selectedValue);
         
-        // AJAX so'rovni yuborish
         $.ajax({
             url: "{% url 'edit_shop_ajax' shop.id %}",
             type: 'POST',
@@ -2607,7 +2616,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 'debtor': selectedValue
             },
             success: function () {
-                // Muvaffaqiyatli amalga oshganda qo'shimcha amallar
                 changeInfo(selectedValue);
             },
             error: function () {
