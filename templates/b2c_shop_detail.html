@@ -363,7 +363,7 @@
                         }
                         window.addEventListener('DOMContentLoaded', toggleValyutaDisabled);
                     </script>
-                    <div class="col-md-8">
+                    <div class="col-md-7">
                         <div class="input-group">
                             <select class="d-none" id="products" name="product" data-recieve="{{recieve.id}}">
                                 <option value="">Mahsulot tanlanmagan</option>
@@ -391,12 +391,26 @@
                         </div>
                         <br>
                     </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-danger" style="height: 47px;" onclick="clearInputProduct()">X</button>
+                    </div>
                     <div class="col-md-2">
-                        <button class="btn btn-primary w-100" id="fullscreenDropdownBtn">
+                        <button class="btn btn-primary w-100" id="fullscreenDropdownBtn" style="height: 48px;">
                             Guruh bo‘yicha
                         </button>
                     </div>
-
+                    <script>
+                        function clearInputProduct() {
+                            const input = document.getElementById('productSearchInput');
+                            if (input) {
+                                input.value = '';
+                                const dropdown = document.getElementById('productListDropdown');
+                                if (dropdown) {
+                                    dropdown.classList.remove('show');
+                                }
+                            }
+                        }
+                    </script>
                     <div id="fullscreenDropdown" class="fullscreen-dropdown">
                         <div class="dropdown-header">
                             <h5>Mahsulot Guruhlari</h5>
@@ -406,7 +420,7 @@
                         <div class="dropdown-content">
                             <div class="row">
                                 {% for i in groups %}
-                                <div class="col-md-12 mb-3" style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                                <div class="col-md-6 mb-3" style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
                                     <div class="d-flex align-items-center">
                                         <div style="width: 50px; margin-right: 10px;">
                                             {% if i.image %}
@@ -670,7 +684,7 @@
                             <div class="form-group">
                                 <label for="recipient-debtor" class="col-form-label">Mijoz</label>
                                 <div class="input-group">
-                                    <select class="form-control" id="selectDebtor"  name="debtor" required>
+                                    <select class="form-control" id="mainSelectDebtor"  name="debtor" required>
                                         <option value=""></option>
                                         {% for i in customers %}
                                             <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
@@ -710,15 +724,14 @@
                             <br>
                             {% if shop.debtor.fio != "Naqd" %}
                             {% endif %}
-                         </form>
-
+                             </form>
                             <div class="modal fade" id="debtorModal" tabindex="-1" role="dialog" aria-hidden="true">
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-body">
                                             <form method="post" enctype="multipart/form-data" id="debtorForm">
                                                 {% csrf_token %}
-                                                <div class="form-group">
+                                                <!-- <div class="form-group">
                                                     <label for="recipient-debtor_type" class="col-form-label">Turi</label>
                                                     <div class="input-group">
                                                         <select name="type" id="recipient-debtor_type" class="form-control">
@@ -731,8 +744,8 @@
                                                             <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorTypeModal">+</button>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="form-group">
+                                                </div> -->
+                                                <!-- <div class="form-group">
                                                     <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
                                                     <div class="input-group">
                                                         <select name="teritory" id="recipient-teritory" class="form-control">
@@ -745,8 +758,7 @@
                                                             <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#teritoryModal">+</button>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <!-- Narx Turi -->
+                                                </div> -->
                                                 <div class="form-group">
                                                     <label class="col-form-label">Narx Turi</label>
                                                     <div class="input-group">
@@ -761,10 +773,10 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="form-group">
+                                                <!-- <div class="form-group">
                                                     <label for="recipient-image" class="col-form-label">Rasm</label>
                                                     <input type="file" class="form-control" id="recipient-image" name="image" >
-                                                </div>
+                                                </div> -->
                                                 <div class="form-group">
                                                     <label for="recipient-fio" class="col-form-label">F.I.O</label>
                                                     <input type="text" class="form-control" id="recipient-fio" name="fio" required>
@@ -894,15 +906,11 @@
                                 </div>
                             </div>
                          <script>
-
-
-
                             const uzsBtn = document.getElementById('uzsBtn');
                             const discountInput = document.getElementById('discountInput');
                             const all_total = document.getElementById('all_total');
                             const all_total_two = document.getElementById('all_total_2');
                             const disc_button = document.getElementById('disc_button');
-
                             function safeParse(text) {
                                 try {
                                     let cleaned = String(text).replace(/\s/g, '');
@@ -945,8 +953,6 @@
                                 all_total.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
                                 all_total_two.value = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
                             }
-                            console.log(11111)
-                            console.log(11111)
                         </script>
                     </div>
 
@@ -969,8 +975,6 @@
                             </div>
                             
                             <div class="row">
-                               
-                                
                                 <div class="col-md-3">
                                     <div class="receipt-wrapper">
                                         <div class="zigzag"></div>
@@ -998,8 +1002,77 @@
                                         </div>
                                         <div class="zigzag"></div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center mt-3">
+                                            <button class="btn btn-primary" id="saveAsPngBtn">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+
+                                        <style>
+                                        .zigzag-top, .zigzag-bottom {
+                                            height: 15px;
+                                            background: 
+                                                linear-gradient(135deg, #000 25%, transparent 25%) -10px 0,
+                                                linear-gradient(225deg, #000 25%, transparent 25%) -10px 0,
+                                                linear-gradient(315deg, #000 25%, transparent 25%),
+                                                linear-gradient(45deg, #000 25%, transparent 25%);
+                                            background-size: 20px 20px;
+                                            margin: 0 -1px;
+                                            width: calc(100% + 2px);
+                                        }
+                                        .zigzag-top {
+                                            margin-bottom: 10px;
+                                        }
+                                        .zigzag-bottom {
+                                            margin-top: 10px;
+                                        }
+                                        .receipt-print {
+                                            background: white;
+                                            padding: 15px;
+                                            border-left: 1px dashed #000;
+                                            border-right: 1px dashed #000;
+                                            width: 300px;
+                                            margin: 0 auto;
+                                        }
+                                        </style>
+
+                                        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+                                        <script>
+                                        document.getElementById('saveAsPngBtn').addEventListener('click', function() {
+                                            const printDiv = document.createElement('div');
+                                            printDiv.className = 'receipt-print-container';
+                                            printDiv.style.position = 'absolute';
+                                            printDiv.style.left = '-9999px';
+                                            printDiv.style.width = '302px'; 
+                                            
+                                            const receiptClone = document.querySelector('.receipt-wrapper').cloneNode(true);
+                                            
+                                            receiptClone.style.width = '300px';
+                                            receiptClone.style.margin = '0';
+                                            receiptClone.style.boxShadow = 'none';
+                                            receiptClone.style.border = 'none';
+                                            
+                                            printDiv.appendChild(receiptClone);
+                                            document.body.appendChild(printDiv);
+                                            
+                                            html2canvas(printDiv, {
+                                                scale: 2,
+                                                logging: false,
+                                                useCORS: true,
+                                                allowTaint: true,
+                                                backgroundColor: 'white'
+                                            }).then(canvas => {
+                                                const link = document.createElement('a');
+                                                link.download = 'chek-' + new Date().toISOString().slice(0, 10) + '.png';
+                                                link.href = canvas.toDataURL('image/png');
+                                                link.click();
+                                                document.body.removeChild(printDiv);
+                                            });
+                                        });
+                                        </script>
+                                    </div>
                                 </div>
-                                
                                 <div class="col-md-9">
                                     <div class="row mb-4">
                                         <div class="col-md-4">
@@ -1010,7 +1083,6 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="summary-card">
-                                                
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -1020,13 +1092,11 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div class="row">
                                         <div class="col-12">
                                             <h4>To'lov usullari</h4>
                                             <hr>
                                         </div>
-                                        
                                         {% for mer in kassa %}
                                         <div class="col-md-3 mb-3">
                                             <div class="payment-method" data-kassa-id="{{ mer.kassa.id }}" data-valyuta-id="{{ mer.valyuta.id }}">
@@ -1105,8 +1175,15 @@
                                         <label>Mijoz</label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fa fa-user"></i></span>
-                                            <input type="text" class="form-control" value="{{shop.debtor}}" readonly  id="qarz_shop_debtor"
-                                                style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
+                                            <select class="form-control" id="modalSelectDebtor" name="debtor" required style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
+                                                <option value=""></option>
+                                                {% for i in customers %}
+                                                    <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorModal" style="height: 45px;">+</button>
+                                            </div>
                                         </div>
                                         <small class="text-muted">Balans: 0 {{shop_valyuta_name}}</small>
                                     </div>
@@ -1263,9 +1340,21 @@
                                     this.totalJami = updateReceiptProducts();
                                     this.totalToPay = this.totalJami;
                                     
+                                    // Avvalgi to'lov usullarini tozalash
+                                    this.paymentMethods = {};
+                                    
+                                    // Barcha to'lov usullarini ishga tushirish
                                     document.querySelectorAll('.payment-method').forEach(method => {
                                         const methodName = method.querySelector('p').textContent.trim();
                                         this.paymentMethods[methodName] = 0;
+                                        
+                                        // Agar input box ochiq bo'lsa, unga to'lov summasi yoziladi
+                                        const inputBox = method.querySelector('.input-box');
+                                        if (inputBox) {
+                                            const input = inputBox.querySelector('input');
+                                            input.value = this.totalToPay.toFixed(2);
+                                            this.updateTolash(input);
+                                        }
                                     });
                                     
                                     this.paymentMethods['Qarz'] = 0;
@@ -1567,7 +1656,52 @@
                                     return true;
                                 }
                             };
-                            
+                           document.addEventListener('DOMContentLoaded', function() {
+                                document.querySelectorAll('.method-box').forEach(box => {
+                                    box.addEventListener('click', function(e) {
+                                        if (e.target.closest('.toggle-input')) return;
+                                        
+                                        const inputBox = this.nextElementSibling;
+                                        
+                                        if (!inputBox || !inputBox.classList.contains('input-box')) return;
+                                        
+                                        document.querySelectorAll('.input-box').forEach(b => {
+                                            if (b !== inputBox) b.style.display = 'none';
+                                        });
+                                        
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                    });
+                                });
+
+                                document.querySelectorAll('.toggle-input').forEach(button => {
+                                    button.addEventListener('click', function(e) {
+                                        e.stopPropagation(); 
+                                        
+                                        const methodBox = this.closest('.method-box');
+                                        const inputBox = methodBox.nextElementSibling;
+                                        
+                                        if (!inputBox || !inputBox.classList.contains('input-box')) return;
+                                        
+                                        document.querySelectorAll('.input-box').forEach(b => {
+                                            if (b !== inputBox) b.style.display = 'none';
+                                        });
+                                        
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                        
+                                        if (inputBox.style.display === 'block') {
+                                            inputBox.querySelector('input').focus();
+                                        }
+                                    });
+                                });
+
+                                document.addEventListener('click', function(e) {
+                                    if (!e.target.closest('.input-box') && !e.target.closest('.method-box')) {
+                                        document.querySelectorAll('.input-box').forEach(box => {
+                                            box.style.display = 'none';
+                                        });
+                                    }
+                                });
+                            });
                             document.getElementById('submit-payment').addEventListener('click', function() {
                                 paymentSystem.submitPayments({{ shop.id }});
                             });
@@ -1774,44 +1908,72 @@ document.addEventListener('DOMContentLoaded', function () {
         dropdown.classList.add('show');
     });
 
-    // Tashqariga bosilganda dropdown yopish
     document.addEventListener('click', function (e) {
         if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.remove('show');
         }
     });
 
-    // Qidiruv filtrlash
     searchInput.addEventListener('input', function () {
-        if (!searchInput.value) {return}
         const filter = this.value.toLowerCase();
         const items = dropdown.querySelectorAll('.select-product-item');
+        let matchCount = 0;
+        let firstMatch = null;
+        
         items.forEach(item => {
             const text = item.textContent.toLowerCase();
-            item.parentElement.style.display = text.includes(filter) ? '' : 'none';
+            if (text.includes(filter)) {
+                item.parentElement.style.display = '';
+                matchCount++;
+                if (!firstMatch) firstMatch = item;
+            } else {
+                item.parentElement.style.display = 'none';
+            }
         });
+        
+        if (matchCount > 0) {
+            dropdown.classList.add('show');
+        } else {
+            dropdown.classList.remove('show');
+        }
     });
 
-    // Mahsulot tanlash
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const filter = this.value.toLowerCase();
+            const items = dropdown.querySelectorAll('.select-product-item');
+            let exactMatch = null;
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    if (!exactMatch) exactMatch = item;
+                }
+            });
+            
+            if (exactMatch) {
+                exactMatch.click();
+            } else {
+                showAlert("Mos keladigan mahsulot topilmadi", "warning");
+            }
+        }
+    });
+
     dropdown.querySelectorAll('.select-product-item').forEach(function (item) {
         item.addEventListener('click', function (e) {
             e.preventDefault();
             const value = this.dataset.value;
             const text = this.innerText.split('\n')[0];
 
-            // Inputga chiqarish
             searchInput.value = text;
 
-            // Eski value bilan solishtirish
             const oldValue = select.value;
 
-            // Har holda select qiymatini o'zgartirish
             select.value = value;
 
-            // Agar bir xil bo‘lsa ham change ishga tushishi uchun
             $('#products').trigger('change');
 
-            // Dropdownni yopish
             dropdown.classList.remove('show');
             $('#products').val('')
         });
@@ -2434,13 +2596,16 @@ document.addEventListener('DOMContentLoaded', function () {
         handleFormSubmit('#teritoryForm', '{% url "create_teritory" %}', '#recipient-teritory', '#teritoryModal');
         handleFormSubmit('#priceTypeForm', '{% url "create_price_type" %}', '#recipient-price_type', '#priceTypeModal');
         handleFormSubmit('#regionForm', '{% url "create_region" %}', '#regionSelect', '#regionModal');
-        handleFormSubmit('#debtorForm', '{% url "create_debtor" %}', '#selectDebtor', '#debtorModal');
+        handleFormSubmit('#debtorForm', '{% url "create_debtor" %}', '#mainSelectDebtor, #modalSelectDebtor', '#debtorModal');
 
     });
-    $('#selectDebtor').on('change', function() {
-        const select_debtor_value = $('#selectDebtor').val();
-        const select_debtor_text = $('#selectDebtor option:selected').text();
-
+    $(document).ready(function () {
+    $('#mainSelectDebtor, #modalSelectDebtor').on('change', function() {
+        const selectedValue = $(this).val();
+        const selectedText = $(this).find('option:selected').text();
+        
+        $('#mainSelectDebtor, #modalSelectDebtor').val(selectedValue);
+        
         $.ajax({
             url: "{% url 'edit_shop_ajax' shop.id %}",
             type: 'POST',
@@ -2448,16 +2613,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRFToken': '{{ csrf_token }}'
             },
             data: {
-                'debtor': select_debtor_value
+                'debtor': selectedValue
             },
             success: function () {
-                qarz_shop_debtor.value = select_debtor_text
-                changeInfo(select_debtor_value);
+                changeInfo(selectedValue);
             },
             error: function () {
+                console.error("Xatolik yuz berdi");
             }
         });
     });
+
+    // Qolgan funksiyalar...
+});
     $('#selectFilial').on('change', function() {
         const select_debtor_value = $('#selectFilial').val();
 
