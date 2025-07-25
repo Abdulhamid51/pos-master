@@ -64,20 +64,254 @@
         }
         
     </style>
-
     <style>
-#productSearchInput {
-    font-size: 1.2rem;
-}
+        #productSearchInput {
+            font-size: 1.2rem;
+        }
 
-#productListDropdown .dropdown-item {
-    line-height: 1.4;
-}
-.hide-important {
-    display: none !important;
-}
+        #productListDropdown .dropdown-item {
+            line-height: 1.4;
+        }
+        .hide-important {
+            display: none !important;
+        }
 
-</style>
+    </style>
+    <style>
+        .discount-input-group {
+            display: flex;
+        }
+        .discount-toggle button {
+            border: 1px solid #ccc;
+            height: 38px;
+            background-color: #f2f2f2;
+            border-radius: 10px;
+            font-weight: bold;
+            min-width: 50px;
+        }
+        .discount-toggle button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .quick-discount button {
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            background-color: #f2f2f2;
+            font-weight: bold;
+            padding: 6px 20px;
+            min-width: 70px;
+        }
+        .quick-discount button:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+    <style>
+        .method-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background-color: white !important;
+            border-radius: 5px;
+            box-shadow: 2px 5px 5px rgba(0,0,0,0.1) !important;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.129) !important;
+        }
+        .method-box:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .method-box i {
+            color: #007bff !important;
+            font-size: 1.2em;
+        }
+        .method-box p {
+            margin: 0;
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        .toggle-input {
+            color: #007bff !important;
+            background-color: white !important;
+            border: 1px solid #ffffff !important;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-input i {
+            font-size: 1.2em;
+        }
+        .input-fields {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .remove-field {
+            cursor: pointer;
+            font-size: 1.8em;
+            color: #dc3545;
+            background: none;
+            border: none;
+        }
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .payment-table th, .payment-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .payment-table th {
+            background-color: #f8f9fa;
+        }
+        .card-balance {
+            text-align: right;
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .inputkassa {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .input-box {
+            display: none;
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.401);
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #fff;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: border 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+        .input-box:hover {
+            border: 1px solid #007bff !important;
+        }
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .box-body {
+            margin-top: 10px;
+        }
+        .payment-input {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.277) !important;
+        }
+        .receipt-wrapper {
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-left: 1.8px solid rgba(192, 192, 192, 0.758);
+            border-right: 1.8px solid rgba(192, 192, 192, 0.758);
+            overflow: hidden; 
+        }
+        .zigzag {
+            width: calc(100% + 3.6px);
+            height: 15px;
+            margin-left: -1.8px; 
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg"><polyline points="0,10 5,0 10,10 15,0 20,10 25,0 30,10 35,0 40,10 45,0 50,10 55,0 60,10 65,0 70,10 75,0 80,10 85,0 90,10 95,0 100,10" fill="white" stroke="lightgray" /></svg>') repeat-x;
+            background-size: contain;
+        }
+        .receipt {
+            padding: 20px;
+            font-size: 13px;
+            color: #000 !important;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .lines {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #bbb;
+            margin: 8px 0;
+        }
+        .section {
+            margin-bottom: 8px;
+        }
+        .barcode {
+            height: 50px;
+            width: 100%;
+            background: repeating-linear-gradient(
+                to right,
+                #000 0px,
+                #000 2px,
+                #fff 2px,
+                #fff 4px
+            );
+            margin: 15px 0;
+        }
+        .center {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .item-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .subline {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .qarz-row {
+            font-weight: bold;
+            color: #dc3545;
+            border-top: 1px dashed #ccc;
+            border-bottom: 1px dashed #ccc;
+            padding: 5px 0;
+            margin: 5px 0;
+            background-color: #fff3f3;
+        }
+        .qarz-row span {
+            font-size: 14px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .summary-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .summary-value.total {
+            color: green;
+        }
+        .input-box.has-value {
+            border: 1px solid #28a745 !important;
+            background-color: #f8fff8;
+        }
+    </style>
 {% endblock css %}
 
 {% block content %}
@@ -129,18 +363,8 @@
                         }
                         window.addEventListener('DOMContentLoaded', toggleValyutaDisabled);
                     </script>
-                    <div class="col-md-10">
+                    <div class="col-md-7">
                         <div class="input-group">
-                            <!-- <select class="form-control searchable" name="product" id="products" data-recieve="{{recieve.id}}">
-                                <option value=""></option>
-                                {% for i in products %}
-                                    <option value="{{ i.id }}&{{ i.name }}&{{ i.quantity }}&{{ i.barcode }}&{% if i.pack == 0 %}1{% else %}{{ i.pack }}{% endif %}">
-                                    {{ i.name }} - {{ i.barcode }} - {{ i.get_season_display|default_if_none:'' }} - {{i.get_barcodes}} - {{i.price}}
-                                </option>
-                                {% endfor %}
-                            </select> -->
-
-                            <!-- original select yashirin holda qoladi -->
                             <select class="d-none" id="products" name="product" data-recieve="{{recieve.id}}">
                                 <option value="">Mahsulot tanlanmagan</option>
                                 {% for i in products %}
@@ -150,8 +374,6 @@
                                     </option>
                                 {% endfor %}
                             </select>
-
-                            <!-- Custom select input -->
                             <div class="dropdown w-100 position-relative">
                                 <input type="text" class="form-control fs-5 py-3" placeholder="Mahsulotni qidiring..." id="productSearchInput" data-bs-toggle="dropdown" aria-expanded="false">
                                 <ul class="dropdown-menu w-100 overflow-auto" style="max-height: 300px;" id="productListDropdown">
@@ -166,14 +388,210 @@
                                     {% endfor %}
                                 </ul>
                             </div>
-
-
-                            <!-- <div class="input-group-append">
-                                <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#new_product_add">+</button>
-                            </div> -->
                         </div>
                         <br>
                     </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-danger" style="height: 47px;" onclick="clearInputProduct()">X</button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" id="fullscreenDropdownBtn" style="height: 48px;">
+                            Guruh bo‘yicha
+                        </button>
+                    </div>
+                    <script>
+                        function clearInputProduct() {
+                            const input = document.getElementById('productSearchInput');
+                            if (input) {
+                                input.value = '';
+                                const dropdown = document.getElementById('productListDropdown');
+                                if (dropdown) {
+                                    dropdown.classList.remove('show');
+                                }
+                            }
+                        }
+                    </script>
+                    <div id="fullscreenDropdown" class="fullscreen-dropdown">
+                        <div class="dropdown-header">
+                            <h5>Mahsulot Guruhlari</h5>
+                            <button class="btn btn-danger btn-sm" onclick="document.getElementById('fullscreenDropdown').style.display='none'; document.body.style.overflow='';">Yopish</button>
+                        </div>
+
+                        <div class="dropdown-content">
+                            <div class="row">
+                                {% for i in groups %}
+                                <div class="col-md-6 mb-3" style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                                    <div class="d-flex align-items-center">
+                                        <div style="width: 50px; margin-right: 10px;">
+                                            {% if i.image %}
+                                                <img src="{{ i.image.url }}" alt="{{ i.name }}" width="40" height="40" style="object-fit: contain;">
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="group-name" style="cursor: pointer;" data-group-id="{{ i.id }}">{{ i.name }}</h6>
+                                        </div>
+                                    </div>
+                                    <div class="group-products mt-2" id="group-products-{{ i.id }}" style="display: none;">
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <style>
+                        .fullscreen-dropdown {
+                            position: fixed;
+                            top: 0;
+                            right: 0;
+                            width: 25%;
+                            height: 100%;
+                            background: white;
+                            z-index: 1050;
+                            display: none;
+                            overflow-y: auto;
+                            padding: 20px;
+                            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+                        }
+
+                        .dropdown-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding-bottom: 10px;
+                            border-bottom: 1px solid #eee;
+                            margin-bottom: 15px;
+                        }
+
+                        .group-name:hover {
+                            background-color: #f0f0f0;
+                            padding: 5px;
+                            border-radius: 5px;
+                        }
+
+                        .product-item {
+                            border: 1px solid #ddd;
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            display: flex;
+                            align-items: center;
+                            border-radius: 4px;
+                            background-color: #f9f9f9;
+                        }
+
+                        .product-item img {
+                            width: 40px;
+                            height: 40px;
+                            object-fit: contain;
+                            margin-right: 10px;
+                        }
+                    </style>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const dropdownBtn = document.getElementById('fullscreenDropdownBtn');
+                            const fullscreenDropdown = document.getElementById('fullscreenDropdown');
+                            let isDropdownOpen = false;
+
+                            function toggleDropdown() {
+                                isDropdownOpen = !isDropdownOpen;
+                                fullscreenDropdown.style.display = isDropdownOpen ? 'block' : 'none';
+                                document.body.style.overflow = isDropdownOpen ? 'hidden' : '';
+                            }
+
+                            dropdownBtn.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                toggleDropdown();
+                            });
+
+                            document.addEventListener('click', function (e) {
+                                if (isDropdownOpen && !fullscreenDropdown.contains(e.target) && e.target !== dropdownBtn) {
+                                    isDropdownOpen = false;
+                                    fullscreenDropdown.style.display = 'none';
+                                    document.body.style.overflow = '';
+                                }
+                            });
+                            
+                            document.querySelectorAll('.group-name').forEach(group => {
+                                group.addEventListener('click', function (e) {
+                                    e.stopPropagation();
+                                    const groupId = this.getAttribute('data-group-id');
+                                    const productsContainer = document.getElementById(`group-products-${groupId}`);
+
+                                    const valyuta_id = document.getElementById('valyuta_input').value;
+                                    const priceType = document.querySelector('.price_type_input:checked');
+                                    const priceTypeValue = priceType ? priceType.value : null;
+
+                                    if (productsContainer.style.display === 'block') {
+                                        productsContainer.style.display = 'none';
+                                        return;
+                                    }
+                                    $.ajax({
+                                        url: `{% url 'ajax_filter_groups' group_id=0 %}`.replace('0', groupId),
+                                        type: 'GET',
+                                        data:{'valyuta_id':valyuta_id, 'price_type':priceTypeValue},
+                                        dataType: 'json',
+                                        beforeSend: function () {
+                                            productsContainer.innerHTML = '<p>Yuklanmoqda...</p>';
+                                            productsContainer.style.display = 'block';
+                                        },
+                                        success: function (data) {
+                                            if (data.data.length > 0) {
+                                                let html = '';
+                                                data.data.forEach(product => {
+                                                    let pr_price = product.price || 0;
+                                                    html += `
+                                                        <div class="product-item add-to-cart"
+                                                            data-id="${product.id}"
+                                                            data-name="${product.name}"
+                                                            data-pack="${product.pack}"
+                                                            data-price="${pr_price}">
+                                                            <div>
+                                                                <img src="${product.image || '/static/default.png'}" alt="${product.name}">
+                                                            </div>
+                                                            <div>
+                                                                <strong>${product.name}</strong><br>
+                                                                <div style="display:flex; gap:10px">
+                                                                    <p>Narx: ${pr_price} ${shop_valyuta_name}</p>
+                                                                    <p>Pachka: ${product.pack}</p> 
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    `;
+                                                });
+                                                productsContainer.innerHTML = html;
+
+                                                document.querySelectorAll(`#group-products-${groupId} .add-to-cart`).forEach(item => {
+                                                    item.addEventListener('click', function () {
+                                                        const productId = this.dataset.id;
+                                                        const productName = this.dataset.name;
+                                                        const pack = parseFloat(this.dataset.pack) || 1;
+                                                        const price = parseFloat(this.dataset.price) || 0;
+
+                                                        const existingRow = $(`#row_${productId}`).first();
+                                                        if (existingRow.length > 0) {
+                                                            const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
+                                                            const newQty = currentQty + 1;
+                                                            existingRow.find('.quantity-input').val(newQty);
+                                                            updateCartItem(existingRow, add=true, quantity_add=1);
+                                                            updatePackFromQuantity(existingRow.find('.quantity-input'));
+                                                        } else {
+                                                            addProductToTable(productId, productName, pack, price, 1);
+                                                        }
+                                                        $('#productSearchInput').val('');
+                                                    });
+                                                });
+                                            } else {
+                                                productsContainer.innerHTML = '<p>Mahsulotlar topilmadi</p>';
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            productsContainer.innerHTML = `<p>Xatolik yuz berdi: ${error}</p>`;
+                                        }
+                                    });
+                                });
+                            });
+                        });
+                    </script>
+
                 </div>
                 <div class="widget-content widget-content-area br-6">
                     <div class="table-responsive mb-4 mt-4">
@@ -182,7 +600,6 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Maxsulot nomi</th>
-                                    <!-- <th>Shtrix kod</th> -->
                                     <th>Paket soni</th>
                                     <th>Paket</th>
                                     <th>Miqdori (dona)</th>
@@ -197,7 +614,6 @@
                                     <tr data-id="{{i.id}}" id="row_{{i.product.id}}">
                                         <td>{{ forloop.counter }}</td>
                                         <td class="product_name">{{ i.product.name }}</td>
-                                        <!-- <td>{{ i.product.barcode }}</td> -->
                                         <td>{{ i.product.pack }}</td>
                                         <td>
                                             <div class="input-group">
@@ -233,7 +649,6 @@
                                 <tr>
                                     <td>Jami</td>
                                     <td></td>
-                                    <!-- <td></td> -->
                                     <td></td>
                                     <td class="text-center" id="pack_total">{{ totals.total_pack|floatformat|intcomma }}</td>
                                     <td class="text-center" id="quantity_total">{{ totals.quantity|floatformat|intcomma }}</td>
@@ -265,16 +680,21 @@
                                 {% endfor %}
                             </div>
                             <br>
-
-
-                            <input type="hidden" name="id" value="{{shop.id}}">
-                            <label for="">Mijoz</label>
-                            <select class="form-control searchable" name="debtor" required>
-                                <option value=""></option>
-                                {% for i in customers %}
-                                    <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
-                                {% endfor %}
-                            </select>
+                            <input type="hidden" name="id" id="shop_id" value="{{shop.id}}">
+                            <div class="form-group">
+                                <label for="recipient-debtor" class="col-form-label">Mijoz</label>
+                                <div class="input-group">
+                                    <select class="form-control" id="mainSelectDebtor"  name="debtor" required>
+                                        <option value=""></option>
+                                        {% for i in customers %}
+                                            <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorModal" style="height: 45px;">+</button>
+                                    </div>
+                                </div>
+                            </div>
                             
                             {% if shop.debtor.fio != "Naqd" %}
                             <label for="">To'lov sanasi</label>
@@ -288,71 +708,194 @@
                                 {% endfor %}
                             </select>
                             {% endif %}
-
-                            <!-- <label for="">Filial</label>
-                            <select class="form-control searchable" name="call_center" required>
-                                <option value=""></option>
-                                {% for i in call_center %}
-                                    <option value="{{i.id}}" {% if shop.saler == i %}selected{% endif %}>{{ i }}</option>
-                                {% endfor %}
-                            </select> -->
+                         
 
                             <label for="">Filial</label>
-                            <select class="form-control searchable" name="filial" required>
+                            <select class="form-control searchable" name="filial" id="selectFilial" required>
                                 <option value=""></option>
                                 {% for i in filial %}
                                     <option value="{{i.id}}" {% if shop.filial == i or user.filial == i %}selected{% endif %}>{{ i.name }}</option>
                                 {% endfor %}
                             </select>
-                            <!-- <button style="width: 100%;" type="submit" class="btn btn-primary">Saqlash</button> -->
                             <br><hr style="color: black;">
 
                             <label for="">Jami summa</label>
                             <input type="text" class="form-control" id="all_total_2" name="all_total" value="{{ totals.total }}" disabled>
                             <br>
-                            <!-- <label for="">Naqd berildi</label>
-                            <input onclick="calculateRemaining()" type="text" class="form-control" id="naqd_summa" value="{{shop.total_pay}}" name="naqd_summa">
-                            
-                            <br><hr>
-                            <label for="">Nasiya {{ shop.valyuta.name }}</label>
-                            <input value="" type="text" class="form-control" id="nasiya_summa" name="nasiya_summa" disabled> -->
                             {% if shop.debtor.fio != "Naqd" %}
                             {% endif %}
-                        </form>
-                            <style>
-                                .discount-input-group {
-                                    display: flex;
-                                }
-                                .discount-toggle button {
-                                    border: 1px solid #ccc;
-                                    height: 38px;
-                                    background-color: #f2f2f2;
-                                    border-radius: 10px;
-                                    font-weight: bold;
-                                    min-width: 50px;
-                                }
-                                .discount-toggle button.active {
-                                    background-color: #007bff;
-                                    color: white;
-                                }
-                                .quick-discount button {
-                                    border: 1px solid #ccc;
-                                    border-radius: 20px;
-                                    background-color: #f2f2f2;
-                                    font-weight: bold;
-                                    padding: 6px 20px;
-                                    min-width: 70px;
-                                }
-                                .quick-discount button:hover {
-                                    background-color: #e0e0e0;
-                                }
-                            </style>
+                             </form>
+                            <div class="modal fade" id="debtorModal" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <form method="post" enctype="multipart/form-data" id="debtorForm">
+                                                {% csrf_token %}
+                                                <!-- <div class="form-group">
+                                                    <label for="recipient-debtor_type" class="col-form-label">Turi</label>
+                                                    <div class="input-group">
+                                                        <select name="type" id="recipient-debtor_type" class="form-control">
+                                                            <option value="">---------</option>
+                                                            {% for debtor_type in debtor_type %}
+                                                                <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorTypeModal">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                                <!-- <div class="form-group">
+                                                    <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
+                                                    <div class="input-group">
+                                                        <select name="teritory" id="recipient-teritory" class="form-control">
+                                                            <option value="">---------</option>
+                                                            {% for teritory in teritory %}
+                                                                <option value="{{ teritory.id }}">{{ teritory.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#teritoryModal">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                                <div class="form-group">
+                                                    <label class="col-form-label">Narx Turi</label>
+                                                    <div class="input-group">
+                                                        <select name="price_type" class="form-control" id="recipient-price_type">
+                                                            <option value="">---------</option>
+                                                            {% for price_type in price_type %}
+                                                                <option value="{{ price_type.id }}">{{ price_type.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#priceTypeModal">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- <div class="form-group">
+                                                    <label for="recipient-image" class="col-form-label">Rasm</label>
+                                                    <input type="file" class="form-control" id="recipient-image" name="image" >
+                                                </div> -->
+                                                <div class="form-group">
+                                                    <label for="recipient-fio" class="col-form-label">F.I.O</label>
+                                                    <input type="text" class="form-control" id="recipient-fio" name="fio" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-form-label">Telegram ID</label>
+                                                    <input type="text" class="form-control"  name="tg_id" oninput="filterTgID(this)" placeholder="ID bir xil bo‘lib qolmasin">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-phone1" class="col-form-label">Telefon</label>
+                                                    <input value="998" type="text" class="form-control" id="recipient-phone1" name="phone1" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-phone2" class="col-form-label">Telefon 2</label>
+                                                    <input value="998" type="text" class="form-control" id="recipient-phone2"  name="phone2" >
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal fade" id="debtorTypeModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form id="debtorTypeForm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Yangi Turi Qo‘shish</h5>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="text" name="name" class="form-control" placeholder="Turi nomi" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="modal fade" id="teritoryModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form id="teritoryForm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Yangi Teritoriya Qo‘shish</h5>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="text" name="name" class="form-control mb-2" placeholder="Teritoriya nomi" required>
+                                                <div class="input-group">
+                                                    <select name="region_id" id="regionSelect" class="form-control" required>
+                                                        <option value="">-- Region tanlang --</option>
+                                                        {% for region in regions %}
+                                                            <option value="{{ region.id }}">{{ region.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#regionModal">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="modal fade" id="regionModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form id="regionForm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Yangi Region Qo‘shish</h5>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="text" name="name" class="form-control mb-2" placeholder="Region nomi" required>
+                                                <input type="number" name="number" class="form-control" placeholder="Region raqami" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="modal fade" id="priceTypeModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <form id="priceTypeForm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Yangi Narx Turi Qo‘shish</h5>
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <input type="text" name="name" class="form-control" placeholder="Narx turi nomi" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+
                             <div class="row">
-                                <div class="col-md-10 discount-input-group">
-                                    <input type="number" id="discountInput" oninput="changeDiscount()" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
+                                <div class="col-md-8 discount-input-group">
+                                    <input type="number" id="discountInput"  oninput="changeDiscount()" class="form-control" placeholder="Chegirmani kiriting" style="border-radius: 10px; height: 38px;">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-danger" onclick="clearPerecent()">X</button>
                                 </div>
                                 <div class="col-md-2 discount-toggle d-flex justify-content-end">
-                                    <!-- <button id="percentBtn" class="me-1 active">%</button> -->
                                     <button id="uzsBtn">{{shop_valyuta_name}}</button>
                                 </div>
                             </div>
@@ -361,27 +904,13 @@
                                 <div class="col-auto">
                                     <button id="disc_button" style="display: none;">0%</button>
                                 </div>
-                                <!-- <div class="col-auto">
-                                    <button onclick="setDiscount(30)">30%</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button onclick="setDiscount(50)">50%</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button onclick="setDiscount(75)">75%</button>
-                                </div> -->
                             </div>
                          <script>
-
-
-
-                            // const percentBtn = document.getElementById('percentBtn');
                             const uzsBtn = document.getElementById('uzsBtn');
                             const discountInput = document.getElementById('discountInput');
                             const all_total = document.getElementById('all_total');
                             const all_total_two = document.getElementById('all_total_2');
                             const disc_button = document.getElementById('disc_button');
-
                             function safeParse(text) {
                                 try {
                                     let cleaned = String(text).replace(/\s/g, '');
@@ -392,26 +921,10 @@
                                     return 0;
                                 }
                             }
-                            
-                            // percentBtn.addEventListener('click', () => {
-                            //     percentBtn.classList.add('active');
-                            //     uzsBtn.classList.remove('active');
-                            //     discountInput.value = '';
-                            //     changeDiscount(); 
-
-                            // });
-                            // uzsBtn.addEventListener('click', () => {
-                            //     uzsBtn.classList.add('active');
-                            //     percentBtn.classList.remove('active');
-                            //     discountInput.value = '';
-                            //     changeDiscount(); 
-                            // });
-                            // function setDiscount(value) {
-                            //     discountInput.value = value;
-                            //     percentBtn.classList.add('active');
-                            //     uzsBtn.classList.remove('active');
-                            //     changeDiscount(); 
-                            // }
+                            function clearPerecent() {
+                                document.getElementById('discountInput').value = ''
+                                changeDiscount();
+                            }
                             function changeDiscount() {
                                 const val = parseFloat(discountInput.value) || 0;
                                 const hidden_skidka = document.getElementById('hidden_skidka');
@@ -462,214 +975,6 @@
                             </div>
                             
                             <div class="row">
-                                <style>
-                                    .method-box {
-                                        display: flex;
-                                        gap: 10px;
-                                        align-items: center;
-                                        padding: 10px;
-                                        background-color: white !important;
-                                        border-radius: 5px;
-                                        box-shadow: 2px 5px 5px rgba(0,0,0,0.1) !important;
-                                        transition: all 0.3s ease;
-                                        border: 1px solid rgba(0, 0, 0, 0.129) !important;
-                                    }
-                                    .method-box:hover {
-                                        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-                                    }
-                                    .method-box i {
-                                        color: #007bff !important;
-                                        font-size: 1.2em;
-                                    }
-                                    .method-box p {
-                                        margin: 0;
-                                        flex-grow: 1;
-                                        font-weight: 500;
-                                    }
-                                    .toggle-input {
-                                        color: #007bff !important;
-                                        background-color: white !important;
-                                        border: 1px solid #ffffff !important;
-                                        width: 25px;
-                                        height: 25px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        padding: 0;
-                                        cursor: pointer;
-                                        transition: all 0.2s ease;
-                                    }
-                                    .toggle-input i {
-                                        font-size: 1.2em;
-                                    }
-                                    .input-fields {
-                                        background-color: #f8f9fa;
-                                        padding: 15px;
-                                        border-radius: 5px;
-                                        margin-top: 10px;
-                                        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-                                    }
-                                    .remove-field {
-                                        cursor: pointer;
-                                        font-size: 1.8em;
-                                        color: #dc3545;
-                                        background: none;
-                                        border: none;
-                                    }
-                                    .payment-table {
-                                        width: 100%;
-                                        border-collapse: collapse;
-                                    }
-                                    .payment-table th, .payment-table td {
-                                        border: 1px solid #ddd;
-                                        padding: 8px;
-                                        text-align: left;
-                                    }
-                                    .payment-table th {
-                                        background-color: #f8f9fa;
-                                    }
-                                    .card-balance {
-                                        text-align: right;
-                                        margin-top: 10px;
-                                        font-style: italic;
-                                        color: #666;
-                                    }
-                                    .inputkassa {
-                                        margin-top: 20px;
-                                        border-top: 1px solid #eee;
-                                        padding-top: 20px;
-                                    }
-                                    .input-box {
-                                        display: none;
-                                        position: relative;
-                                        border: 1px solid rgba(0, 0, 0, 0.401);
-                                        padding: 10px;
-                                        border-radius: 8px;
-                                        background-color: #fff;
-                                        margin-top: 10px;
-                                        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-                                        transition: border 0.3s ease;
-                                        position: relative;
-                                        z-index: 10;
-                                    }
-                                    .input-box:hover {
-                                        border: 1px solid #007bff !important;
-                                    }
-                                    .box-header {
-                                        display: flex;
-                                        justify-content: space-between;
-                                        align-items: center;
-                                        font-weight: bold;
-                                        padding-bottom: 8px;
-                                        border-bottom: 1px solid #ddd;
-                                    }
-                                    .box-body {
-                                        margin-top: 10px;
-                                    }
-                                    .payment-input {
-                                        width: 100%;
-                                        border: 1px solid rgba(0, 0, 0, 0.277) !important;
-                                    }
-                                    .receipt-wrapper {
-                                        width: 100%;
-                                        background: #fff;
-                                        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                                        border-left: 1.8px solid rgba(192, 192, 192, 0.758);
-                                        border-right: 1.8px solid rgba(192, 192, 192, 0.758);
-                                        overflow: hidden; 
-                                    }
-                                    .zigzag {
-                                        width: calc(100% + 3.6px);
-                                        height: 15px;
-                                        margin-left: -1.8px; 
-                                        background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 10" xmlns="http://www.w3.org/2000/svg"><polyline points="0,10 5,0 10,10 15,0 20,10 25,0 30,10 35,0 40,10 45,0 50,10 55,0 60,10 65,0 70,10 75,0 80,10 85,0 90,10 95,0 100,10" fill="white" stroke="lightgray" /></svg>') repeat-x;
-                                        background-size: contain;
-                                    }
-                                    .receipt {
-                                        padding: 20px;
-                                        font-size: 13px;
-                                        color: #000 !important;
-                                    }
-                                    .bold {
-                                        font-weight: bold;
-                                    }
-                                    .lines {
-                                        display: flex;
-                                        justify-content: space-between;
-                                        margin: 3px 0;
-                                    }
-                                    hr {
-                                        border: none;
-                                        border-top: 1px solid #bbb;
-                                        margin: 8px 0;
-                                    }
-                                    .section {
-                                        margin-bottom: 8px;
-                                    }
-                                    .barcode {
-                                        height: 50px;
-                                        width: 100%;
-                                        background: repeating-linear-gradient(
-                                            to right,
-                                            #000 0px,
-                                            #000 2px,
-                                            #fff 2px,
-                                            #fff 4px
-                                        );
-                                        margin: 15px 0;
-                                    }
-                                    .center {
-                                        text-align: center;
-                                        font-weight: bold;
-                                        font-size: 14px;
-                                    }
-                                    .item-title {
-                                        font-weight: bold;
-                                        margin-bottom: 3px;
-                                    }
-                                    .subline {
-                                        display: flex;
-                                        justify-content: space-between;
-                                        font-size: 12px;
-                                        margin-left: 10px;
-                                    }
-                                    .qarz-row {
-                                        font-weight: bold;
-                                        color: #dc3545;
-                                        border-top: 1px dashed #ccc;
-                                        border-bottom: 1px dashed #ccc;
-                                        padding: 5px 0;
-                                        margin: 5px 0;
-                                        background-color: #fff3f3;
-                                    }
-                                    .qarz-row span {
-                                        font-size: 14px;
-                                    }
-                                    .summary-card {
-                                        background: #f8f9fa;
-                                        border-radius: 8px;
-                                        padding: 15px;
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                                        margin-bottom: 20px;
-                                    }
-                                    .summary-title {
-                                        font-weight: bold;
-                                        margin-bottom: 10px;
-                                        font-size: 16px;
-                                    }
-                                    .summary-value {
-                                        font-size: 18px;
-                                        font-weight: bold;
-                                    }
-                                    .summary-value.total {
-                                        color: green;
-                                    }
-                                    .input-box.has-value {
-                                        border: 1px solid #28a745 !important;
-                                        background-color: #f8fff8;
-                                    }
-                                </style>
-                                
                                 <div class="col-md-3">
                                     <div class="receipt-wrapper">
                                         <div class="zigzag"></div>
@@ -697,8 +1002,77 @@
                                         </div>
                                         <div class="zigzag"></div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-12 text-center mt-3">
+                                            <button class="btn btn-primary" id="saveAsPngBtn">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+
+                                        <style>
+                                        .zigzag-top, .zigzag-bottom {
+                                            height: 15px;
+                                            background: 
+                                                linear-gradient(135deg, #000 25%, transparent 25%) -10px 0,
+                                                linear-gradient(225deg, #000 25%, transparent 25%) -10px 0,
+                                                linear-gradient(315deg, #000 25%, transparent 25%),
+                                                linear-gradient(45deg, #000 25%, transparent 25%);
+                                            background-size: 20px 20px;
+                                            margin: 0 -1px;
+                                            width: calc(100% + 2px);
+                                        }
+                                        .zigzag-top {
+                                            margin-bottom: 10px;
+                                        }
+                                        .zigzag-bottom {
+                                            margin-top: 10px;
+                                        }
+                                        .receipt-print {
+                                            background: white;
+                                            padding: 15px;
+                                            border-left: 1px dashed #000;
+                                            border-right: 1px dashed #000;
+                                            width: 300px;
+                                            margin: 0 auto;
+                                        }
+                                        </style>
+
+                                        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+                                        <script>
+                                        document.getElementById('saveAsPngBtn').addEventListener('click', function() {
+                                            const printDiv = document.createElement('div');
+                                            printDiv.className = 'receipt-print-container';
+                                            printDiv.style.position = 'absolute';
+                                            printDiv.style.left = '-9999px';
+                                            printDiv.style.width = '302px'; 
+                                            
+                                            const receiptClone = document.querySelector('.receipt-wrapper').cloneNode(true);
+                                            
+                                            receiptClone.style.width = '300px';
+                                            receiptClone.style.margin = '0';
+                                            receiptClone.style.boxShadow = 'none';
+                                            receiptClone.style.border = 'none';
+                                            
+                                            printDiv.appendChild(receiptClone);
+                                            document.body.appendChild(printDiv);
+                                            
+                                            html2canvas(printDiv, {
+                                                scale: 2,
+                                                logging: false,
+                                                useCORS: true,
+                                                allowTaint: true,
+                                                backgroundColor: 'white'
+                                            }).then(canvas => {
+                                                const link = document.createElement('a');
+                                                link.download = 'chek-' + new Date().toISOString().slice(0, 10) + '.png';
+                                                link.href = canvas.toDataURL('image/png');
+                                                link.click();
+                                                document.body.removeChild(printDiv);
+                                            });
+                                        });
+                                        </script>
+                                    </div>
                                 </div>
-                                
                                 <div class="col-md-9">
                                     <div class="row mb-4">
                                         <div class="col-md-4">
@@ -709,7 +1083,6 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="summary-card">
-                                                
                                             </div>
                                         </div>
                                         <div class="col-md-4">
@@ -719,13 +1092,11 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div class="row">
                                         <div class="col-12">
                                             <h4>To'lov usullari</h4>
                                             <hr>
                                         </div>
-                                        
                                         {% for mer in kassa %}
                                         <div class="col-md-3 mb-3">
                                             <div class="payment-method" data-kassa-id="{{ mer.kassa.id }}" data-valyuta-id="{{ mer.valyuta.id }}">
@@ -788,7 +1159,7 @@
                                     </button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row mb-3">
+                                    <div class="row mb-3" id="customer_info">
                                         {% for i in customer_info.valyuta %}
                                         <div class="col-4">
                                             <label>Faol qarz ({{i.name}})</label>
@@ -804,8 +1175,15 @@
                                         <label>Mijoz</label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fa fa-user"></i></span>
-                                            <input type="text" class="form-control" value="{{shop.debtor}}" readonly 
-                                                style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
+                                            <select class="form-control" id="modalSelectDebtor" name="debtor" required style="border: 1px solid rgba(0, 0, 0, 0.214);font-weight: bold; background-color: #fff; opacity: 1; color: #000;">
+                                                <option value=""></option>
+                                                {% for i in customers %}
+                                                    <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorModal" style="height: 45px;">+</button>
+                                            </div>
                                         </div>
                                         <small class="text-muted">Balans: 0 {{shop_valyuta_name}}</small>
                                     </div>
@@ -835,7 +1213,6 @@
                     </div>
 
                     <script>
-                        console.log(document.getElementById('dollar-kurs-base'))
                         const shop_valyuta_name = document.getElementById('shop_valyuta_name').textContent
 
                         const fullscreenPaymentBtn = document.getElementById('fullscreenPaymentBtn');
@@ -963,9 +1340,21 @@
                                     this.totalJami = updateReceiptProducts();
                                     this.totalToPay = this.totalJami;
                                     
+                                    // Avvalgi to'lov usullarini tozalash
+                                    this.paymentMethods = {};
+                                    
+                                    // Barcha to'lov usullarini ishga tushirish
                                     document.querySelectorAll('.payment-method').forEach(method => {
                                         const methodName = method.querySelector('p').textContent.trim();
                                         this.paymentMethods[methodName] = 0;
+                                        
+                                        // Agar input box ochiq bo'lsa, unga to'lov summasi yoziladi
+                                        const inputBox = method.querySelector('.input-box');
+                                        if (inputBox) {
+                                            const input = inputBox.querySelector('input');
+                                            input.value = this.totalToPay.toFixed(2);
+                                            this.updateTolash(input);
+                                        }
                                     });
                                     
                                     this.paymentMethods['Qarz'] = 0;
@@ -1267,7 +1656,52 @@
                                     return true;
                                 }
                             };
-                            
+                           document.addEventListener('DOMContentLoaded', function() {
+                                document.querySelectorAll('.method-box').forEach(box => {
+                                    box.addEventListener('click', function(e) {
+                                        if (e.target.closest('.toggle-input')) return;
+                                        
+                                        const inputBox = this.nextElementSibling;
+                                        
+                                        if (!inputBox || !inputBox.classList.contains('input-box')) return;
+                                        
+                                        document.querySelectorAll('.input-box').forEach(b => {
+                                            if (b !== inputBox) b.style.display = 'none';
+                                        });
+                                        
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                    });
+                                });
+
+                                document.querySelectorAll('.toggle-input').forEach(button => {
+                                    button.addEventListener('click', function(e) {
+                                        e.stopPropagation(); 
+                                        
+                                        const methodBox = this.closest('.method-box');
+                                        const inputBox = methodBox.nextElementSibling;
+                                        
+                                        if (!inputBox || !inputBox.classList.contains('input-box')) return;
+                                        
+                                        document.querySelectorAll('.input-box').forEach(b => {
+                                            if (b !== inputBox) b.style.display = 'none';
+                                        });
+                                        
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                        
+                                        if (inputBox.style.display === 'block') {
+                                            inputBox.querySelector('input').focus();
+                                        }
+                                    });
+                                });
+
+                                document.addEventListener('click', function(e) {
+                                    if (!e.target.closest('.input-box') && !e.target.closest('.method-box')) {
+                                        document.querySelectorAll('.input-box').forEach(box => {
+                                            box.style.display = 'none';
+                                        });
+                                    }
+                                });
+                            });
                             document.getElementById('submit-payment').addEventListener('click', function() {
                                 paymentSystem.submitPayments({{ shop.id }});
                             });
@@ -1276,10 +1710,7 @@
 
 
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-                    <!-- <div class="col-md-4">
-                        <br>
-                        <a style="width: 100%;" class="btn btn-primary" >Yakunlash</a>
-                    </div> -->
+
                     <div class="col-md-6">
                         <br>
                         <button type="button" class="btn btn-success" onclick="fetchReceipt()" style="width: 100%;">CHEK V1</button>
@@ -1296,7 +1727,6 @@
     </div>
 </div>
 
-<!-- Add New Product Modal -->
 <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <form id="newProductForm" class="modal-content" method="post">
@@ -1478,44 +1908,72 @@ document.addEventListener('DOMContentLoaded', function () {
         dropdown.classList.add('show');
     });
 
-    // Tashqariga bosilganda dropdown yopish
     document.addEventListener('click', function (e) {
         if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.remove('show');
         }
     });
 
-    // Qidiruv filtrlash
     searchInput.addEventListener('input', function () {
-        if (!searchInput.value) {return}
         const filter = this.value.toLowerCase();
         const items = dropdown.querySelectorAll('.select-product-item');
+        let matchCount = 0;
+        let firstMatch = null;
+        
         items.forEach(item => {
             const text = item.textContent.toLowerCase();
-            item.parentElement.style.display = text.includes(filter) ? '' : 'none';
+            if (text.includes(filter)) {
+                item.parentElement.style.display = '';
+                matchCount++;
+                if (!firstMatch) firstMatch = item;
+            } else {
+                item.parentElement.style.display = 'none';
+            }
         });
+        
+        if (matchCount > 0) {
+            dropdown.classList.add('show');
+        } else {
+            dropdown.classList.remove('show');
+        }
     });
 
-    // Mahsulot tanlash
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const filter = this.value.toLowerCase();
+            const items = dropdown.querySelectorAll('.select-product-item');
+            let exactMatch = null;
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    if (!exactMatch) exactMatch = item;
+                }
+            });
+            
+            if (exactMatch) {
+                exactMatch.click();
+            } else {
+                showAlert("Mos keladigan mahsulot topilmadi", "warning");
+            }
+        }
+    });
+
     dropdown.querySelectorAll('.select-product-item').forEach(function (item) {
         item.addEventListener('click', function (e) {
             e.preventDefault();
             const value = this.dataset.value;
             const text = this.innerText.split('\n')[0];
 
-            // Inputga chiqarish
             searchInput.value = text;
 
-            // Eski value bilan solishtirish
             const oldValue = select.value;
 
-            // Har holda select qiymatini o'zgartirish
             select.value = value;
 
-            // Agar bir xil bo‘lsa ham change ishga tushishi uchun
             $('#products').trigger('change');
 
-            // Dropdownni yopish
             dropdown.classList.remove('show');
             $('#products').val('')
         });
@@ -1566,68 +2024,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Sahifa yuklanganda narxlarni yangilash
     updateAllPrices();
 
-    // Narx turi va valyuta o'zgarganda narxlarni yangilash
     priceTypeRadios.forEach(radio => radio.addEventListener('change', updateAllPrices));
     valyutaSelect.addEventListener('change', updateAllPrices);
 });
 </script>
-<!-- <script>
-$(document).ready(function() {
-    const $select = $('#products').selectize({
-        normalize: true,
-        placeholder: "Mahsulotni tanlang",
-        searchField: ['text'],
-        render: {
-            option: function(item) {
-                const itemValue = item.value;
-                const [pr_id, pr_name, quantity, barcode, pack, price] = itemValue.split('&');
 
-                return `
-                    <div class="p-1">
-                        <div></div>
-                        <div><strong>🛒 ${pr_name}</strong></div>
-                        <div class="d-flex flex-wrap small text-muted gap-2">
-                            <div>📦 Miqdor: ${quantity}</div>
-                            <div>🏷️ Shtrix: ${barcode}</div>
-                            <div>📦 Paket: ${pack}</div>
-                            <div>🏬 Qoldiq: ${quantity}</div>
-                            <div>💰 Narx: ${price}</div>
-                        </div>
-                    </div>
-                `;
-            },
-            item: function(item) {
-                const itemValue = item.text;
-                const [pr_id, pr_name] = itemValue.split('&');
-                return `<div>🛒 ${pr_name}</div>`;
-            }
-        }
-    });
-
-    const products_input = $select[0].selectize;
-
-    // Masalan, tanlash:
-    // products_input.setValue("1&Shirinlik&10&123456&1&5000");
-});
-</script> -->
-
-    <script>
-        function products_focus() {
-            // const selectize = products_input
-        // selectize.focus()
-        }
-        products_focus()
-    </script>
 <script>
-    // Format number with commas
     function formatNumber(num) {
         return new Intl.NumberFormat("en-US").format(num);
     }
 
-    // Show alert message
     const showAlert = (message, type) => {
         const alertElement = $(`
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -1643,7 +2051,6 @@ $(document).ready(function() {
         }, 3000); 
     };
 
-    // Update quantity when pack changes
     function updateQuantityFromPack(input) {
         const row = $(input).closest('tr');
         const packValue = parseFloat($(input).val()) || 0;
@@ -1655,7 +2062,6 @@ $(document).ready(function() {
         updateReceiptProducts();
     }
 
-    // Update pack when quantity changes
     function updatePackFromQuantity(input) {
         const row = $(input).closest('tr');
         const quantity = parseFloat($(input).val()) || 0;
@@ -1667,7 +2073,6 @@ $(document).ready(function() {
         updateReceiptProducts();
     }
 
-    // Update price when changed
     function updatePrice(input) {
         const row = $(input).closest('tr');
         const newPrice = parseFloat($(input).val()) || 0;
@@ -1680,7 +2085,6 @@ $(document).ready(function() {
         updateReceiptProducts();
     }
 
-    // Update cart item on server
     function updateCartItem(row) {
         const cart_id = row.data('id');
         let quantity = parseFloat(row.find('.quantity-input').val()) || 0;
@@ -1699,12 +2103,6 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    // console.log(pr_name)
-
-                    // if (add == true && response.success) {
-                    //     const newQty = currentQty + 1;
-                    //     existingRow.find('.quantity-input').val(newQty);
-                    // }
                     row.find('.total').text(formatNumber(total.toFixed(2)));
                     row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
@@ -1718,7 +2116,6 @@ $(document).ready(function() {
                     showAlert(response.message, "danger");
                     const existingRow = $(`#row_${pr_id}`).first();
                     const currentQty = parseFloat(existingRow.find('.quantity-input').val()) || 0;
-                    console.log(response.from_quantity, 'iiiiiii')
                     if (response.from_quantity) {
                         existingRow.find('.quantity-input').val(response.max_quantity);
                     }
@@ -1730,7 +2127,6 @@ $(document).ready(function() {
         });
     }
 
-    // Update totals in footer
     function updateTotals() {
         let totalQuantity = 0;
         let totalPack = 0;
@@ -1754,7 +2150,6 @@ $(document).ready(function() {
         calculateRemaining();
     }
 
-    // Calculate remaining payment
      function calculateRemaining() {
          const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
          const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
@@ -1766,9 +2161,14 @@ $(document).ready(function() {
         const totalJami = parseFloat(document.getElementById('all_total_2').value.replace(/,/g, '')) || 0;
         const totalPaid = Object.values(paymentSystem.paymentMethods).reduce((sum, amount) => sum + amount, 0);
         const remaining = totalJami - totalPaid;
+        const product_name = document.querySelectorAll('.product_name').length
         
-        if (remaining > 1) { // Allowing small rounding differences
-            // showAlert(`To'lov etarli emas! Qolgan summa: ${formatNumber(remaining)} ${shop_valyuta_name}`, "warning");
+        if (product_name == 0) {
+            showAlert(`Maxsulot mavjud emas`, "warning");
+            return false
+        }
+
+        if (remaining > 1) { 
             return false;
         }
         return true;
@@ -1796,7 +2196,6 @@ $(document).ready(function() {
         });
     }
 
-    // Check if product already exists in cart
     function productExistsInCart(productId) {
         let exists = false;
         $("tbody tr").each(function() {
@@ -1812,11 +2211,9 @@ $(document).ready(function() {
     // Add product directly to table when selected
     $('#products').on('change', function() {
         const itemValue = $(this).val();
-        console.log(itemValue)
         if (!itemValue) return;
         
         const [pr_id, pr_name, quantity, barcode, pack, price] = itemValue.split('&');
-        console.log(pr_id, 'oooooo')
         const price_type = $('input[name="type_price"]:checked').val();
         const valyuta = $('#valyuta_input').val()
         if (pr_id) {
@@ -1842,7 +2239,7 @@ $(document).ready(function() {
             } else {
             $.get("{% url 'check_price' %}", { product: pr_id, type: price_type, valyuta: valyuta }, function(data) {
                 const price = parseFloat(data['price']) || 0;
-                addProductToTable(pr_id, pr_name, barcode, pack, price, 1);
+                addProductToTable(pr_id, pr_name, pack, price, 1);
 
                 // updateCartItem(existingRow, add=true, quantity_add=1);
             });
@@ -1856,18 +2253,13 @@ $(document).ready(function() {
             }
         }
         
-        // Reset select
-        // $('#products').val('');
-        // $('#products').selectize()[0].selectize.clear();
-        //products_focus()
+      
     });
 
-    // Add product to table
-    function addProductToTable(productId, productName, barcode, pack, price, quantity = 1) {
+    function addProductToTable(productId, productName, pack, price, quantity = 1) {
         const orderId = $("#order_id").val();
         const totalPack = quantity / parseFloat(pack);
         
-        // Check available quantity
         $.get("{% url 'check_product_quantity' %}", { product_id: productId }, function(qtyData) {
             const availableQty = parseFloat(qtyData.quantity) || 0;
             if (availableQty < quantity) {
@@ -1887,7 +2279,6 @@ $(document).ready(function() {
                 },
                 success: function(response) {
                     if (response.success) {
-                        // showAlert(response.message, "success");
                         const newRow = `
                             <tr data-id="${response.cart_id}" id="row_${response.product_id}">
                                 <td>${$("tbody tr").length + 1}</td>
@@ -1931,17 +2322,7 @@ $(document).ready(function() {
                         const addedRow = $("tbody tr").last();
                         const quantityInput = addedRow.find('.quantity-input')[0];
                         updatePackFromQuantity(quantityInput);
-
-
-
-                        // updatePackFromQuantity(existingRow.find('.quantity-input'));
-                        // Add the new product to selectize dropdown
-                        // const selectize = $('#products')[0].selectize;
-                        // products_input.addOption({
-                        //     value: `${productId}&${productName}&1&${barcode}&${pack}`,
-                        //     text: `${productName} - ${barcode}`
-                        // });
-                        // products_input.refreshOptions(false);
+                       
                         toggleValyutaDisabled();
                     } else {
                         showAlert(response.message, "danger");
@@ -1954,7 +2335,6 @@ $(document).ready(function() {
         });
     }
 
-    // Add new product via modal
     $('#newProductForm').on('submit', function(e) {
         e.preventDefault();
         const form = $(this);
@@ -1966,11 +2346,9 @@ $(document).ready(function() {
             data: form.serialize(),
             success: function(response) {
                 if (response.success) {
-                    // showAlert(response.message, "success");
                     $('#new_product_add').modal('hide');
                     form[0].reset();
                     
-                    // Add the new product to cart
                     $.get("{% url 'check_price' %}", { 
                         product: response.product_id, 
                         type: $('input[name="type_price"]:checked').val(),
@@ -1980,7 +2358,6 @@ $(document).ready(function() {
                         addProductToTable(
                             response.product_id, 
                             response.product_name, 
-                            response.barcode, 
                             response.pack, 
                             price,
                             quantity
@@ -1996,7 +2373,6 @@ $(document).ready(function() {
         });
     });
 
-    // Delete product from cart
     $(document).on("click", ".product-delete", function() {
         const tr_item = $(this).closest("tr");
         const cart_id = tr_item.data("id");
@@ -2006,7 +2382,6 @@ $(document).ready(function() {
             type: "POST",
             success: function(response) {
                 if (response.success) {
-                    // showAlert(response.message, "success");
                     tr_item.remove();
                     updateTotals();
                     if (fullscreenPayment.style.display === 'block') {
@@ -2028,7 +2403,6 @@ $(document).ready(function() {
          calculateRemaining();
      });
 
-    // Generate receipt
     async function fetchReceipt() {
         try {
             const response = await fetch('/create_check/' + "{{ shop.id }}");
@@ -2153,11 +2527,9 @@ $(document).ready(function() {
         receiptWindow.print();
     }
 
-    // Initialize selectize
     $(document).ready(function() {
             updateReceiptProducts();
 
-        // Initialize DataTable
         $('#zero-config').DataTable({
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
             buttons: {
@@ -2188,70 +2560,153 @@ $(document).ready(function() {
 
 
     <script>
-$(document).ready(function () {
-    function handleFormSubmit(formId, url, selectId, modalId) {
-        $(formId).submit(function (e) {
-            e.preventDefault();
-            const formData = $(this).serialize();
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
-                success: function (data) {
-                    $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                    $(modalId).modal('hide');
-                    $(formId)[0].reset();
-                },
-                error: function () {
-                    alert("Xatolik yuz berdi!");
-                }
+    
+    const qarz_shop_debtor = document.getElementById('qarz_shop_debtor')
+
+    $(document).ready(function () {
+        function handleFormSubmit(formId, url, selectId, modalId) {
+            $(formId).submit(function (e) {
+                e.preventDefault();
+                const formDatas = $(this).serialize();
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formDatas + '&csrfmiddlewaretoken={{ csrf_token }}',
+                    success: function (data) {
+                        $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
+                        $(modalId).modal('hide');
+                        $(formId)[0].reset();
+                        if (data.fio) {
+                            qarz_shop_debtor.value = data.fio
+                            changeInfo(data.id);
+
+                        }
+                    },
+                    error: function () {
+                        alert("Xatolik yuz berdi!");
+                    }
+                });
             });
+        }
+
+        handleFormSubmit('#deliverForm', '{% url "create_deliver_new" %}', '#deliverSelect', '#deliverModal');
+        handleFormSubmit('#measurementForm', '{% url "create_measurement" %}', '#measurementSelect', '#measurementModal');
+        handleFormSubmit('#groupForm', '{% url "create_group" %}', '#groupSelect', '#groupModal');
+        handleFormSubmit('#debtorTypeForm', '{% url "create_debtor_type" %}', '#recipient-debtor_type', '#debtorTypeModal');
+        handleFormSubmit('#teritoryForm', '{% url "create_teritory" %}', '#recipient-teritory', '#teritoryModal');
+        handleFormSubmit('#priceTypeForm', '{% url "create_price_type" %}', '#recipient-price_type', '#priceTypeModal');
+        handleFormSubmit('#regionForm', '{% url "create_region" %}', '#regionSelect', '#regionModal');
+        handleFormSubmit('#debtorForm', '{% url "create_debtor" %}', '#mainSelectDebtor, #modalSelectDebtor', '#debtorModal');
+
+    });
+    $(document).ready(function () {
+    $('#mainSelectDebtor, #modalSelectDebtor').on('change', function() {
+        const selectedValue = $(this).val();
+        const selectedText = $(this).find('option:selected').text();
+        
+        $('#mainSelectDebtor, #modalSelectDebtor').val(selectedValue);
+        
+        $.ajax({
+            url: "{% url 'edit_shop_ajax' shop.id %}",
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            data: {
+                'debtor': selectedValue
+            },
+            success: function () {
+                changeInfo(selectedValue);
+            },
+            error: function () {
+                console.error("Xatolik yuz berdi");
+            }
+        });
+    });
+
+    // Qolgan funksiyalar...
+});
+    $('#selectFilial').on('change', function() {
+        const select_debtor_value = $('#selectFilial').val();
+
+        $.ajax({
+            url: "{% url 'edit_shop_ajax' shop.id %}",
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            data: {
+                'filial': select_debtor_value
+            },
+            success: function () {
+            },
+            error: function () {
+            }
+        });
+    });
+    function changeInfo(debtor_id) {
+        console.log(111133222)
+        const customer_info = document.getElementById('customer_info');
+        customer_info.innerHTML = ''; 
+        $.ajax({
+            url: `/ajax_customer_info/${debtor_id}`,
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function (response) {
+                const data = response.data;
+                let html = '';
+
+                data.valyuta.forEach(i => {
+                    html += `
+                        <div class="col-4">
+                            <label>Faol qarz (${i.name})</label>
+                            <h6>${Number(i.summa).toLocaleString()}</h6>
+                        </div>
+                    `;
+                });
+
+                if (data.last_pay) {
+                    html += `
+                        <div class="col-3">
+                            <label>Oxirgi to'lov</label>
+                            <h6>${data.last_pay}</h6>
+                        </div>
+                    `;
+                }
+
+                customer_info.innerHTML = html;
+            },
+            error: function () {
+                customer_info.innerHTML = '<div class="col-12">Xatolik yuz berdi</div>';
+            }
         });
     }
 
-    // Yangi obyektlar uchun AJAX
-    handleFormSubmit('#deliverForm', '{% url "create_deliver_new" %}', '#deliverSelect', '#deliverModal');
-    handleFormSubmit('#measurementForm', '{% url "create_measurement" %}', '#measurementSelect', '#measurementModal');
-    handleFormSubmit('#groupForm', '{% url "create_group" %}', '#groupSelect', '#groupModal');
-});
 </script>
 
 
+
 <script>
-$(document).ready(function() {
-    // $('#products').select2({
-    //     templateResult: formatProduct,
-    //     templateSelection: formatProductSelection,
-    //     width: '100%',
-    //     placeholder: "Mahsulotni tanlang"
-    // });
-
-//     function formatProduct (state) {
-//         if (!state.id) return state.text;
-
-//         const name = $(state.element).data('name');
-//         const barcode = $(state.element).data('barcode');
-//         const season = $(state.element).data('season');
-//         const barcodes = $(state.element).data('barcodes');
-//         const price = $(state.element).data('price');
-
-//         const $state = $(`
-//             <div class="d-flex flex-column">
-//                 <div><strong>${name}</strong></div>
-//                 <div class="d-flex justify-content-between small text-muted">
-//                     <div>Barcode: ${barcode}</div>
-//                     <div>Season: ${season}</div>
-//                     <div>Extra: ${barcodes}</div>
-//                     <div>Price: ${price}</div>
-//                 </div>
-//             </div>
-//         `);
-//         return $state;
-//     }
-
-//     function formatProductSelection (state) {
-//         return state.text;
-//     }
-// });
+    function filterTgID(input) {
+        const tg_id = input.value;
+        $.ajax({
+            url: "{% url 'tg_id_filter' %}",
+            type: "POST",
+            data: { 'tg_id': tg_id },
+            success: function(response) {
+                if (response.data === true) {
+                    showAlert("Bu Telegram ID allaqachon mavjud!", "danger");
+                    $(input).addClass('is-invalid');
+                } else {
+                    $(input).removeClass('is-invalid');
+                }
+            },
+            error: function () {
+                showAlert("Serverda xatolik yuz berdi", "danger");
+            }
+        });
+    }
 </script>
 {% endblock js %}

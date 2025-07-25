@@ -288,6 +288,7 @@ class UserProfile(models.Model):
 class Groups(models.Model):
     name = models.CharField(max_length=255)
     number = models.PositiveIntegerField(default=0)
+    image = models.FileField(upload_to='product_grop/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.name
@@ -1425,7 +1426,7 @@ class DebtorType(models.Model):
         return self.name
 
 class Debtor(models.Model):
-    tg_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    tg_id = models.CharField(max_length=255, null=True, blank=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     type = models.ForeignKey(DebtorType, on_delete=models.PROTECT, blank=True, null=True)
     teritory = models.ForeignKey('Teritory', on_delete=models.PROTECT, blank=True, null=True)
@@ -2451,6 +2452,7 @@ class MobilPayment(models.Model):
     flex_price = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     is_status = models.BooleanField(default=True)
     
+
 class DesktopKassa(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
     kassa_name = models.CharField(max_length=255)
