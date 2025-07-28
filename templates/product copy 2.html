@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div id="content" class="main-content">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <div class="layout-px-spacing">
+        <div class="row layout-top-spacing" id="cancel-row">
+            <div id="alert-container"></div>
+            <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <!-- Top Buttons -->
+                    <div class="d-flex justify-content-between mb-4">
+                        <div>
+                            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#nullModal">
+                                Nolga tushirish
+                            </button>
+                            <button type="button" class="btn btn-primary ml-2" id="savePricesBtn">
+                                Narxlarni saqlash
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#newProductModal">
+                                Yangi qo'shish
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Form -->
+                    <form class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select name="deliver" class="form-control searchable">
+                                    <option value="">Ishlab chiqaruvchi</option>
+                                    {% for deliver in delivers %}
+                                    <option value="{{ deliver.id }}" {% if filters.deliver == deliver.id %}selected{% endif %}>{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="season" class="form-control">
+                                    <option value="">Fasl</option>
+                                    {% for season in seasons %}
+                                    <option value="{{ season.id }}" {% if filters.season == season.id %}selected{% endif %}>{{ season.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">Filtr</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Products Table -->
+                    <div class="table-responsive">
+                        <table id="productsTable" class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>№</th>
+                                    <th>Nomi</th>
+                                    <th>Shtrix kod</th>
+                                    <th>Ishlab chiqaruvchi</th>
+                                    <th>Fasl</th>
+                                    <th>Paket</th>
+                                    <th>Soni</th>
+                                    <th>Min. soni</th>
+                                    <th>Filial</th>
+                                    <th>Guruh</th>
+                                    <th>Harakatlar</th>
+
+                                    {% for valyuta in valyutas %}
+                                        {% for price_type in price_types %}
+                                            <th style="white-space: nowrap;">
+                                                {{ valyuta.name }} / {{ price_type.name }}
+                                            </th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in productfilials %}
+                                <tr data-id="{{ product.id }}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ product.name }}</td>
+                                    <td>
+                                        {% for deliver in product.deliver.all %}
+                                        <span class="badge badge-primary">{{ deliver.name }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ product.get_barcodes }}</td>
+                                    <td>{{ product.get_season_display }}</td>
+                                    <td>{{ product.pack }}</td>
+                                    <td>{{ product.quantity|intcomma }}</td>
+                                    <td>{{ product.min_count|intcomma }}</td>
+                                    <td>{{ product.filial.name }}</td>
+                                    <td>{{ product.group.name }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary edit-product-btn" 
+                                                data-id="{{ product.id }}">
+                                            <i class="fas fa-edit"></i> Tahrirlash
+                                        </button>
+                                    </td>
+
+                                    <!-- {% for valyuta in valyutas %}
+                                        {% for price_type in price_types %}
+                                            <td>
+                                                <input type="number" step="0.01" 
+                                                    class="form-control price-input"
+                                                    data-product="{{ product.id }}"
+                                                    data-valyuta="{{ valyuta.id }}"
+                                                    data-price-type="{{ price_type.id }}"
+                                                    value="{% for price in product.prices.all %}{% if price.valyuta_id == valyuta.id and price.price_type_id == price_type.id %}{{ price.price }}{% endif %}{% endfor %}">
+                                            </td>
+                                        {% endfor %}
+                                    {% endfor %} -->
+
+                                    
+                                    {% for i in product.pricetypevaluta_prices %}
+                                        {% for summa in i.summas %}
+                                            <td>
+                                                <input type="number" step="0.01" 
+                                                    class="form-control price-input"
+                                                    data-product="{{ product.id }}"
+                                                    data-valyuta="{{ i.valyuta_id }}"
+                                                    data-price-type="{{ summa.price_type }}"
+                                                    value="{{ summa.summa }}">
+                                            </td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                        
+
+                                    
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Price Edit Modal -->
+
+
+<!-- Product Edit Modal -->
+<div class="modal fade" id="productEditModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Mahsulotni tahrirlash</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="productEditForm">
+                {% csrf_token %}
+                <input type="hidden" id="editProductId" name="id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nomi</label>
+                                <input type="text" class="form-control" name="name" id="editProductName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Ishlab chiqaruvchi</label>
+                                <select class="form-control searchable" name="deliver" id="editProductDeliver" multiple>
+                                    {% for deliver in delivers %}
+                                    <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Fasl</label>
+                                <select class="form-control" name="season" id="editProductSeason">
+                                    {% for season in seasons %}
+                                    <option value="{{ season.id }}">{{ season.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Paketdagi soni</label>
+                                <input type="number" step="0.01" class="form-control" name="pack" id="editProductPack" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Minimal soni</label>
+                                <input type="number" class="form-control" name="min_count" id="editProductMinCount" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Guruh</label>
+                                <select class="form-control" name="group" id="editProductGroup">
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>O'lchov birligi</label>
+                                <select class="form-control" name="measurement_type" id="editProductMeasurement">
+                                    {% for measurement in measurements %}
+                                    <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Polka kodi</label>
+                                <input type="text" class="form-control" name="shelf_code" id="editProductShelfCode">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Null Products Modal -->
+<div class="modal fade" id="nullModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Nolga tushirish</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Barcha mahsulotlarni nolga tushirmoqchimisiz?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                <a href="{% url 'null_products' %}" class="btn btn-danger">Tasdiqlash</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Product Modal -->
+<div class="modal fade" id="newProductModal" tabindex="-1" role="dialog">
+    <!-- Add your new product form here -->
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'plugins/table/datatable/datatables.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#productsTable').DataTable({
+        dom: '<"top"f>rt<"bottom"lip><"clear">',
+        pageLength: 50,
+        scrollY: '600px',
+
+    });
+
+    // Initialize Select2
+    $('.select2').select2();
+
+    // Edit Product Button Click
+    $('.edit-product-btn').click(function() {
+        var productId = $(this).data('id');
+        loadProductData(productId);
+        $('#productEditModal').modal('show');
+    });
+
+    // Load Product Data
+    function loadProductData(productId) {
+        $.ajax({
+            url: '/get-product-data/' + productId + '/',
+            type: 'GET',
+            success: function(response) {
+                $('#editProductId').val(response.id);
+                $('#editProductName').val(response.name);
+                $('#editProductPack').val(response.pack);
+                $('#editProductMinCount').val(response.min_count);
+                $('#editProductShelfCode').val(response.shelf_code);
+                $('#editProductSeason').val(response.season);
+                $('#editProductGroup').val(response.group);
+                $('#editProductMeasurement').val(response.measurement_type);
+                
+                // Set deliver values
+                $('#editProductDeliver').val(response.delivers).trigger('change');
+            }
+        });
+    }
+
+    // Save Product Form
+    $('#productEditForm').submit(function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        
+        $.ajax({
+            url: '/edit-product/',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if(response.status === 'success') {
+                    showAlert('Mahsulot muvaffaqiyatli saqlandi!', 'success');
+                    $('#productEditModal').modal('hide');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                }
+            }
+        });
+    });
+
+    // Open Price Edit Modal
+    // $('#savePricesBtn').click(function() {
+    //     $('#priceEditModal').modal('show');
+    // });
+
+    // Save Prices
+    $('#savePricesModalBtn').click(function() {
+        var prices = [];
+        $('.price-input').each(function() {
+            var productId = $(this).data('product');
+            var valyutaId = $(this).data('valyuta');
+            var priceTypeId = $(this).data('price-type');
+            var priceValue = $(this).val();
+            
+            if(priceValue) {
+                prices.push({
+                    product: productId,
+                    valyuta: valyutaId,
+                    price_type: priceTypeId,
+                    price: priceValue
+                });
+            }
+        });
+
+        $.ajax({
+            url: '/save-prices/',
+            type: 'POST',
+            data: JSON.stringify({prices: prices}),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if(response.status === 'success') {
+                    showAlert('Narxlar muvaffaqiyatli saqlandi!', 'success');
+                    $('#priceEditModal').modal('hide');
+                }
+            }
+        });
+    });
+
+    // Show Alert Function
+    function showAlert(message, type) {
+        var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                        message +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                        '</button></div>';
+        
+        $('#alert-container').html(alertHtml);
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 3000);
+    }
+});
+</script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+    $('select.searchable').selectize({ normalize: true });
+</script>
+
+
+{% endblock %}

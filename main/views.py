@@ -1846,7 +1846,7 @@ class Products(LoginRequiredMixin, TemplateView):
         deliver = self.request.GET.get('deliver')
         season = self.request.GET.get('season')
 
-        products = ProductFilial.objects.all()
+        products = ProductFilial.objects.all().select_related('measurement_type', 'group', 'deliver1', 'filial', 'category', 'valyuta').prefetch_related('deliver')
         if deliver:
             products = products.filter(deliver=deliver)
         
@@ -1868,9 +1868,13 @@ class Products(LoginRequiredMixin, TemplateView):
         context['dollar_kurs'] = Course.objects.last().som
 
         context['groups'] = Groups.objects.all()
-        context['price_types'] = PriceType.objects.all()
+        # context['price_types'] = PriceType.objects.all()
         context['delivers'] = Deliver.objects.all()
         context['filial'] = Filial.objects.filter(is_activate=True)
+
+        context['valyutas'] = Valyuta.objects.filter(is_activate=True)
+        context['price_types'] = PriceType.objects.filter(is_activate=True)
+
 
 
 
@@ -1899,31 +1903,37 @@ class Products(LoginRequiredMixin, TemplateView):
         return context
 
 
-
 @csrf_exempt
 def create_deliver_new(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         phone1 = request.POST.get('phone1')
         phone2 = request.POST.get('phone2')
-        # viloyat_id = request.POST.get('viloyat_id')
-        print(name, 'pppp')
-        obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
-        print(obj)
-    return JsonResponse({'id': obj.id, 'name': obj.name})
+
+        obj = Deliver.objects.filter(name=name, phone1=phone1).last()
+        if not obj:
+            obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
+
+        return JsonResponse({'id': obj.id, 'name': obj.name})
 
 @csrf_exempt
 def create_measurement(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        obj = MeasurementType.objects.create(name=name)
+
+        obj = MeasurementType.objects.filter(name=name).last()
+        if not obj:
+            obj = MeasurementType.objects.create(name=name)
         return JsonResponse({'id': obj.id, 'name': obj.name})
 
 @csrf_exempt
 def create_group(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        obj = Groups.objects.create(name=name)
+
+        obj = Groups.objects.filter(name=name).last()
+        if not obj:
+            obj = Groups.objects.create(name=name)
         return JsonResponse({'id': obj.id, 'name': obj.name})
 
 
@@ -6470,9 +6480,9 @@ def top_products(request):
     
     if seller_id:
         orders = orders.filter(saler_id__in=seller_id)
-    
+    orders = orders.distinct()
         
-    baskets = Cart.objects.filter(shop__in=orders)
+    baskets = Cart.objects.filter(shop__in=orders).distinct()
 
     # if type_country:
     #     baskets = baskets.filter(product__product__type_country__in=type_country)
@@ -6485,6 +6495,7 @@ def top_products(request):
     data = []
 
     for i in products:
+        print(baskets.filter(product=i).aggregate(foo=Coalesce(Sum('quantity'), float(0), output_field=FloatField()))['foo'])
         data.append({
             'store': i,
             'total_price': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
@@ -6521,6 +6532,20 @@ def top_products(request):
 
 
 
+# orders = Shop.objects.all()
+# baskets = Cart.objects.filter(shop__in=orders).distinct()
+# products = ProductFilial.objects.filter(cart__in=baskets).distinct()
+    
+# data = []
+
+# for i in products:
+#     dt = {
+#         'store': i,
+#         'total_price': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
+#         'foyda': baskets.filter(product=i).aggregate(foo=Coalesce(Sum(F('total') - (F('quantity') * F('bring_price'))), float(0), output_field=FloatField()))['foo'],
+#         'total_count': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('quantity'), float(0), output_field=FloatField()))['foo'],
+#     }
+#     print(dt)
 
 
 
@@ -11355,3 +11380,190 @@ def return_customer_detail(request, id):
         'product':ProductFilial.objects.all(),
     }
     return render(request, 'return_customer_detail.html', context)
+
+
+
+@csrf_exempt
+@require_POST
+def edit_product(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('id')
+        try:
+            product = ProductFilial.objects.get(id=product_id)
+            
+            # Update basic fields
+            product.name = request.POST.get('name')
+            product.pack = request.POST.get('pack')
+            product.min_count = request.POST.get('min_count')
+            product.shelf_code = request.POST.get('shelf_code')
+            product.season = request.POST.get('season')
+            product.group_id = int(val) if (val := request.POST.get('group')).isdigit() else None
+            product.measurement_type_id = int(val) if (val := request.POST.get('measurement_type')).isdigit() else None
+            product.deliver_id = int(val) if (val := request.POST.get('deliver')).isdigit() else None
+
+            
+            product.save()
+            
+            # Update barcodes
+            barcodes = request.POST.getlist('barcodes[]')
+            product.product_barcode.all().delete()  # Remove old barcodes
+            for barcode in barcodes:
+                if barcode.strip():  # Only save non-empty barcodes
+                    ProductBarcode.objects.create(product=product, barcode=barcode.strip())
+            
+            return JsonResponse({
+                'status': 'success',
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'barcodes': list(product.product_barcode.values_list('barcode', flat=True)),
+                    'deliver_name': product.deliver.name if product.deliver else '',
+                    'season_name': product.get_season_display(),
+                    'pack': product.pack,
+                    'min_count': product.min_count,
+                    'group_name': product.group.name if product.group else '',
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@csrf_exempt  # Only use this if you're having CSRF issues, otherwise remove it
+def save_prices(request):
+    try:
+        # Parse the JSON data from the request body
+        data = json.loads(request.body)
+        prices_data = data.get('prices', [])
+        
+        updated_prices = []
+        
+        for price_item in prices_data:
+        #     try:
+            product_id = price_item.get('product')
+            valyuta_id = price_item.get('valyuta')
+            price_type_id = price_item.get('price_type')
+            price_value = price_item.get('price')
+            
+            # Validate required fields
+            # if not all([product_id, valyuta_id, price_type_id, price_value is not None]):
+            #     continue
+            
+            # Get the related objects
+            product = ProductFilial.objects.get(id=product_id)
+            valyuta = Valyuta.objects.get(id=valyuta_id)
+            price_type = PriceType.objects.get(id=price_type_id)
+            
+            # Get or create the price record
+            price_obj, created = ProductPriceType.objects.get_or_create(
+                product=product,
+                valyuta=valyuta,
+                type=price_type,
+                defaults={'price': float(price_value)}
+            )
+            
+            # Update if not created
+            if not created:
+                price_obj.price = float(price_value)
+                price_obj.save()
+            
+            updated_prices.append({
+                'product': product_id,
+                'valyuta': valyuta_id,
+                'price_type': price_type_id,
+                'price': price_value
+            })
+                
+            # except (ProductFilial.DoesNotExist, Valyuta.DoesNotExist, PriceType.DoesNotExist):
+            #     continue
+            # except Exception as e:
+            #     # Log the error if needed
+            #     continue
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{len(updated_prices)} narxlar muvaffaqiyatli saqlandi',
+            'updated_prices': updated_prices
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Noto\'g\'ri JSON formati'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Xatolik yuz berdi: {str(e)}'
+        }, status=500)
+
+@require_GET
+def get_product_data(request, product_id):
+    try:
+        product = ProductFilial.objects.get(id=product_id)
+        return JsonResponse({
+            'id': product.id,
+            'name': product.name,
+            'pack': product.pack,
+            'min_count': product.min_count,
+            'shelf_code': product.shelf_code,
+            'season': product.season,
+            'group': product.group_id,
+            'measurement_type': product.measurement_type_id,
+            'deliver': product.deliver_id,
+            'barcodes': list(product.product_barcode.values_list('barcode', flat=True))
+        })
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+
+
+
+@require_POST
+def product_filial_add(request):
+    if request.method == 'POST':
+        try:
+            # Create new product
+            print(UserProfile.objects.filter(user=request.user).last().filial, 'ooo')
+            product = ProductFilial.objects.create(
+                name=request.POST.get('name'),
+                pack=request.POST.get('pack'),
+                min_count=request.POST.get('min_count'),
+                shelf_code=request.POST.get('shelf_code'),
+                season=request.POST.get('season'),
+                group_id=request.POST.get('group'),
+                measurement_type_id=request.POST.get('measurement_type'),
+                deliver_id=request.POST.get('deliver'),
+                quantity=0,
+                filial=UserProfile.objects.filter(user=request.user).last().filial
+            )
+            
+            # Add barcodes
+            barcodes = request.POST.getlist('barcodes[]')
+            for barcode in barcodes:
+                if barcode.strip():  # Only save non-empty barcodes
+                    ProductBarcode.objects.create(product=product, barcode=barcode.strip())
+            
+            # Generate price columns HTML
+            price_columns = ''
+            for valyuta in Valyuta.objects.all():
+                for price_type in PriceType.objects.all():
+                    price_columns += f'<td><input type="number" step="0.01" class="form-control price-input" data-product="{product.id}" data-valyuta="{valyuta.id}" data-price-type="{price_type.id}" value="0"></td>'
+            
+            return JsonResponse({
+                'status': 'success',
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'barcodes': list(product.product_barcode.values_list('barcode', flat=True)),
+                    'deliver_name': product.deliver.name if product.deliver else '',
+                    'season_name': product.get_season_display(),
+                    'pack': product.pack,
+                    'min_count': product.min_count,
+                    'filial_name': product.filial.name if product.filial else '',
+                    'group_name': product.group.name if product.group else '',
+                    'price_columns': price_columns
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
