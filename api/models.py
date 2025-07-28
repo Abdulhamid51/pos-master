@@ -877,7 +877,7 @@ def update_product_in_other_filials(sender, instance: ProductFilial, created, **
     
 
 class ProductBarcode(models.Model):
-    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='barcodes')
     barcode = models.CharField(max_length=255)
 
 

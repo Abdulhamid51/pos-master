@@ -139,3 +139,11 @@ def add_daliy_rests():
 # # JSON faylga yozish
 # with open("test.json", "w", encoding='utf-8') as f:
 #     json.dump(data, f, ensure_ascii=False, indent=4)
+
+# import json
+# file_path='test.json'
+# with open(file_path, 'r', encoding='utf-8') as f:
+#     data = json.load(f)
+
+# for i in data:
+#     ProductFilial.objects.filter(id=i['id']).update(deliver=i['deliver'])
