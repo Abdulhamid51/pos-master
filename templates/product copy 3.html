@@ -2,33 +2,12 @@
 {% load static %}
 {% load humanize %}
 
-
-{% block css %}
-      <style>
-        .line {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 2px solid #071af2;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        #alert-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            width: 30rem;
-        }
-    </style>
-{% endblock css %}
-    
-
 {% block content %}
 <div id="content" class="main-content">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <div class="layout-px-spacing">
-        <div id="alert-container"></div>
         <div class="row layout-top-spacing" id="cancel-row">
+            <div id="alert-container"></div>
             <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
                 <div class="widget-content widget-content-area br-6">
                     <!-- Top Buttons -->
@@ -49,7 +28,7 @@
                     </div>
 
                     <!-- Filter Form -->
-                    <form class="mb-4" id="filterForm">
+                    <form class="mb-4">
                         <div class="row">
                             <div class="col-md-4">
                                 <select name="deliver" class="form-control searchable">
@@ -60,7 +39,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <select name="season" class="form-control searchable">
+                                <select name="season" class="form-control">
                                     <option value="">Fasl</option>
                                     {% for season in seasons %}
                                     <option value="{{ season.id }}" {% if filters.season == season.id %}selected{% endif %}>{{ season.name }}</option>
@@ -103,21 +82,21 @@
                                 {% for product in productfilials %}
                                 <tr data-id="{{ product.id }}">
                                     <td>{{ forloop.counter }}</td>
-                                    <td class="product-name">{{ product.name }}</td>
-                                    <td class="product-barcode">
+                                    <td>{{ product.name }}</td>
+                                    <td>
                                         {% for barcode in product.barcodes.all %}
                                             {{ barcode.barcode }}{% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                     </td>
-                                    <td class="product-deliver">
+                                    <td>
                                         <span class="badge badge-primary">{{ product.deliver.name }}</span>
                                     </td>
-                                    <td class="product-season">{{ product.get_season_display }}</td>
-                                    <td class="product-pack">{{ product.pack }}</td>
-                                    <td class="product-quantity">{{ product.quantity|intcomma }}</td>
-                                    <td class="product-min-count">{{ product.min_count|intcomma }}</td>
-                                    <td class="product-filial">{{ product.filial.name }}</td>
-                                    <td class="product-group">{{ product.group.name }}</td>
+                                    <td>{{ product.get_season_display }}</td>
+                                    <td>{{ product.pack }}</td>
+                                    <td>{{ product.quantity|intcomma }}</td>
+                                    <td>{{ product.min_count|intcomma }}</td>
+                                    <td>{{ product.filial.name }}</td>
+                                    <td>{{ product.group.name }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-primary edit-product-btn" 
                                                 data-id="{{ product.id }}">
@@ -172,24 +151,17 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Ishlab chiqaruvchi</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="deliver" id="editProductDeliver">
-                                        {% for deliver in delivers %}
-                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#deliverModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control searchable" name="deliver" id="editProductDeliver">
+                                    {% for deliver in delivers %}
+                                    <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Fasl</label>
-                                <select class="form-control searchable" name="season" id="editProductSeason">
+                                <select class="form-control" name="season" id="editProductSeason">
                                     <option value="">Tanlang</option>
                                     {% for season in seasons %}
                                     <option value="{{ season.id }}">{{ season.name }}</option>
@@ -212,37 +184,23 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Guruh</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="group" id="editProductGroup">
-                                        <option value="">Tanlang</option>
-                                        {% for group in groups %}
-                                        <option value="{{ group.id }}">{{ group.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#groupModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control" name="group" id="editProductGroup">
+                                    <option value="">Tanlang</option>
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>O'lchov birligi</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="measurement_type" id="editProductMeasurement">
-                                        <option value="">Tanlang</option>
-                                        {% for measurement in measurements %}
-                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#measurementModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control" name="measurement_type" id="editProductMeasurement">
+                                    <option value="">Tanlang</option>
+                                    {% for measurement in measurements %}
+                                    <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -304,7 +262,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="newProductForm">
+            <form id="newProductForm" action="{% url 'new_product_add' %}" method="POST">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="row">
@@ -317,25 +275,17 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Ishlab chiqaruvchi</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="deliver" id="newProductDeliver">
-                                        <option value="">Tanlang</option>
-                                        {% for deliver in delivers %}
-                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#deliverModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control searchable" name="deliver">
+                                    {% for deliver in delivers %}
+                                    <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Fasl</label>
-                                <select class="form-control searchable" name="season">
+                                <select class="form-control" name="season">
                                     <option value="">Tanlang</option>
                                     {% for season in seasons %}
                                     <option value="{{ season.id }}">{{ season.name }}</option>
@@ -358,37 +308,23 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Guruh</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="group" id="newProductGroup">
-                                        <option value="">Tanlang</option>
-                                        {% for group in groups %}
-                                        <option value="{{ group.id }}">{{ group.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#groupModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control" name="group">
+                                    <option value="">Tanlang</option>
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>O'lchov birligi</label>
-                                <div class="input-group">
-                                    <select class="form-control searchable" name="measurement_type" id="newProductMeasurement">
-                                        <option value="">Tanlang</option>
-                                        {% for measurement in measurements %}
-                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#measurementModal">
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
+                                <select class="form-control" name="measurement_type">
+                                    <option value="">Tanlang</option>
+                                    {% for measurement in measurements %}
+                                    <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -426,71 +362,6 @@
     </div>
 </div>
 
-<!-- Deliver Modal -->
-<div class="modal fade" id="deliverModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="deliverForm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Yangi Ishlab chiqaruvchi</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" name="name" class="form-control mb-2" placeholder="Nomi" required>
-                    <input type="text" name="phone1" class="form-control mb-2" placeholder="Telefon 1" required>
-                    <input type="text" name="phone2" class="form-control mb-2" placeholder="Telefon 2">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Measurement Modal -->
-<div class="modal fade" id="measurementModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="measurementForm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Yangi O'lchov</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" name="name" class="form-control" placeholder="O'lchov nomi" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Group Modal -->
-<div class="modal fade" id="groupModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="groupForm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Yangi Guruh</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" name="name" class="form-control" placeholder="Guruh nomi" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block js %}
@@ -501,7 +372,7 @@
 <script>
 $(document).ready(function() {
     // Initialize DataTable with scroll
-    var table = $('#productsTable').DataTable({
+    $('#productsTable').DataTable({
         dom: '<"top"f>rt<"bottom"lip><"clear">',
         pageLength: 50,
         scrollY: '600px',
@@ -519,21 +390,6 @@ $(document).ready(function() {
         sortField: 'text'
     });
 
-    // Show Alert Function
-    function showAlert(message, type) {
-        var alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                            ${message}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>`;
-        
-        $('#alert-container').html(alertHtml);
-        setTimeout(function() {
-            $('.alert').alert('close');
-        }, 5000);
-    }
-
     // Edit Product Button Click
     $(document).on('click', '.edit-product-btn', function() {
         var productId = $(this).data('id');
@@ -546,36 +402,18 @@ $(document).ready(function() {
             url: '/get-product-data/' + productId + '/',
             type: 'GET',
             success: function(response) {
-                // $('#editProductId').val(response.id);
-                // $('#editProductName').val(response.name);
-                // $('#editProductPack').val(response.pack);
-                // $('#editProductMinCount').val(response.min_count);
-                // $('#editProductShelfCode').val(response.shelf_code);
-                // $('#editProductSeason').val(response.season);
-                // $('#editProductGroup').val(response.group);
-                // $('#editProductMeasurement').val(response.measurement_type);
-
-                function setInputOrSelectValue(selector, value) {
-                    var $el = $(selector);
-                    if ($el[0].selectize) {
-                        $el[0].selectize.setValue(value);
-                    } else {
-                        $el.val(value);
-                    }
-                }
-
-                setInputOrSelectValue('#editProductId', response.id);
-                setInputOrSelectValue('#editProductName', response.name);
-                setInputOrSelectValue('#editProductPack', response.pack);
-                setInputOrSelectValue('#editProductMinCount', response.min_count);
-                setInputOrSelectValue('#editProductShelfCode', response.shelf_code);
-                setInputOrSelectValue('#editProductSeason', response.season);
-                setInputOrSelectValue('#editProductGroup', response.group);
-                setInputOrSelectValue('#editProductMeasurement', response.measurement_type);
-                setInputOrSelectValue('#editProductDeliver', response.deliver);
+                $('#editProductId').val(response.id);
+                $('#editProductName').val(response.name);
+                $('#editProductPack').val(response.pack);
+                $('#editProductMinCount').val(response.min_count);
+                $('#editProductShelfCode').val(response.shelf_code);
+                $('#editProductSeason').val(response.season);
+                $('#editProductGroup').val(response.group);
+                $('#editProductMeasurement').val(response.measurement_type);
                 
                 // Set deliver values
                 var deliverSelect = $('#editProductDeliver')[0].selectize;
+                //deliverSelect.clear();
                 deliverSelect.setValue(response.deliver);
                 
                 // Load barcodes
@@ -633,19 +471,11 @@ $(document).ready(function() {
             data: $(this).serialize(),
             success: function(response) {
                 if(response.status === 'success') {
-                    // Update the table row without reloading
-                    var row = $('tr[data-id="' + response.product.id + '"]');
-                    
-                    row.find('.product-name').text(response.product.name);
-                    row.find('.product-barcode').text(response.product.barcodes.join(', '));
-                    row.find('.product-deliver').html('<span class="badge badge-primary">' + response.product.deliver_name + '</span>');
-                    row.find('.product-season').text(response.product.season_name);
-                    row.find('.product-pack').text(response.product.pack);
-                    row.find('.product-min-count').text(response.product.min_count);
-                    row.find('.product-group').text(response.product.group_name);
-                    
                     showAlert('Mahsulot muvaffaqiyatli saqlandi!', 'success');
                     $('#productEditModal').modal('hide');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
                 }
             },
             error: function(xhr) {
@@ -711,131 +541,20 @@ $(document).ready(function() {
         $('#newBarcodeContainer').append(html);
     });
 
-    // Handle new product form submission
-    $('#newProductForm').submit(function(e) {
-        e.preventDefault();
+    // Show Alert Function
+    function showAlert(message, type) {
+        var alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                            ${message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
         
-        $.ajax({
-            url: '/product-filial-add/',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                if(response.status === 'success') {
-                    // Add new product to the top of the table
-                    var newRow = `
-                        <tr data-id="${response.product.id}">
-                            <td>1</td>
-                            <td class="product-name">${response.product.name}</td>
-                            <td class="product-barcode">${response.product.barcodes.join(', ')}</td>
-                            <td class="product-deliver"><span class="badge badge-primary">${response.product.deliver_name}</span></td>
-                            <td class="product-season">${response.product.season_name}</td>
-                            <td class="product-pack">${response.product.pack}</td>
-                            <td class="product-quantity">0</td>
-                            <td class="product-min-count">${response.product.min_count}</td>
-                            <td class="product-filial">${response.product.filial_name}</td>
-                            <td class="product-group">${response.product.group_name}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary edit-product-btn" 
-                                        data-id="${response.product.id}">
-                                    <i class="fas fa-edit"></i> Tahrirlash
-                                </button>
-                            </td>
-                            ${response.product.price_columns}
-                        </tr>
-                    `;
-                    
-                    // Add to the top of the table and renumber rows
-                    table.row.add($(newRow)).draw();
-                    table.rows().every(function(rowIdx, tableLoop, rowLoop) {
-                        this.cell(rowIdx, 0).data(rowIdx + 1);
-                    });
-                    
-                    showAlert('Yangi mahsulot muvaffaqiyatli qo\'shildi!', 'success');
-                    $('#newProductModal').modal('hide');
-                    $('#newProductForm')[0].reset();
-                    $('#newBarcodeContainer').html(`
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" name="barcodes[]">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-danger remove-barcode" type="button">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `);
-                }
-            },
-            error: function(xhr) {
-                showAlert('Yangi mahsulot qo\'shishda xatolik yuz berdi', 'danger');
-            }
-        });
-    });
-
-    // Handle foreign key object creation
-    // function handleFormSubmit(formId, url, selectId, modalId) {
-    //     $(formId).submit(function(e) {
-    //         e.preventDefault();
-    //         const formData = $(this).serialize();
-    //         $.ajax({
-    //             url: url,
-    //             type: 'POST',
-    //             data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
-    //             success: function(data) {
-    //                 // Update the selectize control
-    //                 var selectizeControl = $(selectId)[0].selectize;
-    //                 selectizeControl.addOption({value: data.id, text: data.name});
-    //                 selectizeControl.setValue(data.id);
-                    
-    //                 $(modalId).modal('hide');
-    //                 $(formId)[0].reset();
-    //                 showAlert('Yangi obyekt muvaffaqiyatli qo\'shildi!', 'success');
-    //             },
-    //             error: function() {
-    //                 showAlert("Xatolik yuz berdi!", 'danger');
-    //             }
-    //         });
-    //     });
-    // }
-
-    function handleFormSubmit(formId, url, selectName, modalId) {
-    $(formId).off('submit').on('submit', function(e) {
-        e.preventDefault();
-
-        const formData = $(this).serialize();
-
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
-            success: function(data) {
-                // Barcha select[name="..."] elementlarini topamiz
-                $(`select[name="${selectName}"]`).each(function() {
-                    var selectizeControl = this.selectize;
-                    if (selectizeControl) {
-                        selectizeControl.addOption({value: data.id, text: data.name});
-                        selectizeControl.refreshOptions(false);
-                        selectizeControl.setValue(data.id);
-                    }
-                });
-
-                $(modalId).modal('hide');
-                $(formId)[0].reset();
-                showAlert('Yangi obyekt muvaffaqiyatli qo\'shildi!', 'success');
-            },
-            error: function() {
-                showAlert("Xatolik yuz berdi!", 'danger');
-            }
-        });
-    });
-}
-
-    // Initialize foreign key object creation forms
-    handleFormSubmit('#deliverForm', '/create-deliver-new/', 'deliver', '#deliverModal');
-    handleFormSubmit('#deliverForm', '/create-deliver-new/', 'deliver', '#deliverModal');
-    handleFormSubmit('#measurementForm', '/create-measurement/', 'measurement_type', '#measurementModal');
-    handleFormSubmit('#measurementForm', '/create-measurement/', 'measurement_type', '#measurementModal');
-    handleFormSubmit('#groupForm', '/create-group/', 'group', '#groupModal');
-    handleFormSubmit('#groupForm', '/create-group/', 'group', '#groupModal');
+        $('#alert-container').html(alertHtml);
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    }
 });
 </script>
 {% endblock %}

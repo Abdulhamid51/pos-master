@@ -1903,31 +1903,37 @@ class Products(LoginRequiredMixin, TemplateView):
         return context
 
 
-
 @csrf_exempt
 def create_deliver_new(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         phone1 = request.POST.get('phone1')
         phone2 = request.POST.get('phone2')
-        # viloyat_id = request.POST.get('viloyat_id')
-        print(name, 'pppp')
-        obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
-        print(obj)
-    return JsonResponse({'id': obj.id, 'name': obj.name})
+
+        obj = Deliver.objects.filter(name=name, phone1=phone1).last()
+        if not obj:
+            obj = Deliver.objects.create(name=name, phone1=phone1, phone2=phone2)
+
+        return JsonResponse({'id': obj.id, 'name': obj.name})
 
 @csrf_exempt
 def create_measurement(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        obj = MeasurementType.objects.create(name=name)
+
+        obj = MeasurementType.objects.filter(name=name).last()
+        if not obj:
+            obj = MeasurementType.objects.create(name=name)
         return JsonResponse({'id': obj.id, 'name': obj.name})
 
 @csrf_exempt
 def create_group(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        obj = Groups.objects.create(name=name)
+
+        obj = Groups.objects.filter(name=name).last()
+        if not obj:
+            obj = Groups.objects.create(name=name)
         return JsonResponse({'id': obj.id, 'name': obj.name})
 
 
@@ -11377,6 +11383,8 @@ def return_customer_detail(request, id):
 
 
 
+@csrf_exempt
+@require_POST
 def edit_product(request):
     if request.method == 'POST':
         product_id = request.POST.get('id')
@@ -11389,18 +11397,33 @@ def edit_product(request):
             product.min_count = request.POST.get('min_count')
             product.shelf_code = request.POST.get('shelf_code')
             product.season = request.POST.get('season')
-            product.group_id = request.POST.get('group')
-            product.measurement_type_id = request.POST.get('measurement_type')
-            
-            # Update deliver relationships
-            product.deliver.clear()
-            deliver_ids = request.POST.getlist('deliver')
-            for deliver_id in deliver_ids:
-                product.deliver.add(deliver_id)
+            product.group_id = int(val) if (val := request.POST.get('group')).isdigit() else None
+            product.measurement_type_id = int(val) if (val := request.POST.get('measurement_type')).isdigit() else None
+            product.deliver_id = int(val) if (val := request.POST.get('deliver')).isdigit() else None
+
             
             product.save()
             
-            return JsonResponse({'status': 'success', 'message': 'Product updated successfully'})
+            # Update barcodes
+            barcodes = request.POST.getlist('barcodes[]')
+            product.product_barcode.all().delete()  # Remove old barcodes
+            for barcode in barcodes:
+                if barcode.strip():  # Only save non-empty barcodes
+                    ProductBarcode.objects.create(product=product, barcode=barcode.strip())
+            
+            return JsonResponse({
+                'status': 'success',
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'barcodes': list(product.product_barcode.values_list('barcode', flat=True)),
+                    'deliver_name': product.deliver.name if product.deliver else '',
+                    'season_name': product.get_season_display(),
+                    'pack': product.pack,
+                    'min_count': product.min_count,
+                    'group_name': product.group.name if product.group else '',
+                }
+            })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
@@ -11474,10 +11497,11 @@ def save_prices(request):
             'message': f'Xatolik yuz berdi: {str(e)}'
         }, status=500)
 
+@require_GET
 def get_product_data(request, product_id):
     try:
         product = ProductFilial.objects.get(id=product_id)
-        data = {
+        return JsonResponse({
             'id': product.id,
             'name': product.name,
             'pack': product.pack,
@@ -11486,9 +11510,60 @@ def get_product_data(request, product_id):
             'season': product.season,
             'group': product.group_id,
             'measurement_type': product.measurement_type_id,
-            'delivers': [d.id for d in product.deliver.all()],
-            'barcodes': [b.barcode for b in product.product_barcode.all()],
-        }
-        return JsonResponse(data)
+            'deliver': product.deliver_id,
+            'barcodes': list(product.product_barcode.values_list('barcode', flat=True))
+        })
     except ProductFilial.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+
+
+
+@require_POST
+def product_filial_add(request):
+    if request.method == 'POST':
+        try:
+            # Create new product
+            print(UserProfile.objects.filter(user=request.user).last().filial, 'ooo')
+            product = ProductFilial.objects.create(
+                name=request.POST.get('name'),
+                pack=request.POST.get('pack'),
+                min_count=request.POST.get('min_count'),
+                shelf_code=request.POST.get('shelf_code'),
+                season=request.POST.get('season'),
+                group_id=request.POST.get('group'),
+                measurement_type_id=request.POST.get('measurement_type'),
+                deliver_id=request.POST.get('deliver'),
+                quantity=0,
+                filial=UserProfile.objects.filter(user=request.user).last().filial
+            )
+            
+            # Add barcodes
+            barcodes = request.POST.getlist('barcodes[]')
+            for barcode in barcodes:
+                if barcode.strip():  # Only save non-empty barcodes
+                    ProductBarcode.objects.create(product=product, barcode=barcode.strip())
+            
+            # Generate price columns HTML
+            price_columns = ''
+            for valyuta in Valyuta.objects.all():
+                for price_type in PriceType.objects.all():
+                    price_columns += f'<td><input type="number" step="0.01" class="form-control price-input" data-product="{product.id}" data-valyuta="{valyuta.id}" data-price-type="{price_type.id}" value="0"></td>'
+            
+            return JsonResponse({
+                'status': 'success',
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'barcodes': list(product.product_barcode.values_list('barcode', flat=True)),
+                    'deliver_name': product.deliver.name if product.deliver else '',
+                    'season_name': product.get_season_display(),
+                    'pack': product.pack,
+                    'min_count': product.min_count,
+                    'filial_name': product.filial.name if product.filial else '',
+                    'group_name': product.group.name if product.group else '',
+                    'price_columns': price_columns
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

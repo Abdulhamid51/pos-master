@@ -652,7 +652,7 @@ class MeasurementType(models.Model):
     is_active = models.BooleanField(default=True)
 
 class ProductFilial(models.Model):
-    deliver = models.ManyToManyField(Deliver, related_name='products1', blank=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.SET_NULL, related_name='product1', blank=True, null=True)
     measure = [
         ('dona', 'dona'),
         ('kg', 'kg'),

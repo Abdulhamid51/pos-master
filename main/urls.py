@@ -372,6 +372,10 @@ urlpatterns = [
     path('save-prices/', save_prices, name='save_prices'),
     path('get-product-data/<int:product_id>/', get_product_data, name='get_product_data'),
 
+    path('product-filial-add/', product_filial_add, name='product_filial_add'),
+
+    
+
     # path(),
     # path(),
 
