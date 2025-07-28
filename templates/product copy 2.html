@@ -84,15 +84,11 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ product.name }}</td>
                                     <td>
-                                        {% for barcode in product.barcodes.all %}
-                                            {{ barcode.barcode }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </td>
-                                    <td>
                                         {% for deliver in product.deliver.all %}
                                         <span class="badge badge-primary">{{ deliver.name }}</span>
                                         {% endfor %}
                                     </td>
+                                    <td>{{ product.get_barcodes }}</td>
                                     <td>{{ product.get_season_display }}</td>
                                     <td>{{ product.pack }}</td>
                                     <td>{{ product.quantity|intcomma }}</td>
@@ -106,6 +102,20 @@
                                         </button>
                                     </td>
 
+                                    <!-- {% for valyuta in valyutas %}
+                                        {% for price_type in price_types %}
+                                            <td>
+                                                <input type="number" step="0.01" 
+                                                    class="form-control price-input"
+                                                    data-product="{{ product.id }}"
+                                                    data-valyuta="{{ valyuta.id }}"
+                                                    data-price-type="{{ price_type.id }}"
+                                                    value="{% for price in product.prices.all %}{% if price.valyuta_id == valyuta.id and price.price_type_id == price_type.id %}{{ price.price }}{% endif %}{% endfor %}">
+                                            </td>
+                                        {% endfor %}
+                                    {% endfor %} -->
+
+                                    
                                     {% for i in product.pricetypevaluta_prices %}
                                         {% for summa in i.summas %}
                                             <td>
@@ -118,6 +128,9 @@
                                             </td>
                                         {% endfor %}
                                     {% endfor %}
+                                        
+
+                                    
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -128,6 +141,9 @@
         </div>
     </div>
 </div>
+
+<!-- Price Edit Modal -->
+
 
 <!-- Product Edit Modal -->
 <div class="modal fade" id="productEditModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -164,7 +180,6 @@
                             <div class="form-group">
                                 <label>Fasl</label>
                                 <select class="form-control" name="season" id="editProductSeason">
-                                    <option value="">Tanlang</option>
                                     {% for season in seasons %}
                                     <option value="{{ season.id }}">{{ season.name }}</option>
                                     {% endfor %}
@@ -187,7 +202,6 @@
                             <div class="form-group">
                                 <label>Guruh</label>
                                 <select class="form-control" name="group" id="editProductGroup">
-                                    <option value="">Tanlang</option>
                                     {% for group in groups %}
                                     <option value="{{ group.id }}">{{ group.name }}</option>
                                     {% endfor %}
@@ -198,7 +212,6 @@
                             <div class="form-group">
                                 <label>O'lchov birligi</label>
                                 <select class="form-control" name="measurement_type" id="editProductMeasurement">
-                                    <option value="">Tanlang</option>
                                     {% for measurement in measurements %}
                                     <option value="{{ measurement.id }}">{{ measurement.name }}</option>
                                     {% endfor %}
@@ -209,17 +222,6 @@
                             <div class="form-group">
                                 <label>Polka kodi</label>
                                 <input type="text" class="form-control" name="shelf_code" id="editProductShelfCode">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Shtrix kodlar</label>
-                                <div id="barcodeContainer">
-                                    <!-- Barcodes will be added here -->
-                                </div>
-                                <button type="button" class="btn btn-sm btn-secondary mt-2" id="addBarcodeBtn">
-                                    <i class="fas fa-plus"></i> Shtrix kod qo'shish
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -256,149 +258,35 @@
 
 <!-- New Product Modal -->
 <div class="modal fade" id="newProductModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">Yangi mahsulot qo'shish</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="newProductForm" action="{% url 'new_product_add' %}" method="POST">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Nomi</label>
-                                <input type="text" class="form-control" name="name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Ishlab chiqaruvchi</label>
-                                <select class="form-control searchable" name="deliver" multiple>
-                                    {% for deliver in delivers %}
-                                    <option value="{{ deliver.id }}">{{ deliver.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Fasl</label>
-                                <select class="form-control" name="season">
-                                    <option value="">Tanlang</option>
-                                    {% for season in seasons %}
-                                    <option value="{{ season.id }}">{{ season.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Paketdagi soni</label>
-                                <input type="number" step="0.01" class="form-control" name="pack" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Minimal soni</label>
-                                <input type="number" class="form-control" name="min_count" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Guruh</label>
-                                <select class="form-control" name="group">
-                                    <option value="">Tanlang</option>
-                                    {% for group in groups %}
-                                    <option value="{{ group.id }}">{{ group.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>O'lchov birligi</label>
-                                <select class="form-control" name="measurement_type">
-                                    <option value="">Tanlang</option>
-                                    {% for measurement in measurements %}
-                                    <option value="{{ measurement.id }}">{{ measurement.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Polka kodi</label>
-                                <input type="text" class="form-control" name="shelf_code">
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label>Shtrix kodlar</label>
-                                <div id="newBarcodeContainer">
-                                    <div class="input-group mb-2">
-                                        <input type="text" class="form-control" name="barcodes[]">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-danger remove-barcode" type="button">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-secondary mt-2" id="addNewBarcodeBtn">
-                                    <i class="fas fa-plus"></i> Shtrix kod qo'shish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                    <button type="submit" class="btn btn-success">Saqlash</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Add your new product form here -->
 </div>
 
 {% endblock %}
 
 {% block js %}
 <script src="{% static 'plugins/table/datatable/datatables.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" />
-
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
 <script>
 $(document).ready(function() {
-    // Initialize DataTable with scroll
+    // Initialize DataTable
     $('#productsTable').DataTable({
         dom: '<"top"f>rt<"bottom"lip><"clear">',
         pageLength: 50,
         scrollY: '600px',
-        scrollX: true,
-        scrollCollapse: true,
-        fixedColumns: {
-            leftColumns: 5
-        }
+
     });
 
-    // Initialize Selectize for searchable selects
-    $('.searchable').selectize({
-        plugins: ['remove_button'],
-        create: false,
-        sortField: 'text'
-    });
+    // Initialize Select2
+    $('.select2').select2();
 
     // Edit Product Button Click
-    $(document).on('click', '.edit-product-btn', function() {
+    $('.edit-product-btn').click(function() {
         var productId = $(this).data('id');
         loadProductData(productId);
+        $('#productEditModal').modal('show');
     });
 
-    // Load Product Data for Edit Modal
+    // Load Product Data
     function loadProductData(productId) {
         $.ajax({
             url: '/get-product-data/' + productId + '/',
@@ -414,149 +302,95 @@ $(document).ready(function() {
                 $('#editProductMeasurement').val(response.measurement_type);
                 
                 // Set deliver values
-                var deliverSelect = $('#editProductDeliver')[0].selectize;
-                deliverSelect.clear();
-                deliverSelect.setValue(response.delivers);
-                
-                // Load barcodes
-                $('#barcodeContainer').empty();
-                if(response.barcodes && response.barcodes.length > 0) {
-                    response.barcodes.forEach(function(barcode) {
-                        addBarcodeField(barcode);
-                    });
-                } else {
-                    addBarcodeField();
-                }
-                
-                $('#productEditModal').modal('show');
-            },
-            error: function(xhr) {
-                showAlert('Mahsulot ma\'lumotlarini yuklashda xatolik', 'danger');
+                $('#editProductDeliver').val(response.delivers).trigger('change');
             }
         });
     }
 
-    // Add barcode field
-    function addBarcodeField(value = '') {
-        var fieldId = 'barcode_' + Date.now();
-        var html = `
-            <div class="input-group mb-2" id="${fieldId}">
-                <input type="text" class="form-control" name="barcodes[]" value="${value}">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-danger remove-barcode" type="button" data-target="${fieldId}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        $('#barcodeContainer').append(html);
-    }
-
-    // Add new barcode field
-    $('#addBarcodeBtn').click(function() {
-        addBarcodeField();
-    });
-
-    // Remove barcode field
-    $(document).on('click', '.remove-barcode', function() {
-        var target = $(this).data('target');
-        $('#' + target).remove();
-    });
-
     // Save Product Form
     $('#productEditForm').submit(function(e) {
         e.preventDefault();
+        var formData = $(this).serialize();
         
         $.ajax({
             url: '/edit-product/',
             type: 'POST',
-            data: $(this).serialize(),
+            data: formData,
             success: function(response) {
                 if(response.status === 'success') {
                     showAlert('Mahsulot muvaffaqiyatli saqlandi!', 'success');
                     $('#productEditModal').modal('hide');
                     setTimeout(function() {
                         location.reload();
-                    }, 1000);
+                    }, 1500);
                 }
-            },
-            error: function(xhr) {
-                showAlert('Saqlashda xatolik yuz berdi', 'danger');
             }
         });
     });
 
-    // Save All Prices Button
-    $('#savePricesBtn').click(function() {
+    // Open Price Edit Modal
+    // $('#savePricesBtn').click(function() {
+    //     $('#priceEditModal').modal('show');
+    // });
+
+    // Save Prices
+    $('#savePricesModalBtn').click(function() {
         var prices = [];
-        
         $('.price-input').each(function() {
-            var $input = $(this);
-            var priceValue = $input.val();
+            var productId = $(this).data('product');
+            var valyutaId = $(this).data('valyuta');
+            var priceTypeId = $(this).data('price-type');
+            var priceValue = $(this).val();
             
             if(priceValue) {
                 prices.push({
-                    product: $input.data('product'),
-                    valyuta: $input.data('valyuta'),
-                    price_type: $input.data('price-type'),
-                    price: parseFloat(priceValue)
+                    product: productId,
+                    valyuta: valyutaId,
+                    price_type: priceTypeId,
+                    price: priceValue
                 });
             }
         });
 
-        if(prices.length === 0) {
-            showAlert('Saqlash uchun narxlar kiritilmagan', 'warning');
-            return;
-        }
-
         $.ajax({
             url: '/save-prices/',
             type: 'POST',
-            contentType: 'application/json',
             data: JSON.stringify({prices: prices}),
+            contentType: 'application/json',
             headers: {
                 'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
                 if(response.status === 'success') {
-                    showAlert('Barcha narxlar muvaffaqiyatli saqlandi!', 'success');
+                    showAlert('Narxlar muvaffaqiyatli saqlandi!', 'success');
+                    $('#priceEditModal').modal('hide');
                 }
-            },
-            error: function(xhr) {
-                showAlert('Narxlarni saqlashda xatolik yuz berdi', 'danger');
             }
         });
     });
 
-    // Add new barcode field for new product
-    $('#addNewBarcodeBtn').click(function() {
-        var html = `
-            <div class="input-group mb-2">
-                <input type="text" class="form-control" name="barcodes[]">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-danger remove-barcode" type="button">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        $('#newBarcodeContainer').append(html);
-    });
-
     // Show Alert Function
     function showAlert(message, type) {
-        var alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                            ${message}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>`;
+        var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                        message +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                        '</button></div>';
         
         $('#alert-container').html(alertHtml);
         setTimeout(function() {
             $('.alert').alert('close');
-        }, 5000);
+        }, 3000);
     }
 });
 </script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+    $('select.searchable').selectize({ normalize: true });
+</script>
+
+
 {% endblock %}

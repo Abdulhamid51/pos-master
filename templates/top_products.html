@@ -90,9 +90,9 @@
                                             <tr class="qwerty" data-id="qwer{{productfilial.id}}" data-som="{{ productfilial.som }}">
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ dt.store }}</td>
-                                                <td class="intcomma">{{ dt.total_count }}</td>
-                                                <td class="intcomma">{{ dt.total_price }}</td>
-                                                <td class="intcomma">{{ dt.foyda }}</td>
+                                                <td class="intcomma">{{ dt.total_count|intcomma }}</td>
+                                                <td class="intcomma">{{ dt.total_price|intcomma }}</td>
+                                                <td class="intcomma">{{ dt.foyda|intcomma }}</td>
                                       
                                             </tr>
                                         {% endfor %}
@@ -101,9 +101,9 @@
                                         <tr>
                                             <th class="">Jami:</th>
                                             <th></th>
-                                            <th class="intcomma">{{ totals.total_count }}</th>
-                                            <th class="intcomma">{{ totals.total_price }}</th>
-                                            <th class="intcomma">{{ totals.foyda }}</th>
+                                            <th class="intcomma">{{ totals.total_count|intcomma }}</th>
+                                            <th class="intcomma">{{ totals.total_price|intcomma }}</th>
+                                            <th class="intcomma">{{ totals.foyda|intcomma }}</th>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -123,7 +123,7 @@
 <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
 <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
 <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
-    <script>
+    <!-- <script>
         $(document).ready(function() {
 
             $('.intcomma').each(function() {
@@ -138,7 +138,7 @@
 
         
 
-    </script>
+    </script> -->
     <script>
         let trs = $('#html5-extension').DataTable( {
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
@@ -178,11 +178,7 @@
             console.log();
             
             
-            // Array.from(rows).forEach(function(item, index) {
-            //     som += parseInt(item.getAttribute('data-som'))
-            // })
-            // som = som.toLocaleString()
-            // $('#som1').text(som)
+           
         })
     </script>
 {% endblock js %}

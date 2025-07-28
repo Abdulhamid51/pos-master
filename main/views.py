@@ -1846,7 +1846,7 @@ class Products(LoginRequiredMixin, TemplateView):
         deliver = self.request.GET.get('deliver')
         season = self.request.GET.get('season')
 
-        products = ProductFilial.objects.all()
+        products = ProductFilial.objects.all().select_related('measurement_type', 'group', 'deliver1', 'filial', 'category', 'valyuta').prefetch_related('deliver')
         if deliver:
             products = products.filter(deliver=deliver)
         
@@ -1868,9 +1868,13 @@ class Products(LoginRequiredMixin, TemplateView):
         context['dollar_kurs'] = Course.objects.last().som
 
         context['groups'] = Groups.objects.all()
-        context['price_types'] = PriceType.objects.all()
+        # context['price_types'] = PriceType.objects.all()
         context['delivers'] = Deliver.objects.all()
         context['filial'] = Filial.objects.filter(is_activate=True)
+
+        context['valyutas'] = Valyuta.objects.filter(is_activate=True)
+        context['price_types'] = PriceType.objects.filter(is_activate=True)
+
 
 
 
@@ -6470,9 +6474,9 @@ def top_products(request):
     
     if seller_id:
         orders = orders.filter(saler_id__in=seller_id)
-    
+    orders = orders.distinct()
         
-    baskets = Cart.objects.filter(shop__in=orders)
+    baskets = Cart.objects.filter(shop__in=orders).distinct()
 
     # if type_country:
     #     baskets = baskets.filter(product__product__type_country__in=type_country)
@@ -6485,6 +6489,7 @@ def top_products(request):
     data = []
 
     for i in products:
+        print(baskets.filter(product=i).aggregate(foo=Coalesce(Sum('quantity'), float(0), output_field=FloatField()))['foo'])
         data.append({
             'store': i,
             'total_price': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
@@ -6521,6 +6526,20 @@ def top_products(request):
 
 
 
+# orders = Shop.objects.all()
+# baskets = Cart.objects.filter(shop__in=orders).distinct()
+# products = ProductFilial.objects.filter(cart__in=baskets).distinct()
+    
+# data = []
+
+# for i in products:
+#     dt = {
+#         'store': i,
+#         'total_price': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('total'), float(0), output_field=FloatField()))['foo'],
+#         'foyda': baskets.filter(product=i).aggregate(foo=Coalesce(Sum(F('total') - (F('quantity') * F('bring_price'))), float(0), output_field=FloatField()))['foo'],
+#         'total_count': baskets.filter(product=i).aggregate(foo=Coalesce(Sum('quantity'), float(0), output_field=FloatField()))['foo'],
+#     }
+#     print(dt)
 
 
 
@@ -11355,3 +11374,121 @@ def return_customer_detail(request, id):
         'product':ProductFilial.objects.all(),
     }
     return render(request, 'return_customer_detail.html', context)
+
+
+
+def edit_product(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('id')
+        try:
+            product = ProductFilial.objects.get(id=product_id)
+            
+            # Update basic fields
+            product.name = request.POST.get('name')
+            product.pack = request.POST.get('pack')
+            product.min_count = request.POST.get('min_count')
+            product.shelf_code = request.POST.get('shelf_code')
+            product.season = request.POST.get('season')
+            product.group_id = request.POST.get('group')
+            product.measurement_type_id = request.POST.get('measurement_type')
+            
+            # Update deliver relationships
+            product.deliver.clear()
+            deliver_ids = request.POST.getlist('deliver')
+            for deliver_id in deliver_ids:
+                product.deliver.add(deliver_id)
+            
+            product.save()
+            
+            return JsonResponse({'status': 'success', 'message': 'Product updated successfully'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@csrf_exempt  # Only use this if you're having CSRF issues, otherwise remove it
+def save_prices(request):
+    try:
+        # Parse the JSON data from the request body
+        data = json.loads(request.body)
+        prices_data = data.get('prices', [])
+        
+        updated_prices = []
+        
+        for price_item in prices_data:
+        #     try:
+            product_id = price_item.get('product')
+            valyuta_id = price_item.get('valyuta')
+            price_type_id = price_item.get('price_type')
+            price_value = price_item.get('price')
+            
+            # Validate required fields
+            # if not all([product_id, valyuta_id, price_type_id, price_value is not None]):
+            #     continue
+            
+            # Get the related objects
+            product = ProductFilial.objects.get(id=product_id)
+            valyuta = Valyuta.objects.get(id=valyuta_id)
+            price_type = PriceType.objects.get(id=price_type_id)
+            
+            # Get or create the price record
+            price_obj, created = ProductPriceType.objects.get_or_create(
+                product=product,
+                valyuta=valyuta,
+                type=price_type,
+                defaults={'price': float(price_value)}
+            )
+            
+            # Update if not created
+            if not created:
+                price_obj.price = float(price_value)
+                price_obj.save()
+            
+            updated_prices.append({
+                'product': product_id,
+                'valyuta': valyuta_id,
+                'price_type': price_type_id,
+                'price': price_value
+            })
+                
+            # except (ProductFilial.DoesNotExist, Valyuta.DoesNotExist, PriceType.DoesNotExist):
+            #     continue
+            # except Exception as e:
+            #     # Log the error if needed
+            #     continue
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{len(updated_prices)} narxlar muvaffaqiyatli saqlandi',
+            'updated_prices': updated_prices
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Noto\'g\'ri JSON formati'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Xatolik yuz berdi: {str(e)}'
+        }, status=500)
+
+def get_product_data(request, product_id):
+    try:
+        product = ProductFilial.objects.get(id=product_id)
+        data = {
+            'id': product.id,
+            'name': product.name,
+            'pack': product.pack,
+            'min_count': product.min_count,
+            'shelf_code': product.shelf_code,
+            'season': product.season,
+            'group': product.group_id,
+            'measurement_type': product.measurement_type_id,
+            'delivers': [d.id for d in product.deliver.all()],
+            'barcodes': [b.barcode for b in product.product_barcode.all()],
+        }
+        return JsonResponse(data)
+    except ProductFilial.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)

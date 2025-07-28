@@ -365,6 +365,13 @@ urlpatterns = [
     path('return_customer', return_customer, name='return_customer'),
     path('return_customer_add', return_customer_add, name='return_customer_add'),
     path('return_customer_detail/<int:id>', return_customer_detail, name='return_customer_detail'),
+
+
+    # path('products/', ProductsView.as_view(), name='products'),
+    path('edit-product/', edit_product, name='edit_product'),
+    path('save-prices/', save_prices, name='save_prices'),
+    path('get-product-data/<int:product_id>/', get_product_data, name='get_product_data'),
+
     # path(),
     # path(),
 
