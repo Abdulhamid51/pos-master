@@ -5859,7 +5859,7 @@ def new_product_add(request):
     measurement_type = request.POST.get('measurement_type')
     min_count = request.POST.get('min_count')
     filial_id = request.POST.get('filial_id')
-    ready = request.POST.get('ready')
+    # ready = request.POST.get('ready')
     quantity = str(request.POST.get('quantity')).replace(',', '.')
     valyuta = request.POST.get('valyuta')
     shelf_code = request.POST.get('shelf_code')
@@ -5869,7 +5869,7 @@ def new_product_add(request):
             name=name,
             pack=pack,
             valyuta_id=valyuta,
-            ready=ready,
+            # ready=ready,
             # barcode=barcode,
             group_id=group,
             measurement_type_id=measurement_type,

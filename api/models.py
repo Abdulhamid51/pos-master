@@ -694,7 +694,7 @@ class ProductFilial(models.Model):
         (2, 'yarim tayyor'),
         (3, 'tayyor'),
     ]
-    ready = models.IntegerField(choices=status_ready, default='1')
+    ready = models.IntegerField(choices=status_ready, null=True, blank=True)
 
 
     def __str__(self):

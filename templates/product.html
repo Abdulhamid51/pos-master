@@ -85,7 +85,6 @@
                                             <th class="">№</th>
                                             <th>Mahsulot</th>
                                             <th>Ishlab chiqaruvchi</th>
-                                            <th>Fasl</th>
                                             <th>Paketdagi soni</th>
                                             <!-- <th>So`m</th> -->
                                             <th>Soni</th>
@@ -104,7 +103,6 @@
                                                 <td class="">{{ forloop.counter }}</td>
                                                 <td>{{ productfilial.name }}</td>
                                                 <td>{% if productfilial.preparer %}{{ productfilial.preparer }}{% else %}-{% endif %}</td>
-                                                <td>{{ productfilial.get_season_display|default_if_none:'' }}</td>
                                                 <td>{{ productfilial.pack }}</td>
                                                 <!-- <td class="som" data-som="{{ productfilial.som }}">{{ productfilial.som|intcomma }}</td> -->
                                                 <td class="quantity" data-quantity="{{ productfilial.quantity|floatformat:0 }}">{{ productfilial.quantity|floatformat:0|intcomma }}</td>
@@ -298,17 +296,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="">Fasl</label>
-                                    <div class="input-group mb-2">
-                                        <select class="form-control searchable" required name="season" id="seasonSelect">
-                                            <option value="">- - - - - - - - </option>
-                                            {% for a in seasons %}
-                                                <option value="{{ a.id }}">{{ a.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
+                            
                                 <div class="col-md-6">
                                     <label for="">Min miqdor</label>
                                     <input type="number" class="form-control" name="min_count" required>
@@ -331,15 +319,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="">Turi</label>
-                                    <select name="ready" class="form-control" id="" required>
-                                        <option value="">- - - - - - - </option>
-                                        {% for i in ready_types %}
-                                            <option value="{{i.id}}">{{ i.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                              
                                 <div class="col-md-6">
                                     <label for="">Filial</label>
                                     <select name="filial_id" class="form-control" id="" required>
@@ -704,26 +684,7 @@
 
 
     <script>
-$(document).ready(function () {
-    function handleFormSubmit(formId, url, selectId, modalId) {
-        $(formId).submit(function (e) {
-            e.preventDefault();
-            const formData = $(this).serialize();
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: formData + '&csrfmiddlewaretoken={{ csrf_token }}',
-                success: function (data) {
-                    $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                    $(modalId).modal('hide');
-                    $(formId)[0].reset();
-                },
-                error: function () {
-                    alert("Xatolik yuz berdi!");
-                }
-            });
-        });
-    }
+
 
     // Yangi obyektlar uchun AJAX
     handleFormSubmit('#deliverForm', '{% url "create_deliver_new" %}', '#deliverSelect', '#deliverModal');

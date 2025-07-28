@@ -120,3 +120,22 @@ def add_daliy_rests():
 
 
 # RejaChiqim.objects.all().delete()
+
+
+# for i in ProductFilial.objects.all():
+
+
+# import json
+
+# data = []
+
+# for product in ProductFilial.objects.all():
+#     item = {
+#         "id": product.id,
+#         "deliver": list(product.deliver.values_list('id', flat=True))[0]  # faqat id lar ro'yxati
+#     }
+#     data.append(item)
+
+# # JSON faylga yozish
+# with open("test.json", "w", encoding='utf-8') as f:
+#     json.dump(data, f, ensure_ascii=False, indent=4)
