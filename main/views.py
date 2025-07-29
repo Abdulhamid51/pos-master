@@ -11492,3 +11492,54 @@ def get_product_data(request, product_id):
         return JsonResponse(data)
     except ProductFilial.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
+
+
+
+
+
+
+
+
+# with open('1.json', 'r', encoding='utf-8') as file:
+#     data = json.load(file)
+
+# for item in data:
+#     name = item.get("name")
+#     phone = item.get("phone")
+#     group_name = item.get("group", "").strip()  # agar group bo'sh bo'lsa, 'Default' bo'ladi
+#     current_debt = item.get("current_debt", 0)
+
+#     # DebtorType yaratish yoki olish
+#     if group_name:
+#         debtor_type, _ = DebtorType.objects.get_or_create(name=group_name)
+#     else:
+#         debtor_type = None
+
+#     # Debtor yaratish yoki olish, telefon raqam asosida
+#     debtor, created = Debtor.objects.get_or_create(
+#         phone1=phone,
+#         defaults={
+#             "fio": name,
+#             "type": debtor_type if debtor_type else None,
+#             # "som": current_debt,
+#             # "start_som": current_debt,
+#             # "start_date": timezone.now(),
+#         }
+#     )
+#     print(debtor)
+
+#     valyuta = Valyuta.objects.filter(is_som=True).last()
+
+#     wallet = Wallet.objects.filter(customer=debtor, valyuta=valyuta).last() or Wallet.objects.create(customer=debtor, valyuta=valyuta)
+#     wallet.start_summa = current_debt
+#     wallet.summa = current_debt
+#     wallet.save()
+#     # Agar debtor allaqachon mavjud bo‘lsa, yangilaymiz
+#     if not created:
+#         debtor.fio = name
+#         debtor.type = debtor_type
+#         debtor.som = current_debt
+#         debtor.start_som = current_debt
+#         debtor.save()
+
+
