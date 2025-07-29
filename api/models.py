@@ -16,6 +16,8 @@ from django.db.models import Manager as GeoManager
 from django.core.validators import RegexValidator
 from itertools import chain
 from collections import defaultdict
+from dateutil.relativedelta import relativedelta
+
 
 
 
@@ -650,7 +652,7 @@ class MeasurementType(models.Model):
     is_active = models.BooleanField(default=True)
 
 class ProductFilial(models.Model):
-    deliver = models.ManyToManyField(Deliver, related_name='products1', blank=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.SET_NULL, related_name='product1', blank=True, null=True)
     measure = [
         ('dona', 'dona'),
         ('kg', 'kg'),
@@ -694,7 +696,7 @@ class ProductFilial(models.Model):
         (2, 'yarim tayyor'),
         (3, 'tayyor'),
     ]
-    ready = models.IntegerField(choices=status_ready, default='1')
+    ready = models.IntegerField(choices=status_ready, null=True, blank=True)
 
 
     def __str__(self):
@@ -875,7 +877,7 @@ def update_product_in_other_filials(sender, instance: ProductFilial, created, **
     
 
 class ProductBarcode(models.Model):
-    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
+    product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='barcodes')
     barcode = models.CharField(max_length=255)
 
 
