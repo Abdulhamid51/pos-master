@@ -6558,9 +6558,9 @@ def top_debtors(request):
     orders = Shop.objects.all()
     
     if start_date and end_date:
-        orders = orders.filter(date__gte=start_date, date__lte=end_date)
+        orders = orders.filter(date__date__gte=start_date, date__date__lte=end_date)
     else:
-        orders = orders.filter(date__gte=datetime.now().date().replace(day=1))
+        orders = orders.filter(date__date__gte=datetime.now().date().replace(day=1))
     
     if hudud:
         orders = orders.filter(debtor__teritory__in=hudud)
@@ -11614,3 +11614,11 @@ def product_filial_add(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+
+# for i in Wallet.objects.filter(customer__isnull=False).distinct():
+#     print(i.customer)
+#     i.start_summa = i.start_summa * -1
+#     i.save()
+#     i.customer.refresh_debt()

@@ -684,10 +684,10 @@
                             <div class="form-group">
                                 <label for="recipient-debtor" class="col-form-label">Mijoz</label>
                                 <div class="input-group">
-                                    <select class="form-control" id="mainSelectDebtor"  name="debtor" required>
+                                    <select class="form-control searchable" id="mainSelectDebtor"  name="debtor" required>
                                         <option value=""></option>
                                         {% for i in customers %}
-                                            <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
+                                            <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }} {{ i.phone1 }}</option>
                                         {% endfor %}
                                     </select>
                                     <div class="input-group-append">
@@ -976,7 +976,7 @@
                             
                             <div class="row">
                                 <div class="col-md-3">
-                                    <div class="receipt-wrapper">
+                                    <div class="receipt-wrapper" id="check_div">
                                         <div class="zigzag"></div>
                                         <div class="receipt">
                                             <div class="section">
@@ -1114,7 +1114,7 @@
                                                         <button class="remove-field">&times;</button>
                                                     </div>
                                                     <div class="box-body">
-                                                        <input type="number" step="any" class="form-control payment-input" placeholder="Summani kiriting">
+                                                        <input type="number" step="any" class="form-control payment-input" placeholder="Summani kiriting" oninput="paymentSystem.updatePaymentDisplay(); paymentSystem.updateTolashText();">
                                                     </div>
                                                 </div>
                                             </div>
@@ -1641,7 +1641,7 @@
                                             if (data.success) {
                                                 successCount++;
                                                 if (successCount === payments.length) {
-                                                    window.location.replace('/b2c_shop');
+                                                    //window.location.replace('/b2c_shop');
                                                 }
                                             } else {
                                                 throw new Error(data.message || 'To\'lovda xatolik yuz berdi');
@@ -1665,9 +1665,9 @@
                                         
                                         if (!inputBox || !inputBox.classList.contains('input-box')) return;
                                         
-                                        document.querySelectorAll('.input-box').forEach(b => {
-                                            if (b !== inputBox) b.style.display = 'none';
-                                        });
+                                        // document.querySelectorAll('.input-box').forEach(b => {
+                                        //     if (b !== inputBox) b.style.display = 'none';
+                                        // });
                                         
                                         inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
                                     });
@@ -1694,13 +1694,13 @@
                                     });
                                 });
 
-                                document.addEventListener('click', function(e) {
-                                    if (!e.target.closest('.input-box') && !e.target.closest('.method-box')) {
-                                        document.querySelectorAll('.input-box').forEach(box => {
-                                            box.style.display = 'none';
-                                        });
-                                    }
-                                });
+                                // document.addEventListener('click', function(e) {
+                                //     if (!e.target.closest('.input-box') && !e.target.closest('.method-box')) {
+                                //         document.querySelectorAll('.input-box').forEach(box => {
+                                //             box.style.display = 'none';
+                                //         });
+                                //     }
+                                // });
                             });
                             document.getElementById('submit-payment').addEventListener('click', function() {
                                 paymentSystem.submitPayments({{ shop.id }});
@@ -1884,6 +1884,28 @@
   </div>
 </div>
 
+
+
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Buyurtma yakunlandi</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Yopish">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Buyurtma muvaffaqiyatli yakunlandi.</p>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-primary" onclick="window.location.href='/b2c_shop'">Yangi yaratish</button>
+          <button class="btn btn-success" onclick="$('#check_div').print()">Print qilish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <input type="hidden" id="order_id" value="{{shop.id}}">
 
 {% endblock content %}
@@ -1895,6 +1917,8 @@
         $('select.searchable').selectize({ normalize: true });
         // const products_input = $('#products')[0].selectize
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.2/jQuery.print.min.js"></script>
+
 
 
 <script>
@@ -1914,15 +1938,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // searchInput.addEventListener('input', function () {
+    //     const filter = this.value.toLowerCase();
+    //     const items = dropdown.querySelectorAll('.select-product-item');
+    //     let matchCount = 0;
+    //     let firstMatch = null;
+        
+    //     items.forEach(item => {
+    //         const text = item.textContent.toLowerCase();
+    //         if (text.includes(filter)) {
+    //             item.parentElement.style.display = '';
+    //             matchCount++;
+    //             if (!firstMatch) firstMatch = item;
+    //         } else {
+    //             item.parentElement.style.display = 'none';
+    //         }
+    //     });
+        
+    //     if (matchCount > 0) {
+    //         dropdown.classList.add('show');
+    //     } else {
+    //         dropdown.classList.remove('show');
+    //     }
+    // });
+
     searchInput.addEventListener('input', function () {
-        const filter = this.value.toLowerCase();
+    const rawFilter = this.value.toLowerCase();  // foydalanuvchi kiritgani (saqlanadi, o‘zgartirilmaydi)
+        
         const items = dropdown.querySelectorAll('.select-product-item');
         let matchCount = 0;
         let firstMatch = null;
-        
+
         items.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            if (text.includes(filter)) {
+            // Mahsulot matnidan / va \ belgilarini olib tashlaymiz
+            const itemText = item.textContent.toLowerCase().replace(/[\\/]/g, '');
+            // Foydalanuvchi kiritgan matndan hech narsa olib tashlamaymiz
+            const filter = rawFilter.replace(/[\\/]/g, '');  // faqat taqqoslash uchun soddalashtiramiz
+
+            if (itemText.includes(filter)) {
                 item.parentElement.style.display = '';
                 matchCount++;
                 if (!firstMatch) firstMatch = item;
@@ -1930,13 +1983,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 item.parentElement.style.display = 'none';
             }
         });
-        
+
         if (matchCount > 0) {
             dropdown.classList.add('show');
         } else {
             dropdown.classList.remove('show');
         }
     });
+
+
 
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -2127,6 +2182,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function formatNumberCustom(num) {
+        // Floatga o‘tkazamiz
+        num = parseFloat(num);
+
+        // butun va o‘nlik qismlarga ajratamiz
+        let parts = num.toString().split(".");
+        let integerPart = parts[0];
+
+        // minglik formatlash faqat inglizcha vergul bilan
+        let formattedInt = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        // agar o‘nlik qism bo‘lmasa ".0" qo‘shamiz
+        let decimalPart = parts[1] ? "." + parts[1] : ".0";
+
+        // faqat string qaytaramiz (raqam emas)
+        return formattedInt + decimalPart;
+    }
+
+
+
+    // ishlatish
+    // $("#all_total_2").val(formatNumberCustom(totalSum));
+
+
     function updateTotals() {
         let totalQuantity = 0;
         let totalPack = 0;
@@ -2144,8 +2223,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         $("#quantity_total").text(formatNumber(totalQuantity.toFixed(2)));
         $("#pack_total").text(formatNumber(totalPack.toFixed(2)));
-        $("#all_total").text(formatNumber(totalSum.toFixed(2)));
-        $("#all_total_2").val(formatNumber(totalSum.toFixed(2)));
+        console.log((formatNumberCustom(totalSum)), 'pppppp')
+        document.getElementById("all_total").textContent = formatNumberCustom(totalSum);
+        $("#all_total_2").val(formatNumberCustom(totalSum));
         changeDiscount();
         calculateRemaining();
     }
@@ -2159,25 +2239,53 @@ document.addEventListener('DOMContentLoaded', function () {
     calculateRemaining()
     function validatePayments() {
         const totalJami = parseFloat(document.getElementById('all_total_2').value.replace(/,/g, '')) || 0;
+        console.log('jami: ', totalJami)
         const totalPaid = Object.values(paymentSystem.paymentMethods).reduce((sum, amount) => sum + amount, 0);
+        console.log('tol: ', totalPaid)
         const remaining = totalJami - totalPaid;
         const product_name = document.querySelectorAll('.product_name').length
         
         if (product_name == 0) {
             showAlert(`Maxsulot mavjud emas`, "warning");
             return false
-        }
+        }   
+        console.log(remaining, 'aaa')
 
         if (remaining > 1) { 
             return false;
         }
         return true;
     }
+    // function Yakunlash() {
+    //     if (!validatePayments()) {
+    //         return;
+    //     }
+        
+    //     const orderId = $("#order_id").val();  
+    //     $.ajax({
+    //         url: `/b2c_shop_finish/${orderId}`,
+    //         type: "POST",
+    //         success: function(response) {
+    //             if (response.success) {
+    //                 showAlert(response.message, "success");
+    //                 $('#check_div').print()
+    //             } else {
+    //                 showAlert(response.message, "danger");
+    //             }
+    //         },
+
+    //         error: function() {
+    //             showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+    //         }
+    //     });
+    // }
+
     function Yakunlash() {
+        console.log(validatePayments(), 'aaa')
         if (!validatePayments()) {
             return;
         }
-        
+
         const orderId = $("#order_id").val();  
         $.ajax({
             url: `/b2c_shop_finish/${orderId}`,
@@ -2185,7 +2293,7 @@ document.addEventListener('DOMContentLoaded', function () {
             success: function(response) {
                 if (response.success) {
                     showAlert(response.message, "success");
-                    window.location.replace('/b2c_shop');
+                    $("#successModal").modal("show");
                 } else {
                     showAlert(response.message, "danger");
                 }
@@ -2195,6 +2303,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
 
     function productExistsInCart(productId) {
         let exists = false;
