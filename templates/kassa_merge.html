@@ -159,6 +159,13 @@
                                         <span>Maxsulot guruhi</span>
                                     </a>
                                 </li>
+
+                                <li class="nav-item">
+                                    <a href="{% url 'rounding_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
+                                       <i class="fa-solid fa-layer-group"></i>   
+                                        <span>Savdo yahlitlash</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>

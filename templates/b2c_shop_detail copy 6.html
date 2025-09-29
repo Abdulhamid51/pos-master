@@ -315,45 +315,6 @@
 {% endblock css %}
 
 {% block content %}
-
-
-<script>
-    let decimalPlaces = parseInt("{{ round_settings.decimal_places }}") || 2;
-    let roundingDirection = parseInt("{{ round_settings.rounding_direction }}") || 2;
-
-    // Number va String uchun ishlaydigan qilib qo‘shamiz
-    Object.defineProperty(Number.prototype, "roundNumber", {
-        value: function() {
-            let num = parseFloat(this); // har ehtimolga qarshi numberga o‘tkazamiz
-            const factor = Math.pow(10, decimalPlaces);
-
-            if (roundingDirection === 1) { // Tepaga
-                return Math.ceil(num * factor) / factor;
-            } else if (roundingDirection === 3) { // Pastga
-                return Math.floor(num * factor) / factor;
-            } else { // Standart
-                return Math.round(num * factor) / factor;
-            }
-        },
-        writable: true,
-        configurable: true
-    });
-
-    Object.defineProperty(String.prototype, "roundNumber", {
-        value: function() {
-            let num = parseFloat(this); // string → number
-            if (isNaN(num)) return NaN; // son emas bo‘lsa
-            return num.roundNumber();   // yuqoridagi Number versiyasidan foydalanadi
-        },
-        writable: true,
-        configurable: true
-    });
-
-
-</script>
-
-
-
 <p style="display: none;" id="shop_valyuta_name">{{ shop_valyuta_name }}</p>
 
 <div id="content" class="main-content">
@@ -369,7 +330,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
 
 
                         <script>
@@ -419,9 +379,9 @@
                                             
                                             // Agar dollar bo'lsa, kursga bo'lib yozamiz
                                             if (isDollar) {
-                                                input.value = (remainingAmount / dollarKurs).roundNumber();
+                                                input.value = (remainingAmount / dollarKurs).toFixed(2);
                                             } else {
-                                                input.value = remainingAmount.roundNumber();
+                                                input.value = remainingAmount.toFixed(2);
                                             }
                                             
                                             // Input qiymatini yangilaymiz
@@ -445,7 +405,7 @@
                                 const remainingAmount = paymentSystem.totalToPay;
                                 
                                 // Qarz summasini inputga yozish
-                                document.getElementById('qarzSumma').value = remainingAmount.roundNumber();
+                                document.getElementById('qarzSumma').value = remainingAmount.toFixed(2);
                                 
                                 // Bugungi sanani olish va 30 kun qo'shamiz
                                 const today = new Date();
@@ -1483,8 +1443,8 @@
                                 summaItog = oraliq_jami - chegirma;
                             }
                             
-                            const formattedSumma = formatNumber(summaItog.roundNumber());
-                            const formattedoraliq_jami = formatNumber(oraliq_jami.roundNumber());
+                            const formattedSumma = formatNumber(summaItog.toFixed(2));
+                            const formattedoraliq_jami = formatNumber(oraliq_jami.toFixed(2));
                             
                             document.getElementById('chek_total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
                             document.getElementById('total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
@@ -2487,8 +2447,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
         const total = newPrice * quantity;
         
-        row.find('.total').text(formatNumber(total.roundNumber()));
-        row.find('.total').attr('data-value', total.roundNumber());
+        row.find('.total').text(formatNumber(total.toFixed(2)));
+        row.find('.total').attr('data-value', total.toFixed(2));
         updateCartItem(row);
         updateReceiptProducts();
     }
@@ -2511,8 +2471,8 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             success: function(response) {
                 if (response.success) {
-                    row.find('.total').text(formatNumber(total.roundNumber()));
-                    row.find('.total').attr('data-value', total.roundNumber());
+                    row.find('.total').text(formatNumber(total.toFixed(2)));
+                    row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
                     changeDiscount();
                     updateReceiptProducts();
@@ -2582,7 +2542,7 @@ document.addEventListener('DOMContentLoaded', function () {
          const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
          const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
          const remaining = Math.max(total - naqd_summa, 0);
-         $("#nasiya_summa").val(formatNumber(remaining.roundNumber()));
+         $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
      }
     calculateRemaining()
     // function validatePayments() {
@@ -2650,6 +2610,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
+
+    // function Yakunlash() {
+    //     if (!validatePayments()) {
+    //         return;
+    //     }
+        
+    //     const orderId = $("#order_id").val();  
+    //     $.ajax({
+    //         url: `/b2c_shop_finish/${orderId}`,
+    //         type: "POST",
+    //         success: function(response) {
+    //             if (response.success) {
+    //                 showAlert(response.message, "success");
+    //                 $('#check_div').print()
+    //             } else {
+    //                 showAlert(response.message, "danger");
+    //             }
+    //         },
+
+    //         error: function() {
+    //             showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+    //         }
+    //     });
+    // }
 
     function Yakunlash() {
         // paymentSystem.updateTolash(input);
@@ -2787,7 +2771,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                onchange="updatePrice(this)">
                                     </div>
                                 </td>
-                                <td class="total" data-value="${(quantity * price).roundNumber()}">${formatNumber((quantity * price).roundNumber())}</td>
+                                <td class="total" data-value="${(quantity * price).toFixed(2)}">${formatNumber((quantity * price).toFixed(2))}</td>
                                 <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>`;
                         
@@ -3224,6 +3208,24 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
+<script>
+    let decimalPlaces = parseInt("{{ round_settings.decimal_places }}") || 2;
+    let roundingDirection = parseInt("{{ round_settings.rounding_direction }}") || 2;
+
+    // Number prototype ga qo‘shamiz
+    Number.prototype.roundNumber = function() {
+        const factor = Math.pow(10, decimalPlaces);
+
+        if (roundingDirection === 1) { // Tepaga
+            return Math.ceil(this * factor) / factor;
+        } else if (roundingDirection === 3) { // Pastga
+            return Math.floor(this * factor) / factor;
+        } else { // Standart
+            return Math.round(this * factor) / factor;
+        }
+    };
+
+</script>
 
 
 {% endblock js %}

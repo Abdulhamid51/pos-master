@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Savdo Yahlitlash Sozlamalari</title>
+{% endblock title %}
+
+{% block content %}
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="row layout-top-spacing" id="cancel-row">
+            <!-- Sidebar -->
+            <div class="col-md-2">
+                        <div class="widget-content widget-content-area">
+                            <ul class="nav flex-column nxl-content-sidebar-item">
+                                {% if custom_user_profile.is_measurement_type %}
+                                <li class="nav-item">
+                                    <a href="{% url 'measurement_type_list' %}" class="nav-link {% if request.resolver_match.url_name == 'measurement_type_list' %}active{% endif %}">
+                                    <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                                        <span>O'lchov turlari</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_price_type %}
+                                <li class="nav-item">
+                                    <a href="{% url 'price_type' %}" class="nav-link {% if request.resolver_match.url_name == 'price_type' %}active{% endif %}">
+                                        <i class="fa-solid fa-tag"></i>
+                                        <span>Narx Turi</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_filial_list %}
+                                <li class="nav-item">
+                                    <a href="{% url 'filial_list' %}" class="nav-link {% if request.resolver_match.url_name == 'filial_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-code-branch"></i>
+                                        <span>Filial</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_nds %}
+                                <li class="nav-item">
+                                    <a href="{% url 'nds_page' %}" class="nav-link {% if request.resolver_match.url_name == 'nds_page' %}active{% endif %}">
+                                        <i class="fa-solid fa-percent"></i>
+                                        <span>NDS</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_kadrlar %}
+                                <li class="nav-item">
+                                    <a href="{% url 'users_restrictions' %}" class="nav-link {% if request.resolver_match.url_name == 'users_restrictions' %}active{% endif %}">
+                                        <i class="fa-solid fa-users"></i>
+                                        <span>Foydalanuvchilar</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_valyuta %}
+                                <li class="nav-item">
+                                    <a href="{% url 'valyuta_list' %}" class="nav-link {% if request.resolver_match.url_name == 'valyuta_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-coins"></i>
+                                        <span>Valyuta</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_kassa_merge %}
+                                <li class="nav-item">
+                                    <a href="{% url 'kassa_merge' %}" class="nav-link {% if request.resolver_match.url_name == 'kassa_merge' %}active{% endif %}">
+                                        <i class="fa-solid fa-link"></i>
+                                        <span>Kassa Biriktirish</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_kassa_new %}
+                                <li class="nav-item">
+                                    <a href="{% url 'kassa_new_list' %}" class="nav-link {% if request.resolver_match.url_name == 'kassa_new_list' %}active{% endif %}">
+                                        <i class="fa-solid fa-cash-register"></i>
+                                        <span>Kassa</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_money_circulation %}
+                                <li class="nav-item">
+                                    <a href="{% url 'money_circulation' %}" class="nav-link {% if request.resolver_match.url_name == 'money_circulation' %}active{% endif %}">
+                                        <i class="fa-solid fa-money-bill-transfer"></i>
+                                        <span>Pul Muomalasi</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="nav-item">
+                                    <a href="{% url 'last_seen' %}" class="nav-link {% if request.resolver_match.url_name == 'last_seen' %}active{% endif %}">
+                                        <i class="fa-solid fa-seedling"></i>
+                                        <span>Oxirgi ko'rilgan</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'debtor_type' %}" class="nav-link {% if request.resolver_match.url_name == 'debtor_type' %}active{% endif %}">
+                                        <i class="fa-solid fa-quote-left"></i>
+                                        <span>Mijoz Turi</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'region' %}" class="nav-link {% if request.resolver_match.url_name == 'region' %}active{% endif %}">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                        <span>Mintaqa</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'teritory' %}" class="nav-link {% if request.resolver_match.url_name == 'teritory' %}active{% endif %}">
+                                        <i class="fa-solid fa-location-dot"></i>    
+                                        <span>Hudud</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'groups' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
+                                       <i class="fa-solid fa-layer-group"></i>   
+                                        <span>Maxsulot guruhi</span>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{% url 'rounding_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
+                                       <i class="fa-solid fa-layer-group"></i>   
+                                        <span>Savdo yahlitlash</span>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+            <!-- Asosiy kontent -->
+            <div class="col-xl-10 col-lg-12 col-sm-12 layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <!-- Xabarlar -->
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fa-solid fa-sliders"></i>
+                                        Savdo Yahlitlash Sozlamalari
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        
+                                        <!-- Nechta xonagacha sonligi -->
+                                        <div class="form-group">
+                                            <label for="decimal_places" class="font-weight-bold">
+                                                Nechta xonagacha sonligi
+                                            </label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="decimal_places" 
+                                                   name="decimal_places" 
+                                                   min="0" 
+                                                   max="6" 
+                                                   value="{{ setting.decimal_places }}" 
+                                                   required>
+                                            <small class="form-text text-muted">
+                                                0 (butun son) dan 6 gacha bo'lgan son kiriting
+                                            </small>
+                                        </div>
+
+                                        <!-- Yahlitlash yo'nalishi -->
+                                        <div class="form-group">
+                                            <label for="rounding_direction" class="font-weight-bold">
+                                                Nuqtadan keyingi son qaysi tomonga yahlitlansin?
+                                            </label>
+                                            <select class="form-control" 
+                                                    id="rounding_direction" 
+                                                    name="rounding_direction" 
+                                                    required>
+                                                <option value="1" {% if setting.rounding_direction == 1 %}selected{% endif %}>
+                                                    1. Tepaga yahlitlash (0.5 → 1)
+                                                </option>
+                                                <option value="2" {% if setting.rounding_direction == 2 %}selected{% endif %}>
+                                                    2. Standart yahlitlash (0.5 → 1, 0.4 → 0)
+                                                </option>
+                                                <option value="3" {% if setting.rounding_direction == 3 %}selected{% endif %}>
+                                                    3. Pastga yahlitlash (0.5 → 0)
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Misol ko'rsatish -->
+                                        <div class="alert alert-info">
+                                            <h6>Misol:</h6>
+                                            <p>
+                                                <strong>Joriy sozlamalar:</strong><br>
+                                                - Xona soni: <span id="current_decimal_places">{{ setting.decimal_places }}</span><br>
+                                                - Yahlitlash: <span id="current_rounding_direction">
+                                                    {% if setting.rounding_direction == 1 %}
+                                                        Tepaga (0.5 → 1)
+                                                    {% elif setting.rounding_direction == 2 %}
+                                                        Standart (0.5 → 1, 0.4 → 0)
+                                                    {% else %}
+                                                        Pastga (0.5 → 0)
+                                                    {% endif %}
+                                                </span>
+                                            </p>
+                                            <p class="mb-0">
+                                                12.3456 raqami <strong id="example_result">{{ setting.round_number|floatformat:6 }}</strong> ga yahlitlanadi
+                                            </p>
+                                            <div id="additional_examples"></div>
+                                        </div>
+
+                                        <!-- Saqlash tugmasi -->
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="fa-solid fa-save"></i>
+                                                Sozlamalarni Saqlash
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script>
+    function roundNumber(number, decimalPlaces, roundingDirection) {
+        const factor = Math.pow(10, decimalPlaces);
+        
+        if (roundingDirection === 1) { // Tepaga
+            return Math.ceil(number * factor) / factor;
+        } else if (roundingDirection === 3) { // Pastga
+            return Math.floor(number * factor) / factor;
+        } else { // Standart
+            return Math.round(number * factor) / factor;
+        }
+    }
+
+    function updateExample() {
+        const decimalPlaces = parseInt(document.getElementById('decimal_places').value) || 2;
+        const roundingDirection = parseInt(document.getElementById('rounding_direction').value) || 2;
+        
+        // Joriy sozlamalarni yangilash
+        document.getElementById('current_decimal_places').textContent = decimalPlaces;
+        
+        // Yahlitlash yo'nalishini yangilash
+        let directionText = '';
+        if (roundingDirection === 1) {
+            directionText = 'Tepaga (0.5 → 1)';
+        } else if (roundingDirection === 2) {
+            directionText = 'Standart (0.5 → 1, 0.4 → 0)';
+        } else {
+            directionText = 'Pastga (0.5 → 0)';
+        }
+        document.getElementById('current_rounding_direction').textContent = directionText;
+        
+        // Asosiy misolni hisoblash va ko'rsatish
+        const exampleNumber = 12.3456;
+        const result = roundNumber(exampleNumber, decimalPlaces, roundingDirection);
+        document.getElementById('example_result').textContent = result.toFixed(6);
+        
+        // Qo'shimcha misollarni ko'rsatish
+        showAdditionalExamples(decimalPlaces, roundingDirection);
+    }
+
+    function showAdditionalExamples(decimalPlaces, roundingDirection) {
+        const examples = [
+            { input: 0.5, name: "0.5" },
+            { input: 0.4, name: "0.4" },
+            { input: 1.2345, name: "1.2345" },
+            { input: 9.9999, name: "9.9999" },
+            { input: 2.5555, name: "2.5555" },
+            { input: 7.1111, name: "7.1111" }
+        ];
+        
+        let examplesHtml = '<div class="mt-3"><small><strong>Boshqa misollar:</strong><br>';
+        
+        examples.forEach(example => {
+            const result = roundNumber(example.input, decimalPlaces, roundingDirection);
+            examplesHtml += `${example.name} → <strong>${result.toFixed(decimalPlaces)}</strong><br>`;
+        });
+        
+        examplesHtml += '</small></div>';
+        
+        // Agar allaqachon mavjud bo'lsa, olib tashlash
+        const existingExamples = document.getElementById('additional_examples');
+        if (existingExamples) {
+            existingExamples.innerHTML = examplesHtml;
+        } else {
+            // Yangi misollarni qo'shish
+            const examplesContainer = document.createElement('div');
+            examplesContainer.id = 'additional_examples';
+            examplesContainer.innerHTML = examplesHtml;
+            document.querySelector('.alert-info').appendChild(examplesContainer);
+        }
+    }
+
+    // Sahifa yuklanganda misollarni ko'rsatish
+    document.addEventListener('DOMContentLoaded', function() {
+        updateExample();
+        
+        // Input va selectlarni kuzatish
+        document.getElementById('decimal_places').addEventListener('input', updateExample);
+        document.getElementById('rounding_direction').addEventListener('change', updateExample);
+    });
+
+    // Formani yuborishdan oldin tekshirish
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const decimalPlaces = parseInt(document.getElementById('decimal_places').value);
+        if (decimalPlaces < 0 || decimalPlaces > 6) {
+            e.preventDefault();
+            alert('Iltimos, xona sonini 0 dan 6 gacha bo\'lgan oraliqda kiriting!');
+        }
+    });
+</script>
+{% endblock js %}

@@ -145,6 +145,7 @@ urlpatterns = [
     path('finish_order/<id>/', finish_order, name='finish_order'),
     path('order_detail_ajax/<order_id>/', order_detail_ajax, name='order_detail_ajax'),
     path('edit_debtor/<id>/', edit_debtor, name='edit_debtor'),
+    path('refresh_debtor/<id>/', refresh_debtor, name='refresh_debtor'),
     path('refresh_debtor_debt/<id>/', refresh_debtor_debt, name='refresh_debtor_debt'),
     path('today_sales/', today_sales, name='today_sales'),
     path('analysis_costs/', analysis_costs, name='analysis_costs'),
@@ -360,7 +361,7 @@ urlpatterns = [
     path('close_cash', close_cash, name='close_cash'),
     path('close_cash_add', close_cash_add, name='close_cash_add'),
     path('close_cash_list', close_cash_list, name='close_cash_list'),
-    path('close_cash_confirmed/<int:id>', close_cash_confirmed, name='close_cash_confirmed'),
+    path('close_cash_confirmed/<int:id>/', close_cash_confirmed, name='close_cash_confirmed'),
 
     path('return_customer', return_customer, name='return_customer'),
     path('return_customer_add', return_customer_add, name='return_customer_add'),
@@ -373,6 +374,12 @@ urlpatterns = [
     path('get-product-data/<int:product_id>/', get_product_data, name='get_product_data'),
 
     path('product-filial-add/', product_filial_add, name='product_filial_add'),
+    path('return-product/', ReturnProductView.as_view(), name='return_product'),
+
+
+    path('rounding-settings/', rounding_settings, name='rounding_settings'),
+
+
 
     
 

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product </title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .nxl-content-sidebar-item {
+            padding: 0;
+            list-style: none;
+        }
+
+        .nxl-content-sidebar-item .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nxl-content-sidebar-item .nav-link {
+            padding: 10px 15px;
+            color: #333 !important;
+            text-decoration: none;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nxl-content-sidebar-item .nav-link:hover {
+            background-color: #f5f5f5 !important;
+        }
+
+        .nxl-content-sidebar-item .nav-link.active {
+            background-color: #d6f0f5 !important;
+            font-weight: 500;
+            color: #000 !important;
+        }
+        .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background-color: #1d6bfd;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table table-hover non-hover" id="html5-extension" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="">№</th>
+                                            <th>Kassa</th>
+                                            <th>Valyuta</th>
+                                            <th>Summa</th>
+                                            <th>Sana</th>
+                                            <th>Filial</th>
+                                            <th>Tasdiklash</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for close in close %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ close.kassa.kassa.name }}</td>
+                                                <td>{{ close.kassa.valyuta.name }}</td>
+                                                <td>{{ close.summa|intcomma }}</td>
+                                                <td>{{ close.date|date:'Y-m-d' }}</td>
+                                                <td>{{ close.filial|default:'' }}</td>
+                                                <td>
+                                                    {% if not close.is_confirmed %}
+                                                        <button class="btn btn-success" type="button" data-toggle="modal" data-target="#exampleModal{{ close.id }}">
+                                                            <i class="fa-solid fa-check"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <span class="badge badge-success">Tasdiqlangan</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Tasdiqlash Modali -->
+                                            <div class="modal fade" id="exampleModal{{ close.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Summani Tasdiqlash</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form method="post" action="{% url 'close_cash_confirmed' close.id %}">
+                                                            {% csrf_token %}
+                                                            <div class="modal-body">
+                                                                <p><strong>Kassa:</strong> {{ close.kassa.kassa.name }}</p>
+                                                                <p><strong>Valyuta:</strong> {{ close.kassa.valyuta.name }}</p>
+                                                                <p><strong>Summa:</strong> {{ close.summa|intcomma }}</p>
+                                                                
+                                                                <div class="form-group">
+                                                                    <label for="to_kassa{{ close.id }}">Qaysi kassaga tushirilsin?</label>
+                                                                    <select class="form-control" id="to_kassa{{ close.id }}" name="to_kassa" required>
+                                                                        <option value="">-- Kassani tanlang --</option>
+                                                                        {% for kassa in kassas %}
+                                                                            <option value="{{ kassa.id }}">{{ kassa.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                                <button type="submit" class="btn btn-primary">Tasdiqlash</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $('#html5-extension').DataTable({
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { 
+                    "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', 
+                    "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' 
+                },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+                "sLengthMenu": "Ko'rsatish: _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        });
+    </script>
+{% endblock js %}

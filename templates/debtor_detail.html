@@ -95,7 +95,11 @@
                                             <i class="fa-solid fa-filter"></i>
                                         </button>
                                     </div>
-                                  
+                                    <div class="col-md-2">
+                                        <a href="{% url 'refresh_debtor' debtor.id %}" class="btn btn-primary" type="button">
+                                            Yangilash
+                                        </a>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -168,7 +172,7 @@
                                                         {{ py.give_summa|intcomma }}
                                                     </td>
                                                     <td></td> 
-                                                    {% if py.debt_new > 0 %}
+                                                    {% if py.debt_new < 0 %}
                                                         <td></td>
                                                         <td>{{ py.debt_new|intcomma }}</td>
                                                     {% else %}

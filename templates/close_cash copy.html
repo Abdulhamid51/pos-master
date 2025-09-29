@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product </title>
+    <style>
+        .dot { width: 14px; height: 14px; background: #23d375; border-radius: 50%; }
+        .subtext { color: #666; font-size: 14px; margin-top: -10px; margin-bottom: 20px; }
+
+    </style>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+{% endblock css %}
+{% block content %}
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6">
+                            <div class="row mb-2">
+                                <div class="col text-left" >
+                                    <div style="display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold;">
+                                        <div class="dot"></div>
+                                        <span>Kassa ecomarf-tekstil</span>
+                                    </div>
+                                    <div class="subtext">Store ecomarf-tekstil · dan ochiq 28.06.2025 09:24:51</div>
+                                </div>
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary" onclick="saveBack()">
+                                        Kassani yopish <i class="fa-solid fa-arrow-right-long"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <style>
+                                .kassa_name {
+                                    font-weight: 700;
+                                    color: rgb(0, 157, 255) !important;
+                                }
+                                td {
+                                    align-items: center;
+                                    text-align: center;
+                                    font-weight: bold; color: #888 !important;
+                                }
+                                th {
+                                    align-items: center;
+                                    text-align: center;
+                                }
+                                tfoot th {
+                                    color: white !important;
+                                } 
+                                tfoot span {
+                                    color: white !important;
+                                } 
+                                .input-group { display: flex; gap: 5px; align-items: center; justify-content: center; }
+                                .input-group input { width: auto; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 6px; }
+                                .input-group span { font-weight: bold; color: #888; }
+                                .badge { background-color: #66e09d; color: #fff; border-radius: 20px; padding: 6px 14px; display: inline-block; font-weight: bold; }
+                                .total-row { background-color: #1d6bfd; color: white !important; font-weight: bold; border-radius: 10px;}
+                                .total-row th:first-child {
+                                    border-top-left-radius: 10px;
+                                    border-bottom-left-radius: 10px;
+                                }
+                                .total-row th:last-child {
+                                    border-top-right-radius: 10px;
+                                    border-bottom-right-radius: 10px;
+                                }
+                            </style>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Kassa</th>
+                                            <th>Kirim</th>
+                                            <th>Chiqim</th>
+                                            <th>Qoldik</th>
+                                            {% for x in valyuta %}
+                                                <th>{{x.name}}</th>
+                                            {% endfor %}
+                                            <th>Farq</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        {% for data in data %}
+                                            <tr>
+                                                <td class="kassa_name">
+                                                    {{ data.kassa_name }}
+                                                </td>
+                                                <td style="display: none;">
+                                                    <span class="kassa_id">{{ data.kassa_id }}</span>
+                                                </td>
+
+                                                <td>
+                                                    {% for i in data.valyuta %}
+                                                        {{ i.kirim_sum|intcomma }} {{i.valyuta_name}} /
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% for i in data.valyuta %}
+                                                        {{ i.chiqim_sum|intcomma }} {{i.valyuta_name}} /
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% for i in data.valyuta %}
+                                                        {{ i.merge_sum|intcomma }} {{i.valyuta_name}} /
+                                                    {% endfor %}
+                                                </td>
+                                                {% for x in valyuta %}
+                                                    <td class="input-group"><input type="number" step="any" data-valyuta_id="{{x.id}}" value="0" oninput="pushData(this)"><span>{{x.name}}</span></td>
+                                                {% endfor %}
+                                               <td><span class="badge">0</span></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <!-- <tfoot>
+                                        <tr class="total-row">
+                                            <th>Jami</th>
+                                            <th>
+                                                {% for x in valyuta %}
+                                                    0 {{x.name}} /
+                                                {% endfor%}
+                                            </th>
+                                            <th>
+                                                {% for x in valyuta %}
+                                                    0 {{x.name}} /
+                                                {% endfor%}
+                                            </th>
+                                            <th>
+                                                {% for x in valyuta %}
+                                                    0 {{x.name}} /
+                                                {% endfor%}
+                                            </th>
+                                            {% for x in valyuta %}
+                                                <th class="input-group"><input type="number" step="any" value="0"><span>{{x.name}}</span></th>
+                                            {% endfor %}
+                                            <th><span class="badge">0</span></th>
+                                        </tr>
+                                    </tfoot> -->
+                                </table>
+                                <script>
+                                    const data = [];
+
+                                    function pushData(input) {
+                                        const summa = input.value;
+                                        const valyuta_id = input.getAttribute('data-valyuta_id');
+                                        const tr = input.closest('tr');
+                                        const kassa_id = tr.querySelector('.kassa_id').textContent;
+
+                                        const existingItem = data.find(item => item.valyuta_id === valyuta_id && item.kassa_id === kassa_id);
+                                        if (existingItem) {
+                                            existingItem.summa = summa;
+                                        } else {
+                                            data.push({
+                                                valyuta_id: valyuta_id,
+                                                kassa_id: kassa_id,
+                                                summa: summa,
+                                            });
+                                        }
+
+                                        const one_data = {
+                                            valyuta_id: valyuta_id,
+                                            kassa_id: kassa_id,
+                                            summa: summa,
+                                        };
+
+                                        console.log(data);
+                                        
+                                    }
+                                    function saveBack() {
+                                        if (data.length > 0) {
+                                                $.ajax({
+                                                url: "{% url 'close_cash_add' %}",
+                                                type: "POST",
+                                                contentType: "application/json",
+                                                data: JSON.stringify(data),
+                                                success: function(response) {
+                                                    console.log('ok');
+                                                    window.location.replace('/close_cash_list');
+                                                    // Swal.fire({
+                                                    //     position: "top-center",
+                                                    //     icon: "success",
+                                                    //     title: "Ma'lumotlar saqlandi",
+                                                    //     showConfirmButton: false,
+                                                    //     timer: 2000
+                                                    // });
+                                                },
+                                                error: function () {
+                                                    console.log('off');
+                                                    Swal.fire({
+                                                        position: "top-center",
+                                                        icon: "error",
+                                                        title: "Ma'lumotlar saqlanmadi",
+                                                        showConfirmButton: true
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+{% endblock js %}

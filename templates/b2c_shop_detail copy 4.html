@@ -315,45 +315,6 @@
 {% endblock css %}
 
 {% block content %}
-
-
-<script>
-    let decimalPlaces = parseInt("{{ round_settings.decimal_places }}") || 2;
-    let roundingDirection = parseInt("{{ round_settings.rounding_direction }}") || 2;
-
-    // Number va String uchun ishlaydigan qilib qo‘shamiz
-    Object.defineProperty(Number.prototype, "roundNumber", {
-        value: function() {
-            let num = parseFloat(this); // har ehtimolga qarshi numberga o‘tkazamiz
-            const factor = Math.pow(10, decimalPlaces);
-
-            if (roundingDirection === 1) { // Tepaga
-                return Math.ceil(num * factor) / factor;
-            } else if (roundingDirection === 3) { // Pastga
-                return Math.floor(num * factor) / factor;
-            } else { // Standart
-                return Math.round(num * factor) / factor;
-            }
-        },
-        writable: true,
-        configurable: true
-    });
-
-    Object.defineProperty(String.prototype, "roundNumber", {
-        value: function() {
-            let num = parseFloat(this); // string → number
-            if (isNaN(num)) return NaN; // son emas bo‘lsa
-            return num.roundNumber();   // yuqoridagi Number versiyasidan foydalanadi
-        },
-        writable: true,
-        configurable: true
-    });
-
-
-</script>
-
-
-
 <p style="display: none;" id="shop_valyuta_name">{{ shop_valyuta_name }}</p>
 
 <div id="content" class="main-content">
@@ -369,122 +330,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
-
-
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                // Har bir to'lov usuli uchun event listener qo'shamiz
-                                document.querySelectorAll('.toggle-input').forEach(button => {
-                                    button.addEventListener('click', function(e) {
-                                        // e.stopPropagation();
-                                        
-                                        const methodBox = this.closest('.method-box');
-                                        const inputBox = methodBox.nextElementSibling;
-                                        
-                                        if (!inputBox || !inputBox.classList.contains('input-box')) return;
-                                        
-                                        // Boshqa barcha input boxlarni yopamiz
-                                        // document.querySelectorAll('.input-box').forEach(b => {
-                                        //     if (b !== inputBox) b.style.display = 'none';
-                                        // });
-
-                                        document.querySelectorAll('.input-box').forEach(b => {
-                                            if (b !== inputBox) {
-                                                let input = b.querySelector('input');
-                                                if (input && (input.value.trim() === '' || parseFloat(input.value) === 0)) {
-                                                    b.classList.add('d-none');   // agar bo‘sh bo‘lsa yashiramiz
-                                                } else {
-                                                    b.classList.remove('d-none'); // qiymati bo‘lsa ko‘rsatamiz
-                                                }
-                                            } else {
-                                                b.classList.remove('d-none'); // tanlangan (bosilgan) elementni ochiq qoldiramiz
-                                            }
-                                        });
-
-
-                                        
-                                        // Input boxni ko'rsatamiz
-                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
-                                        
-                                        // Agar input box ochilgan bo'lsa, unga qolgan summani yozamiz
-                                        if (inputBox.style.display === 'block') {
-                                            const input = inputBox.querySelector('input');
-                                            const toggleButton = methodBox.querySelector('.toggle-input');
-                                            const isDollar = toggleButton.getAttribute('data-dollar') === 'true';
-                                            const dollarKurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
-                                            
-                                            // Jami qolgan summani olish
-                                            const remainingAmount = paymentSystem.totalToPay;
-                                            
-                                            // Agar dollar bo'lsa, kursga bo'lib yozamiz
-                                            if (isDollar) {
-                                                input.value = (remainingAmount / dollarKurs).roundNumber();
-                                            } else {
-                                                input.value = remainingAmount.roundNumber();
-                                            }
-                                            
-                                            // Input qiymatini yangilaymiz
-                                            paymentSystem.updateTolash(input);
-                                            input.focus();
-                                        }
-                                    });
-                                });
-                                
-                                // Qolgan kodlar...
-                            });
-                        </script>
-
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            // Qarz modalini ochish tugmasi uchun event listener
-                            document.getElementById('qarzModalButton').addEventListener('click', function(e) {
-                                e.stopPropagation();
-                                
-                                // Jami qolgan summani olish
-                                const remainingAmount = paymentSystem.totalToPay;
-                                
-                                // Qarz summasini inputga yozish
-                                document.getElementById('qarzSumma').value = remainingAmount.roundNumber();
-                                
-                                // Bugungi sanani olish va 30 kun qo'shamiz
-                                const today = new Date();
-                                const dueDate = new Date();
-                                dueDate.setDate(today.getDate() + 30);
-                                
-                                // Sana inputiga formatlab yozish
-                                document.getElementById('qarzDueDate').value = dueDate.toISOString().split('T')[0];
-                            });
-                            
-                            // Qarzni tasdiqlash tugmasi
-                            document.getElementById('confirmQarzButton').addEventListener('click', function() {
-                                const qarzSumma = parseFloat(document.getElementById('qarzSumma').value) || 0;
-                                
-                                if (qarzSumma > 0) {
-                                    if (paymentSystem.addCreditPayment(qarzSumma)) {
-                                        // Modalni yopish
-                                        const qarzModal = document.getElementById('qarzModal');
-                                        $('#qarzclose').click();
-                                        // qarzclose.click()
-                                        // const modalInstance = bootstrap.Modal.getInstance(qarzModal);
-                                        // qarzModal.hide();
-                                        
-                                        // To'lovlar ro'yxatini yangilash
-                                        paymentSystem.updatePaymentDisplay();
-                                        paymentSystem.updateTolashText();
-                                    }
-                                } else {
-                                    showAlert("Iltimos, to'g'ri summa kiriting!", "warning");
-                                }
-                            });
-                        });
-                        </script>
-                    
-
-
-
-
-
                    <script>
                         function toggleValyutaDisabled() {
                             const valyutaInput = document.getElementById('valyuta_input');
@@ -830,8 +675,6 @@
                                     <input type="radio" class="btn-check price_type_input" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off" 
                                     {% if shop.debtor.price_type == i %}
                                         checked
-                                    {% elif not shop.debtor.price_type and price_types.first == i %}
-                                        checked
                                     {% endif %}
                                         >
                                     <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
@@ -845,7 +688,7 @@
                                     <select class="form-control searchable" id="mainSelectDebtor"  name="debtor" required>
                                         <option value=""></option>
                                         {% for i in customers %}
-                                            <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }} - {{ i.phone1 }}</option>
+                                            <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }} {{ i.phone1 }}</option>
                                         {% endfor %}
                                     </select>
                                     <div class="input-group-append">
@@ -855,7 +698,7 @@
                             </div>
                             
                             {% if shop.debtor.fio != "Naqd" %}
-                            <!-- <label for="">To'lov sanasi</label>
+                            <label for="">To'lov sanasi</label>
                             <input type="date" class="form-control" value="{{ shop.debt_return|date:'Y-m-d' }}" name="debt_return" required>
 
                             <label for="">Call center</label>
@@ -864,7 +707,7 @@
                                 {% for i in call_center %}
                                     <option value="{{i.id}}" {% if shop.saler == i %}selected{% endif %}>{{ i }}</option>
                                 {% endfor %}
-                            </select> -->
+                            </select>
                             {% endif %}
                          
 
@@ -952,7 +795,7 @@
                                                     <input value="998" type="text" class="form-control" id="recipient-phone2"  name="phone2" >
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="debtor_add_close">Yopish</button>
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
                                                     <button type="submit" class="btn btn-primary">Saqlash</button>
                                                 </div>
                                             </form>
@@ -1256,7 +1099,7 @@
                                             <hr>
                                         </div>
                                         {% for mer in kassa %}
-                                        <div class="col-md-3 mb-3 plus_button">
+                                        <div class="col-md-3 mb-3">
                                             <div class="payment-method" data-kassa-id="{{ mer.kassa.id }}" data-valyuta-id="{{ mer.valyuta.id }}">
                                                 <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'">
                                                     <i class="fa-solid fa-money-bill-wave"></i>
@@ -1285,7 +1128,7 @@
                                         </div>
                                         {% endfor %}
                                         
-                                        <div class="col-md-3 mb-3 plus_button">
+                                        <div class="col-md-3 mb-3">
                                             <div class="payment-method" data-kassa-id="qarz" data-valyuta-id="">
                                                 <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'">
                                                     <i class="fa-solid fa-money-bill-transfer"></i>
@@ -1345,9 +1188,9 @@
                                                     <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }}</option>
                                                 {% endfor %}
                                             </select>
-                                            <!-- <div class="input-group-append">
+                                            <div class="input-group-append">
                                                 <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorModal" style="height: 45px;">+</button>
-                                            </div> -->
+                                            </div>
                                         </div>
                                         <small class="text-muted">Balans: 0 {{shop_valyuta_name}}</small>
                                     </div>
@@ -1369,7 +1212,7 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-danger" id="qarzclose" data-bs-dismiss="modal">Bekor qilish</button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Bekor qilish</button>
                                     <button type="button" class="btn btn-primary" id="confirmQarzButton">Qarz berish</button>
                                 </div>
                             </div>
@@ -1402,7 +1245,7 @@
                             }
                             
                             document.querySelectorAll('.payment-input').forEach(input => {
-                                input.value = '0';
+                                input.value = '';
                             });
                             
                             paymentSystem.updatePaymentDisplay();
@@ -1416,7 +1259,7 @@
                             }
                             
                             document.querySelectorAll('.payment-input').forEach(input => {
-                                input.value = '0';
+                                input.value = '';
                             });
                             
                             paymentSystem.updatePaymentDisplay();
@@ -1483,8 +1326,8 @@
                                 summaItog = oraliq_jami - chegirma;
                             }
                             
-                            const formattedSumma = formatNumber(summaItog.roundNumber());
-                            const formattedoraliq_jami = formatNumber(oraliq_jami.roundNumber());
+                            const formattedSumma = formatNumber(summaItog.toFixed(2));
+                            const formattedoraliq_jami = formatNumber(oraliq_jami.toFixed(2));
                             
                             document.getElementById('chek_total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
                             document.getElementById('total_jami').textContent = `${formattedSumma} ${shop_valyuta_name}`;
@@ -1549,17 +1392,17 @@
                                             const isDollar = toggleButton.getAttribute('data-dollar') === 'true';
                                             const dollarKurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
                                             
-                                            // if (isDollar) {
-                                            //     // Dollar bo'lsa, summani kursga bo'lib yozamiz
-                                            //     input.value = (this.totalToPay / dollarKurs).toFixed(2);
-                                            // } else {
-                                            //     // So'm bo'lsa, to'liq summani yozamiz
-                                            //     input.value = this.totalToPay.toFixed(2);
-                                            // }
+                                            if (isDollar) {
+                                                // Dollar bo'lsa, summani kursga bo'lib yozamiz
+                                                input.value = (this.totalToPay / dollarKurs).toFixed(2);
+                                            } else {
+                                                // So'm bo'lsa, to'liq summani yozamiz
+                                                input.value = this.totalToPay.toFixed(2);
+                                            }
                                             this.updateTolash(input);
                                         }
                                     });
-                                    console.log(this.paymentMethods, 'ppppp')
+                                    
                                     this.paymentMethods['Qarz'] = 0;
                                     this.setupEventListeners();
                                     this.initModal();
@@ -1637,7 +1480,7 @@
                                     
                                     qarzModal.addEventListener('show.bs.modal', () => {
                                         const currentQarz = this.paymentMethods['Qarz'] || 0;
-                                        // summaInput.value = currentQarz > 0 ? currentQarz : this.totalToPay;
+                                        summaInput.value = currentQarz > 0 ? currentQarz : this.totalToPay;
                                         summaInput.select();
                                     });
                                     
@@ -1686,7 +1529,7 @@
                                         this.totalToPay += this.paymentMethods[methodName];
                                         this.paymentMethods[methodName] = 0;
                                     } else {
-                                        // inputBox.style.display = 'none';
+                                        inputBox.style.display = 'none';
                                     }
                                     
                                     this.updatePaymentDisplay();
@@ -1943,22 +1786,8 @@
                                         });
                                     }
                                     
-                                    // const totalPaid = payments.reduce((sum, payment) => sum + payment.summa, 0);
-
-                                    let totalPaid = 0;
-
-                                    for (const [methodName, amount] of Object.entries(paymentSystem.paymentMethods)) {
-                                        const numAmount = parseFloat(amount) || 0;
-
-                                        if (methodName.toLowerCase().includes("dollar")) {
-                                            totalPaid += parseFloat(numAmount); // dollarni kursga ko‘paytirib qo‘shamiz
-                                        } else {
-                                            totalPaid += parseFloat(numAmount); // so‘mni o‘zini qo‘shamiz
-                                        }
-                                    }
-
-                                    console.log(this.totalJami- totalPaid, 'kkkkkkk')
-                                    if ((this.totalJami - totalPaid) > 1) {
+                                    const totalPaid = payments.reduce((sum, payment) => sum + payment.summa, 0);
+                                    if (Math.abs(totalPaid - this.totalJami) > 1) {
                                         showAlert("To\'lov summasi umumiy summagacha to\'liq emas!", "danger");
                                         return false;
                                     }
@@ -2023,7 +1852,7 @@
                                         //     if (b !== inputBox) b.style.display = 'none';
                                         // });
                                         
-                                        // inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
                                     });
                                 });
 
@@ -2037,10 +1866,10 @@
                                         if (!inputBox || !inputBox.classList.contains('input-box')) return;
                                         
                                         document.querySelectorAll('.input-box').forEach(b => {
-                                            // if (b !== inputBox) b.style.display = 'none';
+                                            if (b !== inputBox) b.style.display = 'none';
                                         });
                                         
-                                        // inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
+                                        inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
                                         
                                         if (inputBox.style.display === 'block') {
                                             inputBox.querySelector('input').focus();
@@ -2400,6 +2229,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedValyutaId = valyutaSelect.value;
         const selectedPriceTypeId = document.querySelector('.price_type_input:checked')?.value;
 
+        console.log("Selected Valyuta ID:", selectedValyutaId, "Selected Price Type ID:", selectedPriceTypeId);
 
         document.querySelectorAll('#productListDropdown span[data-prices]').forEach(span => {
             const rawPrices = span.getAttribute('data-prices');
@@ -2487,8 +2317,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
         const total = newPrice * quantity;
         
-        row.find('.total').text(formatNumber(total.roundNumber()));
-        row.find('.total').attr('data-value', total.roundNumber());
+        row.find('.total').text(formatNumber(total.toFixed(2)));
+        row.find('.total').attr('data-value', total.toFixed(2));
         updateCartItem(row);
         updateReceiptProducts();
     }
@@ -2511,8 +2341,8 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             success: function(response) {
                 if (response.success) {
-                    row.find('.total').text(formatNumber(total.roundNumber()));
-                    row.find('.total').attr('data-value', total.roundNumber());
+                    row.find('.total').text(formatNumber(total.toFixed(2)));
+                    row.find('.total').attr('data-value', total.toFixed(2));
                     updateTotals();
                     changeDiscount();
                     updateReceiptProducts();
@@ -2572,6 +2402,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         $("#quantity_total").text(formatNumber(totalQuantity.toFixed(2)));
         $("#pack_total").text(formatNumber(totalPack.toFixed(2)));
+        console.log((formatNumberCustom(totalSum)), 'pppppp')
         document.getElementById("all_total").innerHTML = formatNumberCustom(totalSum);
         $("#all_total_2").val(formatNumberCustom(totalSum));
         changeDiscount();
@@ -2582,77 +2413,54 @@ document.addEventListener('DOMContentLoaded', function () {
          const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
          const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
          const remaining = Math.max(total - naqd_summa, 0);
-         $("#nasiya_summa").val(formatNumber(remaining.roundNumber()));
+         $("#nasiya_summa").val(formatNumber(remaining.toFixed(2)));
      }
     calculateRemaining()
-    // function validatePayments() {
-    //     const totalJami = parseFloat(document.getElementById('all_total_2').value) || 0;
-    //     // const totalPaid = Object.values(paymentSystem.paymentMethods).reduce((sum, amount) => sum + amount, 0);
-    //     const dollarKurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
-
-    //     const totalPaid = Object.entries(paymentSystem.paymentMethods).reduce((sum, [methodName, amount]) => {
-    //         console.log(methodName.toLowerCase(), amount, 'oooooo')
-    //         if (methodName.toLowerCase().includes("dollar")) {
-    //             return sum + (amount * dollarKurs); // Dollar bo‘lsa kursga ko‘paytiramiz
-    //         }
-    //         return sum + amount; // Oddiy so‘m bo‘lsa o‘zini qo‘shamiz
-    //     }, 0);
-    //     console.log(dollarKurs, 'pppp')
-    //     console.log(totalPaid, 'oooooo')
-
-    //     const remaining = totalJami - totalPaid;
-    //     const product_name = document.querySelectorAll('.product_name').length
-        
-    //     if (product_name == 0) {
-    //         showAlert(`Maxsulot mavjud emas`, "warning");
-    //         return false
-    //     }   
-    //     console.log(remaining, 'aaa')
-
-    //     if (remaining > 1) { 
-    //         return false;
-    //     }
-    //     return true;
-    // }
-
     function validatePayments() {
         const totalJami = parseFloat(document.getElementById('all_total_2').value) || 0;
-        const dollarKurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
-
-        let totalPaid = 0;
-
-        for (const [methodName, amount] of Object.entries(paymentSystem.paymentMethods)) {
-            const numAmount = parseFloat(amount) || 0;
-
-            if (methodName.toLowerCase().includes("dollar")) {
-                totalPaid += parseFloat(numAmount); // dollarni kursga ko‘paytirib qo‘shamiz
-            } else {
-                totalPaid += parseFloat(numAmount); // so‘mni o‘zini qo‘shamiz
-            }
-        }
-
-
-        // Floating point xatoni oldini olish uchun yaxlitlab olamiz
-        // const fixedTotalPaid = Math.round(totalPaid * 100) / 100; 
-        const remaining = Math.round((totalJami - totalPaid));
-
-
-        const product_name = document.querySelectorAll('.product_name').length;
-        if (product_name === 0) {
+        console.log('jami: ', totalJami)
+        const totalPaid = Object.values(paymentSystem.paymentMethods).reduce((sum, amount) => sum + amount, 0);
+        console.log('tol: ', totalPaid)
+        const remaining = totalJami - totalPaid;
+        const product_name = document.querySelectorAll('.product_name').length
+        
+        if (product_name == 0) {
             showAlert(`Maxsulot mavjud emas`, "warning");
-            return false;
-        }
+            return false
+        }   
+        console.log(remaining, 'aaa')
 
-        if (remaining > 1) {
+        if (remaining > 1) { 
             return false;
         }
         return true;
     }
+    // function Yakunlash() {
+    //     if (!validatePayments()) {
+    //         return;
+    //     }
+        
+    //     const orderId = $("#order_id").val();  
+    //     $.ajax({
+    //         url: `/b2c_shop_finish/${orderId}`,
+    //         type: "POST",
+    //         success: function(response) {
+    //             if (response.success) {
+    //                 showAlert(response.message, "success");
+    //                 $('#check_div').print()
+    //             } else {
+    //                 showAlert(response.message, "danger");
+    //             }
+    //         },
 
-
+    //         error: function() {
+    //             showAlert("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.", "danger");
+    //         }
+    //     });
+    // }
 
     function Yakunlash() {
-        // paymentSystem.updateTolash(input);
+        console.log(validatePayments(), 'aaa')
         if (!validatePayments()) {
             return;
         }
@@ -2787,11 +2595,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                                onchange="updatePrice(this)">
                                     </div>
                                 </td>
-                                <td class="total" data-value="${(quantity * price).roundNumber()}">${formatNumber((quantity * price).roundNumber())}</td>
+                                <td class="total" data-value="${(quantity * price).toFixed(2)}">${formatNumber((quantity * price).toFixed(2))}</td>
                                 <td><button type="button" class="btn btn-danger product-delete"><i class="fa-solid fa-trash"></i></button></td>
                             </tr>`;
                         
-                        $("tbody").prepend(newRow);
+                        $("tbody").append(newRow);
                         updateTotals();
                         updateReceiptProducts();
                         if (fullscreenPayment.style.display === 'block') {
@@ -3041,7 +2849,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <script>
     
-    const qarz_shop_debtor = document.getElementById('modalSelectDebtor')
+    const qarz_shop_debtor = document.getElementById('qarz_shop_debtor')
 
     $(document).ready(function () {
         function handleFormSubmit(formId, url, selectId, modalId) {
@@ -3053,32 +2861,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     type: 'POST',
                     data: formDatas + '&csrfmiddlewaretoken={{ csrf_token }}',
                     success: function (data) {
-                        // $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                        if ($(selectId)[0].selectize) {
-                            // Agar Selectize bo'lsa
-                            let selectize = $(selectId)[0].selectize;
-                            selectize.addOption({ value: data.id, text: data.name });
-                            selectize.addItem(data.id, true);
-                            $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                        } else {
-                            // Oddiy select bo'lsa
-                            $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
-                        }
-
-                        $(selectId).trigger("change");
-
-
-                        // $(modalId).modal('hide');
-                        if (modalId === "#debtorModal" && document.querySelector("#debtor_add_close")) {
-                            document.querySelector("#debtor_add_close").click();
-                        } else {
-                            $(modalId).modal('hide');
-                        }
-
+                        $(selectId).append(`<option value="${data.id}" selected>${data.name}</option>`);
+                        $(modalId).modal('hide');
                         $(formId)[0].reset();
                         if (data.fio) {
-                            // qarz_shop_debtor.options[qarz_shop_debtor.selectedIndex].text = data.fio;
-                            $('#modalSelectDebtor').append(`<option value="${data.id}" selected>${data.name}</option>`);
+                            qarz_shop_debtor.value = data.fio
                             changeInfo(data.id);
 
                         }
@@ -3097,7 +2884,7 @@ document.addEventListener('DOMContentLoaded', function () {
         handleFormSubmit('#teritoryForm', '{% url "create_teritory" %}', '#recipient-teritory', '#teritoryModal');
         handleFormSubmit('#priceTypeForm', '{% url "create_price_type" %}', '#recipient-price_type', '#priceTypeModal');
         handleFormSubmit('#regionForm', '{% url "create_region" %}', '#regionSelect', '#regionModal');
-        handleFormSubmit('#debtorForm', '{% url "create_debtor" %}', '#mainSelectDebtor', '#debtorModal');
+        handleFormSubmit('#debtorForm', '{% url "create_debtor" %}', '#mainSelectDebtor, #modalSelectDebtor', '#debtorModal');
 
     });
     $(document).ready(function () {
@@ -3209,21 +2996,5 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
-    document.querySelectorAll('.plus_button').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.stopPropagation();
-
-            const toggleInput = this.querySelector('.toggle-input');
-            if (toggleInput) {
-                toggleInput.dispatchEvent(new Event("click", { bubbles: true }));
-            }
-        });
-    });
-
 </script>
-
-
-
-
 {% endblock js %}

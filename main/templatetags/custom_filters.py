@@ -27,3 +27,17 @@ def replace(value, arg):
         return str(value).replace(old, new)
     except ValueError:
         return value
+
+
+
+@register.simple_tag(takes_context=True)
+def param_replace(context, **kwargs):
+    """
+    GET parametrlarini saqlab, yangi parametr qo'shadigan template tag
+    """
+    d = context['request'].GET.copy()
+    for k, v in kwargs.items():
+        d[k] = v
+    for k in [k for k, v in d.items() if not v]:
+        del d[k]
+    return d.urlencode()

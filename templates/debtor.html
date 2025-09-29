@@ -34,8 +34,35 @@
 
                         <div class="widget-content widget-content-area br-6">
                                 <div class="row">
-                                    <div class="col-md-10">
-                                    </div>
+                                    <form class="col-md-10">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <!-- Search input -->
+                                                <input type="text" value="{{search|default:''}}" id="searchInput" name="search" class="form-control" placeholder="Qidirish...">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <!-- Price type filter -->
+                                                <select name="price_type" id="priceTypeFilter" class="form-control">
+                                                    <option value="">Narx turi</option>
+                                                    
+                                                    {% for i in price_type %}
+                                                        <option value="{{i.id}}" 
+                                                            {% if price_type_selected == i.id %}
+                                                                selected
+                                                            {% endif %}
+                                                            >{{ i.name }}</option>
+                                                    {% endfor %}
+                                                        
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <!-- Filterlash button -->
+                                                <button id="filterBtn" type="submit" class="btn btn-primary w-100">
+                                                    Filterlash
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
                                     <div class="col-md-2">
                                         <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Yaratish</button>
                                         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -488,6 +515,29 @@
                                               
                                         {% endfor %}
                                     </tbody>
+
+
+                                    <thead>
+                                        <tr>
+                                            <th class=""></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            {% for i in totals_haq %}
+                                                <th>{{ i|intcomma }}</th>
+                                            {% endfor %}
+                                            {% for i in totals_qarz %}
+                                                <th>{{ i|intcomma }}</th>
+                                            {% endfor %}
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
                                    
                                 </table>
                             </div>
@@ -634,7 +684,8 @@
                     { extend: 'print', className: 'btn' }
                 ]
             },
-            paging: false  
+            paging: false  ,
+            searching: false  ,
         } );
     </script>
 

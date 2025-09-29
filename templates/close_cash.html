@@ -7,7 +7,117 @@
     <style>
         .dot { width: 14px; height: 14px; background: #23d375; border-radius: 50%; }
         .subtext { color: #666; font-size: 14px; margin-top: -10px; margin-bottom: 20px; }
-
+        .kassa_name {
+            font-weight: 700;
+            color: rgb(0, 157, 255) !important;
+        }
+        td {
+            align-items: center;
+            text-align: center;
+            font-weight: bold; color: #888 !important;
+        }
+        th {
+            align-items: center;
+            text-align: center;
+        }
+        tfoot th {
+            color: white !important;
+        } 
+        tfoot span {
+            color: white !important;
+        } 
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 5px 0;
+        }
+        .input-group input { 
+            width: 100px; 
+            padding: 5px; 
+            text-align: center; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+        }
+        .input-group span { 
+            font-weight: bold; 
+            color: #888; 
+            font-size: 12px;
+        }
+        .badge { 
+            background-color: #66e09d; 
+            color: #fff; 
+            border-radius: 20px; 
+            padding: 6px 14px; 
+            display: inline-block; 
+            font-weight: bold; 
+        }
+        .total-row { 
+            background-color: #1d6bfd; 
+            color: white !important; 
+            font-weight: bold; 
+            border-radius: 10px;
+        }
+        .total-row th:first-child {
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+        .total-row th:last-child {
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background-color: #1d6bfd;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .confirm-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .confirm-table th, .confirm-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .confirm-table th {
+            background-color: #f8f9fa;
+        }
+        .valyuta-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .difference-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .difference-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .difference-badge {
+            background-color: #66e09d;
+            color: #fff;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .negative-difference {
+            background-color: #ff4d4d;
+        }
     </style>
 {% endblock title %}
 {% block css %}
@@ -17,6 +127,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock css %}
 {% block content %}
         <div id="content" class="main-content">
@@ -30,177 +141,265 @@
                                         <div class="dot"></div>
                                         <span>Kassa ecomarf-tekstil</span>
                                     </div>
-                                    <div class="subtext">Store ecomarf-tekstil · dan ochiq 28.06.2025 09:24:51</div>
+                                    <!-- <div class="subtext">Store ecomarf-tekstil · dan ochiq 28.06.2025 09:24:51</div> -->
                                 </div>
                                 <div class="col text-right">
-                                    <button type="button" class="btn btn-primary" onclick="saveBack()">
+                                    <button type="button" class="btn btn-primary" onclick="showConfirmationModal()">
                                         Kassani yopish <i class="fa-solid fa-arrow-right-long"></i>
                                     </button>
                                 </div>
                             </div>
-                            <style>
-                                .kassa_name {
-                                    font-weight: 700;
-                                    color: rgb(0, 157, 255) !important;
-                                }
-                                td {
-                                    align-items: center;
-                                    text-align: center;
-                                    font-weight: bold; color: #888 !important;
-                                }
-                                th {
-                                    align-items: center;
-                                    text-align: center;
-                                }
-                                tfoot th {
-                                    color: white !important;
-                                } 
-                                tfoot span {
-                                    color: white !important;
-                                } 
-                                .input-group { display: flex; gap: 5px; align-items: center; justify-content: center; }
-                                .input-group input { width: auto; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 6px; }
-                                .input-group span { font-weight: bold; color: #888; }
-                                .badge { background-color: #66e09d; color: #fff; border-radius: 20px; padding: 6px 14px; display: inline-block; font-weight: bold; }
-                                .total-row { background-color: #1d6bfd; color: white !important; font-weight: bold; border-radius: 10px;}
-                                .total-row th:first-child {
-                                    border-top-left-radius: 10px;
-                                    border-bottom-left-radius: 10px;
-                                }
-                                .total-row th:last-child {
-                                    border-top-right-radius: 10px;
-                                    border-bottom-right-radius: 10px;
-                                }
-                            </style>
+                            
                             <div class="table-responsive mb-4 mt-4">
                                 <table class="table table-hover non-hover" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th>Kassa</th>
-                                            <th>Kirim</th>
-                                            <th>Chiqim</th>
-                                            <th>Qoldik</th>
-                                            {% for x in valyuta %}
-                                                <th>{{x.name}}</th>
-                                            {% endfor %}
-                                            <th>Farq</th>
+                                            <th class="text-center">Kassa</th>
+                                            <th class="text-center">Kirim</th>
+                                            <th class="text-center">Chiqim</th>
+                                            <th class="text-center">Qoldiq</th>
+                                            <th class="text-center" style="width: 15rem;">Summa</th>
+                                            <th class="text-center">Farq</th>
                                         </tr>
                                     </thead>
                                     <tbody> 
-                                        {% for data in data %}
+                                        {% for data_item in data %}
                                             <tr>
                                                 <td class="kassa_name">
-                                                    {{ data.kassa_name }}
+                                                    {{ data_item.kassa_name }}
                                                 </td>
-                                                <td style="display: none;">
-                                                    <span class="kassa_id">{{ data.kassa_id }}</span>
-                                                </td>
+                                                <!-- <td style="display: none;">
+                                                    <span class="kassa_id">{{ data_item.kassa_id }}</span>
+                                                </td> -->
 
                                                 <td>
-                                                    {% for i in data.valyuta %}
-                                                        {{ i.kirim_sum }} {{i.valyuta_name}} /
+                                                    {% for i in data_item.valyuta %}
+                                                        {{ i.kirim_sum|intcomma }} {{i.valyuta_name}}<br>
                                                     {% endfor %}
                                                 </td>
                                                 <td>
-                                                    {% for i in data.valyuta %}
-                                                        {{ i.chiqim_sum }} {{i.valyuta_name}} /
+                                                    {% for i in data_item.valyuta %}
+                                                        {{ i.chiqim_sum|intcomma }} {{i.valyuta_name}}<br>
                                                     {% endfor %}
                                                 </td>
                                                 <td>
-                                                    {% for i in data.valyuta %}
-                                                        {{ i.merge_sum }} {{i.valyuta_name}} /
+                                                    {% for i in data_item.valyuta %}
+                                                        {{ i.merge_sum|intcomma }} {{i.valyuta_name}}<br>
                                                     {% endfor %}
                                                 </td>
-                                                {% for x in valyuta %}
-                                                    <td class="input-group"><input type="number" step="any" data-valyuta_id="{{x.id}}" value="0" oninput="pushData(this)"><span>{{x.name}}</span></td>
-                                                {% endfor %}
-                                               <td><span class="badge">0</span></td>
+                                                <td>
+                                                    {% for x in valyuta %}
+                                                        <div class="d-flex mb-2">
+                                                            <input style="width: 10rem;" class="form-control" type="number" step="any" data-valyuta_id="{{x.id}}" data-valyuta_name="{{x.name}}" value="0" oninput="pushData(this, '{{ data_item.kassa_id }}')">
+                                                            <label style="margin-left: 1rem;">{{x.name}}</label>
+                                                        </div>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    <div class="difference-container" id="difference-{{ data_item.kassa_id }}">
+                                                        {% for x in valyuta %}
+                                                            <div class="difference-item">
+                                                                <span class="difference-badge" data-valyuta-id="{{x.id}}" data-kassa-id="{{ data_item.kassa_id }}">0 {{x.name}}</span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
-                                    <tfoot>
-                                        <tr class="total-row">
-                                            <th>Jami</th>
-                                            <th>
-                                                {% for x in valyuta %}
-                                                    0 {{x.name}} /
-                                                {% endfor%}
-                                            </th>
-                                            <th>
-                                                {% for x in valyuta %}
-                                                    0 {{x.name}} /
-                                                {% endfor%}
-                                            </th>
-                                            <th>
-                                                {% for x in valyuta %}
-                                                    0 {{x.name}} /
-                                                {% endfor%}
-                                            </th>
-                                            {% for x in valyuta %}
-                                                <th class="input-group"><input type="number" step="any" value="0"><span>{{x.name}}</span></th>
-                                            {% endfor %}
-                                            <th><span class="badge">0</span></th>
-                                        </tr>
-                                    </tfoot>
                                 </table>
+                                
+                                <!-- Tasdiqlash Modali -->
+                                <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="confirmationModalLabel">Kassani Yopishni Tasdiqlash</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Quyidagi ma'lumotlar bilan kassani yopmoqchimisiz?</p>
+                                                
+                                                <div id="confirmationData">
+                                                    <!-- Ma'lumotlar JavaScript orqali to'ldiriladi -->
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                                                <button type="button" class="btn btn-primary" onclick="saveBack()">Tasdiqlash</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <script>
                                     const data = [];
+                                    const kassaNames = {};
+                                    const valyutaNames = {};
+                                    
+                                    // Kassalar nomlarini saqlash
+                                    {% for data_item in data %}
+                                        kassaNames['{{ data_item.kassa_id }}'] = '{{ data_item.kassa_name }}';
+                                    {% endfor %}
+                                    
+                                    // Valyuta nomlarini saqlash
+                                    {% for x in valyuta %}
+                                        valyutaNames['{{ x.id }}'] = '{{ x.name }}';
+                                    {% endfor %}
 
-                                    function pushData(input) {
-                                        const summa = input.value;
+                                    function pushData(input, kassa_id) {
+                                        const summa = parseFloat(input.value) || 0;
                                         const valyuta_id = input.getAttribute('data-valyuta_id');
-                                        const tr = input.closest('tr');
-                                        const kassa_id = tr.querySelector('.kassa_id').textContent;
+                                        
+                                        // Qoldiqni hisoblash
+                                        const kassaData = {{ data|safe }};
+                                        let qoldiq = 0;
+                                        
+                                        for (const item of kassaData) {
+                                            if (item.kassa_id == kassa_id) {
+                                                for (const val of item.valyuta) {
+                                                    if (val.valyuta_id == valyuta_id) {
+                                                        qoldiq = val.merge_sum;
+                                                        break;
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        
+                                        // Farqni hisoblash
+                                        const difference = summa - qoldiq;
+                                        const differenceBadge = document.querySelector(`.difference-badge[data-valyuta-id="${valyuta_id}"][data-kassa-id="${kassa_id}"]`);
+                                        
+                                        if (differenceBadge) {
+                                            differenceBadge.textContent = `${difference.toLocaleString()} ${valyutaNames[valyuta_id]}`;
+                                            if (difference < 0) {
+                                                differenceBadge.classList.add('negative-difference');
+                                            } else {
+                                                differenceBadge.classList.remove('negative-difference');
+                                            }
+                                        }
 
-                                        const existingItem = data.find(item => item.valyuta_id === valyuta_id && item.kassa_id === kassa_id);
-                                        if (existingItem) {
-                                            existingItem.summa = summa;
+                                        const existingItemIndex = data.findIndex(item => item.valyuta_id == valyuta_id && item.kassa_id == kassa_id);
+                                        if (existingItemIndex !== -1) {
+                                            data[existingItemIndex].summa = summa;
+                                            data[existingItemIndex].qoldiq = qoldiq;
+                                            data[existingItemIndex].difference = difference;
                                         } else {
                                             data.push({
                                                 valyuta_id: valyuta_id,
                                                 kassa_id: kassa_id,
                                                 summa: summa,
+                                                qoldiq: qoldiq,
+                                                difference: difference
                                             });
                                         }
-
-                                        const one_data = {
-                                            valyuta_id: valyuta_id,
-                                            kassa_id: kassa_id,
-                                            summa: summa,
-                                        };
-
-                                        console.log(data);
-                                        
                                     }
+
+                                    function showConfirmationModal() {
+                                        if (data.length === 0) {
+                                            Swal.fire({
+                                                position: "top-center",
+                                                icon: "warning",
+                                                title: "Hech qanday ma'lumot kiritilmagan",
+                                                text: "Iltimos, avval har bir kassa uchun valyuta miqdorlarini kiriting.",
+                                                showConfirmButton: true
+                                            });
+                                            return;
+                                        }
+                                        
+                                        // Modalni to'ldirish
+                                        let modalContent = '';
+                                        
+                                        // Kassalar bo'yicha guruhlash
+                                        const kassaGroups = {};
+                                        data.forEach(item => {
+                                            if (!kassaGroups[item.kassa_id]) {
+                                                kassaGroups[item.kassa_id] = [];
+                                            }
+                                            kassaGroups[item.kassa_id].push(item);
+                                        });
+                                        
+                                        // Har bir kassa uchun jadval yaratish
+                                        for (const kassaId in kassaGroups) {
+                                            modalContent += `<div class="valyuta-group">`;
+                                            modalContent += `<h5>${kassaNames[kassaId]}</h5>`;
+                                            modalContent += `<table class="confirm-table">`;
+                                            modalContent += `<tr><th>Valyuta</th><th>Qoldiq</th><th>Kiritilgan summa</th><th>Farq</th></tr>`;
+                                            
+                                            kassaGroups[kassaId].forEach(item => {
+                                                const differenceClass = item.difference < 0 ? 'style="color: #ff4d4d;"' : 'style="color: #23d375;"';
+                                                modalContent += `
+                                                    <tr>
+                                                        <td>${valyutaNames[item.valyuta_id]}</td>
+                                                        <td>${item.qoldiq.toLocaleString()}</td>
+                                                        <td>${item.summa.toLocaleString()}</td>
+                                                        <td ${differenceClass}>${item.difference.toLocaleString()}</td>
+                                                    </tr>
+                                                `;
+                                            });
+                                            
+                                            modalContent += `</table></div>`;
+                                        }
+                                        
+                                        document.getElementById('confirmationData').innerHTML = modalContent;
+                                        $('#confirmationModal').modal('show');
+                                    }
+                                    
                                     function saveBack() {
                                         if (data.length > 0) {
-                                                $.ajax({
+                                            $('#confirmationModal').modal('hide');
+                                            
+                                            $.ajax({
                                                 url: "{% url 'close_cash_add' %}",
                                                 type: "POST",
                                                 contentType: "application/json",
+                                                headers: {
+                                                    "X-CSRFToken": getCookie("csrftoken")
+                                                },
                                                 data: JSON.stringify(data),
                                                 success: function(response) {
                                                     console.log('ok');
-                                                    window.location.replace('/close_cash_list');
-                                                    // Swal.fire({
-                                                    //     position: "top-center",
-                                                    //     icon: "success",
-                                                    //     title: "Ma'lumotlar saqlandi",
-                                                    //     showConfirmButton: false,
-                                                    //     timer: 2000
-                                                    // });
+                                                    Swal.fire({
+                                                        position: "top-center",
+                                                        icon: "success",
+                                                        title: "Kassa muvaffaqiyatli yopildi",
+                                                        showConfirmButton: false,
+                                                        timer: 2000
+                                                    }).then(() => {
+                                                        window.location.reload()
+                                                    });
                                                 },
-                                                error: function () {
+                                                error: function (xhr, status, error) {
                                                     console.log('off');
                                                     Swal.fire({
                                                         position: "top-center",
                                                         icon: "error",
-                                                        title: "Ma'lumotlar saqlanmadi",
+                                                        title: "Xatolik yuz berdi",
+                                                        text: "Ma'lumotlar saqlanmadi. Iltimos, qayta urunib ko'ring.",
                                                         showConfirmButton: true
                                                     });
                                                 }
                                             });
                                         }
+                                    }
+                                    
+                                    // CSRF token olish uchun yordamchi funksiya
+                                    function getCookie(name) {
+                                        let cookieValue = null;
+                                        if (document.cookie && document.cookie !== '') {
+                                            const cookies = document.cookie.split(';');
+                                            for (let i = 0; i < cookies.length; i++) {
+                                                const cookie = cookies[i].trim();
+                                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        return cookieValue;
                                     }
                                 </script>
                             </div>
@@ -217,4 +416,6 @@
     <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
     <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
     <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock js %}

@@ -20,6 +20,8 @@ from itertools import groupby
 from operator import itemgetter
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
+
 
 
 
@@ -570,6 +572,11 @@ def edit_debtor(request, id):
     dollar = request.POST.get('start_dollar')
     date = request.POST.get('start_date')
     Debtor.objects.filter(id=id).update(start_som=som, start_dollar=dollar, start_date=date)
+    Debtor.objects.get(id=id).refresh_debt()
+    return redirect(request.META['HTTP_REFERER'])
+
+
+def refresh_debtor(request, id):
     Debtor.objects.get(id=id).refresh_debt()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -2972,7 +2979,12 @@ class Recieves(LoginRequiredMixin, TemplateView):
         context['valyutas'] = Valyuta.objects.filter()
         context['today'] = datetime.now()
         context['measurement_type'] = MeasurementType.objects.filter(is_active=True)
-        context['last_part'] = last_part.name+1 if last_part else '0001'
+        # context['last_part'] = int(last_part.name)+1 if last_part else 1
+        if last_part and isinstance(last_part.name, int):
+            context['last_part'] = last_part.name + 1
+        else:
+            context['last_part'] = 1
+
         context['measurements'] = [{
             "id": i[0],
             "name": i[1],
@@ -3209,14 +3221,37 @@ class Debtors(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         debtor = Debtor.objects.select_related('agent','teritory').all()
+
+        search = self.request.GET.get('search')
+        price_type = self.request.GET.get('price_type')
+
+        if search:
+            debtor = debtor.filter(
+                Q(fio__icontains=search) |
+                Q(phone1__icontains=search) |
+                Q(phone2__icontains=search)
+            )
+
+        if price_type:
+            debtor = debtor.filter(price_type=price_type)
+            
         paginator_debtor = Paginator(debtor, 50)
         page_number = self.request.GET.get('page')
         page_debtor = paginator_debtor.get_page(page_number)
         dollar_kurs = Course.objects.last().som
 
+        totals_haq = [
+            Wallet.objects.filter(valyuta=i, summa__lt=0, customer__in=debtor).distinct().aggregate(summa = Sum('summa'))['summa'] or 0 for i in Valyuta.objects.filter(is_activate=True)]
+
+
+        totals_qarz = [
+            Wallet.objects.filter(valyuta=i, summa__gt=0, customer__in=debtor).distinct().aggregate(summa = Sum('summa'))['summa'] or 0 for i in Valyuta.objects.filter(is_activate=True)]
+
         context['debtor'] = 'active'
         context['debtor_t'] = 'true'
         context['debtors'] = page_debtor
+        context['totals_haq'] = totals_haq
+        context['totals_qarz'] = totals_qarz
         context['debtor_type'] = DebtorType.objects.all()
         context['regions'] = Region.objects.all()
         context['teritory'] = Teritory.objects.all()
@@ -3225,6 +3260,8 @@ class Debtors(LoginRequiredMixin, TemplateView):
         context['price_type'] = PriceType.objects.filter(is_activate=True)
         context['dollar_kurs'] = dollar_kurs
         context['cashes'] = KassaNew.objects.filter(is_active=True)
+        context['search'] = search
+        context['price_type_selected'] = int(price_type) if price_type else 0
         return context
 
 def debtor_add(request):
@@ -3372,10 +3409,15 @@ def debtor_detail(request, id):
         'start_date': str(start_date),
         'end_date': str(end_date),
     }
-    pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date), shop__status__in=[1,2])
+    pay = PayHistory.objects.filter(debtor_id=id, date__date__range=(start_date, end_date),is_debt=False)
     shop = Shop.objects.filter(status__in=[1,2],debtor_id=id, date__date__range=(start_date, end_date), is_finished=True)
     bonus = Bonus.objects.filter(debtor_id=id, date__date__range=(start_date, end_date))
-    infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
+    # infos = sorted(chain(pay, shop, bonus), key=lambda instance: instance.date)
+    infos = sorted(
+        chain(pay, shop, bonus),
+        key=lambda instance: (instance.date, instance.id)
+    )
+
     data = []
     for i in infos:
         dt = {
@@ -3398,7 +3440,7 @@ def debtor_detail(request, id):
             
         elif i._meta.model_name == 'shop':
             dt['type_payment'] = f'Maxsulot sotildi - {i.id} check'
-            dt['pay_summa'] = i.baskets_total_price
+            dt['give_summa'] = i.baskets_total_price
         
         elif i._meta.model_name == 'bonus':
             dt['type_payment'] = 'Bonus berildi'
@@ -3414,8 +3456,8 @@ def debtor_detail(request, id):
         pay_shop_summa = shop.filter(valyuta=val).annotate(summa=Sum(F('cart__price') * F('cart__quantity'), output_field=IntegerField())).aggregate(all=Coalesce(Sum('summa'), 0, output_field=IntegerField()))['all']
         dt_sum_valyuta = {
             'valyuta':val.id,
-            'pay_pay_summa':pay_summa + pay_shop_summa,
-            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'],
+            'pay_pay_summa':pay_summa,
+            'pay_give_summa':pay.filter(valyuta=val, type_pay=2).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all'] or 0 + pay_shop_summa,
         }
         summa_total_for_valyuta.append(dt_sum_valyuta)
     
@@ -3430,7 +3472,8 @@ def debtor_detail(request, id):
     }
     return render(request, 'debtor_detail.html', context)
 
-
+# Debtor.objects.get(id=3797).refresh_debt()
+# print('aaaaa')
 
 def deliver_detail(request, id):
     valyuta = Valyuta.objects.all()
@@ -4218,8 +4261,8 @@ def chiqim_qilish(request):
         debtor = request.POST.get('debtor')
         deliver = request.POST.get('deliver')
         partner = request.POST.get('partner')
-        qaysi_oy = int(request.POST.get('qaysi_oy'))
-        qaysi_yil = int(request.POST.get('qaysi_yil'))
+        qaysi_oy = int(request.POST.get('qaysi_oy') or datetime.now().month)
+        qaysi_yil = int(request.POST.get('qaysi_yil') or datetime.now().year)
         qaysi = date(qaysi_yil, qaysi_oy, 1)
         money_circulation = request.POST.get('money_circulation')
         
@@ -4237,9 +4280,9 @@ def chiqim_qilish(request):
                                           plan_total=summa, kurs=kurs, is_confirmed=True,
                                           money_circulation_id=money_circulation, qaysi=qaysi,)
         chiqim.reja_chiqim=reja
-        kassa.summa -= float(summa)
+        # kassa.summa -= float(summa)
 
-        chiqim.kassa_new = kassa.summa
+        # chiqim.kassa_new = kassa.summa
 
         if debtor:
             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
@@ -4502,7 +4545,7 @@ def kirim_qilish(request):
 
         kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
         
-        kassa.summa += float(summa)
+        # kassa.summa += float(summa)
 
         kirim.kassa_new = kassa.summa
         if debtor:
@@ -7290,21 +7333,6 @@ def b2c_shop_view(request):
     valyuta = Valyuta.objects.first()
     order = Shop.objects.create(debtor=debtor, filial=filial, valyuta=valyuta if valyuta else None)
     return redirect('b2c_shop_detail', order.id)
-    # price_types = PriceType.objects.all()
-    # products = ProductFilial.objects.all()
-    # customers = Debtor.objects.all()
-    # call_center = UserProfile.objects.filter(staff=6)
-
-    # context = {
-    #    'price_types': price_types,
-    #    'products': products,
-    #    'call_center': call_center,
-    #    'customers': customers,
-    #    'dollar_kurs': Course.objects.last().som if Course.objects.last() else 0,
-    #    'valyuta':Valyuta.objects.all(),
-    #    'filial':Filial.objects.filter(is_activate=True),
-    # }
-    # return render(request, 'b2c_shop.html', context)
 
 def b2c_naqd_add(request):
     debtor = Debtor.objects.filter(fio="Naqd").first() or Debtor.objects.create(fio="Naqd")
@@ -7352,6 +7380,7 @@ def b2c_shop_edit(request):
     return redirect(request.META['HTTP_REFERER'])
 
 def b2c_shop_detail(request, id):
+    round_settings = RoundingSettings.objects.last()
     user = UserProfile.objects.get(user=request.user)
     shop = Shop.objects.get(id=id)
     price_types = PriceType.objects.all()
@@ -7393,6 +7422,7 @@ def b2c_shop_detail(request, id):
        'regions': Region.objects.all(),
        'teritory': Teritory.objects.all(),
        'price_type' : PriceType.objects.filter(is_activate=True),
+       'round_settings': round_settings
 
     }
 
@@ -7652,14 +7682,23 @@ def today_sales(request):
     today = datetime.now().date()
     start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
     end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
+    
+    # Asosiy queryset - date filterini to'g'irlaymiz
     cart = Cart.objects.filter(shop__date__date__range=(start_date, end_date))
+    
     client = request.GET.getlist('client')
     deliver = request.GET.getlist('deliver')
     search = request.GET.get('search')
+    
+    # Filters dictionary ni to'g'rilaymiz
     filters = {
-        start_date: start_date,
-        end_date: end_date,
+        'start_date': start_date,
+        'end_date': end_date,
+        'search': search or '',
+        'client': client,
+        'deliver': deliver
     }
+    
     if search:
         cart = cart.filter(product__name__icontains=search)
 
@@ -7669,25 +7708,115 @@ def today_sales(request):
     if client:
         cart = cart.filter(shop__debtor_id__in=client)
 
+    # Totals hisobini pagination DAN OLDIN qilamiz
+    totals = {
+        'total_price': cart.aggregate(Sum('price')).get('price__sum', 0) or 0,
+        'total_quantity': cart.aggregate(Sum('quantity')).get('quantity__sum', 0) or 0,
+        'total': cart.aggregate(Sum('total')).get('total__sum', 0) or 0,
+    }
+    
+    # Pagination
     paginator_cart = Paginator(cart, 50)
     page_number = request.GET.get('page')
     page_cart = paginator_cart.get_page(page_number)
 
-    totals = {
-        'total_price': cart.aggregate(Sum('price')).get('price__sum', 0),
-        'total_quantity': cart.aggregate(Sum('quantity')).get('quantity__sum', 0),
-        'total': cart.aggregate(Sum('total')).get('total__sum', 0),
-    }
     context = {
-        'totals':totals,
-        'filters':filters,
+        'totals': totals,
+        'filters': filters,
         'today': today,
         'cart': page_cart,
-        'deliver':Deliver.objects.all(),
-        'client':Debtor.objects.all(),
+        'deliver': Deliver.objects.all(),
+        'client': Debtor.objects.all(),
+        'pay': page_cart,  # Template da 'pay' ishlatilgan, shuning uchun qo'shamiz
     }
     return render(request, 'today_sales.html', context)
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ReturnProductView(View):
+    def post(self, request):
+        try:
+            data = request.POST
+            cart_id = data.get('cart_id')
+            debtor_id = data.get('debtor_id')
+            product_id = data.get('product_id')
+            return_quantity = float(data.get('return_quantity', 0))
+            
+            # Filial va foydalanuvchi ma'lumotlarini olish
+            by_user = request.user.userprofile if hasattr(request.user, 'userprofile') else None
+            filial = request.user.userprofile.filial if hasattr(request.user, 'userprofile') and hasattr(request.user.userprofile, 'filial') else None
+            
+            if not filial:
+                return JsonResponse({'success': False, 'error': 'Filial topilmadi'})
+            
+            # Cart orqali qaytarish
+            if cart_id:
+                cart = get_object_or_404(Cart, id=cart_id)
+
+                if ReturnProduct.objects.filter(cart=cart):
+                    return JsonResponse({'success': False, 'error': 'Bu sotuv avval qaytarilgan'})
+                
+                # Qaytarish miqdori cartdagi miqdordan ko'p bo'lmasligi kerak
+                if return_quantity > cart.quantity:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': f'Qaytarish miqdori sotilgan miqdordan ({cart.quantity}) koʻp boʻlishi mumkin emas'
+                    })
+                
+                # ReturnProduct yaratish
+                return_product = ReturnProduct.objects.create(
+                    cart=cart,
+                    debtor=cart.shop.debtor if cart.shop else None,
+                    product=cart.product,
+                    return_quan=return_quantity,
+                    filial=filial,
+                    price=cart.price,
+                    by_user=by_user
+                )
+            
+                message = f'Maxsulot muvaffaqiyatli qaytarildi'
+                
+                return JsonResponse({
+                    'success': True, 
+                    'message': message,
+                    # 'remaining_quantity': cart.quantity if cart.quantity > 0 else 0
+                })
+            
+            # Cart siz qaytarish (to'g'ridan-to'g'ri product va debtor orqali)
+            elif product_id and debtor_id:
+                product = get_object_or_404(ProductFilial, id=product_id)
+                debtor = get_object_or_404(Debtor, id=debtor_id)
+                
+                # ReturnProduct yaratish (cart siz)
+                return_product = ReturnProduct.objects.create(
+                    cart=None,
+                    debtor=debtor,
+                    product=product,
+                    return_quan=return_quantity,
+                    filial=filial,
+                    by_user=by_user
+                )
+                
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Maxsulot muvaffaqiyatli qaytarildi',
+                    'returned_quantity': return_quantity
+                })
+            
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Cart ID yoki Product ID va Debtor ID kerak'
+                })
+            
+        except Cart.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Cart topilmadi'})
+        except ProductFilial.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Maxsulot topilmadi'})
+        except Debtor.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Mijoz topilmadi'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
 
 def analysis_costs(request):
     start_date = request.GET.get('start_date')
@@ -9876,27 +10005,26 @@ def payment_shop(request, shop_id):
             valyuta = request.POST.get('valyuta_id')
             comment = request.POST.get('comment')
             payment_date = request.POST.get('payment_date')
-            print(payment_date)
+
             summa = float(request.POST.get('summa', 0))
             if kassa != 'qarz':
                 kassas = KassaMerge.objects.get(kassa_id=kassa, valyuta_id=valyuta)
-                PayHistory.objects.create(
-                    shop=shop,
-                    kassa=kassas,
-                    valyuta_id=valyuta,
-                    debtor=shop.debtor,
-                    summa = summa
-                )
+
+                last, created = PayHistory.objects.get_or_create(shop=shop, kassa=kassas)
+                
+                last.valyuta_id=valyuta
+                last.debtor=shop.debtor
+                last.summa = summa
+                last.save()
             else:
-                PayHistory.objects.create(
-                    shop=shop,
-                    debtor=shop.debtor,
-                    is_debt = True,
-                    comment = comment,
-                    valyuta=shop.valyuta,
-                    summa = summa,
-                    payment_date=payment_date,
-                )
+                last, created = PayHistory.objects.get_or_create(shop=shop, is_debt = True)
+
+                last.debtor = debtor
+                last.comment = comment
+                last.valyuta = shop.valyuta
+                last.summa = summa
+                last.payment_date = payment_date
+                last.save()
             shop.debtor.refresh_debt()
             return JsonResponse({'success': True, 'message': 'Payment successful'})
         except Exception as e:
@@ -11324,27 +11452,189 @@ def close_cash(request):
     return render(request, 'close_cash.html', context)
 
 
-@csrf_exempt
-def close_cash_add(request):
-    today = datetime.now().date()
-    data = json.loads(request.body)
-    for lop in data:
-        CloseCash.objects.create(kassa_id=lop['kassa_id'],valyuta_id=lop['valyuta_id'], summa=lop['summa'])
-    return JsonResponse({'messages':'ok'})
+# @csrf_exempt
+# def close_cash_add(request):
+#     today = datetime.now().date()
+#     data = json.loads(request.body)
+#     for lop in data:
+#         CloseCash.objects.create(kassa_id=lop['kassa_id'],valyuta_id=lop['valyuta_id'], summa=lop['summa'])
+#     return JsonResponse({'messages':'ok'})
 
+@csrf_exempt
+@transaction.atomic
+def close_cash_add(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Faqat POST so\'rovlari qabul qilinadi'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        today = datetime.now().date()
+        
+        # Transactionni boshlash
+        with transaction.atomic():
+            smena = SmenaClose.objects.create(by_user=request.user.userprofile, filial=request.user.userprofile.filial)
+            for item in data:
+                kassa_id = item['kassa_id']
+                valyuta_id = item['valyuta_id']
+                summa = float(item['summa'])
+                
+                # KassaMerge ni filter qilib olish (oxirgi faol yozuv)
+                kassa_merge = KassaMerge.objects.filter(
+                    kassa_id=kassa_id,
+                    valyuta_id=valyuta_id,
+                    is_active=True
+                ).order_by('-id').first()
+                
+                if not kassa_merge:
+                    # Agar KassaMerge topilmasa, xatolik qaytarish
+                    raise Exception(f"KassaMerge topilmadi (kassa_id: {kassa_id}, valyuta_id: {valyuta_id})")
+                
+                # Faqat yangi yozuv yaratish
+                close_cash = CloseCash(
+                    kassa=kassa_merge,
+                    summa=summa,
+                    date=today,
+                    is_confirmed=False
+                )
+                
+                close_cash.by_user = request.user.userprofile
+                close_cash.filial = request.user.userprofile.filial
+                
+                close_cash.save()
+
+                smena.closecashes.add(close_cash)
+            smena.save()
+            
+            return JsonResponse({'message': 'Kassa muvaffaqiyatli yopildi'})
+    
+    except Exception as e:
+        # Xatolik yuz berganda transaction avtomatik ravishda bekor qilinadi
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 def close_cash_list(request):
-    close = CloseCash.objects.filter(is_confirmed=False)
+    close = SmenaClose.objects.filter(is_confirmed=False)
+    kassas = KassaNew.objects.filter(is_active=True)
+
+    # ids = close.values('filial_id')
+    filials = Filial.objects.all()
+    valyutas = Valyuta.objects.filter(is_activate=True)
+
+    # data = []
+    # for i in filials:
+    #     dt = {
+    #         "filial": i,
+    #         'valyutas': []
+    #         # 'date'
+    #     }
+    #     for v in valyutas:
+    #         dt['valyutas'].append({
+    #             'valyuta': v,
+    #             # 'summa': 
+    #         })
+
     context = {
         'close':close,
+        'kassas': kassas,
+        'valyutas': valyutas
     }
     return render(request, 'close_cash_list.html', context)
 
-def close_cash_confirmed(request, id):
-    CloseCash.objects.filter(id=id).update(is_confirmed=True)
-    return redirect(request.META['HTTP_REFERER'])
+# def close_cash_confirmed(request, id):
+    
+#     CloseCash.objects.filter(id=id).update(is_confirmed=True)
+#     return redirect(request.META['HTTP_REFERER'])
 
+
+# @transaction.atomic
+# def close_cash_confirmed(request, id):
+#     if request.method == 'POST':
+#         close_cash = get_object_or_404(CloseCash, id=id)
+#         to_kassa_id = request.POST.get('to_kassa')
+        
+#         if not to_kassa_id:
+#             messages.error(request, "Iltimos, kassani tanlang!")
+#             return redirect('close_cash_list')
+        
+#         try:
+#             to_kassa = KassaMerge.objects.get(kassa_id=to_kassa_id, valyuta_id=close_cash.kassa.valyuta.id)
+#             close_cash.to_kassa = to_kassa
+#             close_cash.is_confirmed = True
+#             close_cash.save()
+#             messages.success(request, "Summa muvaffaqiyatli tasdiqlandi!")
+            
+#         except KassaMerge.DoesNotExist:
+#             messages.error(request, "Tanlangan kassa topilmadi!")
+        
+#         return redirect(request.META['HTTP_REFERER'])
+    
+#     messages.error(request, "Noto'g'ri so'rov!")
+#     return redirect(request.META['HTTP_REFERER'])
+
+
+from django.http import JsonResponse
+import json
+
+@transaction.atomic
+def close_cash_confirmed(request, id):
+    if request.method == 'POST':
+        try:
+            smena_close = get_object_or_404(SmenaClose, id=id)
+            to_kassa_id = request.POST.get('to_kassa')
+            
+            if not to_kassa_id:
+                return JsonResponse({
+                    'success': False,
+                    'message': "Iltimos, kassani tanlang!"
+                })
+            
+            to_kassa = KassaNew.objects.get(id=to_kassa_id)
+            
+            # Har bir CloseCash ni yangilash
+            for close_cash in smena_close.closecashes.all():
+                # Har bir valyuta uchun mos kassani topish
+                try:
+                    kassa_merge = KassaMerge.objects.get(kassa=to_kassa, valyuta=close_cash.kassa.valyuta)
+                    
+                    # Confirmed summani olish
+                    summa_confirmed = request.POST.get(f'summa_confirmed{close_cash.id}')
+                    if summa_confirmed:
+                        close_cash.summa_confirmed = float(summa_confirmed.replace(',', ''))
+                    
+                    close_cash.to_kassa = kassa_merge
+                    close_cash.is_confirmed = True
+                    close_cash.save()
+                    
+                except KassaMerge.DoesNotExist:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f"{close_cash.kassa.valyuta.name} valyutasi uchun kassa topilmadi!"
+                    })
+            
+            # SmenaClose ni tasdiqlash
+            smena_close.is_confirmed = True
+            smena_close.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': "Smena muvaffaqiyatli tasdiqlandi!"
+            })
+            
+        except KassaNew.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': "Tanlangan kassa topilmadi!"
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f"Xatolik yuz berdi: {str(e)}"
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': "Noto'g'ri so'rov!"
+    })
 
 
 def return_customer(request):
@@ -11622,3 +11912,166 @@ def product_filial_add(request):
 #     i.start_summa = i.start_summa * -1
 #     i.save()
 #     i.customer.refresh_debt()
+
+
+# import pandas as pd
+
+
+
+
+# def import_products_from_excel(file_path):
+#     """
+#     Excel fayldan ma'lumotlarni ProductBringPrice, ProductPriceType va ProductBarcode ga yozadi.
+#     """
+
+#     # Excelni o‘qish
+#     df = pd.read_excel(file_path)
+
+#     # Oldindan kerakli obyektlarni olib kelamiz
+#     price_type = PriceType.objects.get(name="Standart")
+#     valyuta = Valyuta.objects.get(name="Som")
+
+#     for _, row in df.iterrows():
+#         product_name = str(row["Наименование"]).strip()
+#         barcode = str(row["Баркод"]).strip() if not pd.isna(row["Баркод"]) else None
+#         deliver = str(row["Поставщик"]).strip() if not pd.isna(row["Поставщик"]) else None
+#         # bring_price = float(row["Цена поставки"]) if not pd.isna(row["Цена поставки"]) else 0
+#         value = row["Цена поставки"]
+
+#         if not pd.isna(value):
+#             # Matn sifatida ko'rib, chiziq bo'lsa oldingi qismini olamiz
+#             value = str(value).split("-")[0].strip()
+#             bring_price = float(value)
+#         else:
+#             bring_price = 0
+
+
+#         sell_price = float(row["Цена продажи"]) if not pd.isna(row["Цена продажи"]) else 0
+
+#         product = ProductFilial.objects.create(name=product_name, title=str(row["Артикул"]).strip(), filial_id=4, quantity=str(row["Количество"]).strip(), start_quantity=str(row["Количество"]).strip())
+
+#         # 1. Kelish narxini ProductBringPrice ga yozish
+#         ProductBringPrice.objects.update_or_create(
+#             product=product,
+#             valyuta=valyuta,
+#             defaults={"price": bring_price}
+#         )
+
+#         # 2. Sotish narxini ProductPriceType ga yozish
+#         ProductPriceType.objects.update_or_create(
+#             product=product,
+#             type=price_type,
+#             valyuta=valyuta,
+#             defaults={"price": sell_price}
+#         )
+
+#         # 3. Barcode (artikul) ni ProductBarcode ga yozish
+#         if barcode:
+#             ProductBarcode.objects.update_or_create(
+#                 product=product,
+#                 barcode=barcode
+#             )
+#         if deliver:
+#             deliver_obj, created = Deliver.objects.get_or_create(
+#                 name=deliver
+#             )
+#             product.deliver = deliver_obj
+
+
+#         # 4. ProductFilial dagi title ga artikul yozish
+#         # if barcode:
+#         #     product.title = barcode
+#         #     product.save(update_fields=["title"])
+
+#         product.save()
+#         print(f"✅ {product_name} yangilandi | Kelish: {bring_price}, Sotish: {sell_price}, Artikul: {barcode}")
+
+
+
+# import_products_from_excel("katalog narxlari bn.xlsx")
+
+
+
+
+
+# import pandas as pd
+# # from myapp.models import Debtor, Wallet, Valyuta
+# from django.utils import timezone
+
+# # Excel faylni o‘qish
+# file_path = "yangi dastur uchun klentlar ro'yxati.xlsx"
+# df = pd.read_excel(file_path)
+
+# # Faqat "Som" valyutasini olish
+# som_valyuta = Valyuta.objects.filter(name__iexact="Som").first()
+# if not som_valyuta:
+#     raise Exception("Som valyutasi topilmadi!")
+
+# # Har bir qatorni DB ga yozish
+# for _, row in df.iterrows():
+#     fio = row.get("ФИО")
+#     phone1 = row.get("Телефон")
+#     qarz = row.get("Текущий долг", 0) or 0
+
+#     # Debtor yaratish yoki olish
+#     debtor, created = Debtor.objects.get_or_create(
+#         fio=fio,
+#         phone1=phone1,
+#         defaults={
+#             "som": 0,
+#             "dollar": 0,
+#             "start_som": 0,
+#             "start_dollar": 0,
+#         }
+#     )
+
+#     # Wallet yozish (faqat Som valyutasi bilan)
+#     Wallet.objects.create(
+#         customer=debtor,
+#         valyuta=som_valyuta,
+#         summa=int(qarz),
+#         start_summa=int(qarz),
+#         start_time=timezone.now()
+#     )
+#     print(fio)
+
+# for i in Debtor.objects.all():
+#     i.price_type = PriceType.objects.get(name='Standart')
+#     i.save()
+#     print(i)
+
+# for i in Wallet.objects.all():
+#     i.summa *= -1
+#     i.start_summa *= -1
+#     i.save()
+
+
+# for i in PayHistory.objects.all():
+#     print(i)
+#     i.kassa_new = 0
+#     i.save()
+
+
+
+
+def rounding_settings(request):
+    # Faqat bitta sozlama olish yoki yaratish
+    setting = RoundingSettings.get_settings()
+    
+    if request.method == 'POST':
+        decimal_places = request.POST.get('decimal_places')
+        rounding_direction = request.POST.get('rounding_direction')
+        
+        if decimal_places and rounding_direction:
+            setting.decimal_places = int(decimal_places)
+            setting.rounding_direction = int(rounding_direction)
+            setting.save()
+            
+            messages.success(request, "Yahlitlash sozlamasi saqlandi!")
+            return redirect('rounding_settings')
+        else:
+            messages.error(request, "Iltimos, barcha maydonlarni to'ldiring!")
+    
+    return render(request, 'rounding_settings.html', {
+        'setting': setting
+    })

@@ -13,61 +13,17 @@
     <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
     <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
     <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
-
-    <style>
-        #alert-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            width: 30rem;
-        }
-    </style>
 {% endblock css %}
 
 {% block content %}
 <script src="{% static 'multiselect.js' %}"></script>
 <meta name="csrf-token" content="{{ csrf_token }}">
 
-<!-- Qaytarish Modal -->
-<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="returnModalLabel">Maxsulotni Qaytarish</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="returnForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="returnCartId" name="cart_id">
-                    <div class="form-group">
-                        <label for="returnProductName">Maxsulot:</label>
-                        <input type="text" class="form-control" id="returnProductName" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="returnQuantity">Qaytarish Miqdori:</label>
-                        <input type="number" class="form-control" id="returnQuantity" name="return_quantity" step="0.01" min="0.01" required>
-                        <small class="form-text text-muted">Jami miqdor: <span id="totalQuantity">0</span></small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
-                <button type="button" class="btn btn-primary" id="confirmReturn">Qaytarish</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div id="content" class="main-content">
     <div class="container">
         <div class="row layout-top-spacing" style="width: 100%;">
             <div class="col-12 layout-spacing">
                 <div class="col-md-12">
-                    <div id="alert-container"></div>
                     <!-- Formda GET parametrlarini saqlab qolish uchun hidden fieldlar -->
                     <form class="row" method="GET" id="filter-form">
                         <div class="col-2">
@@ -125,9 +81,6 @@
                                             <th>Narxi</th>
                                             <th>Soni</th>
                                             <th>Summa</th>
-
-                                            <th>Qaytarilgan soni</th>
-
                                             <th>Hodim</th>
                                             <th>Sana</th>
                                             <th>Qaytarish</th>
@@ -141,17 +94,12 @@
                                             <td>{{ i.shop.debtor|default_if_none:'' }}</td>
                                             <td>{{ i.price|intcomma }}</td>
                                             <td>{{ i.quantity|intcomma }}</td>
-                                            <td>{{ i.total|intcomma }}</td>
-
-                                            <td>{{ i.total_returned|intcomma }}</td>
+                                            <td>{{ i.total|intcomma }}</td>  <!-- total_price emas, total -->
                                             <td></td>
-                                            <td>{{ i.shop.date|date:"Y-m-d" }}</td>
+                                            <td>{{ i.shop.date|date:"Y-m-d" }}</td>  <!-- i.date emas, i.shop.date -->
                                             <td>
-                                                <button class="btn btn-primary return-btn" 
-                                                        data-cart-id="{{ i.id }}"
-                                                        data-product-name="{{ i.product }}"
-                                                        data-quantity="{{ i.quantity }}">
-                                                    <i class="fa fa-undo"></i>
+                                                <button class="btn btn-primary">
+                                                    <i class="fa fa-download"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -209,77 +157,11 @@
     </div>
 </div>
 
+<!-- GET parametrlarini saqlab qolish uchun template tag -->
+{% if not request.GET.page %}
 <script>
-        const showAlert = (message, type) => {
-            const alertElement = $(`
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                </div>
-            `);
-
-            $("#alert-container").append(alertElement);
-            setTimeout(() => {
-                alertElement.fadeOut(500, function () { $(this).remove(); });
-            }, 3000);
-        };
-    </script>
-
-<script>
-// Qaytarish funksiyalari
+// Pagination linklarini yaratish uchun JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Qaytarish tugmalariga event listener qo'shamiz
-    document.querySelectorAll('.return-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const cartId = this.getAttribute('data-cart-id');
-            const productName = this.getAttribute('data-product-name');
-            const quantity = parseFloat(this.getAttribute('data-quantity'));
-            
-            // Modalni to'ldiramiz
-            document.getElementById('returnCartId').value = cartId;
-            document.getElementById('returnProductName').value = productName;
-            document.getElementById('returnQuantity').value = quantity;
-            document.getElementById('returnQuantity').setAttribute('max', quantity);
-            document.getElementById('totalQuantity').textContent = quantity;
-            
-            // Modalni ochamiz
-            $('#returnModal').modal('show');
-        });
-    });
-    
-    // Qaytarishni tasdiqlash
-    document.getElementById('confirmReturn').addEventListener('click', function() {
-        const form = document.getElementById('returnForm');
-        const formData = new FormData(form);
-        
-        // CSRF token qo'shamiz
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        fetch("{% url 'return_product' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert(data.message, 'success');
-                $('#returnModal').modal('hide');
-                // Sahifani yangilaymiz
-                location.reload();
-            } else {
-                showAlert('Xatolik: ' + data.error, 'danger');
-                $('#returnModal').modal('hide');
-            }
-        })
-        .catch(error => {
-            console.error('Xatolik:', error);
-            showAlert('Server xatosi yuz berdi');
-        });
-    });
-    
-    // Pagination linklarini yaratish uchun JavaScript
     const form = document.getElementById('filter-form');
     const pageLinks = document.querySelectorAll('.page-link');
     
@@ -315,11 +197,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% endif %}
 
 {% endblock content %}
 
 {% block js %}
 <!-- Kerakli JavaScript fayllar -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 {% endblock js %}

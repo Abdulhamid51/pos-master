@@ -73,7 +73,7 @@
             right: 0;
         }
         .slide-panel-header {
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            /* background: linear-gradient(135deg, #007bff, #0056b3); */
             color: white;
             padding: 15px;
             border-top-left-radius: 10px;
@@ -99,15 +99,13 @@
         .input-group-text {
             background-color: #e9ecef;
         }
+
         #alert-container {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
             width: 30rem;
-        }
-        .form-control:read-only {
-            background-color: #f8f9fa;
         }
     </style>
 {% endblock css %}
@@ -143,7 +141,7 @@
                                             <td>{{ close.by_user }}</td>
                                             <td>
                                                 {% if not close.is_confirmed %}
-                                                    <span class="btn btn-warning status-btn"><i class="fas fa-hourglass-half me-1"></i> Jarayonda</span>
+                                                    <span class="btn btn-primary status-btn"><i class="fas fa-hourglass-half me-1"></i> Jarayonda</span>
                                                 {% else %}
                                                     <span class="btn btn-success status-btn"><i class="fas fa-check me-1"></i> Tasdiqlangan</span>
                                                 {% endif %}
@@ -152,15 +150,9 @@
                                                 <td>{{ i.summa|intcomma }}</td>
                                             {% endfor %}
                                             <td>
-                                                {% if not close.is_confirmed %}
-                                                    <button class="btn btn-primary view-btn" type="button" onclick="togglePanel('panel{{ close.id }}')">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </button>
-                                                {% else %}
-                                                    <button class="btn btn-success view-btn" type="button" onclick="togglePanel('panel{{ close.id }}')">
-                                                        <i class="fa-solid fa-check"></i>
-                                                    </button>
-                                                {% endif %}
+                                                <button class="btn btn-success view-btn" type="button" onclick="togglePanel('panel{{ close.id }}')">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -179,20 +171,14 @@
             <div class="slide-panel-header">
                 <h3 class="fw-bold mb-0"><i class="fas fa-file-contract me-2"></i> {{ close.contract_id|default:'-' }}</h3>
                 <div>
-                    {% if not close.is_confirmed %}
-                        <button class="btn btn-success me-2" onclick="confirmSmena({{ close.id }})">
-                            <i class="fas fa-check me-1"></i> Tasdiqlash
-                        </button>
-                    {% endif %}
-                    <button class="btn btn-secondary" onclick="togglePanel('panel{{ close.id }}')">
-                        <i class="fas fa-times me-1"></i> Yopish
-                    </button>
+                    <!-- <button class="btn btn-danger me-2"><i class="fas fa-times"></i></button> -->
+                    <button class="btn btn-success"><i class="fas fa-check"></i></button>
+                    <button class="btn btn-secondary" onclick="togglePanel('panel{{ close.id }}')">Yopish</button>
                 </div>
             </div>
-            <div class="container mt-3">
-                {% if not close.is_confirmed %}
+            <div class="container">
                 <div class="form-group">
-                    <label for="to_kassa{{ close.id }}" class="fw-bold">Qaysi kassaga tushirilsin?</label>
+                    <label for="to_kassa{{ close.id }}">Qaysi kassaga tushirilsin?</label>
                     <select class="form-control" id="to_kassa{{ close.id }}" name="to_kassa" required>
                         <option value="">-- Kassani tanlang --</option>
                         {% for kassa in kassas %}
@@ -200,7 +186,6 @@
                         {% endfor %}
                     </select>
                 </div>
-                {% endif %}
             </div>
             <div class="p-4">
                 {% for i in close.by_cashes %}
@@ -210,28 +195,26 @@
                         </div>
                         <div class="card-body">
                             {% for c in i.valyutas %}
-                                {% if c.item %}
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Yuborish summasi</label>
+                                        <label class="form-label">Yuborish summasi</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}" readonly>
+                                            <input type="text" id="summa{{ c.item.id }}" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}">
                                             <span class="input-group-text">{{ c.name }}</span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Qabul qilish summasi</label>
+                                        <label class="form-label">Qabul qilish summasi</label>
                                         <div class="input-group">
-                                            <input type="text" id="summa_confirmed{{ c.item.id }}" 
-                                                   class="form-control confirmed-summa" 
-                                                   value="{{ c.item.summa|default:'0'|intcomma }}"
-                                                   data-item-id="{{ c.item.id }}"
-                                                   {% if close.is_confirmed or user.userprofile.staff != 1 %}readonly{% endif %}>
+                                            <input type="text" id="summa_confirmed{{c.item.id}}" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}"
+                                                {% if user.userprofile.staff != 1 %}
+                                                    readonly
+                                                {% endif %}
+                                            >
                                             <span class="input-group-text">{{ c.name }}</span>
                                         </div>
                                     </div>
                                 </div>
-                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -266,7 +249,7 @@
                         "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' 
                     },
                     "sInfo": "_PAGE_ / _PAGES_ sahifa",
-                    "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2=16.65"></line></svg>',
+                    "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
                     "sSearchPlaceholder": "Izlash...",
                     "sLengthMenu": "Ko'rsatish: _MENU_",
                 },
@@ -275,14 +258,6 @@
                 "pageLength": 15,
                 "order": [[0, "desc"]],
                 "responsive": true
-            });
-
-            // Format numbers with commas
-            $('.confirmed-summa').on('blur', function() {
-                let value = $(this).val().replace(/,/g, '');
-                if (!isNaN(value) && value !== '') {
-                    $(this).val(parseFloat(value).toLocaleString('en-US'));
-                }
             });
         });
 
@@ -311,65 +286,19 @@
 
             setTimeout(() => {
                 alertElement.fadeOut(500, function() { $(this).remove(); });
-            }, 5000);
+            }, 3000); 
         };
-
-        function confirmSmena(id) {
-            let toKassa = $(`#to_kassa${id}`).val();
-            
-            if (!toKassa) {
-                showAlert("Iltimos, kassani tanlang!", 'danger');
-                return;
-            }
-
-            // Collect all confirmed sums
-            let confirmedSums = {};
-            $(`#panel${id} .confirmed-summa`).each(function() {
-                let itemId = $(this).data('item-id');
-                let value = $(this).val().replace(/,/g, '');
-                confirmedSums[itemId] = value;
-            });
-
-            // Prepare form data
-            let formData = new FormData();
-            formData.append('to_kassa', toKassa);
-            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-            
-            for (let itemId in confirmedSums) {
-                formData.append(`summa_confirmed${itemId}`, confirmedSums[itemId]);
-            }
-
-            // Show loading state
-            let confirmBtn = $(`#panel${id} .btn-success`);
-            confirmBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Tasdiqlanmoqda...');
-
-            // Send AJAX request
-            $.ajax({
-                url: `/close_cash_confirmed/${id}/`,
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        showAlert(response.message, 'success');
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showAlert(response.message, 'danger');
-                        confirmBtn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Tasdiqlash');
-                    }
-                },
-                error: function(xhr) {
-                    let message = "Xatolik yuz berdi! Qaytadan urinib ko'ring.";
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        message = xhr.responseJSON.message;
-                    }
-                    showAlert(message, 'danger');
-                    confirmBtn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Tasdiqlash');
-                }
-            });
-        }
     </script>
+
+
+<script>
+    function confirm(id) {
+        let cash = $(`to_kassa${id}`).val()
+        if (!cash) {
+            showAlert("Kassani kiriting. ", 'danger')
+        }
+        
+
+    }
+</script>
 {% endblock js %}

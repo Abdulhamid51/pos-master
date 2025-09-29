@@ -1,0 +1,141 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    <title>Bosh Sahifa </title>
+{% endblock title %}
+{% load humanize %}
+{% block css %}
+    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    
+{% endblock css %}
+{% block content %}
+<script src="{% static 'multiselect.js' %}"></script>
+
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+        <div id="content" class="main-content">
+            <div class="container">
+                    <div class="row layout-top-spacing" style="width: 100%;">
+                        <div class="col-12 layout-spacing">
+                            <div class="col-md-12">
+                                <form class="row">
+                                    <div class="col-2">
+                                        <input type="text" name="search" class="form-control" placeholder="Qidiruv">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date  }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <select name="deliver" class="form-control"  multiple
+                                        multiselect-select-all="true" multiselect-max-items="0" id="select-tegirmon"
+                                        multiselect-search="true">
+                                            <option value="" disabled hidden>Taminotchi</option>
+                                            {% for deliver in deliver %}
+                                                <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-2">
+                                        <select name="client" class="form-control"  multiple
+                                        multiselect-select-all="true" multiselect-max-items="0" id="select-tegirmon"
+                                        multiselect-search="true">
+                                            <option value="" disabled hidden>Mijoz</option>
+                                            {% for client in client %}
+                                                <option value="{{ client.id }}">{{ client.fio }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary" style="height: 40px;">Filterlash</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
+                                <div class="statbox widget box box-shadow">
+                                    <div class="widget-content widget-content-area">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-4" id="example122">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Maxsulot</th>
+                                                        <th>Mijoz</th>
+                                                        <th>Narxi</th>
+                                                        <th>Soni</th>
+                                                        <th>Summa</th>
+                                                        <th>Hodim</th>
+                                                        <th>Sana</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for i in cart %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ i.product }}</td>
+                                                        <td>{{ i.shop.debtor|default_if_none:'' }}</td>
+                                                        <td>{{ i.price|intcomma }}</td>
+                                                        <td>{{ i.quantity|intcomma }}</td>
+                                                        <td>{{ i.total_price|intcomma }}</td>
+                                                        <td></td>
+                                                        <td>{{ i.date|date:"Y-m-d" }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Jami</th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th>{{ totals.total_quantity|default_if_none:'0'|intcomma }}</th>
+                                                        <th>{{ totals.total|default_if_none:'0'|intcomma }}</th>
+                                                        <th></th>
+                                                        <th></th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Faqat pagination harakatlanadi -->
+                        <div style="margin-top: 10px; text-align: center; overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 5px;">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination" style="display: inline-flex;">
+                                    {% if pay.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ pay.previous_page_number }}">Previous</a></li>
+                                    {% endif %}
+                                    {% for i in pay.paginator.page_range %}
+                                    {% if pay.number == i %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                    {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if pay.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ pay.next_page_number }}">Next</a></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                    </div>
+            </div>
+        </div>
+        
+{% endblock content %}
+{% block js %}
+{% endblock js %}

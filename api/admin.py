@@ -32,6 +32,10 @@ class EmployeeAdmin(UserAdmin):
     #     (_('Important dates'), {'fields': ('last_login', 'date_joined')}), 
     # )
 
+
+
+
+
 admin.site.register(PayChecker)
 
 @admin.register(OneDayPice)
@@ -75,7 +79,7 @@ admin.site.register(RevisionItems)
 @admin.register(RejaTushum)
 class RejaTushumAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'date')
-admin.site.register(Wallet)
+# admin.site.register(Wallet)
 
 @admin.register(AllDaySumEmployee)
 class AllDaySumEmployeeAdmin(ExportActionMixin, admin.ModelAdmin):
@@ -93,6 +97,10 @@ class DeliverPaymentsAllAdmin(ExportActionMixin, admin.ModelAdmin):
     list_display = ('id', 'user', 'received_total', 'gave_total', 'return_total', 'left', 'comment', 'date', 'check_comment',)
     list_filter = ['deliverpayments']
     date_hierarchy = 'date'
+
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer', 'deliver', 'partner', 'valyuta', 'summa', 'start_summa', 'start_time')
 
 @admin.register(DeliverPayments)
 class DeliverPaymentsAdmin(admin.ModelAdmin):
@@ -271,7 +279,7 @@ class TeritoryAdmin(admin.ModelAdmin):
 
 @admin.register(PayHistory)
 class PayHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'debtor', 'desktop_id', 'som', 'dollar', 'date', 'summa')
+    list_display = ('id', 'debtor', 'desktop_id', 'som', 'dollar', 'date', 'shop', 'summa')
     search_fields = ('id', 'debtor','som', 'dollar', 'date')
     list_filter = ('debtor',)
     date_hierarchy = 'date'
@@ -282,6 +290,11 @@ class DebtAdmin(admin.ModelAdmin):
     list_display = ('id', 'debtor', 'shop', 'date', 'return_date')
     search_fields = ('id', 'debtor', 'shop')
     list_filter = ('debtor',)
+
+
+# @admin.register(CloseCash)
+# class CloseCashAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'kassa', 'to_kassa', 'by_user', 'filial', 'summa', 'date')
 
 
 @admin.register(CartDebt)
@@ -435,3 +448,43 @@ class KassaNewAdmin(admin.ModelAdmin):
 
 
 
+def auto_register(models_list):
+    """
+    Faqat siz bergan modellarga admin yasab beradi.
+    - models_list: ro'yxat ichida modellaringizni bering
+    """
+    for model in models_list:
+        # Agar model allaqachon register qilingan bo'lsa, tashlab ketamiz
+        if model in admin.site._registry:
+            continue
+
+        try:
+            class GenericAdmin(admin.ModelAdmin):
+                # list_display (faqat oddiy fieldlar, M2M va ImageField larsiz)
+                list_display = [
+                    f.name for f in model._meta.get_fields()
+                    if not isinstance(f, models.ImageField)
+                    and not isinstance(f, models.ManyToManyField)
+                    and not f.many_to_many
+                ]
+
+                # Filterlar (faqat ForeignKey va M2M lar uchun)
+                list_filter = [
+                    f.name for f in model._meta.get_fields()
+                    if isinstance(f, (models.ForeignKey, models.ManyToManyField))
+                ]
+
+                # Search faqat CharField lar uchun
+                search_fields = [
+                    f.name for f in model._meta.get_fields()
+                    if isinstance(f, models.CharField)
+                ]
+
+            admin.site.register(model, GenericAdmin)
+
+        except Exception as e:
+            print(f"⚠️ {model.__name__} admin'ga qo'shilmadi: {e}")
+
+
+
+auto_register([SmenaClose, CloseCash])

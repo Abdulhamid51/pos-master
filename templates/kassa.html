@@ -189,7 +189,7 @@
                                                     <th style="text-align: left;">{{ v.name }}</th>
                                                 {% endfor %}
                                                     
-                                                <th style="text-align: left;">Qoldiq</th>
+                                                <!-- <th style="text-align: left;">Qoldiq</th> -->
                                                 <th style="text-align: left;">Hamkor</th>
                                                 <th style="text-align: left;">Izox</th>
                                                 <th style="text-align: left;">Qachon</th>
@@ -212,9 +212,9 @@
                                                     </td>
                                                 {% endfor %}
                                                     
-                                                <td style="text-align: left;">
+                                                <!-- <td style="text-align: left;">
                                                     {{ kirim.kassa_new|default_if_none:'0' | intcomma }}
-                                                </td>
+                                                </td> -->
                                                 
                                                 <td style="text-align: left;">{{ kirim.payhistory.kontr_agent|default_if_none:'' }}</td>
                                                 <td style="text-align: left;">{{ kirim.izox }}</td>
@@ -263,7 +263,7 @@
                                                 {% for q in kirim_totals %}
                                                     <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
                                                 {% endfor %}
-                                                <th style="text-align: left;"></th>
+                                                <!-- <th style="text-align: left;"></th> -->
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
                                                 <th style="text-align: left;"></th>
