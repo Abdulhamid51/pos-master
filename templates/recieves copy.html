@@ -1,0 +1,1129 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}
+    <title>Qabul </title>
+{% endblock title %}
+{% block css %}
+    <link href="{% static 'plugins/perfect-scrollbar/perfect-scrollbar.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+
+    <!--  BEGIN CUSTOM STYLE FILE  -->
+    <link href="{% static 'assets/css/apps/invoice.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!--  END CUSTOM STYLE FILE  -->
+    <style>
+        nput[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox uchun */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+    </style>
+
+<style>
+.custom-scroll-table {
+    overflow-x: auto;  /* faqat gorizontal scroll */
+    overflow-y: hidden;  /* vertikal scrollni o'chiramiz */
+    width: 100%;
+    display: block;
+    white-space: nowrap;  /* qatorlarni yangi qatorga tushmasligi uchun */
+}
+</style>
+  <style>
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            width: 30rem;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div class="row invoice layout-top-spacing">
+                    <div id="alert-container"></div>
+
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                        <div class="app-hamburger-container">
+                            <div class="hamburger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu chat-menu d-xl-none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+                        </div>
+                        <div class="doc-container">
+                            <div class="tab-title">
+                                <div class="row">
+                                    <div class="col-md-12 col-sm-12 col-12">
+                                        <div class="">
+                                            <button style="width: 100%;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_add">
+                                                Yangi
+                                            </button>
+
+                                              <div class="modal fade" id="new_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                  <form action="{% url 'add_recieve' %}" class="modal-content" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="exampleModalLongTitle">Yangi qoshish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="form-group">
+                                                        <label for="">Partiya</label>
+                                                        <input type="text" class="form-control" value="{{last_part}}" name="name" required>
+
+                                                        <label for="">Yetkazib beruvchi</label>
+                                                        <div class="d-flex">
+                                                            <select class="form-control searchable" required name="deliver" id="">
+                                                                
+                                                                {% for del in delivers %}
+                                                                    <option value="{{del.id}}">{{ del.name }}</option>
+                                                                {% endfor %}
+                                                                    
+                                                            </select>
+                                                            <button style="width: 2rem;height: 2.2rem;padding: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_taminotchi">
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                        <label for="">Filial</label>
+                                                        <select class="form-control searchable" name="filial">
+                                                            {% for filial in filial %}
+                                                                    <option value="{{filial.id}}">{{ filial.name }}</option>
+                                                                {% endfor %}
+                                                        </select>
+
+                                                        <label for="">Valyuta</label>
+                                                        <select class="form-control searchable" name="valyuta">
+                                                            {% for valyuta in valyutas %}
+                                                                <option value="{{valyuta.id}}">{{ valyuta.name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <label for="">Kurs</label>
+                                                        <input type="number" name="kurs" value="{{dollar_kurs}}" class="form-control">
+                                                        <label for="">Sana</label>
+                                                        <input type="datetime-local" name="date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
+
+                                                        <label for="">To'lov sanasi</label>
+                                                        <input type="datetime-local" name="payment_date" value="{{ today|date:'Y-m-d H:i' }}" class="form-control">
+                                                      </div>
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                      </div>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+
+
+                                              
+
+
+                                              <div class="modal fade" id="add_taminotchi" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                  <form action="{% url 'create_deliver' %}" class="modal-content" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                      <h5 class="modal-title" id="exampleModalLongTitle">Taminotchi qoshish</h5>
+                                                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                      </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                      <div class="form-group">
+                                                        <label for="">Nomi</label>
+                                                        <input type="text" class="form-control" name="name" required>
+
+                                                        <label for="">Telefon 1</label>
+                                                        <input type="text" class="form-control" name="phone1" required>
+
+                                                        <label for="">Telefon 2</label>
+                                                        <input type="text" class="form-control" name="phone2" >
+                                                      </div>
+                                                      <div class="modal-footer d-flex justify-content-between">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                      </div>
+                                                    </div>
+                                                  </form>
+                                                </div>
+                                              </div>
+                                        </div>
+                                        <div class="search">
+                                            <input type="text" class="form-control" placeholder="Izlash">
+                                        </div>
+                                        <ul class="nav nav-pills inv-list-container d-block" id="pills-tab" role="tablist">
+                                            {% for recieve in recieves %}
+                                                <li data-id="{{recieve.id}}" class="nav-item nav_items
+                                                {% if forloop.first %}
+                                                    active
+                                                {% endif %}
+                                                    ">
+                                                    <div class="nav-link list-actions" id="invoice-{{ recieve.id }}" data-invoice-id="{{ recieve.id }}">
+                                                        <div class="f-m-body">
+                                                            <div class="f-body">
+                                                                <h6 class="invoice-customer-name">Partiya: {{ recieve.name }} <button type="button" class="btn" data-toggle="modal" data-target="#delete_modal{{recieve.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button> </h6>
+                                                                <h6 class="invoice-customer-name"><span>Yetkazib beruvchi:</span> {{ recieve.deliver }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Valyuta:</span> {{ recieve.valyuta }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Summa:</span> {{ recieve.total_bring_price|intcomma }}</h6>
+                                                                <h6 class="invoice-customer-name"><span>Kurs:</span> {{ recieve.kurs|intcomma }}</h6>
+                                                                <!-- <p class="invoice-customer-name"><span>Dollar:</span> {{ recieve.dollar }}</p> -->
+                                                                <h6 class="invoice-generated-date">Sana: {{ recieve.date|date:'d-m-Y H:i' }}</h6>
+                                                                <h6 class="invoice-generated-date">To'lov sanasi: {{ recieve.payment_date|date:'d-m-Y H:i' }}</h6>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+
+
+
+                                                <div class="modal fade" id="delete_modal{{recieve.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                      <div class="modal-content">
+                                                        <div class="modal-header">
+                                                          <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                        </div>
+                                                        <div class="modal-footer d-flex justify-content-between">
+                                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                          <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'delete_recieve'  recieve.id %}">O'chirish</a>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                            {% endfor %}
+                                        </ul>
+                                       
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="invoice-container">
+                                <div class="invoice-inbox">
+
+                                    <div class="inv-not-selected">
+                                        <p>Qabulni tanlang</p>
+                                    </div>
+
+                                    <div class="invoice-header-section">
+                                        <h4 class="inv-number"></h4>
+                                        <h4></h4>
+                                        <div class="invoice-action">
+                                        </div>
+                                    </div>
+
+                                    <div id="ct" style="max-width: 100%;">
+                                        {% for recieve in recieves %}
+                                            <div class="invoice-{{ recieve.id }}" id="{% if active_one == recieve %}active_page{% endif %}">
+                                                <div class="content-section  animated animatedFadeInUp fadeInUp">
+
+                                                    <div class="row">
+
+                                                        <div class="col-sm-6 col-6">
+                                                            <h3 class="in-heading">{{ recieve.name }}</h3>
+                                                        </div>
+                                                        <div class="col-sm-6 col-6 d-flex justify-content-end text-right" style="gap: 10px;">
+                                                            <!-- <p class="inv-due-date"><span class="inv-title">Sana : </span> <span class="inv-date">{{ recieve.date }}</span></p> -->
+                                                             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#excel_import{{recieve.id}}" id="" onclick="">
+                                                                Excel import 
+                                                            </button>
+                                                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_product_add" id="" onclick="">
+                                                                Yangi 
+                                                            </button>
+                                                            <a href="{% url 'recieve_completion' recieve.id %}">
+                                                                <button type="button" class="btn btn-success" >
+                                                                    Yakunlash
+                                                                </button>
+                                                             </a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+
+                                                    </div>
+                                                   
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <select onchange="add_modal(this)" class="form-control searchable" name="product" id="" data-recieve="{{recieve.id}}">
+                                                                <option value="">Maxsulot tanlash</option>
+                                                                
+                                                                {% for i in products %}
+                                                                    <option value="{{i.id}}&{{i.name}}&{{i.som}}&{{i.sotish_som}}">{{ i.name }}</option>
+                                                                {% endfor %}
+                                                                    
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <h4>Maxsulotlar</h4>
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table datatable">
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <!-- <th scope="col"></th> -->
+                                                                            <th scope="col">Mahsulot</th>
+                                                                            <th  scope="col">Kelish narxi</th>
+                                                                            <th  scope="col">Soni</th>
+                                                                            <th  scope="col">Jami</th>
+                                                                            <th  scope="col">Dollar narxi</th>
+                                                                            <th  scope="col">Ulushi</th>
+                                                                            <th  scope="col">Chiqim</th>
+                                                                            <th  scope="col">Chiqim (dona)</th>
+                                                                            <th  scope="col">Tan narx</th>
+                                                                            <!-- <th  scope="col">Sotish jami</th> -->
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.receiveitem.all %}
+                                                                                <tr>
+                                                                                    <!-- <td>
+                                                                                        <label for="item{{ite.id}}"></label>
+                                                                                        <input type="checkbox" id="item{{item.id}}">
+                                                                                    </td> -->
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.product }}</td>
+                                                                                    <td >{{ item.bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.quantity|intcomma }}</td>
+                                                                                    <td >{{ item.total_bring_price|intcomma }}</td>
+                                                                                    <td >{{ item.dollar_price_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.percent|intcomma }}%</td>
+                                                                                    <td >{{ item.expanse|intcomma }}</td>
+                                                                                    <td >{{ item.expanse_for_count|intcomma }}</td>
+                                                                                    <td >{{ item.cost|intcomma }}</td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_item_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td ><button  type="button" class="btn" data-toggle="modal" data-target="#delete_item_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <!-- <th></th> -->
+                                                                            <th></th>
+                                                                            <th scope="col">Jami</th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col">{{ recieve.total_quantity|intcomma }}</th>
+                                                                            <th  scope="col">{{ recieve.total_bring_price|intcomma }}</th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                            <th  scope="col"></th>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="row inv--product-table-section">
+                                                        <div class="col-12">
+                                                            <div class="d-flex justify-content-between">
+                                                                <h4>Qabul chiqimlar</h4>
+                                                                <div class="d-flex">
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_type_modal">Chiqim turi qo'shish</button>
+                                                                    <button style="margin: 0.5rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_expanse_modal{{recieve.id}}">Qo'shish</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="custom-scroll-table">
+                                                                <table class="table" sty>
+                                                                    <thead class="">
+                                                                        <tr>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col">Turi</th>
+                                                                            <th scope="col">Summa</th>
+                                                                            <th scope="col">Valyuta</th>
+                                                                            <th scope="col">Turli shaxs</th>
+                                                                            <th scope="col">Izoh</th>
+                                                                            <th scope="col"></th>
+                                                                            <th scope="col"></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {% for item in recieve.expanses.all %}
+                                                                                <tr>
+                                                                                    <td>{{ forloop.counter }}</td>
+                                                                                    <td>{{ item.type.name }}</td>
+                                                                                    <td>{{ item.summa|intcomma }}</td>
+                                                                                    <td>{{ item.valyuta }}</td>
+                                                                                    <td>{{ item.externaluser.full_name }}</td>
+                                                                                    <td>{{ item.comment }}</td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#recieve_expanse_add_modal_edit{{item.id}}" style="color: rgb(0, 255, 68); float: right;"><i class="fa fa-edit"></i></button></td>
+                                                                                    <td><button  type="button" class="btn" data-toggle="modal" data-target="#delete_expanse_modal{{item.id}}" style="color: red; float: right;"><i class="fa fa-trash"></i></button></td>
+                                                                                </tr>
+                                                                        {% endfor %}
+                                                                    </tbody>
+                                                                    <tfoot class="">
+                                                                        <tr>
+                                                                            <th>Jami</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                            <th>
+                                                                                
+                                                                                {% for q in recieve.expanses_summa %}
+                                                                                    {{q.valyuta}}: {{q.summa|intcomma}} <br>
+                                                                                {% endfor %}
+                                                                                    
+                                                                            </th>
+                                                                            <th>Jami dollar: {{recieve.expanse_total_dollar|intcomma}}</th>
+                                                                            <th></th>
+                                                                            <th></th>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <div class="row mt-4">
+                                                        <div class="col-sm-5 col-12 order-sm-0 order-1">
+                                                            
+                                                        </div>
+                                                        <!-- <div class="col-sm-7 col-12 order-sm-1 order-0">
+                                                            <div class="inv--total-amounts text-sm-right">
+                                                                <div class="row">
+                                                                    <div class="col-sm-8 col-7">
+                                                                        <p class="">Summa: </p>
+                                                                    </div>
+                                                                    <div class="col-sm-4 col-5">
+                                                                        <p class="">{{ recieve.som|intcomma }} so'm</p>
+                                                                    </div>
+                                                                  
+                                                                </div>
+                                                            </div>
+                                                        </div> -->
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
+                                            <div class="modal fade" id="excel_import{{ recieve.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <form class="modal-content" method="post" action="{% url 'import_recieve_items_from_excel' recieve.id %}" enctype="multipart/form-data">
+                                                        {% csrf_token %}
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Excel import</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            <label>Excel file</label>
+
+                                                            <div class="input-group mb-3">
+                                                                <input type="file" name="file" class="form-control" required>
+                                                                <div class="input-group-append">
+                                                                    <a href="{% static 'recieve_items_template.xlsx' %}" download class="btn btn-success">
+                                                                        <i class="fa fa-download"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="modal-footer d-flex justify-content-between">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                                                <button type="submit" class="btn btn-primary">Saqlash</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+
+                                </div>
+
+                            </div>
+                            
+                        </div>
+
+                    </div>
+                </div>
+                </div>
+
+
+
+
+                <button style="width: 100%;display: none;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#recieve_item_add_modal">
+                    Yangi 
+                </button>
+                
+
+
+                  <div class="modal fade" id="recieve_item_add_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_recieve_item_view' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
+                                  <label for="">Miqdori</label>
+                                  <input type="number" step="any" name="quantity" class="form-control" required>
+                                  
+                                <div class="form-group" id="recieve_item_add_product_div">
+      
+                                  
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                  <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  <div class="modal fade" id="add_expanse_type_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_expanse_type' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="recieve_item_add_product_name">Yangi qoshish</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body" >
+                            <input type="hidden" name="product" id="recieve_item_add_product_id">
+                            <input type="hidden" name="recieve" id="recieve_item_add_recieve_id">
+                            
+                                  <label for="">Nomi</label>
+                                  <input type="text" name="name" class="form-control" required>
+                                  
+                                <div class="modal-footer d-flex justify-content-between">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                  <button type="submit" class="btn btn-primary">Saqlash</button>
+                                </div>
+
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+
+
+                  <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                    <div class="modal-dialog " role="document">
+                        <form action="{% url 'new_product_add' %}" class="modal-content" method="post" style="width: 700px;">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle1">Yangi qoshish</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="">Nomi</label>
+                                        <input type="text" class="form-control" name="name" required>
+                                        <input type="hidden" class="form-control" name="filial_id" value="{{ active_one.filial.id }}">
+                                    </div>  
+                                    <div class="col-md-6">
+                                        <label for="">Ishlab chiqaruvchi</label>
+                                        <select class="form-control searchable" required name="deliver" id="">
+                                            <option value="">- - - - - - - - </option>
+                                            {% for a in delivers %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Ulchov</label>
+                                        <select class="form-control searchable" required name="measurement_type">
+                                            {% for a in measurement_type %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Status</label>
+                                        <select class="form-control" required name="ready">
+                                                <option value="1">Xom ashyo</option>
+                                                <option value="2">Yarim tayyor</option>
+                                                <option value="3">Tayyor</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Valyuta</label>
+                                        <select class="form-control searchable" required name="valyuta">
+                                            {% for a in valyutas %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Min miqdor</label>
+                                        <input type="number" class="form-control" name="min_count" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Guruh</label>
+                                        <select class="form-control searchable" required name="group" id="">
+                                            <option value="">- - - - - - - - </option>
+                                            {% for a in groups %}
+                                                <option value="{{a.id}}">{{ a.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Polka kodi</label>
+                                        <input type="text" class="form-control" name="shelf_code">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Paketdagi soni</label>
+                                        <input type="number" step="any" class="form-control" name="pack">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Miqdori</label>
+                                        <input type="number" step="any" class="form-control" name="quantity">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label for="">Barcode</label>
+                                        <div id="barcode_container">
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control barcode-input" oninput="push(this)">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-secondary" onclick="addInput()">+</button>
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="data_list" name="list_barcode" />
+
+                                <script>
+                                    let isBarcodeDuplicate = false;
+
+                                    function addInput() {
+                                        const inputs = document.querySelectorAll(".barcode-input");
+                                        const lastInput = inputs[inputs.length - 1];
+
+                                        const inputValue = lastInput.value.trim();
+
+                                        if (inputValue === '') {
+                                            showAlert("Barcode kiritilmagan!", "warning");
+                                            return;
+                                        }
+
+                                        if (isBarcodeDuplicate) {
+                                            showAlert("Bu barcode allaqachon mavjud!", "warning");
+                                            return;
+                                        }
+
+                                        const container = document.getElementById("barcode_container");
+                                        const group = document.createElement("div");
+                                        group.className = "input-group mb-2";
+                                        group.innerHTML = `
+                                            <input type="text" class="form-control barcode-input" oninput="push(this)">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-secondary" onclick="addInput()">+</button>
+                                            </div>
+                                        `;
+                                        container.appendChild(group);
+                                    }
+
+                                    function push(item) {
+                                        const inputValue = item.value.trim();
+
+                                        if (inputValue === '') {
+                                            isBarcodeDuplicate = true;  
+                                            disableAddButtons(true);
+                                            return;
+                                        }
+
+                                        $.ajax({
+                                            url: "{% url 'filter_product_barcode' %}",
+                                            type: "POST",
+                                            data: JSON.stringify({ 'barcode': inputValue }),
+                                            contentType: "application/json",
+                                            success: function (response) {
+                                                if (response.data.message) {
+                                                    showAlert(response.data.message, 'warning');
+                                                    isBarcodeDuplicate = true;
+                                                    disableAddButtons(true);
+                                                } else {
+                                                    isBarcodeDuplicate = false;
+                                                    disableAddButtons(false);
+                                                }
+                                            },
+                                            error: function () {
+                                                showAlert("Server bilan bog'lanishda xatolik", "danger");
+                                                isBarcodeDuplicate = true;
+                                                disableAddButtons(true);
+                                            }
+                                        });
+                                    }
+
+                                    function disableAddButtons(disable) {
+                                        const buttons = document.querySelectorAll("#barcode_container .btn.btn-secondary");
+                                        buttons.forEach(btn => {
+                                            btn.disabled = disable;
+                                        });
+                                    }
+
+                                    function Pushdata() {
+                                        const inputs = document.querySelectorAll(".barcode-input");
+                                        const data = [];
+                                        inputs.forEach(input => {
+                                            if (input.value.trim() !== '') {
+                                                data.push(input.value.trim());
+                                            }
+                                        });
+                                        document.getElementById('data_list').value = JSON.stringify(data);
+                                    }
+
+                                    function showAlert(message, type) {
+                                        const alertContainer = document.getElementById("alert-container");
+                                        if (!alertContainer) return;
+                                        const alert = document.createElement("div");
+                                        alert.className = `alert alert-${type}`;
+                                        alert.innerText = message;
+                                        alertContainer.appendChild(alert);
+                                        setTimeout(() => alert.remove(), 3000);
+                                    }
+                                </script>
+                                </div>
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                <button type="submit" class="btn btn-primary" onclick="Pushdata()">Saqlash</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+
+
+                {% for recieve in recieves %}
+
+
+                <div class="modal fade" id="add_expanse_modal{{ recieve.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'add_recieve_expanse' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="recieve_id" value="{{ recieve.id }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqim qo‘shish</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="form-group">
+                            <label>Chiqim turi</label>
+                            <select name="type" class="form-control" required>
+                              {% for t in expanse_types %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" required>
+                          </div>
+                          <div class="form-group">
+                            <label>Valyuta</label>
+                            <select name="valyuta" class="form-control" required>
+                              {% for v in valyutas %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Turli shaxs</label>
+                            <select name="externaluser" class="form-control">
+                              <option value="">-</option>
+                              {% for user in external_users %}
+                                <option value="{{ user.id }}">{{ user.full_name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label>Izoh</label>
+                            <textarea name="comment" class="form-control"></textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+                  
+                  
+                  {% for item in recieve.expanses.all %}
+                  <div class="modal fade" id="recieve_expanse_add_modal_edit{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form class="modal-content" method="post" action="{% url 'edit_recieve_expanse' item.id %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Chiqimni tahrirlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <!-- Shu joyda ham xuddi qo'shish modalidagi form fieldlar bo'ladi, faqat qiymatlar bilan to'ldirilgan -->
+                          <!-- Misol uchun -->
+                          <div class="form-group">
+                            <label>Summa</label>
+                            <input type="number" step="0.01" name="summa" class="form-control" value="{{ item.summa }}">
+                          </div>
+                          <!-- qolganlari ham shunday -->
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                          <button class="btn btn-primary" type="submit">Saqlash</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+
+
+                  <div class="modal fade" id="delete_expanse_modal{{item.id}}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <form method="post" action="{% url 'delete_recieve_expanse' item.id %}" class="modal-content">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title">Tasdiqlash</h5>
+                          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                          <p>Haqiqatan ham ushbu chiqimni o‘chirmoqchimisiz?</p>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                          <button type="submit" class="btn btn-danger">O‘chirish</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  {% endfor %}
+                    
+
+
+                {% for item in recieve.receiveitem.all %}
+
+
+                    <div class="modal fade" id="delete_item_modal{{item.id}}" tabindex="0" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Haqiqatdanham o'chirmoqchimisiz</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                            <div class="modal-body">
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                            <a class="btn btn-primary" type="button" style="color: #fff;" href="{% url 'delete_recieve_item'  item.id %}">O'chirish</a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal fade" id="recieve_item_add_modal_edit{{item.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <form class="modal-content" method="post" action="{% url 'edit_recieve_item_view' %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" >Tahrirlash</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" >
+                                    <div class="form-group">
+                                        <input type="hidden" name="item" value="{{item.id}}">
+                                        
+                                        <label for="">Miqdori</label>
+                                    <input type="number" step="any" value="{{ item.quantity|comma_to_dot }}" name="quantity" class="form-control">
+                                        
+                                        
+                                        {% for br in item.bring_prices %}
+                                            <label class="br" for="">Kelish {{br.valyuta}}</label>
+                                            <input type="number" name="br_{{br.valyuta_id}}_{{br.id}}" class="form-control" value="{{br.price|floatformat:'0'}}">                                
+                                        {% endfor %}
+
+                                        <label for="">Sotish narx </label>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>N</th>
+                                                    <th>Valyuta</th>
+                                                    {% for p in price_types %}
+                                                        <th>{{ p.name }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for row in item.product.pricetypevaluta_prices %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ row.valuta }}</td>
+                                                        {% for s in row.summas %}
+                                                            <td>
+                                                                <input step="any"
+                                                                    type="number" 
+                                                                    class="form-control"
+                                                                    name="price_{{ s.id }}_{{ row.valyuta_id }}" 
+                                                                    value="{{ s.summa }}"
+                                                                />
+                                                            </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+            
+                                        <!-- <label for="">Kelish narx</label>
+                                        <input value="{{item.som}}" type="number" name="som" class="form-control">
+                                        
+                                        <label for="">Sotish narx</label>
+                                        <input  value="{{item.sotish_som}}" type="number" name="sotish_som" class="form-control">
+            
+                                        
+                                        {% for pr_type in item.product.price_types.all %}
+                                            <label class="pr_type" for="">{{pr_type.type.name}}</label>
+                                            <input type="number" name="{{pr_type.id}}" class="form-control" value="{{pr_type.price|floatformat:'0'}}">                                
+                                        {% endfor %} -->
+                                            
+                                        
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-between">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                                    </div>
+
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+{% endblock content %}
+{% block js %}
+    <script>
+        const showAlert = (message, type) => {
+            const alertElement = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                </div>
+            `);
+
+            $("#alert-container").append(alertElement);
+            setTimeout(() => {
+                alertElement.fadeOut(500, function () { $(this).remove(); });
+            }, 3000);
+        };
+
+    </script>
+    <!-- END GLOBAL MANDATORY SCRIPTS -->
+    <script src="{% static 'assets/js/apps/invoice.js'%}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+    <script>
+        $('select.searchable').selectize({ normalize: true });
+    </script>
+     <script>
+        $('.nav_items').click(function() {
+            let item = $(this)
+            let id = item.attr('data-id')
+            const currentUrl = new URL(window.location.href);
+
+            const paramName = 'active';
+            const paramValue = id;
+
+            currentUrl.searchParams.set(paramName, paramValue);
+
+            window.history.replaceState({}, '', currentUrl.toString());
+
+            })
+    </script>
+    <script>
+        let active = $('#active_page')
+        if (active.length) {
+            $(`#invoice-${"{{active_one.id}}"}`).click()
+        }
+    </script>
+<!-- <script>
+    function add_modal(item) {
+        const itemValue = $(item).val(); // Get the value of the passed item
+        const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
+
+
+        if (pr_id) {
+            $('#recieve_item_add_button').click();
+            $('#recieve_item_add_product_id').val(pr_id);
+
+            $('#recieve_item_add_recieve_som').val(pr_som);
+            $('#recieve_item_add_recieve_sotish_som').val(pr_sotish_som);
+            $('#recieve_item_add_recieve_id').val($(item).data('recieve')); 
+            $('#recieve_item_add_product_name').text(pr_name);
+            $('#recieve_item_add_product_div .pr_type').remove();
+            let price_types = $.get('/api/productpricetype/', { product:  pr_id}, function(data) {
+                console.log(data);
+                data.forEach(element => {
+                    $('#recieve_item_add_product_div').append(
+                        `
+                        <label class="pr_type" for="">${element.name}</label>
+                        <input type="number" name="${element.id}" class="form-control pr_type" value="${element.price}">
+                        `
+                    )
+                });
+            });
+
+        }
+    }
+</script> -->
+<script>
+function add_modal(item) {
+    const itemValue = $(item).val(); // Get the value of the passed item
+    const [pr_id, pr_name, pr_som, pr_sotish_som] = itemValue.split('&');
+
+    if (pr_id) {
+        $('#recieve_item_add_button').click();
+        $('#recieve_item_add_product_id').val(pr_id);
+
+        // $('#recieve_item_add_recieve_som').val(pr_som);
+        // $('#recieve_item_add_recieve_sotish_som').val(pr_sotish_som);
+        $('#recieve_item_add_recieve_id').val($(item).data('recieve'));
+        $('#recieve_item_add_product_name').text(pr_name);
+        $('#recieve_item_add_product_div .pr_type').remove();
+
+        $.get("{% url 'get_product_prices' %}", { product: pr_id }, function(data) {
+            const container = $('#recieve_item_add_product_div');
+            container.empty()
+
+            // Kelish narxlari qo'shish
+            data.bring_prices.forEach(br => {
+                if (container.find('input[name="' + br.valyuta + '"]').length === 0) {
+                    container.append(`
+                        <label class="br" for="">Kelish ${br.valyuta}</label>
+                        <input type="number" name="br_${br.valyuta_id}_${br.id}" class="form-control" value="${parseFloat(br.price).toFixed(0)}">
+                    `);
+                }
+            });
+
+            // Sotish narxlari jadvali
+            let table = container.find('table.table');
+            if (table.length === 0) {
+                // price_types bu ma'lumot kelmayapti JSONda, agar kerak bo'lsa backenddan berilishi kerak
+                // Shu sababdan ustun nomlarini backenddan olish yoki statik berish kerak
+                // Mana bu yerda misol uchun statik berilgan:
+                const price_types = data.price_types;
+
+                table = $(`
+                    <label for="">Sotish narx </label>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>N</th>
+                                <th>Valyuta</th>
+                                ${price_types.map(name => `<th>${name}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `);
+                container.append(table);
+            }
+
+            const tbody = table.find('tbody');
+            tbody.empty();
+
+            data.sell_prices.forEach((row, index) => {
+                const tds = row.summas.map(s => `
+                    <td>
+                        <input step="any" type="number" class="form-control" name="price_${s.id}_${row.valyuta_id}" value="${s.summa}">
+                    </td>
+                `).join('');
+
+                const tr = $(`
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.valuta}</td>
+                        ${tds}
+                    </tr>
+                `);
+                tbody.append(tr);
+            });
+        });
+    }
+}
+
+</script>
+
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    // function delete_modal() {
+    //     console.log('aaaaaa')
+    //     console.log($('.modal-backdrop'))
+    //     $('.modal-backdrop').remove()
+    // }
+    function delete_modal() {
+    setTimeout(function() {
+        console.log($('.modal-backdrop'));
+        $('.modal-backdrop').removeClass('modal-backdrop');
+    }, 100); // Delay of 100 milliseconds
+}
+</script>
+<script>
+    $(document).ready(function () {
+        $('.datatable').DataTable({
+            scrollX: true,
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false, // Agar saralash kerak bo'lmasa
+            fixedHeader: true
+        });
+    });
+</script>
+{% endblock js %}

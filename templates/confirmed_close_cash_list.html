@@ -3,7 +3,7 @@
 {% load humanize %}
 {% load mathfilters %}
 {% block title %}
-    <title>Product</title>
+    <title>Tasdiqlangan Smenalar</title>
 {% endblock title %}
 {% block css %}
     <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
@@ -19,13 +19,19 @@
             font-family: 'Nunito', sans-serif;
             overflow-x: hidden;
         }
+        .filter-card {
+            background: linear-gradient(135deg, #ffffff, #f0f4f8);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
         .widget-content {
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             background: linear-gradient(135deg, #ffffff, #f0f4f8);
         }
         .table th {
-            background-color: #007bff;
+            background-color: #28a745;
             color: white;
             text-transform: uppercase;
             font-weight: 600;
@@ -64,7 +70,7 @@
             height: 100%;
             background-color: #f8f9fa;
             box-shadow: -10px 0 20px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid #007bff;
+            border-left: 5px solid #28a745;
             transition: right 0.3s ease-in-out;
             z-index: 1050;
             overflow-y: auto;
@@ -73,7 +79,7 @@
             right: 0;
         }
         .slide-panel-header {
-            /* background: linear-gradient(135deg, #007bff, #0056b3); */
+            background: linear-gradient(135deg, #28a745, #1e7e34);
             color: white;
             padding: 15px;
             border-top-left-radius: 10px;
@@ -96,17 +102,6 @@
             padding: 10px;
             font-weight: bold;
         }
-        .input-group-text {
-            background-color: #e9ecef;
-        }
-
-        #alert-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            width: 30rem;
-        }
     </style>
 {% endblock css %}
 {% block content %}
@@ -114,9 +109,53 @@
         <div class="layout-px-spacing">
             <div class="row layout-top-spacing" id="cancel-row">
                 <div id="alert-container"></div>
+                
+                <!-- Filter Section -->
+                <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
+                    <div class="filter-card p-4">
+                        <!-- <h4 class="mb-4 text-center fw-bold text-success">
+                            <i class="fas fa-filter me-2"></i> Filter
+                        </h4> -->
+                        <form method="GET" action="{% url 'confirmed_close_cash_list' %}">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="start_date" class="form-label fw-bold">Boshlanish sanasi</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" 
+                                           value="{{ start_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="end_date" class="form-label fw-bold">Tugash sanasi</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" 
+                                           value="{{ end_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="kassa_id" class="form-label fw-bold">Kassa</label>
+                                    <select class="form-control" id="kassa_id" name="kassa_id">
+                                        <option value="">Barcha kassalar</option>
+                                        {% for kassa in kassas %}
+                                            <option value="{{ kassa.id }}" 
+                                                    {% if selected_kassa == kassa.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ kassa.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-search me-1"></i> Qidirish
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Table Section -->
                 <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
                     <div class="widget-content widget-content-area br-6 p-4">
-                        <h2 class="mb-4 text-center fw-bold text-primary"><i class="fas fa-table me-2"></i> Smena Yopilganlar Ro'yxati</h2>
+                        <h2 class="mb-4 text-center fw-bold text-success">
+                            <i class="fas fa-check-circle me-2"></i> Tasdiqlangan Smenalar Ro'yxati
+                        </h2>
                         <div class="table-responsive">
                             <table class="table table-hover" id="html5-extension" style="width:100%">
                                 <thead>
@@ -140,19 +179,25 @@
                                             <td>{{ close.filial }}</td>
                                             <td>{{ close.by_user }}</td>
                                             <td>
-                                                {% if not close.is_confirmed %}
-                                                    <span class="btn btn-primary status-btn"><i class="fas fa-hourglass-half me-1"></i> Jarayonda</span>
-                                                {% else %}
-                                                    <span class="btn btn-success status-btn"><i class="fas fa-check me-1"></i> Tasdiqlangan</span>
-                                                {% endif %}
+                                                <span class="btn btn-success status-btn">
+                                                    <i class="fas fa-check me-1"></i> Tasdiqlangan
+                                                </span>
                                             </td>
                                             {% for i in close.valyuta_totals %}
                                                 <td>{{ i.summa|intcomma }}</td>
                                             {% endfor %}
                                             <td>
-                                                <button class="btn btn-success view-btn" type="button" onclick="togglePanel('panel{{ close.id }}')">
+                                                <button class="btn btn-success view-btn" type="button" 
+                                                        onclick="togglePanel('panel{{ close.id }}')">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="{{ valyutas|length|add:6 }}" class="text-center py-4">
+                                                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted">Ma'lumot topilmadi</p>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -171,20 +216,9 @@
             <div class="slide-panel-header">
                 <h3 class="fw-bold mb-0"><i class="fas fa-file-contract me-2"></i> {{ close.contract_id|default:'-' }}</h3>
                 <div>
-                    <!-- <button class="btn btn-danger me-2"><i class="fas fa-times"></i></button> -->
-                    <button class="btn btn-success"><i class="fas fa-check"></i></button>
-                    <button class="btn btn-secondary" onclick="togglePanel('panel{{ close.id }}')">Yopish</button>
-                </div>
-            </div>
-            <div class="container">
-                <div class="form-group">
-                    <label for="to_kassa{{ close.id }}">Qaysi kassaga tushirilsin?</label>
-                    <select class="form-control" id="to_kassa{{ close.id }}" name="to_kassa" required>
-                        <option value="">-- Kassani tanlang --</option>
-                        {% for kassa in kassas %}
-                            <option value="{{ kassa.id }}">{{ kassa.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <button class="btn btn-secondary" onclick="togglePanel('panel{{ close.id }}')">
+                        <i class="fas fa-times me-1"></i> Yopish
+                    </button>
                 </div>
             </div>
             <div class="p-4">
@@ -195,26 +229,26 @@
                         </div>
                         <div class="card-body">
                             {% for c in i.valyutas %}
+                                {% if c.item %}
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Yuborish summasi</label>
+                                        <label class="form-label fw-bold">Yuborish summasi</label>
                                         <div class="input-group">
-                                            <input type="text" id="summa{{ c.item.id }}" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}">
+                                            <input type="text" class="form-control" 
+                                                   value="{{ c.item.summa|default:'0'|intcomma }}" readonly>
                                             <span class="input-group-text">{{ c.name }}</span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Qabul qilish summasi</label>
+                                        <label class="form-label fw-bold">Qabul qilish summasi</label>
                                         <div class="input-group">
-                                            <input type="text" id="summa_confirmed{{c.item.id}}" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}"
-                                                {% if user.userprofile.staff != 1 %}
-                                                    readonly
-                                                {% endif %}
-                                            >
+                                            <input type="text" class="form-control" 
+                                                   value="{{ c.item.summa_confirmed|default:'0'|intcomma }}" readonly>
                                             <span class="input-group-text">{{ c.name }}</span>
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -249,7 +283,7 @@
                         "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' 
                     },
                     "sInfo": "_PAGE_ / _PAGES_ sahifa",
-                    "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                    "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2=16.65"></line></svg>',
                     "sSearchPlaceholder": "Izlash...",
                     "sLengthMenu": "Ko'rsatish: _MENU_",
                 },
@@ -259,6 +293,20 @@
                 "order": [[0, "desc"]],
                 "responsive": true
             });
+
+            // Bugungi sana va 1 hafta oldingi sanani default qilib o'rnatish
+            const today = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekAgoStr = weekAgo.toISOString().split('T')[0];
+            
+            // Agar start_date bo'sh bo'lsa, default qiymat berish
+            if (!$('#start_date').val()) {
+                $('#start_date').val(weekAgoStr);
+            }
+            if (!$('#end_date').val()) {
+                $('#end_date').val(today);
+            }
         });
 
         function togglePanel(panelId) {
@@ -273,32 +321,5 @@
                 panel.classList.add('open');
             }
         }
-
-        const showAlert = (message, type) => {
-            const alertElement = $(`
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `);
-
-            $("#alert-container").append(alertElement);
-
-            setTimeout(() => {
-                alertElement.fadeOut(500, function() { $(this).remove(); });
-            }, 3000); 
-        };
     </script>
-
-
-<script>
-    function confirm(id) {
-        let cash = $(`to_kassa${id}`).val()
-        if (!cash) {
-            showAlert("Kassani kiriting. ", 'danger')
-        }
-        
-
-    }
-</script>
 {% endblock js %}

@@ -116,6 +116,109 @@
         <div class="layout-px-spacing">
             <div class="row layout-top-spacing" id="cancel-row">
                 <div id="alert-container"></div>
+
+                <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
+                    <div class="filter-card p-4">
+                        <!-- <h4 class="mb-4 text-center fw-bold text-success">
+                            <i class="fas fa-filter me-2"></i> Filter
+                        </h4> -->
+                        <form method="GET">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="start_date" class="form-label fw-bold">Boshlanish sanasi</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" 
+                                           value="{{ start_date }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="end_date" class="form-label fw-bold">Tugash sanasi</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" 
+                                           value="{{ end_date }}">
+                                </div>
+                                
+                                <!-- {% if user.userprofile.staff == 1 %}
+                                    <div class="col-md-3">
+                                        <label for="kassa_id" class="form-label fw-bold">Kassa</label>
+                                        <select class="form-control" id="kassa_id" name="kassa_id">
+                                            <option value="">Barcha kassalar</option>
+                                            {% for kassa in kassas %}
+                                                <option value="{{ kassa.id }}" 
+                                                        {% if selected_kassa == kassa.id|stringformat:"i" %}selected{% endif %}>
+                                                    {{ kassa.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                {% endif %} -->
+                                    
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-search me-1"></i> Qidirish
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+                <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
+                    <div class="widget-content widget-content-area br-6 p-4">
+                        <h2 class="mb-4 text-center fw-bold text-success">
+                            <i class="fas fa-check-circle me-2"></i> Tasdiqlangan Smenalar Ro'yxati
+                        </h2>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="html5-extension" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th class="text-light"><i class="fas fa-hashtag me-1"></i> №</th>
+                                        <th class="text-light"><i class="far fa-calendar-alt me-1"></i> Sana</th>
+                                        <th class="text-light"><i class="fas fa-building me-1"></i> Filial</th>
+                                        <th class="text-light"><i class="fas fa-user me-1"></i> Mas'ul</th>
+                                        <!-- <th class="text-light"><i class="fas fa-check-circle me-1"></i> Status</th> -->
+                                        {% for v in valyutas %}
+                                            <th class="text-light"><i class="fas fa-money-bill-wave me-1"></i> Summa ({{v.name}})</th>
+                                        {% endfor %}
+                                        <th class="text-light"><i class="fas fa-info-circle me-1"></i> Ma'lumotlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for close in close_accepted %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ close.date|date:'d-m-Y H:i' }}</td>
+                                            <td>{{ close.filial }}</td>
+                                            <td>{{ close.by_user }}</td>
+                                            <!-- <td>
+                                                <span class="btn btn-success status-btn">
+                                                    <i class="fas fa-check me-1"></i> Tasdiqlangan
+                                                </span>
+                                            </td> -->
+                                            {% for i in close.valyuta_totals %}
+                                                <td>{{ i.summa|intcomma }}</td>
+                                            {% endfor %}
+                                            <td>
+                                                <button class="btn btn-success view-btn" type="button" 
+                                                        onclick="togglePanel('panel{{ close.id }}')">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="{{ valyutas|length|add:6 }}" class="text-center py-4">
+                                                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted">Ma'lumot topilmadi</p>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                
                 <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
                     <div class="widget-content widget-content-area br-6 p-4">
                         <h2 class="mb-4 text-center fw-bold text-primary"><i class="fas fa-table me-2"></i> Smena Yopilganlar Ro'yxati</h2>
@@ -127,7 +230,7 @@
                                         <th class="text-light"><i class="far fa-calendar-alt me-1"></i> Sana</th>
                                         <th class="text-light"><i class="fas fa-building me-1"></i> Filial</th>
                                         <th class="text-light"><i class="fas fa-user me-1"></i> Mas'ul</th>
-                                        <th class="text-light"><i class="fas fa-check-circle me-1"></i> Status</th>
+                                        <!-- <th class="text-light"><i class="fas fa-check-circle me-1"></i> Status</th> -->
                                         {% for v in valyutas %}
                                             <th class="text-light"><i class="fas fa-money-bill-wave me-1"></i> Summa ({{v.name}})</th>
                                         {% endfor %}
@@ -135,19 +238,19 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for close in close %}
+                                    {% for close in close_not_accepted %}
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
                                             <td>{{ close.date|date:'d-m-Y H:i' }}</td>
                                             <td>{{ close.filial }}</td>
                                             <td>{{ close.by_user }}</td>
-                                            <td>
+                                            <!-- <td>
                                                 {% if not close.is_confirmed %}
                                                     <span class="btn btn-warning status-btn"><i class="fas fa-hourglass-half me-1"></i> Jarayonda</span>
                                                 {% else %}
                                                     <span class="btn btn-success status-btn"><i class="fas fa-check me-1"></i> Tasdiqlangan</span>
                                                 {% endif %}
-                                            </td>
+                                            </td> -->
                                             {% for i in close.valyuta_totals %}
                                                 <td>{{ i.summa|intcomma }}</td>
                                             {% endfor %}
@@ -174,7 +277,7 @@
     </div>
 
     <!-- Slide-in panel for each close item -->
-    {% for close in close %}
+    {% for close in close_accepted %}
         <div class="slide-panel" id="panel{{ close.id }}">
             <div class="slide-panel-header">
                 <h3 class="fw-bold mb-0"><i class="fas fa-file-contract me-2"></i> {{ close.contract_id|default:'-' }}</h3>
@@ -196,7 +299,11 @@
                     <select class="form-control" id="to_kassa{{ close.id }}" name="to_kassa" required>
                         <option value="">-- Kassani tanlang --</option>
                         {% for kassa in kassas %}
-                            <option value="{{ kassa.id }}">{{ kassa.name }}</option>
+                            
+                            {% if kassa.is_main %}
+                                <option value="{{ kassa.id }}">{{ kassa.name }}</option>
+                            {% endif %}
+                                
                         {% endfor %}
                     </select>
                 </div>
@@ -239,6 +346,83 @@
             </div>
         </div>
     {% endfor %}
+
+
+
+
+
+    {% for close in close_not_accepted %}
+        <div class="slide-panel" id="panel{{ close.id }}">
+            <div class="slide-panel-header">
+                <h3 class="fw-bold mb-0"><i class="fas fa-file-contract me-2"></i> {{ close.contract_id|default:'-' }}</h3>
+                <div>
+                    {% if not close.is_confirmed %}
+                        <button class="btn btn-success me-2" onclick="confirmSmena({{ close.id }})">
+                            <i class="fas fa-check me-1"></i> Tasdiqlash
+                        </button>
+                    {% endif %}
+                    <button class="btn btn-secondary" onclick="togglePanel('panel{{ close.id }}')">
+                        <i class="fas fa-times me-1"></i> Yopish
+                    </button>
+                </div>
+            </div>
+            <div class="container mt-3">
+                {% if not close.is_confirmed %}
+                <div class="form-group">
+                    <label for="to_kassa{{ close.id }}" class="fw-bold">Qaysi kassaga tushirilsin?</label>
+                    <select class="form-control" id="to_kassa{{ close.id }}" name="to_kassa" required>
+                        <option value="">-- Kassani tanlang --</option>
+                        {% for kassa in kassas %}
+                            
+                            {% if kassa.is_main %}
+                                <option value="{{ kassa.id }}">{{ kassa.name }}</option>
+                            {% endif %}
+                                
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                {% for i in close.by_cashes %}
+                    <div class="card cash-card mb-4">
+                        <div class="card-header cash-header mb-3">
+                            <i class="fas fa-wallet me-2"></i> {{ i.kassa.name }}
+                        </div>
+                        <div class="card-body">
+                            {% for c in i.valyutas %}
+                                {% if c.item %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Yuborish summasi</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" value="{{ c.item.summa|default:'0'|intcomma }}" readonly>
+                                            <span class="input-group-text">{{ c.name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Qabul qilish summasi</label>
+                                        <div class="input-group">
+                                            <input type="text" id="summa_confirmed{{ c.item.id }}" 
+                                                   class="form-control confirmed-summa" 
+                                                   value="{{ c.item.summa|default:'0'|intcomma }}"
+                                                   data-item-id="{{ c.item.id }}"
+                                                   {% if close.is_confirmed or user.userprofile.staff != 1 %}readonly{% endif %}>
+                                            <span class="input-group-text">{{ c.name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+
+
 {% endblock content %}
 {% block js %}
     <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>

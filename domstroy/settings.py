@@ -219,7 +219,7 @@ USE_TZ = False
 
 LOGIN_URL = "/login"
 
-TELEGRAM_BOT_TOKEN = '8189365368:AAHzo5WFAtZSTrOm661At2z8rq-B_LXUSp8'
+TELEGRAM_BOT_TOKEN = '8566681924:AAGjsMBbY8igYWETwW-fOnBWHDIDlZoLsyI'
 
 
 #sms
@@ -262,4 +262,32 @@ CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
 
 TELEGRAM_GROUP_ID = '-1002061163231'
-BOT_TOKEN = '6733642026:AAFuWM8ZJLCpEAZO9iDGJzThv9D-Uh_zgf4'
+BOT_TOKEN = '8566681924:AAGjsMBbY8igYWETwW-fOnBWHDIDlZoLsyI'
+
+
+
+from django.contrib.humanize.templatetags import humanize
+
+def intcomma_with_space(value):
+    result = humanize.intcomma(value)
+    return result.replace(",", " ")
+    
+humanize.register.filter("intcomma", intcomma_with_space)
+
+
+
+def floatformat_clean(value, arg=3):
+    try:
+        num = float(value)
+        # Agar butun bo'lsa, faqat butun qismini qaytar
+        if num.is_integer():
+            return str(int(num))
+        # Aks holda, berilgan aniqlikkacha formatla
+        else:
+            return f"{num:.{arg}f}"
+    except (ValueError, TypeError):
+        return value
+
+
+
+humanize.register.filter("floatformat", floatformat_clean)

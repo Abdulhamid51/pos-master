@@ -1,841 +1,661 @@
-    {% extends 'base.html' %}
-    {% load static %}
-    {% block css %}
-    {% load humanize  %}
-        
-        <!-- BEGIN PAGE LEVEL STYLES -->
-        <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css' %}">
-        <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_multiple_tables.css' %}">
-        <link href="{% static 'assets/css/components/custom-countdown.css' %}" rel="stylesheet" type="text/css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            #chart-container {
-            width: 300px;
-            margin: auto;
-            }
-        </style>
-        <style>
-            #excel22 td {
-                color: red !important;
-            }
-            #excel21 td {
-                color: green !important;
-            }
-        </style>
-    {% endblock css %}
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
 
+{% block css %}
+<!-- BEGIN PAGE LEVEL STYLES -->
+<link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_multiple_tables.css' %}">
+<link href="{% static 'assets/css/components/custom-countdown.css' %}" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* .kirim-row { 
+        background-color: rgba(40, 167, 69, 0.1) !important; 
+    }
+    .chiqim-row { 
+        background-color: rgba(220, 53, 69, 0.1) !important; 
+    } */
+    .badge-kirim { background-color: #28a745; color: white; }
+    .badge-chiqim { background-color: #dc3545; color: white; }
+    .transaction-type-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    #chart-container {
+        width: 300px;
+        margin: auto;
+    }
+    .kassa-card {
+        transition: transform 0.2s;
+    }
+    .kassa-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock css %}
 
-    {% block content %}
-    <script src="{% static 'multiselect.js' %}"></script>
+{% block content %}
+<script src="{% static 'multiselect.js' %}"></script>
 
-    
-            <div id="content" class="main-content">
-                <div class="layout-px-spacing">
-                    <div class="row layout-top-spacing">
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="row layout-top-spacing">
 
-                    <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
+            <!-- Kassa Summary Cards -->
+            <div class="col-xl-12 col-lg-8 col-sm-12 layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <div class="row">    
+                        {% for i in data %}
+                        <div class="col-xl-3 col-md-3 mb-4 text-center">
+                            <div class="card border-left-primary shadow h-100 py-2 kassa-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">{{ i.name }}</div>
+                                            {% for x in i.valyuta %}
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa|intcomma}}</div>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="col-auto">
+                                            <img src="{% static 'assets/img/dollar.svg' %}" width="30px" alt="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <!-- <div class="col-12" style="display: flex;justify-content: end;">
+                <div class="row">
+                    <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
+                        <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
+                    </button>
+                </div>
+            </div> -->
+
+            <!-- Filters -->
+            <form class='col-12' style="margin: 1rem 2rem 1rem 1rem;">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Boshlangich sana</label>
+                        <input name="start_date" class="form-control" type="date" value="{{filters.start_date}}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Yakuniy sana</label>
+                        <input name="end_date" class="form-control" type="date" value="{{filters.end_date}}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Taminotchi</label>
+                        <select multiple multiselect-select-all="true" multiselect-max-items="0" multiselect-search="true" name="deliver" class="form-control">
+                            {% for d in delivers %}
+                                <option {% if d.id in filters.deliver %}selected{% endif %} value="{{d.id}}">{{d.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Mijoz</label>
+                        <select multiple multiselect-select-all="true" multiselect-max-items="0" multiselect-search="true" name="debtor" class="form-control">
+                            {% for d in debtors %}
+                                <option {% if d.id in filters.debtor %}selected{% endif %} value="{{d.id}}">{{d.fio}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Kategoriya</label>
+                        <select multiple multiselect-select-all="true" multiselect-max-items="0" multiselect-search="true" name="category" class="form-control">
+                            {% for d in categories %}
+                                <option {% if d.id in filters.category %}selected{% endif %} value="{{d.id}}">{{d.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Podkategoriya</label>
+                        <select multiple multiselect-select-all="true" multiselect-max-items="0" multiselect-search="true" name="subcategory" class="form-control">
+                            {% for d in subcategories %}
+                                <option {% if d.id in filters.subcategory %}selected{% endif %} value="{{d.id}}">{{d.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button style="margin-top: 1.8rem;" type="submit" class="btn btn-primary form-control">Filterlash</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Combined Transactions Table -->
+            <div class="col-xl-12 col-lg-8 col-sm-12 layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <div class="row">
+                        <div class="col-6">
+                            <h4>Pul o'tkazmalari tarixi</h4>
+                        </div>
+                        <div class="col-6 text-right">
+                            <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#KirimModal">Kirim qilish</button>
+                            <button class="btn btn-warning" data-toggle="modal" data-target="#ChiqimModal">Chiqim qilish</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive mb-4 mt-4">
+                        <table class="multi-table table " style="width:100%" id="transactionsTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">#</th>
+                                    <th style="text-align: left;">Turi</th>
+                                    <th style="text-align: left;">Kassa</th>
+                                    <th style="text-align: left;">Valyuta</th>
+                                    <th style="text-align: left;">Pul Muomalasi</th>
+                                    <th style="text-align: left;">Qaysi oy uchun</th>
+                                    {% for v in valutas %}
+                                        <th style="text-align: left;">{{ v.name }}</th>
+                                    {% endfor %}
+                                    <!-- <th style="text-align: left;">Qoldiq</th> -->
+                                    <th style="text-align: left;">Hamkor</th>
+                                    <th style="text-align: left;">Izox</th>
+                                    <th style="text-align: left;">Sana</th>
+                                    <th style="text-align: left;">Harakatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr class="{% if transaction.type == 'kirim' %}kirim-row{% else %}chiqim-row{% endif %}">
+                                    <td style="text-align: left;">{{ forloop.counter }}</td>
+                                    <td style="text-align: left;">
+                                        <span class="transaction-type-badge {% if transaction.type == 'kirim' %}badge-kirim{% else %}badge-chiqim{% endif %}">
+                                            {{ transaction.type|upper }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: left;">{{ transaction.obj.kassa.kassa.name|default:"-" }}</td>
+                                    <td style="text-align: left;">{{ transaction.obj.kassa.valyuta.name|default:"-" }}</td>
+                                    <td style="text-align: left;">
+                                        {% if transaction.type == 'chiqim' %}
+                                            {{ transaction.obj.money_circulation.name|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td style="text-align: left;">
+                                        {% if transaction.type == 'chiqim' and transaction.obj.qaysi %}
+                                            {{ transaction.obj.qaysi|date:'Y-m' }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    {% for q in transaction.obj.summa_for_valutas %}
+                                        <td style="text-align: left;">{{ q.summa|default:0|intcomma }}</td>
+                                    {% endfor %}
+                                    <!-- <td style="text-align: left;">{{ transaction.obj.kassa_new|default:0|intcomma }}</td> -->
+                                    <td style="text-align: left;">{{ transaction.obj.payhistory.kontr_agent|default_if_none:'' }}</td>
+                                    <td style="text-align: left;">{{ transaction.obj.izox|default:''|truncatewords:5 }}</td>
+                                    <td style="text-align: left;">{{ transaction.obj.qachon|date:'Y-m-d H:i' }}</td>
+                                    <td style="text-align: left;">
+                                        <button class="btn btn-primary btn-sm edit-transaction" 
+                                                data-id="{{ transaction.obj.id }}"
+                                                data-type="{{ transaction.type }}"
+                                                data-summa="{{ transaction.obj.summa }}"
+                                                data-kurs="{{ transaction.obj.currency }}"
+                                                data-izox="{{ transaction.obj.izox }}">
+                                            <i class="fas fa-edit"></i> Tahrirlash
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th style="text-align: left;" colspan="6">Jami kirim:</th>
+                                    {% for q in kirim_totals %}
+                                        <th style="text-align: left;" class="text-success">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+                                    {% endfor %}
+                                    <th style="text-align: left;" colspan="4"></th>
+                                </tr>
+
+                                <tr>
+                                    <th style="text-align: left;" colspan="6">Jami chiqim:</th>
+                                    {% for q in chiqim_totals %}
+                                        <th style="text-align: left;" class="text-danger">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+                                    {% endfor %}
+                                    <th style="text-align: left;" colspan="4"></th>
+                                </tr>
+                            </tfoot>
+
+                            <!-- <tfoot>
+
+                            </tfoot> -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="col-xl-8 col-lg-12 col-sm-12 layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <canvas id="chiqimChart" width="600" height="400"></canvas>
+                </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-12 col-sm-12 layout-spacing">
+                <div class="row">
+                    <div class="col-md-12">
                         <div class="widget-content widget-content-area br-6">
-                            <!--  -->
-                            <div class="row">    
-                                {% for i in data %}
-                                <div class="col-xl-3 col-md-3 mb-4 text-center">
-                                    <div class="card border-left-primary shadow h-100 py-2">
-                                        <div class="card-body">
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col mr-2">
-                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">{{ i.name }}</div>
-                                                    {% for x in i.valyuta %}
-                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ x.name }} {{x.summa|intcomma}}</div>
-                                                    {% endfor %}
-                                                </div>
-                                                <div class="col-auto">
-                                                <img src="{% static 'assets/img/dollar.svg' %}" width="30px" alt="">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                                
-                            </div>
+                            <div id="piechart_3d" style="width: 100%; height: 250px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="widget-content widget-content-area br-6 mt-4">
+                            <div id="piechart_dol_3d" style="width: 100%; height: 250px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Dynamic Edit Modal -->
+<div class="modal fade" id="EditTransactionModal" tabindex="-1" role="dialog" aria-labelledby="EditTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="editTransactionForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="EditTransactionModalLabel">Transaksiyani tahrirlash</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="transaction_id" id="editTransactionId">
+                    <input type="hidden" name="transaction_type" id="editTransactionType">
+                    
+                    <div class="form-group">
+                        <label for="editSumma">Summa</label>
+                        <input class="form-control" type="number" id="editSumma" name="summa" placeholder="Summa" required step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editKurs">Kurs</label>
+                        <input class="form-control" type="number" id="editKurs" name="kurs" placeholder="Kurs" required step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editIzox">Izox</label>
+                        <textarea name="izox" id="editIzox" class="form-control" cols="30" rows="5" placeholder="Izox"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
+<!-- Kirim Modal -->
+<div class="modal fade" id="KirimModal" tabindex="-1" role="dialog" aria-labelledby="KirimModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="{% url 'kirim_qilish' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="KirimModalLabel">Kirim qilish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="kirimValuta">Valyuta</label>
+                        <select name="valuta" id="kirimValuta" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for v in valuta %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
                         
-                        </div>
+                    <div class="form-group">
+                        <label for="kirimKassa">Kassa</label>
+                        <select name="kassa" id="kirimKassa" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for k in cashes %}
+                                <option value="{{ k.id }}">{{ k.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="col-12" style="display: flex;justify-content: end;" >
-                        <div class="row">
-                                <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
-                                    <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
-                                </button>
-                        </div>
-                    </div>
-                    <br>
-                    <form style="margin: 1rem 2 rem 1rem 1rem;" class='col-12'>
-                        <div class="row">
-
-                            <div class="col-md-3" >
-                                Boshlangich sana
-                                <input name="start_date" class="form-control" type="date" value="{{filters.start_date}}">
-                            </div>
-                            <div class="col-md-3 mb-3" >
-                                Yakuniy sana
-                                <input name="end_date" class="form-control" type="date" value="{{filters.end_date}}">
-                            </div>
-                            <div class="col-md-3 mb-3" >
-                                Taminotchi
-                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
-                                multiselect-search="true" name="deliver" id="" class="form-control">
-                                    {% for d in delivers %}
-                                        <option 
-                                        {% if d.id in filters.deliver %}
-                                            selected
-                                        {% endif %}
-                                            value="{{d.id}}">{{d.name}}</option>
-                                    {% endfor %}
-                                        
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3" >
-                                Mijoz
-                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
-                                multiselect-search="true" name="debtor" id="" class="form-control">
-                                    {% for d in debtors %}
-                                        <option 
-                                        {% if d.id in filters.debtor %}
-                                            selected
-                                        {% endif %}
-                                            value="{{d.id}}">{{d.fio}}</option>
-                                    {% endfor %}
-                                        
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3" >
-                                Kategoriya
-                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
-                                multiselect-search="true" name="category" id="" class="form-control">
-                                    {% for d in categories %}
-                                        <option
-                                        {% if d.id in filters.category %}
-                                            selected
-                                        {% endif %}
-                                        value="{{d.id}}">{{d.name}}</option>
-                                    {% endfor %}
-                                        
-                                </select>
-                            </div>
-
-
-                            <div class="col-md-3 mb-3" >
-                                Podkategoriya
-                                <select multiple multiselect-select-all="true" multiselect-max-items="0"
-                                multiselect-search="true" name="subcategory" id="" class="form-control">
-                                    {% for d in subcategories %}
-                                        <option value="{{d.id}}"
-                                        {% if d.id in filters.subcategory %}
-                                            selected
-                                        {% endif %}>{{d.name}}</option>
-                                    {% endfor %}
-                                        
-                                </select>
-                            </div>
-
-                            <!-- <div class="col-md-3 mb-3" >
-                                <label for="">Turi</label>
-                                <select name="expanse_category" id="" class="form-control">
-                                    <option label="Filial chiqim turi"></option>
-                                    {% for d in expanse_category %}
-                                        <option
-                                        {% if d.id == filters.expanse_category %}
-                                            selected
-                                        {% endif %}
-                                        value="{{d.id}}">{{d.title}}</option>
-                                    {% endfor %}
-                                        
-                                </select>
-                            </div> -->
-
-                            <div class="col-md-2" >
-                                <button style="margin-top: 1rem;" type="submit" class="btn btn-primary form-control">Filterlash</button>
-                            </div>
-                            
-                        </div>
-                    </form>
-                        <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                            <div class="widget-content widget-content-area br-6">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <h4>Kirim tarixi</h4>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-right">
-                                            <button class="btn btn-primary" data-toggle="modal" data-target="#KirimModal">Kirim qilish</button>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-                                <div class="table-responsive mb-4 mt-4">
-                                    <table class="multi-table table table-hover" style="width:100%" id="excel21">
-                                        <thead>
-                                            <tr>
-                                                <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Kassa</th>
-                                                
-                                                {% for v in valutas %}
-                                                    <th style="text-align: left;">{{ v.name }}</th>
-                                                {% endfor %}
-                                                    
-                                                <!-- <th style="text-align: left;">Qoldiq</th> -->
-                                                <th style="text-align: left;">Hamkor</th>
-                                                <th style="text-align: left;">Izox</th>
-                                                <th style="text-align: left;">Qachon</th>
-                                                <th style="text-align: left;"></th>
-
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for kirim in shu_oylik_kirimlar %}
-                                            <tr>
-                                                <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
-                                                <td style="text-align: left;">
-                                                    {{ kirim.kassa.kassa.name }}
-                                                </td>
-                                                
-                                                
-                                                {% for q in kirim.summa_for_valutas %}
-                                                    <td style="text-align: left;">
-                                                        {{ q.summa|intcomma }}
-                                                    </td>
-                                                {% endfor %}
-                                                    
-                                                <!-- <td style="text-align: left;">
-                                                    {{ kirim.kassa_new|default_if_none:'0' | intcomma }}
-                                                </td> -->
-                                                
-                                                <td style="text-align: left;">{{ kirim.payhistory.kontr_agent|default_if_none:'' }}</td>
-                                                <td style="text-align: left;">{{ kirim.izox }}</td>
-                                                <td style="text-align: left;">{{ kirim.qachon }}</td>
-                                                <td style="text-align: left;">
-                                                    <button data-toggle="modal" data-target="#KirimModal{{kirim.id}}" class="btn btn-primary">
-                                                        Tahrirlash
-                                                    </button>
-                                                </td>
-                                            </tr>
-
-                                            <div class="modal fade" id="KirimModal{{kirim.id}}" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                <form action="{% url 'kirim_qilish_edit' %}" method="POST"  enctype="multipart/form-data">
-                                                    {% csrf_token %}
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                        <h5 class="modal-title" id="KirimModalLabel">Tahrirlash</h5>
-                                                    
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <input type="hidden" name="kirim_id" value="{{kirim.id}}">
-                                                            
-                                                            <label for="">Summa</label>
-                                                            <input class="form-control" type="number" value="{{kirim.summa}}" name="summa" placeholder="Summa"><br>
-                                                            <label for="">Kurs</label>
-                                                            <input class="form-control" type="number" value="{{kirim.currency}}" name="kurs" placeholder="Kurs"><br>
-                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox">{{kirim.izox}}</textarea>
-                                                            
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th style="text-align: left;">Jami: </th>
-                                                <th style="text-align: left;"></th>
-                                                {% for q in kirim_totals %}
-                                                    <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
-                                                {% endfor %}
-                                                <!-- <th style="text-align: left;"></th> -->
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-12 col-lg-8 col-sm-12  layout-spacing">
-                            <div class="widget-content widget-content-area br-6">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <h4>Chiqim tarixi</h4>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-right">
-                                            <button class="btn btn-warning" data-toggle="modal" data-target="#ChiqimModal">Chiqim qilish</button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                
-                                <div class="table-responsive mb-4 mt-4">
-                                    <table class="multi-table table table-hover" id="excel22" style="width:100%">
-                                        <thead>
-                                            <tr>
-                                                <th style="text-align: left;">#</th>
-                                                <th style="text-align: left;">Kassa</th>
-                                                <th style="text-align: left;">Pul Muomalasi</th>
-                                                <th style="text-align: left;">Qaysi oy uchun</th>
-                                                
-                                                {% for v in valutas %}
-                                                    <th style="text-align: left;">{{ v.name }}</th>
-                                                {% endfor %}
-                                                    
-                                                <th style="text-align: left;">Qoldiq</th>
-                                                <th style="text-align: left;">Kategoriya</th>
-                                                <th style="text-align: left;">Podkotegoriya</th>
-                                                <th style="text-align: left;">Hamkor</th>
-                                                <th style="text-align: left;">Izox</th>
-                                                <th style="text-align: left;">Qachon</th>
-                                                <th style="text-align: left;"></th>
-
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for chiqim in shu_oylik_chiqimlar %}
-                                            <tr>
-                                                <td style="text-align: left;">{{ forloop.counter | intcomma}}</td>
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.kassa.kassa.name }}
-                                                </td>
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.money_circulation.name }}
-                                                </td><td style="text-align: left;">
-                                                    {{ chiqim.qaysi|date:'Y-m-d' }}
-                                                </td>
-                                                {% for q in chiqim.summa_for_valutas %}
-                                                    <td style="text-align: left;">
-                                                        {{ q.summa|intcomma }}
-                                                    </td>
-                                                {% endfor %}
-                                                <td style="text-align: left;">
-                                                    {{ chiqim.kassa_new|default_if_none:'0' | intcomma }}
-                                                </td>
-                                                <td style="text-align: left;">{{ chiqim.subcategory.category|default_if_none:'' }}</td>
-                                                <td style="text-align: left;">{{ chiqim.subcategory|default_if_none:'' }}</td>
-                                                <td style="text-align: left;">{{ chiqim.payhistory.kontr_agent|default_if_none:'' }}</td>
-                                                <td style="text-align: left;">{{ chiqim.izox }}</td>
-                                                <td style="text-align: left;">{{ chiqim.qachon|date:'Y-m-d H:i' }}</td>
-                                                <td style="text-align: left;">
-                                                    <button data-toggle="modal" data-target="#ChiqimModal{{chiqim.id}}" class="btn btn-primary">
-                                                        Tahrirlash
-                                                    </button>
-                                                </td>
-                                              
-                                            </tr>
-
-
-                                            <div class="modal fade" id="ChiqimModal{{chiqim.id}}" tabindex="-1" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                <form action="{% url 'chiqim_qilish_edit' %}" method="POST">
-                                                    {% csrf_token %}
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                        <h5 class="modal-title" id="ChiqimModalLabel">Chiqim tahrirlash</h5>
-                                                    
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <input type="hidden" value="{{chiqim.id}}" name="chiqim_id">
-
-                                                            
-                                                            <label for="">Summa</label>
-                                                            <input class="form-control" type="number" value="{{chiqim.summa}}" name="summa" placeholder="Summa"><br>
-                                
-                                                            <label for="">Kurs</label>
-                                                            <input class="form-control" type="number" value="{{chiqim.currency}}" name="kurs" placeholder="Kurs"><br>
-                                                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
-
-
-                                                            
-                                                            
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                                                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th style="text-align: left;">Jami: </th>
-                                                <th style="text-align: left;"></th>
-                                                
-                                                {% for q in chiqim_totals %}
-                                                    <th style="text-align: left;">{{ q.summa|default_if_none:'0'|intcomma }}</th>
-                                                {% endfor %}
-                                                    
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                                <th style="text-align: left;"></th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-xl-8 col-lg-8 col-sm-12 layout-spacing">
-                            <div class="widget-content widget-content-area br-6">
-                                <canvas id="chiqimChart" width="600" height="400"></canvas>
-                                <script>
-                                    const chartData = {{ chart_month|safe }}
-
-                                    const labels_month = chartData.map(item => item.month)
-                                    const chiqim_data = chartData.map(item => item.chiqim_summa)
-                                    const shop_data = chartData.map(item => item.shop_summa)
-
-                                    const ctx_month = document.getElementById('chiqimChart').getContext('2d')
-                                    new Chart(ctx_month, {
-                                        type: 'bar',
-                                        data: {
-                                            labels: labels_month,
-                                            datasets: [
-                                                {
-                                                    label: 'Chiqim',
-                                                    data: chiqim_data,
-                                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                                                    borderColor: 'rgba(255, 99, 132, 1)',
-                                                    borderWidth: 1
-                                                },
-                                                {
-                                                    label: 'Savdo',
-                                                    data: shop_data,
-                                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                                    borderColor: 'rgba(54, 162, 235, 1)',
-                                                    borderWidth: 1
-                                                }
-                                            ]
-                                        },
-                                        options: {
-                                            responsive: true,
-                                            scales: {
-                                                y: {
-                                                    beginAtZero: true
-                                                }
-                                            },
-                                            plugins: {
-                                                legend: {
-                                                    position: 'top'
-                                                },
-                                                title: {
-                                                    display: true,
-                                                    text: 'Oylar bo‘yicha chiqim va savdo'
-                                                }
-                                            }
-                                        }
-                                    })
-                                </script>
-                            </div>
-                        </div>
-
-                        <div class="col-xl-4 col-lg-8 col-sm-12  layout-spacing">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="widget-content widget-content-area br-6">
-                                        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-                                        <script type="text/javascript">
-                                            google.charts.load("current", {packages:["corechart"]});
-                                            google.charts.setOnLoadCallback(drawChart);
-                                            function drawChart() {
-                                                const data_som = google.visualization.arrayToDataTable([
-                                                ['Name', 'Summa'],
-                                                {% for item in round_chart %}
-                                                    ['{{ item.name }}', {{ item.summa_som }}],
-                                                {% endfor %}
-                                                ]);
-                                                const options_som = {
-                                                    title: 'Kassadagi pul Som',
-                                                    is3D: true,
-                                                    pieSliceText: 'value',
-                                                    backgroundColor: 'transparent' ,
-                                                    sliceVisibilityThreshold:0
-                                                };
-                                                const chart_som = new google.visualization.PieChart(document.getElementById('piechart_3d'));
-                                                chart_som.draw(data_som, options_som);
-                                            }
-                                            </script>
-                                        <div id="piechart_3d" style="width: 500px; height: 250px;"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <br>
-                                    <div class="widget-content widget-content-area br-6">
-                                        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-                                        <script type="text/javascript">
-                                            google.charts.load("current", {packages:["corechart"]});
-                                            google.charts.setOnLoadCallback(roundChart);
-                                            function roundChart() {
-                                                const data_dol = google.visualization.arrayToDataTable([
-                                                ['Name', 'Summa'],
-                                                {% for item in round_chart %}
-                                                    ['{{ item.name }}', {{ item.summa_dol }}],
-                                                {% endfor %}
-                                                ]);
-                                                const options_dol = {
-                                                    title: 'Kassadagi pul Dollar',
-                                                    is3D: true,
-                                                    pieSliceText: 'value',
-                                                    backgroundColor: 'transparent' ,
-                                                    sliceVisibilityThreshold:0
-
-                                                    };
-                                                const chart_dol = new google.visualization.PieChart(document.getElementById('piechart_dol_3d'));
-                                                chart_dol.draw(data_dol, options_dol);
-                                            }
-                                            </script>
-                                        <div id="piechart_dol_3d" style="width: 500px; height: 250px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {% for hodim in hodimlar_qarz %}
-            <!-- Qarz Berish Modal -->
-            <div class="modal fade" id="Qarz_berish_Modal_{{hodim.id}}" tabindex="-1" aria-labelledby="Qarz_berish_ModalLabel_{{hodim.id}}" aria-hidden="true">
-                <div class="modal-dialog">
-                <form action="{% url 'hodim-qarz' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title" id="Qarz_berish_ModalLabel_{{hodim.id}}">{{ hodim.ism_familya }}ga qarz berish</h5>
                     
-                        </div>
-                        <div class="modal-body">
-                            <input class="form-control" type="number" name="qancha_som" placeholder="Qancha (so'm)"><br>
-                            <input class="form-control" type="number" name="qancha_dol" placeholder="Qancha (dollar)"><br>
-                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
-                            <input type="hidden" name="hodim_id" value="{{hodim.id}}">
-                            <input type="hidden" name="uslub" value="yangi">
-
-                        </div>
-                        <div class="modal-footer">
-
-                            
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                        </div>
+                    <div class="form-group">
+                        <label for="kirimSumma">Summa</label>
+                        <input class="form-control" type="number" name="summa" placeholder="Summa" required step="0.01">
                     </div>
-                </form>
-                </div>
-            </div>
-            {% endfor %}
 
-        
-
-            <!-- chiqim Modal -->
-            <div class="modal fade" id="ChiqimModal" tabindex="-1" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                <form action="{% url 'chiqim_qilsih' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title" id="ChiqimModalLabel">Chiqim qilish</h5>
+                    <div class="form-group">
+                        <label for="kirimKurs">Kurs</label>
+                        <input class="form-control" type="number" name="kurs" value="{{dollar_kurs}}" placeholder="Kurs" required step="0.01">
+                    </div>
                     
-                        </div>
-                        <div class="modal-body">
-
-                            <select class="form-control" name="chiqim_turi" id="categorySelect" required>
-                                <option value="" disabled selected>--Kategoriya--</option>
-                                {% for cat in categories %}
-                                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                                {% endfor %}
-                            </select><br>
-                            
-                            <select class="form-control" name="subcategory" id="subcategorySelect" required>
-                                <option value="" disabled selected>--Subkategoriya--</option>
-                                {% for subcat in subcategories %}
-                                    <option value="{{ subcat.id }}" data-category="{{ subcat.category.id }}">{{ subcat.name }}</option>
-                                {% endfor %}
-                            </select><br>
-
-
-                            <label for="">Valyuta</label>
-                            <select name="valuta" id="" class="form-control">
-                                <option value="">- - - - - - - </option>
-                                {% for v in valuta %}
-                                    <option value="{{ v.id }}">{{ v.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <br>
-                            <label for="">Kassa</label>
-                            <select name="kassa" id="" class="form-control">
-                                <option value="">- - - - - - - </option>
-                                {% for k in cashes %}
-                                    <option value="{{ k.id }}">{{ k.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <br>
-                            <label for="">Pul Muomalasi</label>
-                            <select name="money_circulation" id="" class="form-control">
-                                <option value="">- - - - - - - </option>
-                                {% for k in money_circulation %}
-                                    <option value="{{ k.id }}">{{ k.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <br>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label  class="col-form-label">Qaysi Oy uchun: </label>
-                                        <select class="form-control" name="qaysi_oy"> 
-                                                    <option value="1" >Yanvar</option>
-                                                    <option value="2" >Fevral</option>
-                                                    <option value="3">Mart</option>
-                                                    <option value="4" >Aprel</option>
-                                                    <option value="5" >May</option>
-                                                    <option value="6" >Iyun</option>
-                                                    <option value="7">Iyul</option>
-                                                    <option value="8" >Avgust</option>
-                                                    <option value="9" >Sentyabr</option>
-                                                    <option value="10">Oktyabr</option>
-                                                    <option value="11">Noyabr</option>
-                                                    <option value="12">Dekabr</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label  class="col-form-label">Qaysi Yil uchun:</label>
-                                        <input type="number"  name="qaysi_yil" class="form-control" value="{{bugun_year}}">
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                            <label for="">Summa</label>
-                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa" required><br>
-
-                            <label for="">Kurs</label>
-                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
-                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
-                            
-                        </div>
-                        <div class="modal-footer">
-                            
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                        </div>
+                    <div class="form-group">
+                        <label for="kirimIzox">Izox</label>
+                        <textarea name="izox" class="form-control" rows="3" placeholder="Izox"></textarea>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
                 </div>
             </div>
+        </form>
+    </div>
+</div>
 
-            
-            <div class="modal fade" id="KirimModal" tabindex="-1" aria-labelledby="KirimModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                <form action="{% url 'kirim_qilish' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title" id="KirimModalLabel">Kirim qilish</h5>
+<!-- Chiqim Modal -->
+<div class="modal fade" id="ChiqimModal" tabindex="-1" role="dialog" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="{% url 'chiqim_qilsih' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ChiqimModalLabel">Chiqim qilish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="chiqimValuta">Valyuta</label>
+                        <select name="valuta" id="chiqimValuta" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for v in valuta %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     
-                        </div>
-                        <div class="modal-body">
-                            <label for="">Valyuta</label>
-                            <select name="valuta" id="" class="form-control">
-                                <option value="">- - - - - - - </option>
-                                {% for v in valuta %}
-                                    <option value="{{ v.id }}">{{ v.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <br>
-                            <label for="">Kassa</label>
-                            <select name="kassa" id="" class="form-control">
-                                <option value="">- - - - - - - </option>
-                                {% for k in cashes %}
-                                    <option value="{{ k.id }}">{{ k.name }}</option>
-                                {% endfor %}
-                            </select>
-                            <br>
-                            <label for="">Summa</label>
-                            <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
-
-                            <label for="">Kurs</label>
-                            <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs"><br>
-                            <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
-                            
-                        </div>
-                        <div class="modal-footer">
-                            
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                        </div>
+                    <div class="form-group">
+                        <label for="chiqimKassa">Kassa</label>
+                        <select name="kassa" id="chiqimKassa" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for k in cashes %}
+                                <option value="{{ k.id }}">{{ k.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                </form>
-                </div>
-            </div>
-
-            {% for hodim in hodimlar %}
-            <!-- Modal -->
-            <div class="modal fade" id="oylik_tolov_tasdiqlashModal_{{hodim.id}}" tabindex="-1" aria-labelledby="oylik_tolov_tasdiqlashModalLabel_{{hodim.id}}" aria-hidden="true">
-                <div class="modal-dialog">
-                <form action="{% url 'oylik-tolash' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-content">
-                        <div class="modal-header">
-                        <h5 class="modal-title" id="oylik_tolov_tasdiqlashModalLabel_{{hodim.id}}">To'lovni tasdiqlash</h5>
                     
+                    <div class="form-group">
+                        <label for="chiqimMoneyCirculation">Pul Muomalasi</label>
+                        <select name="money_circulation" id="chiqimMoneyCirculation" class="form-control">
+                            <option value="">- - - - - - - </option>
+                            {% for k in money_circulation %}
+                                <option value="{{ k.id }}">{{ k.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Qaysi Oy uchun:</label>
+                                <select class="form-control" name="qaysi_oy"> 
+                                    <option value="1">Yanvar</option>
+                                    <option value="2">Fevral</option>
+                                    <option value="3">Mart</option>
+                                    <option value="4">Aprel</option>
+                                    <option value="5">May</option>
+                                    <option value="6">Iyun</option>
+                                    <option value="7">Iyul</option>
+                                    <option value="8">Avgust</option>
+                                    <option value="9">Sentyabr</option>
+                                    <option value="10">Oktyabr</option>
+                                    <option value="11">Noyabr</option>
+                                    <option value="12">Dekabr</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            <h4>{{hodim.toliq_ism_ol}}ga rostan oylik to'ladingizmi</h4>
-                        </div>
-                        <div class="modal-footer">
-                            <input type="hidden" name="hodim_id" value="{{hodim.id}}" id="">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yo'q</button>
-                        <button type="submit" class="btn btn-primary">Ha</button>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Qaysi Yil uchun:</label>
+                                <input type="number" name="qaysi_yil" class="form-control" value="{{bugun_year}}">
+                            </div>
                         </div>
                     </div>
-                </form>
+                    
+                    <div class="form-group">
+                        <label for="chiqimSumma">Summa</label>
+                        <input class="form-control" type="number" name="summa" placeholder="Summa" required step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chiqimKurs">Kurs</label>
+                        <input class="form-control" type="number" name="kurs" value="{{dollar_kurs}}" placeholder="Kurs" required step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="chiqimIzox">Izox</label>
+                        <textarea name="izox" class="form-control" rows="3" placeholder="Izox"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
                 </div>
             </div>
-            {% endfor %}
+        </form>
+    </div>
+</div>
 
+<!-- Success Message Modal -->
+{% if messages %}
+<div class="modal fade" id="MessageModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="MessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="MessageModalLabel" style="color: green;">Xabar</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
-                <!-- Succses Modal -->
-                <div class="modal fade" id="MessageModal" data-backdrop="static" tabindex="-1" aria-labelledby="MessageModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                            <h5 class="modal-title" id="KirimModalLabel" style="color: green;"></h5>
-                        
-                            </div>
-                            <div class="modal-body">
-                                {% for message in messages %}
-                                    <h4>{{message}}</h4>
-                                {% endfor %}
-                                
-                            </div>
-                            <div class="modal-footer">
-                                
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        
-            <!--  END CONTENT AREA  -->
-        <!-- </div> -->
-        <!-- END MAIN CONTAINER -->
-    {% endblock content %}
+{% endblock content %}
 
-    {% block js %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        
-        <!-- DataTables -->
-        <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-        <!-- DataTables Buttons extension and related libraries -->
-        <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.flash.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.flash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
 
-    <script>
-            $('#excel21').DataTable( {
-                dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-                buttons: {
-                    buttons: [
-                        { extend: 'copy', className: 'btn' },
-                        { extend: 'csv', className: 'btn' },
-                        { extend: 'excel', className: 'btn' },
-                        { extend: 'print', className: 'btn' }
-                    ]
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#transactionsTable').DataTable({
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { 
+                    "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', 
+                    "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' 
                 },
-                "oLanguage": {
-                    "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
-                    "sInfo": " _PAGE_ / _PAGES_",
-                    "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-                    "sSearchPlaceholder": "Izlash",
-                "sLengthMenu": "Results :  _MENU_",
-                },
-                "stripeClasses": [],
-                "lengthMenu": [10, 20, 50, 100],
-                "pageLength": 15
-            } );
-        </script>
-        
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+                "sLengthMenu": "Natijalar: _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "paging": false,
+            // "order": [[1, 'desc']], // Sort by date column
+            "scrollY": "500px",
+            "scrollCollapse": true,
+        });
 
-
+        // Edit transaction modal handler
+        $('.edit-transaction').on('click', function() {
+            const transactionId = $(this).data('id');
+            console.log(transactionId, 'pppppp')
+            const transactionType = $(this).data('type');
+            const summa = $(this).data('summa');
+            const kurs = $(this).data('kurs');
+            const izox = $(this).data('izox');
             
-
-
-        
-        <!-- END PAGE LEVEL SCRIPTS -->
-
-        {% if messages %}
-        <script>
-            $(document).ready(function() {
-                $('#MessageModal').modal({
-                    show: true
-                });
-            });
-        </script>
-        {% endif %}
-        <script src="{% static 'plugins/table/datatable/datatables.js' %}"></script>
-        <script src="{% static 'assets/js/scrollspyNav.js' %}"></script>
-        <script src="{% static 'plugins/countdown/jquery.countdown.min.js' %}"></script>
-        <script src="{% static 'assets/js/components/custom-countdown.js' %}"></script>
-        <script src="https://unpkg.com/feather-icons"></script>
-
-    
-        <script>
-            const categorySelect = document.getElementById("categorySelect");
-            const subcategorySelect = document.getElementById("subcategorySelect");
-        
-            function filterSubcategories(categoryId) {
-                const options = subcategorySelect.options;
-                for (let i = 0; i < options.length; i++) {
-                    const option = options[i];
-                    const catId = option.getAttribute("data-category");
-                    if (!catId) continue; // Skip the placeholder
-                    option.style.display = (catId === categoryId) ? "block" : "none";
-                }
-                subcategorySelect.selectedIndex = 0; // reset selection
+            $('#editTransactionId').val(transactionId);
+            $('#editTransactionType').val(transactionType);
+            $('#editSumma').val(summa);
+            $('#editKurs').val(kurs);
+            $('#editIzox').val(izox);
+            
+            // Set form action based on transaction type
+            if (transactionType === 'kirim') {
+                $('#editTransactionForm').attr('action', "{% url 'kirim_qilish_edit' %}");
+            } else {
+                $('#editTransactionForm').attr('action', "{% url 'chiqim_qilish_edit' %}");
             }
-        
-            categorySelect.addEventListener("change", function () {
-                filterSubcategories(this.value);
-            });
-        
-            // Dastlab hammasini yashirish
-            window.addEventListener("DOMContentLoaded", () => {
-                filterSubcategories(categorySelect.value);
-            });
-        </script>
-        
+            
+            $('#EditTransactionModal').modal('show');
+        });
 
-    {% endblock js %}
+        // Show message modal if there are messages
+        {% if messages %}
+            $('#MessageModal').modal('show');
+        {% endif %}
+
+        // Initialize charts
+        initializeCharts();
+    });
+
+    function initializeCharts() {
+        // Bar Chart
+        const chartData = {{ chart_month|safe }};
+        const labels_month = chartData.map(item => item.month);
+        const chiqim_data = chartData.map(item => item.chiqim_summa);
+        const shop_data = chartData.map(item => item.shop_summa);
+
+        const ctx_month = document.getElementById('chiqimChart').getContext('2d');
+        new Chart(ctx_month, {
+            type: 'bar',
+            data: {
+                labels: labels_month,
+                datasets: [
+                    {
+                        label: 'Chiqim',
+                        data: chiqim_data,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Savdo',
+                        data: shop_data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Oylar bo\'yicha chiqim va savdo'
+                    }
+                }
+            }
+        });
+
+        // Pie Charts
+        google.charts.load("current", {packages:["corechart"]});
+        google.charts.setOnLoadCallback(drawCharts);
+
+        function drawCharts() {
+            // Som pie chart
+            const data_som = google.visualization.arrayToDataTable([
+                ['Name', 'Summa'],
+                {% for item in round_chart %}
+                    ['{{ item.name }}', {{ item.summa_som }}],
+                {% endfor %}
+            ]);
+            
+            const options_som = {
+                title: 'Kassadagi pul Som',
+                is3D: true,
+                pieSliceText: 'value',
+                backgroundColor: 'transparent',
+                sliceVisibilityThreshold: 0
+            };
+            
+            const chart_som = new google.visualization.PieChart(document.getElementById('piechart_3d'));
+            chart_som.draw(data_som, options_som);
+
+            // Dollar pie chart
+            const data_dol = google.visualization.arrayToDataTable([
+                ['Name', 'Summa'],
+                {% for item in round_chart %}
+                    ['{{ item.name }}', {{ item.summa_dol }}],
+                {% endfor %}
+            ]);
+            
+            const options_dol = {
+                title: 'Kassadagi pul Dollar',
+                is3D: true,
+                pieSliceText: 'value',
+                backgroundColor: 'transparent',
+                sliceVisibilityThreshold: 0
+            };
+            
+            const chart_dol = new google.visualization.PieChart(document.getElementById('piechart_dol_3d'));
+            chart_dol.draw(data_dol, options_dol);
+        }
+    }
+
+    // Handle window resize for charts
+    $(window).on('resize', function() {
+        initializeCharts();
+    });
+</script>
+{% endblock js %}

@@ -773,7 +773,7 @@
                                         <td>
                                             <div class="input-group">
                                                 <input type="text" class="form-control pack-input" 
-                                                       value="{{ i.total_pack|floatformat }}" min="0" step="0.01"
+                                                       value="{{ i.total_pack|floatformat:'2' }}" min="0" step="0.01"
                                                        data-pack="{{ i.product.pack }}"
                                                        onkeyup="updateQuantityFromPack(this)" style="width: 6rem;">
                                             </div>
@@ -781,7 +781,7 @@
                                         <td>
                                             <div class="input-group">
                                                 <input type="text" class="form-control quantity-input" 
-                                                       value="{{ i.quantity|floatformat }}" name="quantity" min="0" step="0.01"
+                                                       value="{{ i.quantity|floatformat:'2' }}" name="quantity" min="0" step="0.01"
                                                        onkeyup="updatePackFromQuantity(this)" style="width: 6rem;">
                                             </div>
                                         </td>
@@ -789,7 +789,7 @@
                                         <td>
                                             <div class="input-group">
                                                 <input type="text" class="form-control price-input price_product_list" 
-                                                       value="{{ i.price|floatformat }}" min="0" step="0.01"
+                                                       value="{{ i.price|floatformat:'2' }}" min="0" step="0.01"
                                                        onchange="updatePrice(this)">
                                             </div>
                                         </td>
@@ -805,8 +805,8 @@
                                     <td>Jami</td>
                                     <td></td>
                                     <td></td>
-                                    <td class="text-center" id="pack_total">{{ totals.total_pack|floatformat|intcomma }}</td>
-                                    <td class="text-center" id="quantity_total">{{ totals.quantity|floatformat|intcomma }}</td>
+                                    <td class="text-center" id="pack_total">{{ totals.total_pack|floatformat:'2'|intcomma }}</td>
+                                    <td class="text-center" id="quantity_total">{{ totals.quantity|floatformat:'2'|intcomma }}</td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -823,7 +823,7 @@
                         <form method="post" action="{% url 'b2c_shop_edit' %}">
                             {% csrf_token %}
                             <!-- <h4 class="text-success" style="font-size: 50px;" id="all_total">{{ totals.total|intcomma }}</h4> -->
-                             <h4 class="text-success" style="font-size: 50px;" id="all_total">{{ totals.total|floatformat:2|default:"0.0" }}</h4>
+                            <h4 class="text-success" style="font-size: 50px;" id="all_total">{{ totals.total|floatformat:'2'|default:"0"|intcomma }}</h4>
                             <br>
                             <div class="btn-group" role="group" aria-label="Price Types" style="width: 100%;">
                                 {% for i in price_types %}
@@ -889,34 +889,7 @@
                                         <div class="modal-body">
                                             <form method="post" enctype="multipart/form-data" id="debtorForm">
                                                 {% csrf_token %}
-                                                <!-- <div class="form-group">
-                                                    <label for="recipient-debtor_type" class="col-form-label">Turi</label>
-                                                    <div class="input-group">
-                                                        <select name="type" id="recipient-debtor_type" class="form-control">
-                                                            <option value="">---------</option>
-                                                            {% for debtor_type in debtor_type %}
-                                                                <option value="{{ debtor_type.id }}">{{ debtor_type.name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <div class="input-group-append">
-                                                            <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#debtorTypeModal">+</button>
-                                                        </div>
-                                                    </div>
-                                                </div> -->
-                                                <!-- <div class="form-group">
-                                                    <label for="recipient-teritory" class="col-form-label">Teritoriyasi</label>
-                                                    <div class="input-group">
-                                                        <select name="teritory" id="recipient-teritory" class="form-control">
-                                                            <option value="">---------</option>
-                                                            {% for teritory in teritory %}
-                                                                <option value="{{ teritory.id }}">{{ teritory.name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <div class="input-group-append">
-                                                            <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#teritoryModal">+</button>
-                                                        </div>
-                                                    </div>
-                                                </div> -->
+                                                
                                                 <div class="form-group">
                                                     <label class="col-form-label">Narx Turi</label>
                                                     <div class="input-group">
@@ -1088,13 +1061,13 @@
                                 const hidden_skidka = document.getElementById('hidden_skidka');
                                 let originlaTotal = 0;
                                 $("tbody tr").each(function() {
-                                    const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
-                                    const price = parseFloat($(this).find('.price-input').val()) || 0;
+                                    const quantity = parseFloat($(this).find('.quantity-input').val().replace(/\s/g, '')) || 0;
+                                    const price = parseFloat($(this).find('.price-input').val().replace(/\s/g, '')) || 0;
                                     originlaTotal += quantity * price;
                                 });
                                 if (0 >= val) {
-                                    all_total.textContent = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
-                                    all_total_two.value = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                                    all_total.textContent = (originlaTotal % 1 === 0 ? originlaTotal.toLocaleString('ru-RU', {maximumFractionDigits: 0}) : originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2}));
+                                    all_total_two.value = originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 0});
                                     hidden_skidka.value = 0;
                                     disc_button.textContent = '';
                                     disc_button.style.display = 'none';
@@ -1108,8 +1081,8 @@
                                 disc_button.textContent = `${percent.toFixed(2)}%`
                                 disc_button.style.display = 'block';
                                 updateReceiptProducts();
-                                all_total.textContent = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
-                                all_total_two.value = result.toLocaleString('ru-RU', {minimumFractionDigits: 1});
+                                all_total.textContent = (originlaTotal % 1 === 0 ? originlaTotal.toLocaleString('ru-RU', {maximumFractionDigits: 0}) : originlaTotal.toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2}));
+                                all_total_two.value = result.toLocaleString('ru-RU', {minimumFractionDigits: 0});
                             }
                         </script>
                     </div>
@@ -1424,13 +1397,13 @@
                             closeFullscreen();
                         });
                         function formatNumber(num) {
-                            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                         }
                             
                         function updateReceiptProducts() {
                             const productList = document.getElementById('product_list');
                             const receiptContainer = document.getElementById('chek_products');
-                            const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value) || 0;
+                            const hidden_skidka = parseFloat(document.getElementById('hidden_skidka').value.replace(/\s/g, '')) || 0;
                             
                             if (!productList || !receiptContainer) return 0;
                             
@@ -1448,13 +1421,13 @@
                                 let quantity = 1;
                                 const quantityInput = row.querySelector('.quantity-input');
                                 if (quantityInput) {
-                                    quantity = parseFloat(quantityInput.value) || 1;
+                                    quantity = parseFloat(quantityInput.value.replace(/\s/g, '')) || 1;
                                 }
                                 
                                 let price = 0;
                                 const priceInput = row.querySelector('.price-input');
                                 if (priceInput) {
-                                    price = parseFloat(priceInput.value) || 0;
+                                    price = parseFloat(priceInput.value.replace(/\s/g, '')) || 0;
                                 } 
                                 
                                 const totalWithoutDiscount = price * quantity;
@@ -1642,7 +1615,7 @@
                                     });
                                     
                                     qarzButton.addEventListener('click', () => {
-                                        const summa = parseFloat(summaInput.value) || 0;
+                                        const summa = parseFloat(summaInput.value.replace(/\s/g, '')) || 0;
                                         if (summa > 0) {
                                             if (this.addCreditPayment(summa)) {
                                                 this.modalInstance.hide();
@@ -1680,7 +1653,7 @@
                                     const input = inputBox.querySelector('input');
                                     const methodName = inputBox.querySelector('.box-header span').textContent.trim();
                                   
-                                    const value = parseFloat(input.value) || 0;
+                                    const value = parseFloat(input.value.replace(/\s/g, '')) || 0;
                                     if (value > 0) {
                                         input.value = '';
                                         this.totalToPay += this.paymentMethods[methodName];
@@ -1746,8 +1719,8 @@
                                     const inputBox = input.closest('.input-box');
                                     const methodName = inputBox.querySelector('.box-header span').textContent.trim();
                                     const methodValyutaName = inputBox.querySelector('.box-header-valyuta-name').textContent.trim();
-                                    const dollar_kurs = parseFloat(document.getElementById('dollar-kurs-base').value) || 1;
-                                    const value = parseFloat(input.value) || 0;
+                                    const dollar_kurs = parseFloat(document.getElementById('dollar-kurs-base').value.replace(/\s/g, '')) || 1;
+                                    const value = parseFloat(input.value.replace(/\s/g, '')) || 0;
                                     const previousValue = this.paymentMethods[methodName] || 0;
                                     
                                     const isSom = (currency) => ['Som', 'Sum', 'SOM', 'SUM', 'UZS', 'Samon', 'SAMON'].includes(currency);
@@ -2292,29 +2265,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // searchInput.addEventListener('input', function () {
-    //     const filter = this.value.toLowerCase();
-    //     const items = dropdown.querySelectorAll('.select-product-item');
-    //     let matchCount = 0;
-    //     let firstMatch = null;
-        
-    //     items.forEach(item => {
-    //         const text = item.textContent.toLowerCase();
-    //         if (text.includes(filter)) {
-    //             item.parentElement.style.display = '';
-    //             matchCount++;
-    //             if (!firstMatch) firstMatch = item;
-    //         } else {
-    //             item.parentElement.style.display = 'none';
-    //         }
-    //     });
-        
-    //     if (matchCount > 0) {
-    //         dropdown.classList.add('show');
-    //     } else {
-    //         dropdown.classList.remove('show');
-    //     }
-    // });
 
     searchInput.addEventListener('input', function () {
     const rawFilter = this.value.toLowerCase();  // foydalanuvchi kiritgani (saqlanadi, o‘zgartirilmaydi)
@@ -2441,7 +2391,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
     function formatNumber(num) {
-        return new Intl.NumberFormat("en-US").format(num);
+        return new Intl.NumberFormat("ru-RU").format(num);
     }
 
     const showAlert = (message, type) => {
@@ -2458,6 +2408,8 @@ document.addEventListener('DOMContentLoaded', function () {
             alertElement.fadeOut(500, function() { $(this).remove(); });
         }, 3000); 
     };
+    console.log('iiii')
+    showAlert('aaaaaa', 'success');
 
     function updateQuantityFromPack(input) {
         const row = $(input).closest('tr');
@@ -2476,7 +2428,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const packSize = parseFloat(row.find('.pack-input').data('pack')) || 1;
         const totalPack = quantity / packSize;
         
-        row.find('.pack-input').val(totalPack.toFixed(2));
+        row.find('.pack-input').val(totalPack.toFixed(2).replace(/\.?0+$/, ''));
         updateCartItem(row);
         updateReceiptProducts();
     }
@@ -2579,7 +2531,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
      function calculateRemaining() {
-         const total = parseFloat($("#all_total_2").val().replace(/,/g, "")) || 0;
+         const total = parseFloat($("#all_total_2").val().replace(/,/g, "").replace(/\s/g, '')) || 0;
          const naqd_summa = parseFloat($("#naqd_summa").val()) || 0;
          const remaining = Math.max(total - naqd_summa, 0);
          $("#nasiya_summa").val(formatNumber(remaining.roundNumber()));
@@ -2767,7 +2719,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <td>
                                     <div class="input-group">
                                         <input type="text" class="form-control pack-input" 
-                                               value="${totalPack.toFixed(2)}" min="0" step="0.01"
+                                               value="${totalPack.toFixed(2).replace(/\.?0+$/, '')}" min="0" step="any"
                                                data-pack="${parseInt(pack) || 1}"
                                                onkeyup="updateQuantityFromPack(this)" style="width: 6rem;">
                                     </div>
@@ -2775,15 +2727,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <td>
                                     <div class="input-group">
                                         <input type="text" class="form-control quantity-input" 
-                                               value="${quantity.toFixed(2)}" min="0" step="0.01"
+                                               value="${quantity.toFixed(2).replace(/\.?0+$/, '')}" min="0" step="0.01"
                                                onkeyup="updatePackFromQuantity(this)" style="width: 6rem;">
                                     </div>
                                 </td>
-                                <td>${formatNumber(price.toFixed(2))}</td>
+                                <td>${formatNumber(price.toFixed(2).replace(/\.?0+$/, ''))}</td>
                                 <td>
                                     <div class="input-group">
                                         <input type="text" class="form-control price-input" 
-                                               value="${price.toFixed(2)}" min="0" step="0.01"
+                                               value="${price.toFixed(2).replace(/\.?0+$/, '')}" min="0" step="0.01"
                                                onchange="updatePrice(this)">
                                     </div>
                                 </td>

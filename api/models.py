@@ -61,6 +61,7 @@ class Valyuta(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     is_dollar = models.BooleanField(default=False)
     is_som = models.BooleanField(default=False)
+    is_som_or_dollar = models.BooleanField(default=False)
     is_activate = models.BooleanField(default=True)
 
     def __str__(self):
@@ -185,7 +186,7 @@ class OylikTolov(models.Model):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE,null=True,blank=True, related_name='userprofile')
+    user = models.OneToOneField(User,on_delete=models.CASCADE, null=True,blank=True, related_name='userprofile')
     
     staffs = [
         (1, 'director'),
@@ -265,6 +266,16 @@ class UserProfile(models.Model):
     is_kassa_new = models.BooleanField(default=False)
     is_money_circulation = models.BooleanField(default=False)
 
+
+    is_last_seen = models.BooleanField(default=False)
+    is_debtor_type = models.BooleanField(default=False)
+    is_region = models.BooleanField(default=False)
+    is_teritory = models.BooleanField(default=False)
+    is_groups = models.BooleanField(default=False)
+    is_rounding_settings = models.BooleanField(default=False)
+    is_close_cash = models.BooleanField(default=False)
+    is_product_filail_zero = models.BooleanField(default=False)
+
     def refresh_total(self, date):
         if type(date) == str:
             date = date[:10]
@@ -280,6 +291,22 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.first_name
+    
+    def save(self, *args, **kwargs):
+        if not self.user:
+            user = User.objects.create(username=self.username, first_name=self.first_name, last_name=self.last_name)
+            user.set_password(self.password)
+            user.save()
+            self.user = user
+        else:
+            user = self.user
+            user.username = self.username
+            user.first_name = self.first_name
+            user.last_name = self.last_name
+            if not user.check_password(self.password):
+                user.set_password(self.password)
+            user.save()
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = '1) User'
@@ -885,7 +912,7 @@ class ProductBarcode(models.Model):
     
 
 class Recieve(models.Model):
-    name = models.IntegerField(default=0)
+    name = models.CharField(max_length=255, blank=True, null=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
     payment_date = models.DateTimeField(blank=True, null=True)
@@ -1227,12 +1254,21 @@ class Shop(models.Model):
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
     status = models.IntegerField(choices=((1, 'Yaratildi'),(2, 'Tasdiqlandi'), (3, 'Qaytarildi')), default=1)
+    chiqims = models.ManyToManyField('Chiqim', blank=True)
 
     # @property
 
     @property
     def total_price(self):
         return sum(i.total_price for i in Cart.objects.filter(shop=self))
+    
+    @property
+    def total_returned_sum(self):
+        return sum(i.total_returned * i.price for i in Cart.objects.filter(shop=self))
+
+    @property
+    def total_price_to_refresh(self):
+        return sum(i.total_price for i in Cart.objects.filter(shop=self)) - self.chegirma - self.total_returned_sum
     
     @property
     def total_pay(self):
@@ -1360,6 +1396,7 @@ class Cart(models.Model):
     def total_returned(self):
         return ReturnProduct.objects.filter(cart=self).aggregate(sum=Sum('return_quan'))['sum'] or 0
 
+    
     @property
     def foyda_total(self):
         summa = 0
@@ -1485,13 +1522,95 @@ class Debtor(models.Model):
             Wallet.objects.get_or_create(customer=self, valyuta=val)
 
 
+    # def refresh_debt(self):
+    #     customer = self
+    #     valyutalar = Valyuta.objects.all()
+
+    #     # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+    #     pay_history_qs = list(
+    #         PayHistory.objects.filter(debtor=customer, is_debt=False)
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+
+    #     bonus_qs = list(
+    #         Bonus.objects.filter(debtor=customer)
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+
+    #     shop_qs = list(
+    #         Shop.objects.filter(debtor=customer, status__in=[1,2])
+    #         .select_related('valyuta')
+    #         .order_by('date')
+    #     )
+
+    #     # Valyutalar bo‘yicha hodisalarni guruhlab olamiz
+    #     valyuta_events = defaultdict(list)
+        
+    #     events = list(pay_history_qs) + list(shop_qs) + list(bonus_qs)
+    #     events = sorted(events, key=lambda x: (x.date, x.id))
+
+    #     for event in events:
+    #         valyuta_events[event.valyuta_id].append(event)
+
+    #     wallets_to_update = []
+    #     payhistory_to_update = []
+    #     shop_to_update = []
+    #     bonus_to_update = []
+
+    #     for valyuta in valyutalar:
+    #         events = valyuta_events.get(valyuta.id, [])
+
+    #         # So'nggi Wallet yoki yangisini topamiz
+    #         wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
+    #         summa = wallet.start_summa
+
+    #         for event in events:
+    #             if isinstance(event, PayHistory):
+    #                 event.debt_old = summa
+    #                 # if not event.is_debt:
+    #                 summa += event.summa if event.type_pay == 1 else -event.summa
+    #                 event.debt_new = summa
+    #                 payhistory_to_update.append(event)
+
+    #             elif isinstance(event, Shop):
+    #                 event.debt_old = summa
+    #                 summa -= event.total_price_to_refresh
+    #                 event.debt_new = summa
+    #                 shop_to_update.append(event)
+                
+    #             elif isinstance(event, Bonus):
+    #                 event.debt_old = summa
+    #                 summa += event.summa
+    #                 event.debt_new = summa
+    #                 bonus_to_update.append(event)
+
+    #         wallet.summa = summa
+    #         wallets_to_update.append(wallet)
+
+    #     # Hammasini bir marta yangilaymiz
+    #     if wallets_to_update:
+    #         Wallet.objects.bulk_update(wallets_to_update, ['summa'])
+
+    #     if payhistory_to_update:
+    #         PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+
+    #     if shop_to_update:
+    #         Shop.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+        
+    #     if bonus_to_update:
+    #         Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
+
+
+
     def refresh_debt(self):
         customer = self
-        valyutalar = Valyuta.objects.all()
+        valyutalar = Valyuta.objects.filter(is_som_or_dollar=True)
 
         # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
         pay_history_qs = list(
-            PayHistory.objects.filter(debtor=customer, is_debt=False)
+            PayHistory.objects.filter(debtor=customer, is_debt=False, shop__isnull=True, for_debt__isnull=True).distinct()
             .select_related('valyuta')
             .order_by('date')
         )
@@ -1528,6 +1647,7 @@ class Debtor(models.Model):
             # So'nggi Wallet yoki yangisini topamiz
             wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
             summa = wallet.start_summa
+            print("start: ", wallet.start_summa)
 
             for event in events:
                 if isinstance(event, PayHistory):
@@ -1539,7 +1659,9 @@ class Debtor(models.Model):
 
                 elif isinstance(event, Shop):
                     event.debt_old = summa
-                    summa -= event.baskets_total_price
+                    debt = PayHistory.objects.filter(is_debt=True, shop=event).first().rest_debt if PayHistory.objects.filter(is_debt=True, shop=event) else 0
+                    summa -= debt
+                    print("summa: ", debt)
                     event.debt_new = summa
                     shop_to_update.append(event)
                 
@@ -1550,6 +1672,7 @@ class Debtor(models.Model):
                     bonus_to_update.append(event)
 
             wallet.summa = summa
+            print(summa, 'aaaaa')
             wallets_to_update.append(wallet)
 
         # Hammasini bir marta yangilaymiz
@@ -1566,23 +1689,18 @@ class Debtor(models.Model):
             Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
 
 
-        
-
-
-
-
     @property
     def debt_haqimiz(self):
         data = [
             {'summa': Wallet.objects.filter(customer=self, valyuta=val, summa__gt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
-            for val in Valyuta.objects.all()
+            for val in Valyuta.objects.filter(is_som_or_dollar=True)
         ]
         return data
     @property
     def debt_qarzimiz(self):
         data = [
             {'summa': Wallet.objects.filter(customer=self, valyuta=val, summa__lt=0).aggregate(all=Coalesce(Sum('summa'), 0 , output_field=IntegerField()))['all']}
-            for val in Valyuta.objects.all()
+            for val in Valyuta.objects.filter(is_som_or_dollar=True)
         ]
         return data
     class Meta:
@@ -1656,7 +1774,9 @@ class Debt(models.Model):
 
 
 class PayHistory(models.Model):
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, blank=True, null=True)
+    for_debt = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, blank=True, null=True, related_name="shop_pays")
+    return_product = models.ForeignKey("ReturnProduct", on_delete=models.CASCADE, blank=True, null=True)
     desktop_id = models.IntegerField(blank=True, null=True)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE , blank=True, null=True)
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE , blank=True, null=True)
@@ -1669,7 +1789,7 @@ class PayHistory(models.Model):
     comment = models.TextField(blank=True, null=True, default='Izoh yo`q')
     date = models.DateTimeField(default=timezone.now)
 
-    summa = models.IntegerField(default=0, null=True)
+    summa = models.FloatField(default=0, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
     kassa_new = models.FloatField(default=0)
@@ -1682,10 +1802,40 @@ class PayHistory(models.Model):
     external_income_user = models.ForeignKey('ExternalIncomeUser', on_delete=models.CASCADE, null=True, blank=True)
     payment_date = models.DateField(null=True, blank=True)
     type_pay = models.IntegerField(choices=((1, 'Pay'),(2, 'Give')), default=1)
-    summa = models.IntegerField(default=0)
+    summa = models.FloatField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
     is_debt = models.BooleanField(default=False)
+
+    @property
+    def in_som(self):
+        if not self.valyuta.is_dollar:
+            return self.summa
+        else:
+            return self.summa * self.currency  # dollar -> so'm
+
+    @property
+    def in_dollar(self):
+        if self.valyuta.is_dollar:
+            return self.summa
+        else:
+            return self.summa / self.currency  # so'm -> dollar
+
+    
+    @property
+    def rest_debt(self):
+        pays = PayHistory.objects.filter(for_debt_id=self.id)
+        remaining_debt = self.summa
+        for p in pays:
+            if self.valyuta.is_dollar:
+                remaining_debt -= p.in_dollar
+            else:
+                remaining_debt -= p.in_som
+        
+        return remaining_debt
+
+
+
     @property
     def kontr_agent(self):
         if self.debtor:
@@ -1791,34 +1941,7 @@ class PayHistory(models.Model):
     #     super().save(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        if self.kassa:
-            old_summa = 0
-            diff = 0
-
-            if self.pk:  
-                # faqat summa olib kelinadi
-                old_summa = PayHistory.objects.only("summa").get(id=self.pk).summa
-
-            # farqni hisoblaymiz
-            if self.type_pay == 1:
-                diff = float(self.summa) - old_summa
-                self.kassa.summa += diff
-            else:
-                diff = float(self.summa) - old_summa
-                self.kassa.summa -= diff
-            self.kassa_new = self.kassa.summa
-            # faqat kerakli yozuvlarni bulk update qilish
-            if diff != 0 and self.pk:
-                if self.type_pay == 1:
-                    PayHistory.objects.filter(id__gt=self.pk).update(
-                        kassa_new=F("kassa_new") + diff
-                    )
-                else:
-                    PayHistory.objects.filter(id__gt=self.pk).update(
-                        kassa_new=F("kassa_new") - diff
-                    )
-
-            self.kassa.save()
+      
 
         super().save(*args, **kwargs)
 
@@ -1871,7 +1994,7 @@ class CartDebt(models.Model):
 
 
 class ReturnProduct(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.SET_NULL, blank=True, null=True)
+    cart = models.ForeignKey(Cart, on_delete=models.SET_NULL, blank=True, null=True, related_name="returns")
     debtor = models.ForeignKey(Debtor, on_delete=models.SET_NULL, blank=True, null=True)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
     return_quan = models.FloatField(default=0)
@@ -1879,6 +2002,7 @@ class ReturnProduct(models.Model):
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE)
     by_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
+    chiqim_set = models.ManyToManyField('Chiqim', blank=True)
 
 
     som = models.IntegerField(default=0)
@@ -1894,6 +2018,7 @@ class ReturnProduct(models.Model):
 
     def __str__(self):
         return self.product.name
+
     
 
     class Meta:
@@ -2057,6 +2182,9 @@ class KassaNew(models.Model):
     is_main = models.BooleanField(default=False)
     kassa_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
+    def __str__(self):
+        return self.name
+
 class KassaMerge(models.Model):
     kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE, null=True, blank=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
@@ -2064,6 +2192,44 @@ class KassaMerge(models.Model):
     summa = models.IntegerField(default=0)
     start_date = models.DateField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+
+
+    def save(self, *args, **kwargs):
+        if self.pk and self.kassa.is_main==False:
+            last_close = (
+                CloseCash.objects.filter(kassa_id=self.pk)
+                .order_by('-date')
+                .first()
+            )
+            start_summa = 0
+            if last_close:
+                start_date = last_close.date
+                start_summa = last_close.rest_summa
+            else:
+                # agar hali yopilmagan bo‘lsa, eng boshidan hisoblaymiz
+                start_date = None
+
+            # 🔹 Kirimlar
+            kirim_qs = Kirim.objects.filter(kassa_id=self.pk)
+            chiqim_qs = Chiqim.objects.filter(kassa_id=self.pk)
+            if start_date:
+                kirim_qs = kirim_qs.filter(qachon__gt=start_date)
+                chiqim_qs = chiqim_qs.filter(qachon__gt=start_date)
+
+            kirim = (
+                kirim_qs.values('valyuta_id')
+                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+            ).aggregate(sum=Sum('summa'))['sum'] or 0
+            chiqim = (
+                chiqim_qs.values('valyuta_id')
+                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+            ).aggregate(sum=Sum('summa'))['sum'] or 0
+
+            self.summa = kirim-chiqim + start_summa
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.kassa.name + " " + self.valyuta.name
 
 class ChiqimTuri(models.Model):
     nomi = models.CharField(max_length=50)
@@ -2153,6 +2319,41 @@ class Chiqim(models.Model):
         return [{
             "summa": self.summa if self.valyuta == v else 0 
         } for v in valutas]
+    
+    def save(self, *args, **kwargs):
+        if self.kassa:
+            old_summa = 0
+            diff = 0
+
+            if self.pk:  
+                # faqat summa olib kelinadi
+                old_summa = Chiqim.objects.only("summa").get(id=self.pk).summa
+
+            # farqni hisoblaymiz
+            diff = float(self.summa) - old_summa
+            self.kassa.summa -= diff
+            
+            if not self.pk:
+                self.kassa_new = self.kassa.summa
+            else:
+                self.kassa_new -= diff
+            # faqat kerakli yozuvlarni bulk update qilish
+            if diff != 0 and self.pk:
+                Chiqim.objects.filter(id__gt=self.pk).update(
+                    kassa_new=F("kassa_new") - diff
+                )
+
+                Kirim.objects.filter(qachon__gt=self.qachon).update(
+                    kassa_new=F("kassa_new") - diff
+                )
+
+            self.kassa.save()
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        self.summa = 0
+        self.save()
+        super().delete(*args, **kwargs)
 
 
 
@@ -2220,23 +2421,39 @@ class Kirim(models.Model):
         return f'{str(self.qachon)}'
 
     def save(self, *args, **kwargs):
-        # if self.plastik and self.kassa_hisob_raqam_yangi != 0 and self.kassa_hisob_raqam_eski != 0:
-        #     self.kassa_plastik_eski = self.kassa_hisob_raqam_eski
-        #     self.kassa_plastik_yangi = self.kassa_hisob_raqam_yangi
-        
+        if self.kassa:
+            old_summa = 0
+            diff = 0
 
-        # if self.qancha_hisob_raqamdan and self.kassa_plastik_eski != 0 and self.kassa_plastik_yangi != 0:
-        #     self.kassa_hisob_raqam_eski = self.kassa_plastik_eski
-        #     self.kassa_hisob_raqam_yangi = self.kassa_plastik_yangi
+            if self.pk:  
+                # faqat summa olib kelinadi
+                old_summa = Kirim.objects.only("summa").get(id=self.pk).summa
 
-        # if self.payhistory and not self.payhistory.shop:
-        #     self.payhistory.som = self.qancha_som
-        #     self.payhistory.dollar = self.qancha_dol
-        #     self.payhistory.plastik = self.plastik
-        #     self.payhistory.click = self.qancha_hisob_raqamdan
-        #     self.payhistory.save(update_fields=['som', 'dollar', 'plastik', 'click'])
+            # farqni hisoblaymiz
+            diff = float(self.summa) - old_summa
+            self.kassa.summa += diff
+
+            if not self.pk:
+                self.kassa_new = self.kassa.summa
+            else:
+                self.kassa_new += diff
+            # faqat kerakli yozuvlarni bulk update qilish
+            if diff != 0 and self.pk:
+                Kirim.objects.filter(id__gt=self.pk).update(
+                    kassa_new=F("kassa_new") + diff
+                )
+
+                Chiqim.objects.filter(qachon__gt=self.qachon).update(
+                    kassa_new=F("kassa_new") + diff
+                )
+            self.kassa.save()
 
         super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        self.summa = 0
+        self.save()
+        super().delete(*args, **kwargs)
 
 
 import binascii
@@ -2991,86 +3208,11 @@ class CloseCash(models.Model):
     filial = models.ForeignKey(Filial, on_delete=models.CASCADE, blank=True, null=True)
     summa = models.FloatField(default=0)
     summa_confirmed = models.FloatField(default=0)
+    rest_summa = models.FloatField(default=0)
     kassa_new = models.FloatField(default=0)
     date = models.DateTimeField(default=timezone.now)
     is_confirmed = models.BooleanField(default=False)
     
-    # def save(self, *args, **kwargs):
-    #     # Yangi yozuv kiritilayotganida
-    #     if not self.pk:
-    #         # KassaMerge ni yangilashdan oldin summasini olish
-    #         current_kassa_sum = self.kassa.summa
-            
-    #         # Kassa_new ni hisoblash
-    #         self.kassa_new = current_kassa_sum - self.summa
-            
-    #         # KassaMerge ni yangilash
-    #         self.kassa.summa = current_kassa_sum - self.summa
-    #         self.kassa.save()
-        
-    #     else:
-    #         # EDIT HOLATI: Avvalgi yozuvni yangilash
-    #         old_instance = CloseCash.objects.get(pk=self.pk)
-    #         old_sum = old_instance.summa
-    #         old_confirmed = old_instance.is_confirmed
-    #         old_to_kassa = old_instance.to_kassa
-            
-    #         # Farqni hisoblash
-    #         difference = self.summa - old_sum
-            
-    #         # 1. Agar oldin tasdiqlangan bo'lsa va hozir ham tasdiqlangan bo'lsa
-    #         if old_confirmed and self.is_confirmed:
-    #             # Eski summani to_kassa dan ayirib, yangi summani qo'shamiz
-    #             if old_to_kassa:
-    #                 old_to_kassa.summa = old_to_kassa.summa - old_sum
-    #                 old_to_kassa.save()
-                
-    #             if self.to_kassa:
-    #                 self.to_kassa.summa = self.to_kassa.summa + self.summa
-    #                 self.to_kassa.save()
-            
-    #         # 2. Agar oldin tasdiqlanmagan bo'lsa, lekin hozir tasdiqlangan bo'lsa
-    #         elif not old_confirmed and self.is_confirmed:
-    #             # Faqat yangi summani to_kassa ga qo'shamiz
-    #             if self.to_kassa:
-    #                 self.to_kassa.summa = self.to_kassa.summa + self.summa
-    #                 self.to_kassa.save()
-            
-    #         # 3. Agar oldin tasdiqlangan bo'lsa, lekin hozir tasdiqlanmagan bo'lsa
-    #         elif old_confirmed and not self.is_confirmed:
-    #             # Eski summani to_kassa dan ayiramiz
-    #             if old_to_kassa:
-    #                 old_to_kassa.summa = old_to_kassa.summa - old_sum
-    #                 old_to_kassa.save()
-            
-    #         # KassaMerge ni yangilash
-    #         self.kassa.summa = self.kassa.summa - difference
-    #         self.kassa.save()
-            
-    #         # Yangi qoldiqni hisoblash
-    #         self.kassa_new = self.kassa.summa
-            
-    #         # Boshqa CloseCash yozuvlarini yangilash
-    #         later_records = CloseCash.objects.filter(
-    #             kassa=self.kassa,
-    #             date__gte=self.date,
-    #             id__gt=self.pk
-    #         ).order_by('date', 'id')
-            
-    #         for record in later_records:
-    #             record.kassa_new = record.kassa_new - difference
-    #             # Rekursiyani oldini olish uchun update_fields ishlatamiz
-    #             record.save(update_fields=['kassa_new'])
-        
-    #     # was_confirmed ni yangilash
-    #     self.was_confirmed = self.is_confirmed
-        
-    #     super().save(*args, **kwargs)
-        
-    #     # was_confirmed ni yangilash
-    #     self.was_confirmed = self.is_confirmed
-        
-    #     super().save(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         # Yangi yozuv kiritilayotganida
@@ -3147,9 +3289,24 @@ class CloseCash(models.Model):
         super().delete(*args, **kwargs)
     
 
+class SmenaOpen(models.Model):
+    date = models.DateTimeField(default=timezone.now)
+    filial = models.ForeignKey(Filial, on_delete=models.PROTECT)
+    by_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    contract_id = models.CharField(max_length=200, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        is_new = False if self.pk else True
+
+        super().save(*args, **kwargs)
+
+        if is_new and not self.contract_id:
+            self.contract_id = f"Smena ochish #{str(self.id).zfill(6)}"
+            super().save(update_fields=["contract_id"])
 
 
 class SmenaClose(models.Model):
+    smenaopen = models.ForeignKey(SmenaOpen, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
     closecashes = models.ManyToManyField(CloseCash, blank=True)
     filial = models.ForeignKey(Filial, on_delete=models.PROTECT)
@@ -3193,7 +3350,7 @@ class SmenaClose(models.Model):
         super().save(*args, **kwargs)
 
         if is_new and not self.contract_id:
-            self.contract_id = f"Smena yopish #{str(self.id).zfill(6)}"
+            self.contract_id = self.smenaopen.contract_id if self.smenaopen else ''
             super().save(update_fields=["contract_id"])
 
 
@@ -3269,3 +3426,5 @@ class RoundingSettings(models.Model):
             }
         )
         return settings
+
+

@@ -20,139 +20,37 @@
     {% block css %}
     {% endblock css %}
     
+
 <style>
 
-    body {
-        text-shadow: 0 0 0.3px currentColor;
+    @media (max-width: 768px) {
+    .header-container .navbar .navbar-toggler {
+        display: block !important;
     }
-
-    ::selection {
-        background: #3390ff; /* yoki #b3d4fc - brauzer default rangga o‘xshash */
-        color: white;
-    }
-
-.header-container {
-    height: 50px;
-    min-height: 50px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.header {
-    height: 50px;
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-}
-
-/* Header elementlari - doim bir xil o'lchamda */
-
-
-
-/* Video tutorial container */
-.video-tutorial-container {
-    position: static;
-    background: white;
-    padding: 4px 8px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-
-#div_one_1, #div_one_2, #div_one_3 {
-    margin-top: -2rem;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .header {
-        flex-wrap: wrap;
-        height: auto;
-        min-height: 50px;
-        padding: 0.5rem;
+    
+    .sidebar-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
     }
     
     .header-container {
-        height: auto;
-        min-height: 50px;
-    }
-
-    #div_one_1, #div_one_2, #div_one_3 {
-        margin-top: 0rem;
+        padding: 0 15px;
     }
     
+    .navbar-brand {
+        margin-right: auto;
+    }
     
-    /* Kichik ekranlarda kamroq muhim elementlarni yashirish */
-    @media (max-width: 480px) {
-         #div_one_1 {
-            display: none;
-        }
+    /* Boshqa elementlarni yashirish */
+    #div_one_1,
+    #div_one_2,
+    #div_one_3 {
+        display: none;
     }
 }
 
-/* Sidebar toggle bosilganda header o'zgarishlari */
-.sidebar-collapsed .header {
-    /* Sidebar yopilganda header o'lchami o'zgarmasligi kerak */
-    height: 50px;
-}
 
-/* Dropdown styling */
-#dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ccc;
-    border-top: none;
-    display: none;
-    z-index: 1001;
-    max-height: 200px;
-    overflow-y: auto;
-}
-</style>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toggleBtn = document.querySelector('.sidebar-toggle');
-    
-    toggleBtn.addEventListener('click', function () {
-        const body = document.body;
-        
-        // Faqat sidebar klassi o'zgarsin, header elementlari o'zgarmasin
-        body.classList.toggle('sidebar-collapsed');
-        
-        // Margin-top'larni o'chirish yoki qo'shish kerak emas
-        // Header doim bir xil o'lchamda qoladi
-    });
-
-    // Input focus bo'lganda dropdownni ko'rsatish
-    document.getElementById('barcode-input').addEventListener('focus', function() {
-        if(this.value.trim() !== '') {
-            search(this);
-        }
-    });
-    
-    // Tashqariga klik qilganda dropdownni yopish
-    document.addEventListener('click', function(event) {
-        const input = document.getElementById('barcode-input');
-        const dropdown = document.getElementById('dropdown');
-        if (!input.contains(event.target) && !dropdown.contains(event.target)) {
-            dropdown.style.display = 'none';
-        }
-    });
-});
-</script>
-<style>
 .video-tutorial-container {
     position: fixed;
     top: 70px;
@@ -230,17 +128,20 @@ document.addEventListener("DOMContentLoaded", function () {
         min-height: 50px;
     }
 
-    /* .header {
+    .header {
         height: 100%;
         padding: 7rem 4rem;
         align-items: center;
-    } */
+    }
     /* faqat sahifa collapsed bo‘lsa, qizil */
 body.sidebar-collapsed .sidebar-toggle svg {
     color: red;
     transform: rotate(180deg);
 }
 
+    #div_one_1, #div_one_2, #div_one_3 {
+        margin-top: -2rem;
+    }
 
 
 </style>
@@ -259,28 +160,17 @@ body.sidebar-collapsed .sidebar-toggle svg {
 
 <!--  BEGIN NAVBAR  -->
 <div class="header-container fixed-top">
-    <header class="header navbar navbar-expand-sm">
-
-        <a href="javascript:void(0);" class="sidebarCollapse" data-placement="bottom">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 class="feather feather-menu">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </a>
-
-
-        
-        <ul  id="div_one_1" class="navbar-item flex-row">
+    <header class="header navbar navbar-expand-sm expand-header">
+        <ul class="navbar-item flex-row navbar-dropdown" style="  display: flex;flex-wrap: wrap;justify-content: flex-start;margin-bottom: 10px;gap: 50px; width: 100%;overflow-x: auto;white-space: nowrap;">
+        </ul>
+        <div style="margin-right: 3rem;  position: relative;" id="div_one_1">
             <input type="text" placeholder="Check" oninput="search(this)" class="form-control" style="height: 33px;" id="barcode-input" autocomplete="off">
             <div id="dropdown" style="position: absolute; top: 35px; left: 0; right: 0; background: white; border: 1px solid #ccc; display: none; z-index: 1000;"></div>
-        </ul>
-        <ul id="div_one_3" class="navbar-item flex-row">
+        </div>
+        <div style="margin-right: 3rem;  position: relative;" id="div_one_3">
             <input type="number" step="any" placeholder="Kurs" value="{{kurs_dollar}}" oninput="addKurs(this)" class="form-control" style="height: 33px;" id="dollar-kurs-base" autocomplete="off">
-        </ul>
-        <!-- <div style="margin-right: 3rem;"  id="div_one_2">
+        </div>
+        <div style="margin-right: 3rem;"  id="div_one_2">
             <div class="video-tutorial-container" style="display: none;">
                 <a href="#" class="video-tutorial-link" target="_blank">
                     <i class="fas fa-video"></i> Video qo'llanma
@@ -291,7 +181,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
                 Qo'llanma
             </button>
             {% endif %}
-        </div> -->
+        </div>
     </header>
 </div>
 <div class="main-container" id="container">
@@ -301,8 +191,8 @@ body.sidebar-collapsed .sidebar-toggle svg {
     <div class="search-overlay"></div>
 
     <!--  BEGIN SIDEBAR  -->
-    <div class="sidebar-wrapper sidebar-theme" >
-        <!-- {% if request.user.userprofile.staff == 4 %}
+    <div class="sidebar-wrapper sidebar-theme collapsed" >
+        {% if request.user.userprofile.staff == 4 %}
         <nav id="sidebar">
             <div class="shadow-bottom"></div>
             <ul class="list-unstyled menu-categories" id="accordionExample">
@@ -357,8 +247,6 @@ body.sidebar-collapsed .sidebar-toggle svg {
 
         </nav>
         {% else %}
-                {% endif  %} -->
-
         <nav id="sidebar">
            <div class="navbar-nav theme-brand flex-row  text-center">
                 <div class="nav-logo">
@@ -432,7 +320,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
                             
                                 {% if custom_user_profile.is_bugungi_sotuvlar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'today_sales' %}active{% endif %}">
-                                        <a href="{% url 'today_sales' %}">Sotuv bo'limi</a>
+                                        <a href="{% url 'today_sales' %}">Bugungi Sotuvlar</a>
                                     </li>
                                 {% endif %}
                                 {% if custom_user_profile.is_buyurtmalar %} 
@@ -440,11 +328,11 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                         <a href="{% url 'shops' %}">Buyurtmalar</a>
                                     </li>
                                 {% endif %}
-                                <!-- {% if custom_user_profile.is_savdo %} 
+                                {% if custom_user_profile.is_savdo %} 
                                 <li class="menu {% if request.resolver_match.url_name == 'b2c_shop' %}active{% elif request.resolver_match.url_name == 'b2c_shop_detail' %}active{% endif %}">
                                     <a href="{% url 'b2c_shop' %}">Savdo</a>
                                 </li>
-                                {% endif %} -->
+                                {% endif %}
                                 {% if custom_user_profile.is_b2b_savdo %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'b2b_shop' %}active{% elif request.resolver_match.url_name == 'b2b_shop_ajax' %}active{% endif %}">
                                         <a href="{% url 'b2b_shop' %}">B2B Savdo</a>
@@ -455,12 +343,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     <a href="{% url 'todays_practices' %}">Bugungi amaliyotlar</a>
                                 </li>
                                 {% endif %}
-                                
-                                <!-- {% if custom_user_profile.is_product_filail_zero %}
-                                    <li class="menu {% if request.resolver_match.url_name == 'mobile_order_list' %}active{% elif request.resolver_match.url_name == 'mobile_order_detail' %}active{% endif %}">
-                                        <a href="{% url 'mobile_order_list' %}">Mobile buyurtmalar</a>
-                                    </li>
-                                {% endif %}    -->
+                                <li class="menu {% if request.resolver_match.url_name == 'mobile_order_list' %}active{% elif request.resolver_match.url_name == 'mobile_order_detail' %}active{% endif %}">
+                                    <a href="{% url 'mobile_order_list' %}">Mobile buyurtmalar</a>
+                                </li>
                             </ul>
                         </li>
                     {% endwith %}
@@ -629,12 +514,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     <a href="{% url 'deliver_return_tarix' %}">Taminotchi Tarix</a>
                                 </li>
                                 {% endif %}
-
-                                {% if custom_user_profile.is_product_filail_zero  %}
                                 <li class="menu {% if request.resolver_match.url_name == 'product_filail_zero' %}active{% endif %}">
-                                    <a href="{% url 'product_filail_zero' %}">Ohirlagan maxsulotlar</a>
+                                    <a href="{% url 'product_filail_zero' %}">Yoq maxsulotlar</a>
                                 </li>
-                                {% endif %}
                             </ul>
                         </li>
                     {% endwith %}
@@ -663,17 +545,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                         </li>
                                     {% endif %}
                                     {% if custom_user_profile.is_filial_kassalar %} 
-                                    
-                                    {% if user.userprofile.staff == 1 %}
-                                        <li class="menu {% if request.resolver_match.url_name == 'filial_kassalar' %}active{% endif %}">
-                                            <a href="{% url 'filial_kassalar' %}"> Kassa Filial</a>
-                                        </li>
-                                    {% else %}
-                                        <li class="menu {% if request.resolver_match.url_name == 'filial_kassalar' %}active{% endif %}">
-                                            <a href="{% url 'kassa' %}"> Kassa Filial</a>
-                                        </li>
-                                    {% endif %}
-                                        
+                                    <li class="menu {% if request.resolver_match.url_name == 'filial_kassalar' %}active{% endif %}">
+                                        <a href="{% url 'filial_kassalar' %}"> Kassa Filial</a>
+                                    </li>
                                     {% endif %}
 
                                     {% if custom_user_profile.is_analiz_xarajatlar %} 
@@ -693,19 +567,13 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     {% endif %}
                                     {% if custom_user_profile.is_kassa_tasdiklanmagan %} 
                                         <li class="menu {% if request.resolver_match.url_name == 'close_cash_list' %}active{% endif %}">
-                                            <a href="{% url 'close_cash_list' %}">Smenalar tarixi</a>
+                                            <a href="{% url 'close_cash_list' %}">Kassa Tasdiklanmagan </a>
                                         </li>
                                     {% endif %}
-
-                                    <!-- <li class="menu {% if request.resolver_match.url_name == 'confirmed_close_cash_list' %}active{% endif %}">
-                                        <a href="{% url 'confirmed_close_cash_list' %}">Kassa Tasdiqlangan </a>
-                                    </li> -->
-
-                                    {% if custom_user_profile.is_close_cash %} 
-                                        <li class="menu {% if request.resolver_match.url_name == 'close_cash' %}active{% endif %}">
-                                                <a href="{% url 'close_cash' %}">Kassani yopish</a>
-                                        </li>
-                                    {% endif %}
+                                    <li class="menu {% if request.resolver_match.url_name == 'close_cash' %}active{% endif %}">
+                                            <a href="{% url 'close_cash' %}">Kassani yopish</a>
+                                    </li>
+                                    
                              </ul>
                         </li>
                     {% endwith %}
@@ -829,6 +697,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
                 </ul>
 
         </nav>
+        {% endif  %}
     </div>
     <!--  END SIDEBAR  -->
     {% block content %}
@@ -1103,13 +972,13 @@ $(document).ready(function() {
                 window.open(`/shop_nakladnoy/${id}`, '_blank');
             }
 
-            // document.addEventListener('click', function(event) {
-            //     const input = document.getElementById('barcode-input');
-            //     const dropdown = document.getElementById('dropdown');
-            //     if (!input.contains(event.target) && !dropdown.contains(event.target)) {
-            //         dropdown.style.display = 'none';
-            //     }
-            // });
+            document.addEventListener('click', function(event) {
+                const input = document.getElementById('barcode-input');
+                const dropdown = document.getElementById('dropdown');
+                if (!input.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
         </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -1143,12 +1012,7 @@ $(document).ready(function() {
    
 </script>
 
-<script>
-    $(document).on('wheel', 'input[type=number]', function (e) {
-        $(this).blur(); // inputdan fokusni oladi
-        e.preventDefault(); // skrollni to‘xtatadi
-    });
-</script>
+
 
 
 

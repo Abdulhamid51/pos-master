@@ -93,16 +93,16 @@
                                 <div class="subsection" id="sotuvlar">
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_bugungi_sotuvlar" {% if use.is_bugungi_sotuvlar %} checked {% endif %}>
-                                        <label>Bugungi Sotuvlar</label>
+                                        <label>Sotuv bo'limi</label>
                                     </div>
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_buyurtmalar" {% if use.is_buyurtmalar %} checked {% endif %}>
                                         <label>Buyurtmalar</label>
                                     </div>
-                                    <div class="subsection-item">
+                                    <!-- <div class="subsection-item">
                                         <input type="checkbox" name="is_savdo" {% if use.is_savdo %} checked {% endif %}>
                                         <label>Savdo</label>
-                                    </div>
+                                    </div> -->
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_b2b_savdo" {% if use.is_b2b_savdo %} checked {% endif %}>
                                         <label>B2B Savdo</label>
@@ -217,6 +217,12 @@
                                         <input type="checkbox" name="is_taminotchi_qaytuv_tarix" {% if use.is_taminotchi_qaytuv_tarix %} checked {% endif %}>
                                         <label>Taminotchi Tarix</label>
                                     </div>
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_product_filail_zero" {% if use.is_product_filail_zero %} checked {% endif %}>
+                                        <label>Ohirlagan maxsulotlar</label>
+                                    </div>
+
                                 </div>
                                 
                                 <div class="divider"></div>
@@ -251,25 +257,30 @@
                                         <input type="checkbox" name="is_fin_hisoboti" {% if use.is_fin_hisoboti %} checked {% endif %}>
                                         <label>Fin Hisoboti</label>
                                     </div>
-                                    <div class="subsection-item">
+                                    <!-- <div class="subsection-item">
                                         <input type="checkbox" name="is_xodim_kunlik" {% if use.is_xodim_kunlik %} checked {% endif %}>
                                         <label>Kunlik ishchi</label>
                                     </div>
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_xodim_oylik" {% if use.is_xodim_oylik %} checked {% endif %}>
                                         <label>Oylik ishchi</label>
-                                    </div>
-                                    <div class="subsection-item">
+                                    </div> -->
+                                    <!-- <div class="subsection-item">
                                         <input type="checkbox" name="is_xodim_mobile" {% if use.is_xodim_mobile %} checked {% endif %}>
                                         <label>Mobile ishchi</label>
-                                    </div>
-                                    <div class="subsection-item">
+                                    </div> -->
+                                    <!-- <div class="subsection-item">
                                         <input type="checkbox" name="is_xodim_call_center" {% if use.is_xodim_call_center %} checked {% endif %}>
                                         <label>Call center</label>
-                                    </div>
+                                    </div> -->
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_kassa_tasdiklanmagan" {% if use.is_kassa_tasdiklanmagan %} checked {% endif %}>
-                                        <label>Kassa Tasdiklanmagan</label>
+                                        <label>Smenalar tarixi</label>
+                                    </div>
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_close_cash" {% if use.is_close_cash %} checked {% endif %}>
+                                        <label>Kassani yopish</label>
                                     </div>
                                 </div>
                                 
@@ -338,6 +349,39 @@
                                     <div class="subsection-item">
                                         <input type="checkbox" name="is_money_circulation" {% if use.is_money_circulation %} checked {% endif %}>
                                         <label>Pul Muomalasi</label>
+                                    </div>
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_last_seen" {% if use.is_last_seen %} checked {% endif %}>
+                                        <label>Oxirgi ko'rilgan</label>
+                                    </div>
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_debtor_type" {% if use.is_debtor_type %} checked {% endif %}>
+                                        <label>Mijoz Turi</label>
+                                    </div>
+
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_region" {% if use.is_region %} checked {% endif %}>
+                                        <label>Mintaqa</label>
+                                    </div>
+
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_teritory" {% if use.is_teritory %} checked {% endif %}>
+                                        <label>Hudud</label>
+                                    </div>
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_groups" {% if use.is_groups %} checked {% endif %}>
+                                        <label>Maxsulot guruhi</label>
+                                    </div>
+
+
+                                    <div class="subsection-item">
+                                        <input type="checkbox" name="is_rounding_settings" {% if use.is_rounding_settings %} checked {% endif %}>
+                                        <label>Savdo yahlitlash</label>
                                     </div>
                                 </div>
                                 

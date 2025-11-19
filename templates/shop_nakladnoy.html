@@ -1,266 +1,398 @@
 {% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
-
-    <title>Faktura card - {{ brand.title }}</title>
+    <title>Faktura - {{ data.chek }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/static/nakladnoy/main.css" />
-    <style type="text/css">
-      body {
-        margin-top: 20px;
-        background-color: #eee;
-      }
-
-      .card {
-        box-shadow: 0 20px 27px 0 rgb(0 0 0 / 5%);
-      }
-
-      .card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        word-wrap: break-word;
-        background-color: #fff;
-        background-clip: border-box;
-        border: 0 solid rgba(0, 0, 0, 0.125);
-        border-radius: 1rem;
-      }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-      
-      .table th, .table td {
-        border: 2px solid #dee2e6; 
-        text-align: center; 
-        vertical-align: middle; 
-        padding: 10px; 
-        width: auto; 
-        font-weight: bold;
-        font-size: 14px;
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
         
-      }
-    </style>
-    <style>
-      @media print {
         body {
-          background: none !important;
-          font-size: 12px !important;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .table {
-          width: 100% !important; 
-          table-layout: auto !important; 
-          border-collapse: collapse !important; 
+        .invoice-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-    
-        .table th, .table td {
-          padding: 5px !important;
-          border: 1px solid #000 !important; 
-          word-wrap: break-word !important;
-          white-space: normal !important; 
-          text-align: center !important; 
+        
+        .invoice-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            position: relative;
         }
-    
-        .table img {
-          max-width: 60px !important;
-          max-height: 60px !important;
+        
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
         }
-    
-        .container {
-          max-width: 100% !important;
+        
+        .status-1 { background: var(--warning-color); }
+        .status-2 { background: var(--success-color); }
+        .status-3 { background: var(--danger-color); }
+        
+        .invoice-body {
+            padding: 30px;
         }
-    
-        .d-print-none {
-          display: none !important;
+        
+        .section-title {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 15px;
+            margin: 25px 0 15px 0;
+            color: var(--primary-color);
+            font-weight: 600;
         }
-      }
+        
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .payment-method {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            margin: 2px;
+            font-size: 12px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .return-stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            border: 8px solid var(--danger-color);
+            border-radius: 50%;
+            padding: 40px;
+            color: var(--danger-color);
+            font-weight: bold;
+            font-size: 24px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 0 0 10px white;
+            z-index: 100;
+        }
+        
+        @media print {
+            body {
+                background: none !important;
+                padding: 0;
+            }
+            
+            .invoice-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
-    
-  </head>
-
-  <body>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css"
-      integrity="sha256-2XFplPlrFClt0bIdPgpz8H7ojnk10H69xRqd9+uTShA="
-      crossorigin="anonymous"
-    />
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="card">
-            <div class="card-body" style="font-size: 12px">
-              <div class="invoice-title">
-                <div class="mb-4 logo_container">
-                  <h2 class="mb-1 text-white">
-                   Eco Maruf
-                  </h2>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-1"><i class="fas fa-receipt me-2"></i>Faktura #{{ data.chek }}</h1>
+                    <p class="mb-0">{{ data.filial }}</p>
                 </div>
-              </div>
-              <hr class="my-4" />
-              <div class="box_to_print row" style="font-size: 12px">
-                <div class="col-4">
-                  <div class="">
-                    <h7 class="">Mijoz:</h7>
-                    <p class style="color : red">{{ data.customer }}</p>
-                    <p class="">{{ order.customer.hudud.name }}</p>
-                    <h7 class="">Telefon nomer:</h7>
-                    <p class="">{{ data.customer_phone}}</p>
-                    <h7 class="">Valyuta:</h7>
-                    <p class="">{{ data.valyuta}}</p>
-                  </div>
-                </div>
-                <style>
-                  .return-stamp {
-                    position: relative;
-                    width: 150px;
-                    height: 150px;
-                    border: 6px solid #a30000;
-                    border-radius: 50%;
-                    color: #a30000;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transform: rotate(-15deg);
-                    font-size: 18px;
-                    background: white;
-                    box-shadow: 0 0 0 5px white, 0 0 0 10px #a30000;
-                  }
-
-                  .return-stamp::before, .return-stamp::after {
-                    content: "★ ★ ★ ★ ★";
-                    position: absolute;
-                    left: 0;
-                    width: 100%;
-                    text-align: center;
-                    font-size: 12px;
-                  }
-
-                  .return-stamp::before {
-                    top: 20px;
-                  }
-
-                  .return-stamp::after {
-                    bottom: 20px;
-                  }
-
-                  .text-qaytarildi {
-                    transform: rotate(-10deg);
-                  }
-                  </style>
-
-                  <div class="col-md-4 text-center">
-                    {% if data.status == 3%}
-                      <div class="return-stamp">
-                        <div class="text-qaytarildi">Qaytarildi</div>
-                      </div>
-                    {% endif %}
-                  </div>
-
-
-                <div class="col-4">
-                  <div class="" style="float: right">
-                    <div class="mt-4">
-                      <h7 class="font-size-15 mb-1">Buyurtma vaqti:</h7>
-                      <p>{{ data.date_time|date:"d-m-Y H:i:s" }}</p>
+                <div class="col-md-4 text-end">
+                    <div class="status-badge status-{{ data.status }}">
+                        {{ shop.get_status_display }}
                     </div>
-                    <div class="mt-4">
-                        <h7 class="font-size-15 mb-1">Sotuvchi:</h7>
-                        <p>{{ data.seller}}</p>
-                      </div>
-                    <div class="mt-4">
-                        <h7 class="font-size-15 mb-1">Check:  {{ data.chek}}</h7>
-                    </div>
-                  </div>
+                    <p class="mb-0">{{ data.date_time|date:"d-m-Y H:i" }}</p>
                 </div>
-              </div>
-
-              <div class="py-2">
-                <div class="table-responsive" style="font-size: 12px">
-                  <table
-                    class="table align-middle table-nowrap table-centered mb-3">
-                    <thead>
-                      <tr>
-                        <th style="width: 70px">No.</th>
-                        <th>Maxsulot</th>
-                        <th>Rasim</th>
-                        <th>Soni</th>
-                        <th>Narxi</th>
-                        <th>NDS Narxi</th>
-                        <th>Summa</th>
-                        <th>NDS Summa</th>
-                      </tr>
+            </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="invoice-body">
+            <!-- Mijoz ma'lumotlari -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="section-title">Mijoz ma'lumotlari</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <p><strong>Ism:</strong> {{ data.customer }}</p>
+                            <p><strong>Telefon:</strong> {{ data.customer_phone }}</p>
+                            <p><strong>Manzil:</strong> {{ data.customer_address|default:'' }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="section-title">Sotuv ma'lumotlari</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <p><strong>Sotuvchi:</strong> {{ data.seller }}</p>
+                            <p><strong>Valyuta:</strong> {{ data.valyuta }}</p>
+                            <p><strong>NDS:</strong> {{ data.nds_count }}%</p>
+                            <p><strong>Chigirma:</strong> <span class="btn-sm btn-primary">{{ data.nds_count }}</span></p>
+                            {% if data.comment %}
+                            <p><strong>Izoh:</strong> {{ data.comment }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mahsulotlar -->
+            <h5 class="section-title">Sotilgan mahsulotlar</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Mahsulot</th>
+                            <th>Soni</th>
+                            <th>Narxi</th>
+                            <th>NDS Narxi</th>
+                            <th>Summa</th>
+                            <th>NDS Summa</th>
+                        </tr>
                     </thead>
                     <tbody>
-                      
-                      {% for i in data.items %}
+                        {% for item in data.items %}
                         <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ forloop.counter }}</td>
                             <td>
-                              <div>
-                                  <p5 class="text-truncate">{{ i.name }}</p5>
-                              </div>
+                                <div class="d-flex align-items-center">
+                                    {% if item.img %}
+                                    <img src="{{ item.img.url }}" alt="{{ item.name }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ item.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ item.deliver }}</small>
+                                    </div>
+                                </div>
                             </td>
-                            <td>
-                            {% if i.img %}
-                                <img src="{{ i.img.url }}" alt="" style="width: 60px; height: 60px;">
-                            {% else %}
-                                <span>🖼️</span>
-                            {% endif %}
-                            </td>
-                            <td>{{ i.quantity|floatformat:0|intcomma }}</td>
-                            <td>{{ i.price|floatformat:2|intcomma }}</td>
-                            <td>{{ i.nds_price|floatformat:2|intcomma }}</td>
-                            <td>{{ i.total|floatformat:2|intcomma }}</td>
-                            <td>{{ i.nds_total|floatformat:2|intcomma }}</td>
+                            <td>{{ item.quantity|floatformat:0|intcomma }}</td>
+                            <td>{{ item.price|floatformat:2|intcomma }}</td>
+                            <td>{{ item.nds_price|floatformat:2|intcomma }}</td>
+                            <td>{{ item.total|floatformat:2|intcomma }}</td>
+                            <td>{{ item.nds_total|floatformat:2|intcomma }}</td>
                         </tr>
-                    {% endfor %}
-
+                        {% endfor %}
                     </tbody>
-                    <tbody>
-                      <tr>
-                        <th>#</th>
-                        <th>Buyurtma summa</th>
-                        <th></th>
-                        <th>{{total.quantity|floatformat:1|intcomma}}</th>
-                        <th></th>
-                        <th></th>
-                        <th>{{total.summa|floatformat:2|intcomma}} </th>
-                        <th>{{ total.summa_nds|floatformat:2|intcomma }}</th>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="d-print-none mt-4">
-                  <div class="float-end">
-                    <a
-                      href="javascript:window.print()" 
-                      class="btn btn-success me-1"
-                      ><i class="fa fa-print"></i
-                    ></a>
-                    <a href="{% url 'return_shop' data.chek %}" class="btn btn-primary w-md">Qaytarish</a>
-                  </div>
-                </div>
-              </div>
+                </table>
             </div>
-          </div>
+            
+            <!-- To'lovlar -->
+            {% if data.payments %}
+            <h5 class="section-title">To'lovlar</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-info">
+                        <tr>
+                            <th>Summa</th>
+                            <th>Valyuta</th>
+                            <th>Kassa</th>
+                            <th>Sana</th>
+                            <th>Turi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in data.payments %}
+                        <tr>
+                            <td class="{% if payment.type == 'Qarz' %}text-danger{% else %}text-success{% endif %}">
+                                <strong>{{ payment.summa|floatformat:2|intcomma }}</strong>
+                            </td>
+                            <td>{{ payment.valyuta }}</td>
+                            <td>{{ payment.kassa }}</td>
+                            <td>{{ payment.date }}</td>
+                            <td>
+                                <span class="badge {% if payment.type == 'Qarz' %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ payment.type }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+
+
+            {% if data.chiqims %}
+            <h5 class="section-title">Qaytarilgan to'lovlar</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-info">
+                        <tr>
+                            <th>Summa</th>
+                            <th>Valyuta</th>
+                            <th>Kassa</th>
+                            <th>Sana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chiqim in data.chiqims %}
+                        <tr>
+                            <td>
+                                <strong>{{ chiqim.summa|floatformat:2|intcomma }}</strong>
+                            </td>
+                            <td>{{ chiqim.valyuta }}</td>
+                            <td>{{ chiqim.kassa }}</td>
+                            <td>{{ chiqim.date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            
+            <!-- Qaytarilgan mahsulotlar -->
+            {% if data.returns %}
+            <h5 class="section-title">Qaytarilgan mahsulotlar</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-warning">
+                        <tr>
+                            <th>Mahsulot</th>
+                            <th>Qaytarilgan miqdor</th>
+                            <!-- <th>Summa</th> -->
+                            <th>Sana</th>
+                            <th>Qaytargan</th>
+                            <th>Chiqim</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for return in data.returns %}
+                        <tr>
+                            <td>{{ return.product_name }}</td>
+                            <td>{{ return.quantity|floatformat:0|intcomma }}</td>
+                            <!-- <td class="text-danger">{{ return.total|floatformat:2|intcomma }}</td> -->
+                            <td>{{ return.date }}</td>
+                            <td>{{ return.returned_by }}</td>
+                            <td>
+                            {% for a in return.chiqims %}
+                              {{ a.summa }} {{ a.valyuta }} <br>
+                            {% endfor %}
+                              </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            <!-- Jami hisob -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="summary-card">
+                        <h5 class="mb-3"><i class="fas fa-calculator me-2"></i>Jami hisob</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <p>Jami summa:</p>
+                                <p>To'langan:</p>
+                                <p>Qaytarilgan:</p>
+                                <p><strong>Qoldiq:</strong></p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p><strong>{{ total.summa|floatformat:2|intcomma }}</strong></p>
+                                <p class="text-success">{{ total.total_paid|floatformat:2|intcomma }}</p>
+                                <p class="text-danger">{{ total.total_returned|floatformat:2|intcomma }}</p>
+                                <p class="{% if total.remaining_debt > 0 %}text-warning{% else %}text-success{% endif %}">
+                                    <strong>{{ total.remaining_debt|floatformat:2|intcomma }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">To'lov usullari</h5>
+                            {% if total.naqd_som > 0 %}
+                            <span class="payment-method">Naqd (So'm): {{ total.naqd_som|intcomma }}</span>
+                            {% endif %}
+                            {% if total.naqd_dollar > 0 %}
+                            <span class="payment-method">Naqd (Dollar): {{ total.naqd_dollar|intcomma }}</span>
+                            {% endif %}
+                            {% if total.plastik > 0 %}
+                            <span class="payment-method">Plastik: {{ total.plastik|intcomma }}</span>
+                            {% endif %}
+                            {% if total.click > 0 %}
+                            <span class="payment-method">Click: {{ total.click|intcomma }}</span>
+                            {% endif %}
+                            {% if total.transfer > 0 %}
+                            <span class="payment-method">Transfer: {{ total.transfer|intcomma }}</span>
+                            {% endif %}
+                            {% if total.chegirma > 0 %}
+                            <span class="payment-method text-danger">Chegirma: {{ total.chegirma|intcomma }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        
+        <!-- Footer -->
+        <div class="border-top p-3 text-center text-muted">
+            <small>Ushbu faktura {{ data.date_time|date:"d-m-Y H:i" }} da yaratilgan</small>
+        </div>
+        
+        <!-- Qaytarilgan stamp -->
+        {% if data.status == 3 %}
+        <div class="return-stamp">
+            <div>QAYTARILDI</div>
+        </div>
+        {% endif %}
     </div>
-    <script
-      data-cfasync="false"
-      src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"
-    ></script>
-    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    
+    <!-- Print button -->
+    <div class="text-center mt-3 no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>Chop etish
+        </button>
+        <a href="{% url 'today_sales' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Ortga
+        </a>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript"></script>
-  </body>
+</body>
 </html>

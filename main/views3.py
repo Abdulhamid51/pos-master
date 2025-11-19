@@ -4153,13 +4153,8 @@ def kassa(request):
         base_filters &= Q(subcategory_id__in=subcategory)
     
     # Get kirim and chiqim
-    if request.user.userprofile.staff == 1:
-        cashes = KassaNew.objects.filter(is_main=True)
-    else:
-        cashes = KassaNew.objects.filter(is_main=False, filial=request.user.userprofile.filial)
-        
-    kirim_qs = Kirim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
-    chiqim_qs = Chiqim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
+    kirim_qs = Kirim.objects.filter(is_approved=True, kassa__kassa__is_main=True).filter(date_filters & base_filters)
+    chiqim_qs = Chiqim.objects.filter(is_approved=True, kassa__kassa__is_main=True).filter(date_filters & base_filters)
     
     # Combine and sort by date
     for kirim in kirim_qs:
@@ -4213,9 +4208,9 @@ def kassa(request):
     
     # Optimize kassa data
     kassa_data = []
-    active_kassa = KassaMerge.objects.filter(is_active=True, kassa__in=cashes).distinct()
+    active_kassa = KassaMerge.objects.filter(is_active=True, kassa__is_main=True)
     
-    for kassa_obj in cashes:
+    for kassa_obj in KassaNew.objects.filter(is_main=True):
         valyuta_data = []
         for val in Valyuta.objects.filter(is_activate=True):
             total = active_kassa.filter(valyuta=val, kassa=kassa_obj).aggregate(
@@ -4242,7 +4237,7 @@ def kassa(request):
     
     # Optimize round_chart
     round_chart = []
-    for kassa_obj in cashes:
+    for kassa_obj in KassaNew.objects.filter(is_main=True):
         som_total = active_kassa.filter(kassa=kassa_obj, valyuta__is_som=True).aggregate(
             total=Coalesce(Sum('summa'), 0, output_field=IntegerField())
         )['total']
@@ -4311,7 +4306,7 @@ def kassa(request):
         'delivers': Deliver.objects.all(),
         'debtors': Debtor.objects.all(),
         'valuta': valutas,
-        'cashes': cashes,
+        'cashes': KassaNew.objects.filter(is_main=True),
         'money_circulation': MoneyCirculation.objects.filter(is_delete=True),
         'bugun_year': bugun.year,
         'data': kassa_data,
@@ -7557,7 +7552,7 @@ def shop_nakladnoy(request, order_id):
                 to_attr='carts'
             ),
             Prefetch(
-                'shop_pays',
+                'payhistory_set',
                 queryset=PayHistory.objects.select_related('valyuta', 'kassa', 'kassa__kassa'),
                 to_attr='payment_history'
             ),
@@ -7580,7 +7575,6 @@ def shop_nakladnoy(request, order_id):
             'customer_address': shop.debtor.address if shop.debtor else '',
             'filial': shop.filial.name if shop.filial else '',
             'comment': shop.comment,
-            'nds_count': shop.nds_count,
             'nds_count': shop.nds_count,
             'items': [],
             'payments': [],
@@ -8285,11 +8279,9 @@ def return_products(request):
         try:
             data = json.loads(request.body)
             shop_id = data.get('shop_id')
-            filial = data.get('filial')
             return_items = data.get('return_items', [])
             payments = data.get('payments', [])
             subtract_from_debt = data.get('subtract_from_debt', True)
-
             
             shop = Shop.objects.get(id=shop_id)
             debtor = shop.debtor
@@ -8313,7 +8305,7 @@ def return_products(request):
                             return_quan=return_quantity,
                             date=timezone.now(),
                             by_user=request.user.userprofile,
-                            filial_id=filial
+                            filial=request.user.userprofile.filial
                         )
                         
                         return_amount = return_quantity * cart.price
@@ -11184,8 +11176,6 @@ def kassa_new_edit(request,id):
 
 
 def filial_kassalar(request):
-    # if request.user.userprofile.staff != !:
-    #     return redirect
     kassa = KassaMerge.objects.filter(is_active=True, kassa__is_main=False)
     filial = Filial.objects.all()
     data = []
@@ -12178,7 +12168,6 @@ def close_cash(request):
         if start_date:
             kirim_qs = kirim_qs.filter(qachon__gt=start_date)
             chiqim_qs = chiqim_qs.filter(qachon__gt=start_date)
-    
 
         kirim = (
             kirim_qs.values('valyuta_id')
@@ -12202,20 +12191,9 @@ def close_cash(request):
 
         valyuta_list = []
         for v in valyuta:
-            item = KassaMerge.objects.filter(kassa_id=kassa_id, is_active=True).last()
-            last_close = (
-                CloseCash.objects.filter(kassa_id=item.pk)
-                .order_by('-date')
-                .first()
-            ) if item else None
-            start_summa = 0
-            if last_close:
-                start_date = last_close.date
-                start_summa = last_close.rest_summa
             valyuta_list.append({
                 'valyuta_id': v.id,
                 'valyuta_name': v.name,
-                'rest': start_summa,
                 'kirim_sum': kirim_dict.get(v.id, 0),
                 'chiqim_sum': chiqim_dict.get(v.id, 0),
                 'merge_sum': merge_dict.get(v.id, 0),
@@ -12270,8 +12248,7 @@ def close_cash_add(request):
         
         # Transactionni boshlash
         with transaction.atomic():
-            smenaopen = SmenaOpen.objects.filter(filial=request.user.userprofile.filial).last()
-            smena = SmenaClose.objects.create(by_user=request.user.userprofile, filial=request.user.userprofile.filial, smenaopen=smenaopen)
+            smena = SmenaClose.objects.create(by_user=request.user.userprofile, filial=request.user.userprofile.filial)
             for item in data:
                 kassa_id = item['kassa_id']
                 valyuta_id = item['valyuta_id']
@@ -12284,7 +12261,6 @@ def close_cash_add(request):
                     is_active=True
                 ).order_by('-id').first()
                 
-                rest = kassa_merge.summa - summa
                 if not kassa_merge:
                     # Agar KassaMerge topilmasa, xatolik qaytarish
                     raise Exception(f"KassaMerge topilmadi (kassa_id: {kassa_id}, valyuta_id: {valyuta_id})")
@@ -12293,8 +12269,7 @@ def close_cash_add(request):
                 close_cash = CloseCash(
                     kassa=kassa_merge,
                     summa=summa,
-                    is_confirmed=False,
-                    rest_summa=rest
+                    is_confirmed=False
                 )
                 
                 close_cash.by_user = request.user.userprofile
@@ -12303,7 +12278,6 @@ def close_cash_add(request):
                 close_cash.save()
 
                 smena.closecashes.add(close_cash)
-                kassa_merge.save()
             smena.save()
             
             return JsonResponse({'message': 'Kassa muvaffaqiyatli yopildi'})
@@ -13486,7 +13460,7 @@ def today_sales(request):
     
     # PayHistory ni prefetch qilamiz
     pay_history_prefetch = Prefetch(
-        'shop_pays',
+        'payhistory_set',
         queryset=PayHistory.objects.filter().select_related('valyuta', 'kassa'),
         to_attr='payment_history'
     )
@@ -13497,7 +13471,6 @@ def today_sales(request):
         queryset=ReturnProduct.objects.select_related('by_user', 'cart__product'),
         to_attr='return_history'
     )
-
     
     # Chiqim ni prefetch qilamiz
     chiqim_prefetch = Prefetch(
@@ -13505,7 +13478,6 @@ def today_sales(request):
         queryset=Chiqim.objects.filter().select_related('valyuta', 'kassa'),
         to_attr='chiqim_history'
     )
-    
     
     # Asosiy queryset - Shop modelini olamiz
     shops = Shop.objects.filter(
@@ -13673,21 +13645,21 @@ def today_sales(request):
     kassalar = KassaMerge.objects.filter(is_active=True, kassa__is_main=False).distinct().select_related('kassa', 'valyuta')
     
     open_smena = None
-    # if request.user.userprofile.staff != 1:
-    last_close = SmenaClose.objects.filter(filial=filial, date__date=today).order_by('-date').last()
+    if request.user.userprofile.staff != 1:
+        last_close = SmenaClose.objects.filter(filial=filial, date__date=today).order_by('-date').last()
 
-    if last_close:
-        # Oxirgi smena yopilgan vaqtdan keyin ochilgan SmenaOpenni topamiz
-        open_smena = SmenaOpen.objects.filter(
-            filial=filial,
-            date__gt=last_close.date  # faqat oxirgi yopilishdan keyingi smenalarni olamiz
-        ).order_by('date').first()
-    else:
-        # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
-        open_smena = SmenaOpen.objects.filter(
-            filial=filial,
-            date__date=today
-        ).last()
+        if last_close:
+            # Oxirgi smena yopilgan vaqtdan keyin ochilgan SmenaOpenni topamiz
+            open_smena = SmenaOpen.objects.filter(
+                filial=filial,
+                date__gt=last_close.date  # faqat oxirgi yopilishdan keyingi smenalarni olamiz
+            ).order_by('date').first()
+        else:
+            # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
+            open_smena = SmenaOpen.objects.filter(
+                filial=filial,
+                date__date=today
+            ).last()
 
 
         # open_smena = SmenaOpen.objects.filter(filial=request.user.userprofile.filial, date__date=today).last()
@@ -13746,21 +13718,8 @@ def b2c_shop_create(request):
     
     request_type = request.GET.get('request_type')
     
-    if request_type == 'delete_all':
-        pays = PayHistory.objects.filter(shop=shop)
-        carts = Cart.objects.filter(shop=shop)
-        for i in pays:
-            i.delete()
-        
-        for i in carts:
-            i.delete()
-        return JsonResponse({
-            "success": True
-        })
-    
     if request_type == 'cart_add':
         return _handle_cart_add(request, shop)
-
     
     elif request_type == 'cart_edit':
         cart_id = request.GET.get('cart_id')
@@ -13813,8 +13772,7 @@ def _handle_cart_add(request, shop):
             'success': True,
             'message': "Mahsulot qo'shildi",
             'cart_id': cart_item.id,
-            'product_id': cart_item.product.id,
-            'rest': product.quantity
+            'product_id': cart_item.product.id
         })
 
     except ProductFilial.DoesNotExist:
@@ -13857,8 +13815,7 @@ def _handle_cart_edit(request, cart_id):
             return JsonResponse({
                 'success': True,
                 'message': 'Maxsulot o\'zgartirildi',
-                'rest': product.quantity,
-                'product_id': product.id,
+                'rest': product.quantity
             })
 
     except Cart.DoesNotExist:
@@ -13879,7 +13836,7 @@ def _handle_cart_delete(cart_id):
             product.save()
             cart.delete()
 
-        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi", 'rest': product.quantity, 'product_id': product.id})
+        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi"})
     
     except Cart.DoesNotExist:
         return JsonResponse({'success': False, 'message': "Mahsulot allaqachon o'chirilgan"})
@@ -14111,12 +14068,10 @@ def complete_payment(request):
                 shop.status = 2  # To'langan
                 shop.chegirma = chegirma
                 shop.save()
-
-                # Shop uchun mavjud PayHistory'larni olish
-                existing_payments = PayHistory.objects.filter(shop=shop)
-                existing_payment_ids = set(existing_payments.values_list('id', flat=True))
-                updated_payment_ids = set()
-
+                
+                # Avvalgi to'lovlarni o'chirish (edit qilish uchun)
+                PayHistory.objects.filter(shop=shop).delete()
+                
                 # Kassalar bo'yicha to'lovlarni qayd etish
                 for payment in payments:
                     if payment.get('type') == 'payment':
@@ -14131,53 +14086,28 @@ def complete_payment(request):
                                 defaults={'summa': 0}
                             )
                             
-                            # Mavjud PayHistory ni topish
-                            pay_history = PayHistory.objects.filter(
+                            # PayHistory yaratish
+                            pay_history = PayHistory.objects.create(
                                 shop=shop,
                                 kassa=kassa_merge,
                                 valyuta_id=valyuta_id,
+                                debtor=shop.debtor,
+                                summa=summa,
                                 is_debt=False
-                            ).last()
+                            )
                             
-                            if pay_history:
-                                # Mavjud bo'lsa, yangilash
-                                pay_history.summa = summa
-                                pay_history.save()
-                            else:
-                                # Yangi yaratish
-                                pay_history = PayHistory.objects.create(
-                                    shop=shop,
-                                    kassa=kassa_merge,
-                                    valyuta_id=valyuta_id,
-                                    debtor=shop.debtor,
-                                    summa=summa,
-                                    is_debt=False
-                                )
-                            
-                            updated_payment_ids.add(pay_history.id)
-                            
-                            # Kirim ni topish
-                            kirim = Kirim.objects.filter(
+                            # Kirim yaratish
+                            kirim = Kirim.objects.create(
                                 payhistory=pay_history,
                                 kassa=kassa_merge,
-                                valyuta_id=valyuta_id
-                            ).last()
+                                valyuta_id=valyuta_id,
+                                summa=summa,
+                                currency=pay_history.currency,
+                                kassa_new=kassa_merge.summa + summa
+                            )
                             
-                            if kirim:
-                                # Mavjud bo'lsa, yangilash
-                                kirim.summa = summa
-                                kirim.kassa_new = kassa_merge.summa + summa
-                                kirim.save()
-                            else:
-                                # Yangi yaratish
-                                kirim = Kirim.objects.create(
-                                    payhistory=pay_history,
-                                    kassa=kassa_merge,
-                                    valyuta_id=valyuta_id,
-                                    summa=summa,
-                                    currency=pay_history.currency,
-                                    kassa_new=kassa_merge.summa + summa
-                                )
+                            # Kassa balansini yangilash
+                            kassa_merge.save()
                             
                     elif payment.get('type') == 'qarz':
                         # Qarz to'lovi
@@ -14189,113 +14119,16 @@ def complete_payment(request):
                         if summa > 0:
                             valyuta = Valyuta.objects.get(id=valyuta_id)
                             
-                            # Qarz uchun PayHistory ni topish
-                            pay_history = PayHistory.objects.filter(
+                            # Qarz uchun PayHistory yaratish
+                            pay_history = PayHistory.objects.create(
                                 shop=shop,
+                                debtor=shop.debtor,
                                 valyuta=valyuta,
+                                summa=summa,
                                 is_debt=True,
+                                comment=comment,
                                 payment_date=due_date
-                            ).last()
-                            
-                            if pay_history:
-                                # Mavjud bo'lsa, yangilash
-                                pay_history.summa = summa
-                                pay_history.comment = comment
-                                pay_history.payment_date = due_date
-                                pay_history.save()
-                            else:
-                                # Yangi yaratish
-                                pay_history = PayHistory.objects.create(
-                                    shop=shop,
-                                    debtor=shop.debtor,
-                                    valyuta=valyuta,
-                                    summa=summa,
-                                    is_debt=True,
-                                    comment=comment,
-                                    payment_date=due_date
-                                )
-                            
-                            updated_payment_ids.add(pay_history.id)
-
-                # Yangilanmagan (o'chirilgan) to'lovlarni 0 qilish
-                for payment_id in existing_payment_ids - updated_payment_ids:
-                    try:
-                        pay_history = PayHistory.objects.get(id=payment_id)
-                        pay_history.summa = 0
-                        pay_history.save()
-                        
-                        # Tegishli Kirim'larni ham 0 qilish
-                        kirim_list = Kirim.objects.filter(payhistory=pay_history)
-                        for kirim in kirim_list:
-                            kirim.summa = 0
-                            kirim.save()
-                            
-                    except PayHistory.DoesNotExist:
-                        pass
-                
-                # Avvalgi to'lovlarni o'chirish (edit qilish uchun)
-                # for i in PayHistory.objects.filter(shop=shop):
-                #     for k in Kirim.objects.filter(payhistory=i):
-                #         k.delete()
-                #     i.delete()
-                
-                # # Kassalar bo'yicha to'lovlarni qayd etish
-                # for payment in payments:
-                #     if payment.get('type') == 'payment':
-                #         # Oddiy to'lov (kassa orqali)
-                #         kassa_id = payment.get('kassa_id')
-                #         valyuta_id = payment.get('valyuta_id')
-                #         summa = payment.get('summa', 0)
-                        
-                #         if summa > 0:
-                #             kassa_merge, created = KassaMerge.objects.get_or_create(
-                #                 id=kassa_id, 
-                #                 defaults={'summa': 0}
-                #             )
-                            
-                #             # PayHistory yaratish
-                #             pay_history = PayHistory.objects.create(
-                #                 shop=shop,
-                #                 kassa=kassa_merge,
-                #                 valyuta_id=valyuta_id,
-                #                 debtor=shop.debtor,
-                #                 summa=summa,
-                #                 is_debt=False
-                #             )
-                            
-                #             # Kirim yaratish
-                #             kirim = Kirim.objects.create(
-                #                 payhistory=pay_history,
-                #                 kassa=kassa_merge,
-                #                 valyuta_id=valyuta_id,
-                #                 summa=summa,
-                #                 currency=pay_history.currency,
-                #                 kassa_new=kassa_merge.summa + summa
-                #             )
-                            
-                #             # Kassa balansini yangilash
-                #             kassa_merge.save()
-                            
-                #     elif payment.get('type') == 'qarz':
-                #         # Qarz to'lovi
-                #         valyuta_id = payment.get('valyuta_id')
-                #         summa = payment.get('summa', 0)
-                #         due_date = payment.get('due_date')
-                #         comment = payment.get('comment', '')
-                        
-                #         if summa > 0:
-                #             valyuta = Valyuta.objects.get(id=valyuta_id)
-                            
-                #             # Qarz uchun PayHistory yaratish
-                #             pay_history = PayHistory.objects.create(
-                #                 shop=shop,
-                #                 debtor=shop.debtor,
-                #                 valyuta=valyuta,
-                #                 summa=summa,
-                #                 is_debt=True,
-                #                 comment=comment,
-                #                 payment_date=due_date
-                #             )
+                            )
                             
                 
                 # Mijoz qarzini yangilash
@@ -14318,351 +14151,6 @@ def complete_payment(request):
 
 
 
-
-
-def debtor_history(request, id):
-    today = datetime.now().date()
-    start_date = request.GET.get('start_date', today.strftime('2025-11-01'))
-    # start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
-    end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
-    operation_type = request.GET.get('operation_type', '')
-    
-    debtor = get_object_or_404(Debtor, id=id)
-    all_operations = []
-    
-    # Sotuvlarni olish
-    if not operation_type or operation_type == 'shop' or operation_type == 'debts':
-        shops = Shop.objects.filter(
-            date__date__range=(start_date, end_date),
-            debtor=debtor,
-            is_savdo=True
-        ).select_related('valyuta').prefetch_related('cart', 'shop_pays').order_by('-date')
-
-        if operation_type == 'debts':
-            shops = shops.filter(shop_pays__is_debt=True)
-        
-        for shop in shops:
-            if shop.total_price > 0:
-                # To'lovlarni hisoblash
-                payment_details = []
-                payment_totals = {}
-
-                chiqim_details = []
-                chiqim_totals = {}
-
-                paid_amount = 0
-                
-                for payment in shop.shop_pays.all():
-                    valyuta_name = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
-                    payment_details.append({
-                        'summa': payment.summa,
-                        'valyuta': valyuta_name,
-                        'kassa': payment.kassa.kassa.name if payment.kassa else 'Noma\'lum',
-                        'date': payment.date.strftime('%d.%m.%Y %H:%M'),
-                        'type_pay': payment.get_type_pay_display(),
-                        'is_debt': payment.is_debt
-                    })
-                    
-                    if valyuta_name not in payment_totals:
-                        payment_totals[valyuta_name] = 0
-                    payment_totals[valyuta_name] += payment.summa
-                    paid_amount += payment.summa
-                
-                shop.chiqim_history = shop.chiqims.all()
-                for chiqim in shop.chiqim_history:
-                    if chiqim.summa > 0:
-                        valyuta_name = chiqim.valyuta.name if chiqim.valyuta else 'Noma\'lum'
-                        kassa_name = chiqim.kassa.kassa.name if chiqim.kassa else 'Noma\'lum'
-                        
-                        # Har bir valyuta bo'yicha jami
-                        if valyuta_name not in chiqim_totals:
-                            chiqim_totals[valyuta_name] = 0
-                        chiqim_totals[valyuta_name] += chiqim.summa
-                        
-                        chiqim_details.append({
-                            'summa': chiqim.summa,
-                            'valyuta': chiqim.valyuta.name if chiqim.valyuta else 'Noma\'lum',
-                            'date': chiqim.qachon.strftime('%Y-%m-%d %H:%M'),
-                            'kassa': chiqim.kassa.kassa.name if chiqim.kassa and chiqim.kassa.kassa else 'Noma\'lum',
-                        })
-                return_details = []
-                for cart in shop.cart.all():
-                    cart.return_history = ReturnProduct.objects.filter(cart=cart)
-                    for return_item in cart.return_history:
-                        return_details.append({
-                            'product_name': cart.product.name,
-                            'return_quantity': return_item.return_quan,
-                            'date': return_item.date.strftime('%Y-%m-%d %H:%M'),
-                            'returned_by': return_item.by_user.first_name,
-                        })
-                
-                remaining_debt = shop.total_price - paid_amount
-                
-                operation = {
-                    'type': 'shop',
-                    'id': shop.id,
-                    'date': shop.date.strftime('%Y-%m-%d %H:%M'),
-                    'total_price': shop.total_price,
-                    'product_count': shop.product_count,
-                    'chegirma': shop.chegirma,
-                    'valyuta_name': shop.valyuta.name if shop.valyuta else '',
-                    'paid_amount': paid_amount,
-                    'remaining_debt': PayHistory.objects.filter(shop=shop, is_debt=True).last().rest_debt if PayHistory.objects.filter(shop=shop, is_debt=True) else 0,
-                    'remaining_debt_id': PayHistory.objects.filter(shop=shop, is_debt=True).last().id if PayHistory.objects.filter(shop=shop, is_debt=True) else None,
-                    'remaining_valyuta': PayHistory.objects.filter(shop=shop, is_debt=True).last().valyuta.name if PayHistory.objects.filter(shop=shop, is_debt=True).last() else 0,
-                    'carts': [{
-                        'product_name': str(cart.product),
-                        'price': cart.price,
-                        'quantity': cart.quantity,
-                        'total': cart.total_price
-                    } for cart in shop.cart.all()],
-                    'payment_details': payment_details,
-                    'payment_totals': payment_totals,
-                    'chiqim_details': chiqim_details,
-                    'return_details': return_details,
-                    'chiqim_totals': chiqim_totals,
-                    'chiqim_totals': chiqim_totals,
-                }
-                all_operations.append(operation)
-    
-    # To'lovlarni olish (faqat qarz to'lovlari)
-    if not operation_type or operation_type == 'payment':
-        payments = PayHistory.objects.filter(
-            date__date__range=(start_date, end_date),
-            debtor=debtor, 
-            shop__isnull=True,
-            for_debt__isnull=True,
-        ).distinct().select_related('valyuta', 'kassa').order_by('-date')
-        
-        for payment in payments:
-            operation = {
-                'type': 'payment',
-                'id': payment.id,
-                'date': payment.date.strftime('%Y-%m-%d %H:%M'),
-                'summa': payment.summa,
-                'valyuta': payment.valyuta.name if payment.valyuta else 'Noma\'lum',
-                'kassa': payment.kassa.kassa.name if payment.kassa else 'Noma\'lum',
-                'type_pay': payment.get_type_pay_display(),
-                'is_debt': payment.is_debt
-            }
-            all_operations.append(operation)
-    
-    # Chiqimlarni olish
-    if not operation_type or operation_type == 'chiqim':
-        chiqims = Chiqim.objects.filter(
-            qachon__date__range=(start_date, end_date),
-            payhistory__debtor=debtor
-        ).select_related('valyuta', 'kassa').order_by('-qachon')
-        
-        for chiqim in chiqims:
-            operation = {
-                'type': 'chiqim',
-                'id': chiqim.id,
-                'date': chiqim.qachon.strftime('%Y-%m-%d %H:%M'),
-                'summa': chiqim.summa,
-                'valyuta': chiqim.valyuta.name if chiqim.valyuta else 'Noma\'lum',
-                'kassa': chiqim.kassa.kassa.name if chiqim.kassa else 'Noma\'lum',
-                'sabab': chiqim.sabab or 'Chiqim'
-            }
-            all_operations.append(operation)
-    
-    # Tartiblash
-    all_operations.sort(key=lambda x: x['date'], reverse=True)
-    
-    # Jami hisoblar
-    total_shops = sum(op['total_price'] for op in all_operations if op['type'] == 'shop')
-    total_payments = sum(op['summa'] for op in all_operations if op['type'] == 'payment')
-    total_returns = sum(op['total_amount'] for op in all_operations if op['type'] == 'return')
-    total_chiqims = sum(op['summa'] for op in all_operations if op['type'] == 'chiqim')
-    
-    # Qoldiq qarz - faqat qarz to'lovlarini hisobga olgan holda
-    total_debt_payments = sum(op['summa'] for op in all_operations if op['type'] == 'payment' and op['is_debt'])
-    remaining_debt = total_shops - total_debt_payments - total_returns
-
-
-    payments_by_currency = {}
-    payments = PayHistory.objects.filter(
-        date__date__range=(start_date, end_date),
-        debtor=debtor,
-        is_debt=False
-    )
-
-    for payment in payments:
-        currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
-        if currency not in payments_by_currency:
-            payments_by_currency[currency] = 0
-        payments_by_currency[currency] += payment.summa
-
-    
-    totals = {
-        'total_shops': total_shops,
-        'total_payments': total_payments,
-        'total_returns': total_returns,
-        'total_chiqims': total_chiqims,
-        'remaining_debt': remaining_debt,
-        'payments_by_currency': payments_by_currency
-    }
-    
-    # Pagination
-    paginator = Paginator(all_operations, 20)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-    
-    # AJAX so'rov bo'lsa, faqat JSON ma'lumotlarni qaytaramiz
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({
-            'operations': list(page_obj.object_list),
-            'totals': totals,
-            'pagination': {
-                'has_previous': page_obj.has_previous(),
-                'has_next': page_obj.has_next(),
-                'current_page': page_obj.number,
-                'total_pages': paginator.num_pages,
-            },
-            'filters': {
-                'start_date': start_date,
-                'end_date': end_date,
-                'operation_type': operation_type,
-            }
-        })
-
-    cashes = []
-    if request.user.userprofile.staff == 1:
-        cashes = KassaNew.objects.filter()
-    else:
-        cashes = KassaNew.objects.filter(filial=request.user.userprofile.filial)
-
-    kassalar = KassaMerge.objects.filter(kassa__in=cashes).distinct()
-    
-    # Oddiy so'rov bo'lsa, template render qilamiz
-    context = {
-        'debtor': debtor,
-        'valyutas_for_debt': Valyuta.objects.filter(is_som_or_dollar=True),
-        'wallets': Wallet.objects.filter(customer=debtor),
-        'totals': totals,
-        'cashes': cashes,
-        'kassalar': kassalar,
-        'filters': {
-            'start_date': start_date,
-            'end_date': end_date,
-            'operation_type': operation_type,
-        }
-    }
-    context['dollar_kurs'] = Course.objects.last().som
-    return render(request, 'debtor_detail.html', context)
-
-
-
-@csrf_exempt
-def pay_debt(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            operation_id = data.get('operation_id')  # Bu for_debt ga bog'lanadi
-            payments = data.get('payments', [])
-            total_required = data.get('total_required', 0)
-            total_paid = data.get('total_paid', 0)
-            
-            with transaction.atomic():
-                # Asosiy qarz operatsiyasini topish (for_debt)
-                main_debt_payment = PayHistory.objects.get(id=operation_id)
-                
-                # Qarzni to'lash uchun yangi PayHistory yaratish
-                for payment in payments:
-                    if payment.get('type') == 'payment':
-                        # Kassadan to'lov
-                        kassa_id = payment.get('kassa_id')
-                        currency = payment.get('currency')
-                        valyuta_id = payment.get('valyuta_id')
-                        summa = payment.get('summa', 0)
-                        
-                        if summa > 0:
-                            kassa_merge = KassaMerge.objects.get(id=kassa_id)
-                            valyuta = Valyuta.objects.get(id=valyuta_id)
-                            
-                            # Yangi to'lov yaratish
-                            pay_history = PayHistory.objects.create(
-                                for_debt=main_debt_payment,  # Asosiy qarzga bog'lash
-                                debtor=main_debt_payment.debtor,
-                                filial=main_debt_payment.filial,
-                                kassa=kassa_merge,
-                                valyuta=valyuta,
-                                summa=summa,
-                                type_pay=1,  # Pay
-                                is_debt=False,
-                                date=timezone.now(),
-                                currency=currency
-                            )
-                            
-                            # Kassa balansini yangilash
-                            # kassa_merge.summa += summa
-                            kassa_merge.save()
-                            
-                            # Kirim yaratish
-                            Kirim.objects.create(
-                                payhistory=pay_history,
-                                kassa=kassa_merge,
-                                valyuta=valyuta,
-                                summa=summa,
-                                # kassa_new=kassa_merge.summa
-                            )
-
-                # Mijoz qarzini yangilash
-                main_debt_payment.debtor.refresh_debt()
-                
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Qarz to\'lovi muvaffaqiyatli amalga oshirildi'
-                })
-                
-        except PayHistory.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Qarz operatsiyasi topilmadi'}, status=404)
-        except KassaMerge.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Kassa topilmadi'}, status=404)
-        except Valyuta.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Valyuta topilmadi'}, status=404)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Xatolik yuz berdi: {str(e)}'}, status=400)
-    
-    return JsonResponse({'success': False, 'message': 'Noto\'g\'ri so\'rov metod'}, status=405)
-
-
-
-
-def debt_pay_history(request, id):
-    main_obj = PayHistory.objects.get(id=id)
-    pays = PayHistory.objects.filter(for_debt_id=id)
-
-    paid_total = 0
-
-    for p in pays:
-        if main_obj.valyuta.is_dollar:
-            paid_total += p.in_dollar
-        else:
-            paid_total += p.in_som
-
-
-    data = []
-
-    for p in pays:
-        dt = {
-            "id": p.id,
-            "date": p.date.strftime('%d-%m-%Y %H:%M'),
-            "summa": p.summa,
-            "valyuta": p.valyuta.name,
-            "kassa": p.kassa.kassa.name,
-        }
-        data.append(dt)
-    
-    return JsonResponse({
-        "debt_history": data,
-        'all_debt': main_obj.summa,
-        'paid_total': paid_total,
-        'remaining_debt': main_obj.rest_debt,
-        'valyuta_name': main_obj.valyuta.name,
-    })
-
-
 # Kirim.objects.update(kassa_new=0)
 # Chiqim.objects.update(kassa_new=0)
 
@@ -14672,7 +14160,3 @@ def debt_pay_history(request, id):
 #         print(i)
 #         i.cart.shop.chiqims.set(i.chiqim_set.all())
 #         i.cart.shop.save()
-
-
-# for i in Debtor.objects.filter(id=3823):
-#     i.refresh_debt()

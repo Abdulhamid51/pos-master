@@ -139,7 +139,7 @@
                                 <div class="col text-left" >
                                     <div style="display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold;">
                                         <div class="dot"></div>
-                                        <span>Kassa ecomarf-tekstil</span>
+                                        <span>Kassa ecomarf</span>
                                     </div>
                                     <!-- <div class="subtext">Store ecomarf-tekstil · dan ochiq 28.06.2025 09:24:51</div> -->
                                 </div>
@@ -155,6 +155,7 @@
                                     <thead>
                                         <tr>
                                             <th class="text-center">Kassa</th>
+                                            <th class="text-center">Boshlang'ich hisob</th>
                                             <th class="text-center">Kirim</th>
                                             <th class="text-center">Chiqim</th>
                                             <th class="text-center">Qoldiq</th>
@@ -172,6 +173,11 @@
                                                     <span class="kassa_id">{{ data_item.kassa_id }}</span>
                                                 </td> -->
 
+                                                <td>
+                                                    {% for i in data_item.valyuta %}
+                                                        {{ i.rest|intcomma }}<br>
+                                                    {% endfor %}
+                                                </td>
                                                 <td>
                                                     {% for i in data_item.valyuta %}
                                                         {{ i.kirim_sum|intcomma }} {{i.valyuta_name}}<br>
@@ -255,6 +261,7 @@
                                         
                                         // Qoldiqni hisoblash
                                         const kassaData = {{ data|safe }};
+                                        console.log(kassaData, 'uuuuuuu')
                                         let qoldiq = 0;
                                         
                                         for (const item of kassaData) {

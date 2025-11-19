@@ -143,7 +143,7 @@ class TokenAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'password', 'first_name', 'last_name', 'phone', 'filial')
+    list_display = ('id', 'user', 'staff', 'username', 'password', 'first_name', 'last_name', 'phone', 'filial')
     # list_display = ('id', 'username', 'password', 'first_name', 'last_name', 'phone', 'filial')
 
 
@@ -487,4 +487,4 @@ def auto_register(models_list):
 
 
 
-auto_register([SmenaClose, CloseCash])
+auto_register([SmenaClose, CloseCash, SmenaOpen])

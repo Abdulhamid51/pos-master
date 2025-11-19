@@ -41,7 +41,7 @@ urlpatterns = [
     path('debtor_edit/<int:id>', debtor_edit, name='debtor_edit'),
     path('debtor_pay/<int:id>', debtor_pay, name='debtor_pay'),
     path('debtor_give/<int:id>', debtor_give, name='debtor_give'),
-    path('debtor_detail/<int:id>', debtor_detail, name='debtor_detail'),
+    path('debtor_detail/<int:id>', debtor_history, name='debtor_detail'),
     path('debtorhistory/', DebtorHistory, name='debtorhistory'),
     path('productinfo/<int:id>', productinfo, name='productinfo'),
     path('deliverhistory/<int:id>', deliver_detail, name='deliverhistory'),
@@ -147,7 +147,12 @@ urlpatterns = [
     path('edit_debtor/<id>/', edit_debtor, name='edit_debtor'),
     path('refresh_debtor/<id>/', refresh_debtor, name='refresh_debtor'),
     path('refresh_debtor_debt/<id>/', refresh_debtor_debt, name='refresh_debtor_debt'),
-    path('today_sales/', today_sales, name='today_sales'),
+    # path('today_sales/', today_sales, name='today_sales'),
+    path('today-sales/', today_sales, name='today_sales'),
+    path('return-products/', return_products, name='return_products'),
+    path('get-kassalar-by-valyuta/', get_kassalar_by_valyuta, name='get_kassalar_by_valyuta'),
+
+
     path('analysis_costs/', analysis_costs, name='analysis_costs'),
     path('tovar_prixod/', tovar_prixod, name='tovar_prixod'),
     path('add_recieve_perexoded/', add_recieve_perexoded, name='add_recieve_perexoded'),
@@ -361,6 +366,7 @@ urlpatterns = [
     path('close_cash', close_cash, name='close_cash'),
     path('close_cash_add', close_cash_add, name='close_cash_add'),
     path('close_cash_list', close_cash_list, name='close_cash_list'),
+    path('confirmed_close_cash_list', confirmed_close_cash_list, name='confirmed_close_cash_list'),
     path('close_cash_confirmed/<int:id>/', close_cash_confirmed, name='close_cash_confirmed'),
 
     path('return_customer', return_customer, name='return_customer'),
@@ -379,9 +385,45 @@ urlpatterns = [
 
     path('rounding-settings/', rounding_settings, name='rounding_settings'),
 
+    
+    
+    path('recieve/', Recieves.as_view(), name='recieve'),
+    
+    # Qabul operatsiyalari
+    path('recieve/create/', recieve_create, name='recieve_create'),  # POST
+    path('recieve/<int:recieve_id>/delete/', recieve_delete, name='recieve_delete'),  # DELETE
+    
+    # Qabul itemlari
+    path('recieve/<int:recieve_id>/items/add/', recieve_item_create, name='recieve_item_create'),  # POST
+    path('recieve/items/<int:item_id>/update/', recieve_item_update, name='recieve_item_update'),  # PUT
+    path('recieve/items/<int:item_id>/remove/', recieve_item_remove, name='recieve_item_remove'),  # DELETE
+    
+    # Qabul chiqimlari
+    path('recieve/<int:recieve_id>/expenses/add/', recieve_expense_create, name='recieve_expense_create'),  # POST
+    path('recieve/expenses/<int:expense_id>/update/', recieve_expense_update, name='recieve_expense_update'),  # PUT
+    path('recieve/expenses/<int:expense_id>/delete/', recieve_expense_delete, name='recieve_expense_delete'),  # DELETE
+    path('recieve/expense-types/create/', recieve_expense_type_create, name='recieve_expense_type_create'),  # POST
+    
+    # Yetkazib beruvchi
+    path('deliver/create/', deliver_create, name='deliver_create'),  # POST
+    
+    # Mahsulot narxlari
+    path('products/<int:product_id>/prices/', product_prices_get, name='product_prices_get'),  # GET
 
+
+    path('b2c_shop_create/', b2c_shop_create, name='b2c_shop_create'),  # POST
+    path('get-shop-payments/', get_shop_payments, name='get_shop_payments'),
+    path('complete-payment/', complete_payment, name='complete_payment'),
+    path('open-smena/', open_smena, name='open_smena'),
+    path('get_debtor_datas/<int:id>/', get_debtor_datas, name='get_debtor_datas'),
+    path('b2c_shop_edit_ajax/', b2c_shop_edit_ajax, name='b2c_shop_edit_ajax'),
+    path('pay-debt/', pay_debt, name='pay_debt'),
+
+    path('debt-history/<int:id>/', debt_pay_history, name='debt_pay_history'),
 
     
+
+
 
     # path(),
     # path(),

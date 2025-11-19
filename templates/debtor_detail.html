@@ -1,218 +1,1818 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
-{% load mathfilters %}
+
 {% block title %}
-    <title>Product </title>
+    <title>Mijoz tarixi - {{ debtor.fio }}</title>
 {% endblock title %}
+
 {% block css %}
-    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
-    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
-    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
-    <link href="{% static 'assets/css/loader.css' %}" rel="stylesheet" type="text/css"/>
-    <script src="{% static 'assets/js/loader.js' %}"></script>
-    <script src="{% static 'assets/js/apps/contact.js' %}"></script>
-    <link href="{% static 'assets/css/apps/contacts.css' %}" rel="stylesheet" type="text/css"/>
     <style>
-        td {
-            color: black !important;
+
+        .status-badge {
+            white-space: nowrap;
         }
-        .white_class {
-            color: white !important;
+
+        .shop-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        
+        .shop-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .shop-header:hover {
+            background: #e9ecef;
+        }
+        
+        .shop-main-info {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .shop-details {
+            padding: 0;
+            background: #f8f9fa;
+            display: none;
+        }
+        
+        .shop-details.show {
+            display: block;
+        }
+        
+        .carts-section, .payments-section, .returns-section {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .carts-section:last-child, .payments-section:last-child, .returns-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        
+        .payment-totals {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .payment-total-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            min-width: 120px;
+        }
+        
+        .payment-total-label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .payment-total-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-1 { background: #e3f2fd; color: #1976d2; }
+        .status-2 { background: #e8f5e8; color: #2e7d32; }
+        .status-3 { background: #ffebee; color: #c62828; }
+        
+        .debt-payment {
+            background: #fff3cd !important;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .table-sm th, .table-sm td {
+            padding: 8px 12px;
+        }
+        
+        .chegirma-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .pagination-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .operation-type-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .type-shop { background: #e3f2fd; color: #1976d2; }
+        .type-payment { background: #e8f5e9; color: #2e7d32; }
+        .type-return { background: #fff3e0; color: #f57c00; }
+        .type-chiqim { background: #ffebee; color: #c62828; }
+
+        .debt-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .filter-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+        }
+
+        #operations-container {
+            min-height: 200px;
+        }
+
+
+        .method-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            background-color: white !important;
+            border-radius: 5px;
+            box-shadow: 2px 5px 5px rgba(0,0,0,0.1) !important;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.129) !important;
+        }
+        .method-box:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .method-box i {
+            color: #007bff !important;
+            font-size: 1.2em;
+        }
+        .method-box p {
+            margin: 0;
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        .toggle-input {
+            color: #007bff !important;
+            background-color: white !important;
+            border: 1px solid #ffffff !important;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-input i {
+            font-size: 1.2em;
+        }
+        .input-fields {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .remove-field {
+            cursor: pointer;
+            font-size: 1.8em;
+            color: #dc3545;
+            background: none;
+            border: none;
+        }
+
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .payment-table th, .payment-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .payment-table th {
+            background-color: #f8f9fa;
+        }
+        .card-balance {
+            text-align: right;
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .inputkassa {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .input-box {
+            display: none;
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.401);
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #fff;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: border 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+        .input-box:hover {
+            border: 1px solid #007bff !important;
+        }
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .box-body {
+            margin-top: 10px;
+        }
+        .payment-input {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.277) !important;
         }
     </style>
 {% endblock css %}
+
 {% block content %}
 <div id="content" class="main-content">
-    <div class="layout-px-spacing">
-        <div class="middle-content container-xxl p-0">
-            <div class="row layout-spacing layout-top-spacing" id="cancel-row" >
-                <div class="col-lg-12" >
-                    <div class="widget-content searchable-container list">
-                        <div class="searchable-items list">
-                            <div class="items">
-                                <div class="item-content">
-                                    <div class="user-profile">
-                                        <div class="n-chk align-self-center text-center">
-                                            <div class="form-check form-check-primary me-0 mb-0">
-                                            </div>
-                                        </div>
-                                        <div class="n-chk align-self-center text-center">
-                                            <div class="form-check form-check-primary me-0 mb-0">
-                                            </div>
-                                        </div>
-                                         <div class="n-chk align-self-center text-center">
-                                            <div class="form-check form-check-primary me-0 mb-0">
-                                            </div>
-                                        </div>
-                                        <div class="user-meta-info">
-                                            <p class="user-name" data-name="Alan Green">F.I.O: {{ debtor.fio }}</p>
-                                            <!-- <p class="user-work" data-occupation="Web Developer">Web Developer</p> -->
-                                        </div>
+    <div style="margin:2rem;">
+        <div style="z-index: 1000000000;" id="alert-container"></div>
+        <div class="row layout-top-spacing">
+            <div class="col-12 layout-spacing" style="margin-top: -2rem;">
+                <!-- Mijoz ma'lumotlari -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>{{ debtor.fio }}</h6>
+                                <p class="text-muted mb-0">
+                                    Telefon: {{ debtor.phone1|default:"Kiritilmagan" }}
+                                    {% if debtor.phone2 %} | {{ debtor.phone2 }}{% endif %}
+                                </p>
+                                {% if debtor.price_type %}
+                                <p class="text-muted mb-0">Narx turi: {{ debtor.price_type.name }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Boshlang'ich qarz</h6>
+                                {% for v in valyutas_for_debt %}
+                                    {% for w in wallets %}
+                                        {% if w.valyuta == v %}
+                                            <p class="text-muted mb-0">{{v.name}}: {{ w.start_summa|intcomma }}</p>
+                                        {% endif %} 
+                                    {% endfor %} 
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6>Qarz</h6>
                                     </div>
-                                    <div class="user-email">
-                                        
-                                        <p class="usr-email-addr" data-email="alan@mail.com">Telefon: {{ debtor.phone1|default_if_none:"-" }}</p>
+                                    <div class="col-md-4">
+                                        <a class="btn btn-primary" type="button" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"> <i class="fa-solid fa-download"></i> Kirim</a>
                                     </div>
-                                    <div class="user-location">
-                                        <p class="info-title">Location: </p>
-                                        <p class="usr-location" data-location="Boston, USA">Tefon 2: {{ debtor.phone2|default_if_none:"-" }}</p>
-                                    </div>
-                                    <div class="user-phone">
-                                        <p class="info-title">Phone: </p>
-                                        <p class="usr-ph-no" data-phone="+1 (070) 123-4567">Hudud :{{ debtor.teritory|default_if_none:"-" }}</p>
-                                    </div>
-                                    <div class="action-btn">
-                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2 edit"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> -->
-                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-minus delete"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg> -->
-                                    </div>
+
                                 </div>
+                                {% for v in valyutas_for_debt %}
+                                    {% for w in wallets %}
+                                        {% if w.valyuta == v %}
+                                            <p class="text-muted mb-0">{{v.name}}: {{ w.summa|intcomma }}</p>
+                                        {% endif %} 
+                                    {% endfor %} 
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="row layout-top-spacing" id="cancel-row">
-            <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
-                <div class="widget-content widget-content-area br-6">
-                    <div class="row">
-                        <div class="col-md-10">
-                            <form action="">
-                                <div class="row">
-                                    <div class="col-md-7"></div>
-                                    <div class="col-md-2">
-                                        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
-                                    </div>
-                                    <div class="col-md-1">
-                                        <button class="btn btn-primary" type="submit">
-                                            <i class="fa-solid fa-filter"></i>
-                                        </button>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <a href="{% url 'refresh_debtor' debtor.id %}" class="btn btn-primary" type="button">
-                                            Yangilash
-                                        </a>
-                                    </div>
+
+                <!-- Filter Form -->
+                <!-- <div class="card" style="margin-top: -2rem;">
+                    <div class="card-body position-relative">
+                        <div class="filter-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Yuklanmoqda...</span>
+                            </div>
+                        </div>
+                        <form class="row" method="GET" id="filter-form">
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="operation_type" class="form-control">
+                                    <option value="">Barcha operatsiyalar</option>
+                                    <option value="shop" {% if filters.operation_type == 'shop' %}selected{% endif %}>Sotuvlar</option>
+                                    <option value="payment" {% if filters.operation_type == 'payment' %}selected{% endif %}>To'lovlar</option>
+                                    <option value="return" {% if filters.operation_type == 'return' %}selected{% endif %}>Qaytuvlar</option>
+                                    <option value="chiqim" {% if filters.operation_type == 'chiqim' %}selected{% endif %}>Chiqimlar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Filter</span>
+                                    </button>
+                                    <a href="{% url 'debtor_detail' debtor.id %}" class="btn btn-secondary flex-fill d-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-times"></i>
+                                        <span>Tozalash</span>
+                                    </a>
                                 </div>
-                            </form>
+                            </div>
+                        </form>
+                    </div>
+                </div> -->
+
+
+                <div class="card" style="margin-top: -2rem;">
+                    <div class="card-body position-relative">
+                        <div class="filter-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Yuklanmoqda...</span>
+                            </div>
                         </div>
                         
-                        <div class="col-md-12">
-                            <div class="table-responsive mb-4 mt-4">
-                                <table id="html5-extension" class="table table-striped table-bordered display" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Sana</th>
-                                            <th>Turi</th>
-                                            <th>Bizga kirim</th>
-                                            <th>Bizdan chiqim</th>
-                                            <th>Bonus</th>
-                                            <th>Qarzimiz</th>
-                                            <th>Haqqimiz</th>
-                                            <th>Izoh</th>
-                                        </tr>
-                                    </thead>
-                                    {% for v in valyuta %}
-                                    <tbody>
-                                        <tr style="background-color: beige !important;">
-                                            <th></th>
-                                            <th></th>
-                                            <th style="text-align: center;">{{v.name}}</th>
-                                            {% for sm in summa_total_for_valyuta %}
-                                                {% if sm.valyuta == v.id %}
-                                                    <th>{{sm.pay_pay_summa|intcomma}}</th>
-                                                    <th>{{sm.pay_give_summa|intcomma}}</th>
-                                                    <th></th>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                        </tr>
-                                        {% for b in debt_shot %}
-                                            {% if b.valyuta == v %}
-                                                <tr style="background-color: cornflowerblue;">
-                                                    <th></th>
-                                                    <th></th>
-                                                    <th class="white_class">Boshlang'ich qoldiq</th>
-                                                    <th></th>
-                                                    <th></th>
-                                                    <th></th>
-                                                    {% if b.start_summa > 0 %}
-                                                        <th></th>
-                                                        <th>{{b.start_summa|intcomma}}</th>
-                                                        {% else %}
-                                                        <th>{{b.start_summa|intcomma}}</th>
-                                                        <th></th>
-                                                    {% endif %}
-                                                    <th></th>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% for py in data %}
-                                            {% if v == py.valyuta %}
-                                                <tr>
-                                                    <td></td>
-                                                    <td>{{py.date|date:'Y-m-d H:i'}}</td>
-                                                    <td>
-                                                        {{py.type_payment}}
-                                                    </th>
-                                                    <td>
-                                                        {{ py.pay_summa|intcomma }}
-                                                    </td>
-                                                    <td>
-                                                        {{ py.give_summa|intcomma }}
-                                                    </td>
-                                                    <td></td> 
-                                                    {% if py.debt_new < 0 %}
-                                                        <td></td>
-                                                        <td>{{ py.debt_new|intcomma }}</td>
-                                                    {% else %}
-                                                        <td>{{ py.debt_new|intcomma }}</td>
-                                                        <td></td>
-                                                    {% endif %}
-                                                    <td>{{ py.comment|default_if_none:'' }}</td>
-                                                </tr>
-                                            {%endif%}
-                                        {% endfor %}
-                                    </tbody>
-                                    {% endfor %}
-                                </table>
+                        <!-- Filter Form -->
+                        <form class="row" method="GET" id="filter-form">
+                            <!-- Yashirin select - qiymatlarni saqlash uchun -->
+                            <input type="hidden" name="operation_type" id="operationType" value="{{ filters.operation_type }}">
+                            
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <div class="d-flex gap-2">
+                                    <button id="filterbutton" type="submit" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-filter"></i>
+                                        <span>Filter</span>
+                                    </button>
+                                    <a href="{% url 'debtor_detail' debtor.id %}" class="btn btn-secondary flex-fill d-flex align-items-center justify-content-center gap-2">
+                                        <i class="fas fa-times"></i>
+                                        <span>Tozalash</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Tablar - Filterdan pastda -->
+                        <ul class="nav nav-tabs mt-3" id="operationTabs" role="tablist" style="width: 100%;">
+                            <li class="nav-item flex-fill" role="presentation" style="flex: 1;">
+                                <button class="nav-link w-100 text-center {% if not filters.operation_type %}active{% endif %}" 
+                                        data-operation-type="" type="button">
+                                    Barcha operatsiyalar
+                                </button>
+                            </li>
+                            <li class="nav-item flex-fill" role="presentation" style="flex: 1;">
+                                <button class="nav-link w-100 text-center {% if filters.operation_type == 'shop' %}active{% endif %}" 
+                                        data-operation-type="shop" type="button">
+                                    Sotuvlar
+                                </button>
+                            </li>
+
+                            <li class="nav-item flex-fill" role="presentation" style="flex: 1;">
+                                <button class="nav-link w-100 text-center {% if filters.operation_type == 'debts' %}active{% endif %}" 
+                                        data-operation-type="debts" type="button">
+                                    Qarzlar
+                                </button>
+                            </li>
+
+                            <li class="nav-item flex-fill" role="presentation" style="flex: 1;">
+                                <button class="nav-link w-100 text-center {% if filters.operation_type == 'payment' %}active{% endif %}" 
+                                        data-operation-type="payment" type="button">
+                                    To'lovlar
+                                </button>
+                            </li>
+                            <li class="nav-item flex-fill" role="presentation" style="flex: 1;">
+                                <button class="nav-link w-100 text-center {% if filters.operation_type == 'chiqim' %}active{% endif %}" 
+                                        data-operation-type="chiqim" type="button">
+                                    Pul berilgan
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                
+                <!-- Totals Card -->
+                <div class="card mt-3">
+                    <div class="card-body" id="totals-container">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h5>Jami Sotuvlar</h5>
+                                <h3 class="text-primary" id="total-shops">0</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Jami To'lovlar</h5>
+                                <h3 class="text-success" id="total-payments">0</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Jami Qaytuvlar</h5>
+                                <h3 class="text-warning" id="total-returns">0</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Qoldiq Qarz</h5>
+                                <h3 class="text-success" id="remaining-debt">0</h3>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                
+                <!-- Operations Container -->
+                <div id="operations-container" class="mt-3">
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Yuklanmoqda...</span>
+                        </div>
+                        <p class="mt-2">Ma'lumotlar yuklanmoqda...</p>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination-container" id="pagination-container">
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="exampleModalPay" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{% url 'kirim_qilish' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-content">
+                <input type="hidden" name="debtor" value="{{debtor.id}}">
+                <div class="modal-header">
+                <h5 class="modal-title" id="KirimModalLabel">Pul olish</h5>
+            
+                </div>
+                <div class="modal-body">
+                    <label for="">Valyuta</label>
+                    <select name="valuta" id="" class="form-control">
+                        <option value="">- - - - - - - </option>
+                        {% for v in valyutas_for_debt %}
+                            <option value="{{ v.id }}">{{ v.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                    <label for="">Kassa</label>
+                    <select name="kassa" id="" class="form-control">
+                        <option value="">- - - - - - - </option>
+                        {% for k in cashes %}
+                            <option value="{{ k.id }}">{{ k.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                    <label for="">Summa</label>
+                    <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
+
+                    <label for="">Kurs</label>
+                    <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs" required><br>
+                    <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                    
+                </div>
+                <div class="modal-footer">
+                    
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" style="z-index: 100000;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel">Qarzni to'lash</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="paymentOperationId">
+                
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="summary-card">
+                            <div class="summary-title">Jami:</div>
+                            <div class="summary-value"><span id="total_jami"></span> <span id="total_jami_valyuta"></span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="summary-card">
+                            <!-- Bo'sh qism -->
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="summary-card">
+                            <div class="summary-title">To'lash uchun:</div>
+                            <div class="summary-value total" id="tolash_summasi"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h4>To'lov usullari</h4>
+                        <hr>
+                    </div>
+                    
+                    {% for mer in kassalar %}
+                    <div class="col-md-3 mb-3 plus_button kassa_merges" data-filial="{{ mer.kassa.filial.id }}">
+                        <div class="payment-method" data-kassa-id="{{ mer.id }}" data-valyuta-id="{{ mer.valyuta.id }}" data-valyuta-name="{{ mer.valyuta.name }}">
+                            <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'" onclick="showInputBox(this)">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                                <p>{{ mer.kassa.name }} ({{ mer.valyuta.name }})</p>
+                                <button class="toggle-input"
+                                    {% if mer.valyuta.is_dollar %}
+                                        data-dollar="true"
+                                    {% else %}
+                                        data-dollar="false"
+                                    {% endif %}
+                                    >
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="input-box" style="display: none;">
+                                <div class="box-header">
+                                    <span>{{ mer.kassa.name }} ({{ mer.valyuta }})</span>
+                                    <p style="display: none;" class="box-header-valyuta-name">{{ mer.valyuta.name }}</p>
+                                    <button class="remove-field">&times;</button>
+                                </div>
+                                <div class="box-body">
+                                    <input min="0" type="number" step="any" class="form-control payment-input" oninput="updateTotalAmount()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="paymentModalClose" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="submitDebtPayment()">To'lash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Qarz tarixi modali -->
+<div class="modal fade" id="debtHistoryModal" tabindex="-1" aria-labelledby="debtHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="debtHistoryModalLabel">Qarz tarixi</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="debtHistoryContent">
+                <!-- Ma'lumotlar shu yerda ko'rsatiladi -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
+
 {% block js %}
-    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
-    <script>
-        let trs = $('#html5-extension').DataTable( {
-            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-            buttons: {
-                buttons: [
-                    { extend: 'copy', className: 'btn' },
-                    { extend: 'csv', className: 'btn' },
-                    { extend: 'excel', className: 'btn' },
-                    { extend: 'print', className: 'btn' }
-                ]
-            },
-            paging: false  
-        } );
-    </script>
+<script>
+
+let currentKurs = document.querySelector('#dollar-kurs-base').value
+
+
+// Shop tafsilotlarini ochish/yopish
+function toggleShopDetails(shopId) {
+    const details = document.getElementById(shopId);
+    details.classList.toggle('show');
+}
+
+// Format number with commas
+function formatNumber(num) {
+    return new Intl.NumberFormat("ru-RU").format(num);
+}
+
+// Operations HTML yaratish
+function generateOperationsHTML(operations) {
+    if (!operations || operations.length === 0) {
+        return `
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h5>Hech qanday operatsiya topilmadi</h5>
+                    <p class="text-muted">Tanlangan davr uchun operatsiyalar mavjud emas</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    let html = '';
+    operations.forEach(operation => {
+        if (operation.type === 'shop') {
+            html += generateShopHTML(operation);
+        } else if (operation.type === 'payment') {
+            html += generatePaymentHTML(operation);
+        } else if (operation.type === 'return') {
+            html += generateReturnHTML(operation);
+        } else if (operation.type === 'chiqim') {
+            html += generateChiqimHTML(operation);
+        }
+    });
+    return html;
+}
+
+// Sotuv HTML yaratish
+function generateShopHTML(operation) {
+    const chegirmaHTML = operation.chegirma > 0 ? 
+        `<span class="chegirma-badge">Chegirma: ${formatNumber(operation.chegirma)}</span>` : '';
+    
+    const statusHTML = operation.remaining_debt > 0 ?
+        `<span class="status-badge status-3">Qarz: ${formatNumber(operation.remaining_debt)} ${operation.remaining_valyuta}</span>` :
+        `<span class="status-badge status-2">To'landi</span>`;
+    
+    // Mahsulotlar jadvali
+    let productsHTML = '';
+    operation.carts.forEach(cart => {
+        productsHTML += `
+            <tr>
+                <td>${cart.product_name}</td>
+                <td>${formatNumber(cart.price)}</td>
+                <td>${formatNumber(cart.quantity)}</td>
+                <td>${formatNumber(cart.total)}</td>
+            </tr>
+        `;
+    });
+    
+    // To'lovlar jadvali
+    let paymentsHTML = '';
+    let paymentTotalsHTML = '';
+    
+    if (operation.payment_details && operation.payment_details.length > 0) {
+        // Payment totals
+        Object.entries(operation.payment_totals).forEach(([currency, amount]) => {
+            paymentTotalsHTML += `
+                <div class="payment-total-item">
+                    <div class="payment-total-label">${currency}</div>
+                    <div class="payment-total-value">${formatNumber(amount)}</div>
+                </div>
+            `;
+        });
+        
+        // Payment details
+        operation.payment_details.forEach(payment => {
+            const debtClass = payment.is_debt ? 'debt-payment' : '';
+            if (!payment.is_debt) {
+                paymentsHTML += `
+                    <tr class="${debtClass}">
+                        <td>${formatNumber(payment.summa)}</td>
+                        <td>${payment.valyuta}</td>
+                        <td>${payment.kassa}</td>
+                        <td>${payment.date}</td>
+                    </tr>
+                `;
+            }
+        });
+
+    }
+    
+    const debtInfoHTML = operation.remaining_debt > 0 ?
+    `<div class="debt-info">
+        <strong>Qoldiq qarz: ${formatNumber(operation.remaining_debt)} ${operation.valyuta_name}</strong>
+    </div>` : '';
+
+// Valyuta bo'yicha to'lovlarni guruhlash
+const paymentByCurrency = {};
+let totalPaid = 0;
+
+if (operation.payment_details && operation.payment_details.length > 0) {
+    operation.payment_details.forEach(payment => {
+        if (!paymentByCurrency[payment.valyuta]) {
+            paymentByCurrency[payment.valyuta] = 0;
+        }
+        paymentByCurrency[payment.valyuta] += payment.summa;
+        totalPaid += payment.summa;
+    });
+}
+
+// Valyuta bo'yicha to'lovlarni ko'rsatish
+let paymentDisplayHTML = '';
+if (Object.keys(paymentByCurrency).length > 0) {
+    paymentDisplayHTML = Object.entries(paymentByCurrency).map(([currency, amount]) => `
+        <div><strong>${formatNumber(amount)} ${currency}</strong></div>
+    `).join('');
+} else {
+    paymentDisplayHTML = '<div><strong>0</strong></div>';
+}
+
+
+let chiqimTotalsHtml = '';
+for (const [valyuta, summa] of Object.entries(operation.chiqim_totals)) {
+    chiqimTotalsHtml += `
+        <div class="payment-total-item">
+            <div class="payment-total-label">${valyuta}</div>
+            <div class="payment-total-value">${parseFloat(summa).toLocaleString()}</div>
+        </div>
+    `;
+}
+
+if (!chiqimTotalsHtml) {
+    chiqimTotalsHtml = '<div class="text-muted">To\'lovlar mavjud emas</div>';
+}
+
+return `
+    <div class="shop-table">
+        <div class="shop-header" onclick="toggleShopDetails('shop-${operation.id}')">
+            <div class="shop-main-info">
+                <div>
+                    <strong>💰 Sotuv #${operation.id}</strong>
+                    <br>
+                    <small class="text-muted">${operation.date}</small>
+                    ${chegirmaHTML}
+                </div>
+                <div>
+                    <div class="text-success"><strong>${formatNumber(operation.total_price)}</strong></div>
+                    <small class="text-muted">Jami summa</small>
+                </div>
+                <div>
+                    <div><strong>${operation.product_count}</strong></div>
+                    <small class="text-muted">Mahsulotlar</small>
+                </div>
+                <div>
+                    ${paymentDisplayHTML}
+                    <small class="text-muted">To'langan</small>
+                </div>
+                <div>
+                    ${statusHTML}
+                    ${operation.remaining_debt > 0 ? 
+                        `<button class="btn btn-warning btn-sm mt-2" onclick="payDebt(${operation.remaining_debt_id}, ${operation.remaining_debt}, '${operation.remaining_valyuta}')">To'lash</button>` : 
+                        `<button class="btn btn-success btn-sm mt-2" disabled>To'landi</button>`
+                    }
+                    <button class="btn btn-primary btn-sm mt-2" onclick="showDebtList(${operation.remaining_debt_id})"><i class="fa fa-list"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="shop-details" id="shop-${operation.id}">
+            <div class="carts-section">
+                <div class="section-title">
+                    <span>Sotilgan Mahsulotlar</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Mahsulot</th>
+                                <th>Narx</th>
+                                <th>Soni</th>
+                                <th>Summa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="payments-section">
+                <div class="section-title">
+                    <span>To'lovlar</span>
+                </div>
+                
+                ${operation.payment_details && operation.payment_details.length > 0 ? `
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Summa</th>
+                                    <th>Valyuta</th>
+                                    <th>Kassa</th>
+                                    <th>Sana</th>
+                                    <th>Holati</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${paymentsHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : '<p class="text-muted">To\'lovlar mavjud emas</p>'}
+            </div>
+
+
+
+
+            <!-- Qaytarilgan summalar qismi -->
+                <div class="payments-section">
+                    <div class="section-title">
+                        <span>Qaytarilgan summalar</span>
+                    </div>
+                    <div class="payment-totals">
+                        ${chiqimTotalsHtml}
+                    </div>
+                    ${operation.chiqim_details.length > 0 ? `
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Summa</th>
+                                        <th>Valyuta</th>
+                                        <th>Kassa</th>
+                                        <th>Sana</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${operation.chiqim_details.map(chiqim => `
+                                    <tr class="">
+                                        <td>${parseFloat(chiqim.summa).toLocaleString()}</td>
+                                        <td>${chiqim.valyuta}</td>
+                                        <td>${chiqim.kassa}</td>
+                                        <td>${chiqim.date}</td>
+                                    </tr>
+                                `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-muted">To\'lovlar mavjud emas</p>'}
+                </div>
+                
+                <!-- Qaytarilgan mahsulotlar qismi -->
+                ${operation.return_details.length > 0 ? `
+                    <div class="returns-section">
+                        <div class="section-title">
+                            <span>Qaytarilgan Mahsulotlar</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Mahsulot</th>
+                                        <th>Qaytarilgan miqdor</th>
+                                        <th>Sana</th>
+                                        <th>Kim tomonidan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${operation.return_details.map(return_item => `
+                                        <tr>
+                                            <td>${return_item.product_name}</td>
+                                            <td>${parseFloat(return_item.return_quantity).toLocaleString()}</td>
+                                            <td>${return_item.date}</td>
+                                            <td>${return_item.returned_by}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : ''}
+        </div>
+    </div>
+`;
+}
+
+// To'lov HTML yaratish
+function generatePaymentHTML(operation) {
+    const debtRow = operation.is_debt ? `
+        <tr class="debt-payment">
+            <td><strong>Holat:</strong></td>
+            <td>Qarz to'lovi</td>
+        </tr>
+    ` : '';
+    
+    return `
+        <div class="shop-table">
+            <div class="shop-header" onclick="toggleShopDetails('payment-${operation.id}')">
+                <div class="shop-main-info">
+                    <div>
+                        <strong>${operation.type_pay === 'Give' ? '💰 Pul berildi' : '💳 To\'lov'}</strong>
+                        <br>
+                        <small class="text-muted">${operation.date}</small>
+                    </div>
+                    <div>
+                        <div class="text-success"><strong>${formatNumber(operation.summa)}</strong></div>
+                        <small class="text-muted">Summa</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.valyuta}</strong></div>
+                        <small class="text-muted">Valyuta</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.kassa}</strong></div>
+                        <small class="text-muted">Kassa</small>
+                    </div>
+                    <div>
+                        <span class="operation-type-badge type-payment">TO'LOV</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shop-details" id="payment-${operation.id}">
+                <div class="payments-section">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>To'lov turi:</strong></td>
+                                    <td>${operation.type_pay}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valyuta:</strong></td>
+                                    <td>${operation.valyuta}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kassa:</strong></td>
+                                    <td>${operation.kassa}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Summa:</strong></td>
+                                    <td class="text-success">${formatNumber(operation.summa)}</td>
+                                </tr>
+                                ${debtRow}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Qaytuv HTML yaratish
+function generateReturnHTML(operation) {
+    return `
+        <div class="shop-table">
+            <div class="shop-header" onclick="toggleShopDetails('return-${operation.id}')">
+                <div class="shop-main-info">
+                    <div>
+                        <strong>🔄 Qaytuv</strong>
+                        <br>
+                        <small class="text-muted">${operation.date}</small>
+                    </div>
+                    <div>
+                        <div class="text-warning"><strong>${formatNumber(operation.total_amount)}</strong></div>
+                        <small class="text-muted">Qaytarilgan summa</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.product_name}</strong></div>
+                        <small class="text-muted">Mahsulot</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.return_quantity}</strong></div>
+                        <small class="text-muted">Miqdor</small>
+                    </div>
+                    <div>
+                        <span class="operation-type-badge type-return">QAYTUV</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shop-details" id="return-${operation.id}">
+                <div class="returns-section">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Mahsulot:</strong></td>
+                                    <td>${operation.product_name}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Qaytarilgan miqdor:</strong></td>
+                                    <td class="text-warning">${operation.return_quantity}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Narx:</strong></td>
+                                    <td>${formatNumber(operation.price)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jami summa:</strong></td>
+                                    <td class="text-warning">${formatNumber(operation.total_amount)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Qaytargan:</strong></td>
+                                    <td>${operation.returned_by}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Chiqim HTML yaratish
+function generateChiqimHTML(operation) {
+    return `
+        <div class="shop-table">
+            <div class="shop-header" onclick="toggleShopDetails('chiqim-${operation.id}')">
+                <div class="shop-main-info">
+                    <div>
+                        <strong>📤 Chiqim</strong>
+                        <br>
+                        <small class="text-muted">${operation.date}</small>
+                    </div>
+                    <div>
+                        <div class="text-danger"><strong>${formatNumber(operation.summa)}</strong></div>
+                        <small class="text-muted">Summa</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.valyuta}</strong></div>
+                        <small class="text-muted">Valyuta</small>
+                    </div>
+                    <div>
+                        <div><strong>${operation.kassa}</strong></div>
+                        <small class="text-muted">Kassa</small>
+                    </div>
+                    <div>
+                        <span class="operation-type-badge type-chiqim">CHIQIM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shop-details" id="chiqim-${operation.id}">
+                <div class="payments-section">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Sabab:</strong></td>
+                                    <td>${operation.sabab}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Valyuta:</strong></td>
+                                    <td>${operation.valyuta}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kassa:</strong></td>
+                                    <td>${operation.kassa}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Summa:</strong></td>
+                                    <td class="text-danger">${formatNumber(operation.summa)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Pagination HTML yaratish
+function generatePaginationHTML(pagination, filters) {
+    if (!pagination || pagination.total_pages <= 1) return '';
+    
+    let html = '<nav aria-label="Operations pagination"><ul class="pagination justify-content-center">';
+    
+    if (pagination.has_previous) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" data-page="${pagination.current_page - 1}">Oldingi</a>
+        </li>`;
+    }
+    
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        if (i === pagination.current_page) {
+            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+        } else {
+            html += `<li class="page-item">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>`;
+        }
+    }
+    
+    if (pagination.has_next) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" data-page="${pagination.current_page + 1}">Keyingi</a>
+        </li>`;
+    }
+    
+    html += '</ul></nav>';
+    return html;
+}
+
+// Totals HTML yaratish
+function generateTotalsHTML(totals) {
+    const debtClass = totals.remaining_debt > 0 ? 'text-danger' : 'text-success';
+    
+    // Valyuta bo'yicha to'lovlarni ko'rsatish
+    let paymentsHTML = '';
+    if (totals.payments_by_currency && Object.keys(totals.payments_by_currency).length > 0) {
+        paymentsHTML = Object.entries(totals.payments_by_currency)
+            .map(([currency, amount]) => `
+                <div><strong>${formatNumber(amount)} ${currency}</strong></div>
+            `).join('');
+    } else {
+        paymentsHTML = '<div><strong>0</strong></div>';
+    }
+    
+    return `
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h5>Jami Sotuvlar</h5>
+                <h3 class="text-primary" id="total-shops">${formatNumber(totals.total_shops)}</h3>
+            </div>
+            <div class="col-md-3">
+                <h5>Jami To'lovlar</h5>
+                ${paymentsHTML}
+            </div>
+            <div class="col-md-3">
+                <h5>Jami Qaytuvlar</h5>
+                <h3 class="text-warning" id="total-returns">${formatNumber(totals.total_returns)}</h3>
+            </div>
+        </div>
+    `;
+}
+
+// Xabarlarni ko'rsatish
+function showAlert(message, type) {
+    const alertElement = document.createElement('div');
+    alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+    alertElement.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-dismiss="alert"></button>
+    `;
+    alertElement.style.zIndex = '10000000';
+    alertElement.style.position = 'relative';
+
+    
+    document.getElementById('alert-container').appendChild(alertElement);
+    
+    setTimeout(() => {
+        alertElement.remove();
+    }, 5000);
+}
+
+// AJAX bilan filterlash
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filter-form');
+    const filterLoading = document.querySelector('.filter-loading');
+    const operationsContainer = document.getElementById('operations-container');
+    const paginationContainer = document.getElementById('pagination-container');
+    const totalsContainer = document.getElementById('totals-container');
+    const loadingSpinner = operationsContainer.querySelector('.loading-spinner');
+    
+    // Sahifa yuklanganda avtomatik ravishda ma'lumotlarni yuklash
+    function loadInitialData() {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+        
+        for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+        
+        const url = `?${params.toString()}`;
+        loadData(url);
+    }
+    
+    function loadData(url) {
+        filterLoading.style.display = 'block';
+        loadingSpinner.style.display = 'block';
+        operationsContainer.style.opacity = '0.5';
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Operations HTML yaratish
+            operationsContainer.innerHTML = generateOperationsHTML(data.operations);
+            
+            // Pagination HTML yaratish
+            paginationContainer.innerHTML = generatePaginationHTML(data.pagination, data.filters);
+            
+            // Totals HTML yaratish
+            totalsContainer.innerHTML = generateTotalsHTML(data.totals);
+            
+            window.history.pushState({ path: url }, '', url);
+        })
+        .catch(error => {
+            console.error('Xatolik:', error);
+            showAlert('Ma\'lumotlarni yuklashda xatolik yuz berdi', 'danger');
+        })
+        .finally(() => {
+            filterLoading.style.display = 'none';
+            loadingSpinner.style.display = 'none';
+            operationsContainer.style.opacity = '1';
+        });
+    }
+    
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+        
+        for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+        
+        const url = `?${params.toString()}`;
+        loadData(url);
+    });
+
+    // Inputlarda o'zgarish bo'lganda filterlash
+    filterForm.querySelectorAll('input, select').forEach(element => {
+        element.addEventListener('change', function() {
+            filterForm.dispatchEvent(new Event('submit'));
+        });
+    });
+
+    // Pagination linklarini AJAX bilan ishlash
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.page-link') && !e.target.closest('.page-link').classList.contains('active')) {
+            e.preventDefault();
+            const page = e.target.closest('.page-link').dataset.page;
+            
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams();
+            
+            for (let [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+            params.append('page', page);
+            
+            const url = `?${params.toString()}`;
+            loadData(url);
+        }
+    });
+
+    // Browser orqaga/oldinga tugmalari uchun
+    window.addEventListener('popstate', function() {
+        loadData(window.location.href);
+    });
+
+    // Sahifa yuklanganda birinchi marta ma'lumotlarni yuklash
+    loadInitialData();
+});
+</script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('#operationTabs .nav-link');
+    const operationTypeInput = document.getElementById('operationType');
+    
+    // Tab bosilganda qiymatni yangilash
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            const operationType = this.getAttribute('data-operation-type');
+            // Yashirin input qiymatini yangilash
+            operationTypeInput.value = operationType;
+
+            console.log(operationTypeInput.value)
+            $('#filterbutton').trigger('click')
+            
+            // Barcha tablardan active klassini olib tashlash
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            // Bosilgan tabga active klassini qo'shish
+            this.classList.add('active');
+            
+            // Bu yerda siz AJAX orqali ma'lumotlarni yangilashingiz mumkin
+            // yoki filter formini yuborishingiz mumkin
+        });
+    });
+});
+</script>
+
+
+<script>
+    function payDebt(operationId, remaining_debt, remaining_valyuta) {
+        // Modalni ochish
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        
+        // Modalni sozlash
+        document.getElementById('paymentModalLabel').textContent = `Qarzni to'lash - Operatsiya #${operationId}`;
+        document.getElementById('paymentOperationId').value = operationId;
+        console.log(remaining_debt, 'ooo')
+        document.getElementById('total_jami').textContent = remaining_debt
+        document.getElementById('total_jami_valyuta').textContent = remaining_valyuta
+        document.getElementById('tolash_summasi').textContent = remaining_debt
+        
+        // To'lov summasini nolga sozlash
+        document.querySelectorAll('.payment-input').forEach(input => {
+            input.value = '';
+        });
+        
+        // Qarz qismini yashirish
+        
+        // Jami summani yangilash
+        updateTotalAmount();
+        
+        // Modalni ochish
+        modal.show();
+    }
+
+    // Qarz tarixini ko'rsatish funksiyasi
+    function showDebtList(operationId) {
+        // Loading ko'rsatish
+        const loadingHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Yuklanmoqda...</span>
+                </div>
+                <p class="mt-2">Ma'lumotlar yuklanmoqda...</p>
+            </div>
+        `;
+        
+        // Modal tanazasini sozlash
+        document.getElementById('debtHistoryModalLabel').textContent = `Qarz tarixi - Operatsiya #${operationId}`;
+        document.getElementById('debtHistoryContent').innerHTML = loadingHTML;
+        
+        // AJAX so'rov orqali ma'lumotlarni olish
+        fetch(`/debt-history/${operationId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Ma'lumotlarni modalga joylash
+                displayDebtHistory(data, operationId);
+            })
+            .catch(error => {
+                console.error('Xatolik:', error);
+                document.getElementById('debtHistoryContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        Ma'lumotlarni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.
+                    </div>
+                `;
+            });
+        
+        // Modalni ochish
+        const modal = new bootstrap.Modal(document.getElementById('debtHistoryModal'));
+        modal.show();
+    }
+
+    // Qarz tarixini ko'rsatish
+//     function displayDebtHistory(data, operationId) {
+//         let html = '';
+        
+//         if (data.debt_history && data.debt_history.length > 0) {
+//             html = `
+//                 <div class="table-responsive">
+//                     <table class="table table-sm table-bordered">
+//                         <thead>
+//                             <tr>
+//                                 <th>Sana</th>
+//                                 <th>Summa</th>
+//                                 <th>Valyuta</th>
+//                                 <th>Kassa</th>
+//                                 <th>Holati</th>
+//                             </tr>
+//                         </thead>
+//                         <tbody>
+//             `;
+            
+//             data.debt_history.forEach(payment => {
+//                 const statusBadge = payment.is_debt ? 
+//                     '<span class="badge bg-warning">Qarz</span>' : 
+//                     '<span class="badge bg-success">To\'landi</span>';
+                
+//                 html += `
+//                     <tr>
+//                         <td>${payment.date}</td>
+//                         <td>${parseFloat(payment.summa).toLocaleString()}</td>
+//                         <td>${payment.valyuta}</td>
+//                         <td>${payment.kassa}</td>
+//                         <td>${statusBadge}</td>
+//                     </tr>
+//                 `;
+//             });
+            
+//             html += `
+//                         </tbody>
+//                     </table>
+//                 </div>
+//             `;
+            
+//             // Qoldiq qarz ma'lumotlari
+//             if (data.remaining_debt > 0) {
+//                 html += `
+//                     <div class="alert alert-warning mt-3">
+//                         <strong>Qoldiq qarz:</strong> ${parseFloat(data.remaining_debt).toLocaleString()} ${data.valyuta_name}
+//                     </div>
+//                 `;
+//             } else {
+//                 html += `
+//                     <div class="alert alert-success mt-3">
+//                         <strong>Barcha qarz to'landi</strong>
+//                     </div>
+//                 `;
+//             }
+//         } else {
+//             html = `
+//                 <div class="alert alert-info">
+//                     Ushbu operatsiya uchun qarz to'lovlari mavjud emas.
+//                 </div>
+//             `;
+//         }
+        
+//         document.getElementById('debtHistoryContent').innerHTML = html;
+//     }
+
+
+function displayDebtHistory(data, operationId) {
+    let html = '';
+    
+    // Tepadagi jami ma'lumotlar qismi
+    html += `
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Jami Qarz</h6>
+                        <h4 class="text-danger">${parseFloat(data.all_debt).toLocaleString()} ${data.valyuta_name}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">To'langan</h6>
+                        <h4 class="text-success">${parseFloat(data.paid_total).toLocaleString()} ${data.valyuta_name}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">Qoldiq Qarz</h6>
+                        <h4>${parseFloat(data.remaining_debt).toLocaleString()} ${data.valyuta_name}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="progress mb-4" style="height: 25px;">
+            <div class="progress-bar bg-success" 
+                 role="progressbar" 
+                 style="width: ${(data.paid_total / data.all_debt) * 100}%"
+                 aria-valuenow="${(data.paid_total / data.all_debt) * 100}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+                To'langan: ${((data.paid_total / data.all_debt) * 100).toFixed(1)}%
+            </div>
+            <div class="progress-bar bg-warning" 
+                 role="progressbar" 
+                 style="width: ${(data.remaining_debt / data.all_debt) * 100}%"
+                 aria-valuenow="${(data.remaining_debt / data.all_debt) * 100}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+                Qoldiq: ${((data.remaining_debt / data.all_debt) * 100).toFixed(1)}%
+            </div>
+        </div>
+    `;
+    
+    if (data.debt_history && data.debt_history.length > 0) {
+        html += `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">To'lovlar Tarixi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sana</th>
+                                    <th>Summa</th>
+                                    <th>Valyuta</th>
+                                    <th>Kassa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        data.debt_history.forEach((payment, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${payment.date}</td>
+                    <td class="fw-bold text-success">${parseFloat(payment.summa).toLocaleString()}</td>
+                    <td><span class="badge bg-primary">${payment.valyuta}</span></td>
+                    <td>${payment.kassa}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                    <h5>To'lovlar mavjud emas</h5>
+                    <p class="text-muted">Ushbu qarz uchun hali to'lov amalga oshirilmagan</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Qoldiq qarz ma'lumotlari
+    if (data.remaining_debt > 0) {
+        html += `
+            <div class="alert alert-warning mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Qoldiq qarz:</strong> ${parseFloat(data.remaining_debt).toLocaleString()} ${data.valyuta_name}
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="payDebt(${operationId}, ${data.remaining_debt}, '${data.valyuta_name}')">
+                        <i class="fas fa-money-bill-wave me-1"></i> Qarzni To'lash
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="alert alert-success mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Barcha qarz to'landi</strong>
+                    </div>
+                    <span class="badge bg-success fs-6">
+                        <i class="fas fa-check me-1"></i> To'liq to'langan
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('debtHistoryContent').innerHTML = html;
+}
+
+
+
+    function updateTotalAmount() {
+    let total = 0;
+    document.querySelectorAll('.payment-input').forEach(input => {
+        if (input.value) {
+            total += parseFloat(input.value) || 0;
+        }
+    });
+    document.getElementById('tolash_summasi').textContent = total.toLocaleString() + ' {{shop_valyuta_name}}';
+}
+
+// function showInputBox(element) {
+//     const inputBox = element.parentElement.querySelector('.input-box');
+//     if (inputBox) {
+//         inputBox.style.display = 'block';
+//         element.style.display = 'none';
+//     }
+// }
+
+function showInputBox(item) {
+    const mainBox = $(item).closest('.plus_button');
+    const isDollar = mainBox.find('.toggle-input').data('dollar') === true;
+    const inputBox = mainBox.find('.input-box');
+    const valyutaName = mainBox.find('.box-header-valyuta-name').text();
+
+    if (inputBox.length) {
+        inputBox.show();
+
+        const input = inputBox.find('input');
+
+
+        let inputValue = 0
+        if (isDollar) {
+            inputValue = (parseFloat(input.val()) || 0) * currentKurs;
+        } else {
+            inputValue = parseFloat(input.val()) || 0;
+        }
+        input.trigger('focus');
+        
+        // Qoldiq summani olish
+        const remainingDebt = parseFloat(calculatePaymentTotal()) + inputValue;
+        console.log(remainingDebt, 'ooo')
+        // Agar dollar bo'lsa, kursga ko'ra hisoblash
+        if (isDollar) {
+            // Qoldiq summani dollarga aylantirish
+            const dollarAmount = remainingDebt / currentKurs;
+            input.val(dollarAmount.toFixed(2));
+        } else {
+            // So'm bo'lsa, to'g'ridan-to'g'ri qoldiq summa
+            input.val(remainingDebt);
+        }
+
+        updatePaymentTotal();
+    }
+}
+
+
+function calculatePaymentTotal() {
+    const total_jami = parseFloat($('#total_jami').text().replace(/\s+/g, '')) || 0;
+    let totalPaid = 0;
+
+    $('.plus_button').each(function() {
+        const inputBox = $(this).find('.input-box');
+        
+        // faqat display:none bo'lmaganlarini olish
+        if (inputBox.is(':visible')) {
+            const inputVal = parseFloat($(this).find('.payment-input').val()) || 0;
+            const isDollar = $(this).find('.toggle-input').data('dollar') === true;
+
+            if (isDollar) {
+                totalPaid += inputVal * currentKurs;
+            } else {
+                totalPaid += inputVal;
+            }
+        }
+    });
+
+    const remaining = total_jami - totalPaid;
+    $('#tolash_summasi').text(formatNumber(Math.max(0, remaining)));
+    return remaining;
+}
+
+
+function updatePaymentTotal() {
+    calculatePaymentTotal();
+}
+
+// Input qiymati o'zgarganda jami summani yangilash
+$(document).on('input', '.payment-input', function() {
+    updatePaymentTotal();
+});
+
+$(document).on('click', '.remove-field', function () {
+    const parentBox = $(this).closest('.input-box');
+    const input = parentBox.find('.payment-input');
+
+    // Inputni tozalaymiz
+    input.val('');
+    updatePaymentTotal();
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentModal = document.getElementById('paymentModal');
+    
+    if (paymentModal) {
+        paymentModal.addEventListener('show.bs.modal', function() {
+            // Modal ochilganda to'lov inputlarini tozalash
+            $('.payment-input').val('');
+            $('.input-box').hide();
+            
+            // Qoldiq summani yangilash
+            updatePaymentTotal();
+        });
+    }
+});
+
+
+
+function submitDebtPayment() {
+    const operationId = document.getElementById('paymentOperationId').value;
+    const paymentData = {
+        operation_id: operationId, // Bu for_debt ga bog'lanadi
+        payments: [],
+        total_required: parseFloat($('#total_jami').text().replace(/\s+/g, '')),
+        total_paid: 0
+    };
+    
+    // Kassalar orqali to'lovlarni yig'ish
+    document.querySelectorAll('.payment-method').forEach(method => {
+        const input = method.querySelector('.payment-input');
+        if (input && input.value) {
+            const kassaId = method.getAttribute('data-kassa-id');
+            const valyutaId = method.getAttribute('data-valyuta-id');
+            const valyutaName = method.getAttribute('data-valyuta-name');
+            const summa = parseFloat(input.value);
+            
+            if (summa > 0) {
+                paymentData.payments.push({
+                    kassa_id: kassaId,
+                    valyuta_id: valyutaId,
+                    valyuta_name: valyutaName,
+                    summa: summa,
+                    currency: currentKurs,
+                    type: 'payment'
+                });
+                paymentData.total_paid += summa;
+            }
+        }
+    });
+
+    // AJAX orqali serverga yuborish
+    fetch('/pay-debt/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Qarz muvaffaqiyatli to\'landi', 'success');
+            
+            // Modalni yopish
+            // const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            $('#paymentModalClose').trigger('click')
+            // modal.hide();
+
+            $('#filterbutton').trigger('click')
+            
+            // Sahifani yangilash
+            // setTimeout(() => {
+            //     location.reload();
+            // }, 1500);
+        } else {
+            showAlert('To\'lovda xatolik: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Xatolik:', error);
+        showAlert('To\'lovda xatolik yuz berdi', 'danger');
+    });
+}
+
+
+
+// CSRF token olish uchun yordamchi funksiya
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 {% endblock js %}

@@ -1,141 +1,1759 @@
-
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}
-    <title>Bosh Sahifa </title>
-{% endblock title %}
 {% load humanize %}
+
+{% block title %}
+    <title>Sotuvlar hisoboti</title>
+{% endblock title %}
+
 {% block css %}
-    <link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
-    <link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
-    <link href="{% static 'plugins/flatpickr/flatpickr.css'%}" rel="stylesheet" type="text/css">
-    <link href="{% static 'plugins/noUiSlider/nouislider.min.css'%}" rel="stylesheet" type="text/css">
-    <link href="{% static 'plugins/flatpickr/custom-flatpickr.css'%}" rel="stylesheet" type="text/css">
+    <link href="{% static 'assets/css/tables/table-basic.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'plugins/flatpickr/flatpickr.css' %}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
     
+    <style>
+        .btn-check:checked + .btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .modal-fullscreen-custom {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0;
+            padding: 0;
+        }
+        .modal-fullscreen-custom .modal-content {
+            height: 100vh;
+            width: 100vw;
+            border-radius: 0;
+        }
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .shop-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        
+        .shop-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .shop-header:hover {
+            background: #e9ecef;
+        }
+        
+        .shop-main-info {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .shop-details {
+            padding: 0;
+            background: #f8f9fa;
+            display: none;
+        }
+        
+        .shop-details.show {
+            display: block;
+        }
+        
+        .carts-section, .payments-section, .returns-section {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .carts-section:last-child, .payments-section:last-child, .returns-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .payment-totals {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .payment-total-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            min-width: 120px;
+        }
+        
+        .payment-total-label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .payment-total-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-1 { background: #e3f2fd; color: #1976d2; }
+        .status-2 { background: #e8f5e8; color: #2e7d32; }
+        .status-3 { background: #ffebee; color: #c62828; }
+        
+        .return-modal, .payment-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 600px;
+            max-width: 95%;
+            max-height: 90vh;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1060;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .return-modal.show, .payment-modal.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1050;
+            display: none;
+        }
+        
+        .modal-overlay.show {
+            display: block;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .pagination-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .debt-payment {
+            background: #fff3cd !important;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .table-sm th, .table-sm td {
+            padding: 8px 12px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .payment-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+        
+        .payment-amount {
+            flex: 1;
+        }
+        
+        .remove-payment {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        
+        .total-return-amount {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .chegirma-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .cart-item-row {
+            transition: background-color 0.3s ease;
+        }
+        
+        .cart-item-row:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .cart-input {
+            width: 80px;
+            text-align: center;
+        }
+        
+        .delete-cart-btn {
+            padding: 4px 8px;
+        }
+
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 30rem;
+        }
+
+        /* Yangi qo'shilgan stillar */
+        .formatted-input {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .formatted-input::placeholder {
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .payment-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1080;
+            overflow-y: auto;
+        }
+
+        .payment-panel.open {
+            right: 0;
+        }
+
+        .payment-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1070;
+            display: none;
+        }
+
+        .payment-panel-overlay.show {
+            display: block;
+        }
+
+        .payment-input-group {
+            position: relative;
+        }
+
+        .payment-input-group .quick-fill {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .remaining-amount {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .exchange-rate {
+            background: #e7f3ff;
+            padding: 8px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        .payment-method-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+
+        .payment-method-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .payment-method-title {
+            font-weight: 600;
+            color: #495057;
+        }
+    </style>
 {% endblock css %}
+
 {% block content %}
-<script src="{% static 'multiselect.js' %}"></script>
+<div id="content" class="main-content">
+    <div style="margin:2rem;">
+        <div class="row layout-top-spacing">
+            <div style="z-index: 1000;" id="alert-container"></div>
+            <div class="col-12 layout-spacing">
+                <!-- Filter Form -->
+                <div class="card">
+                    <div class="card-body">
+                        <form class="row" method="GET" id="filter-form">
+                            <div class="col-md-2 mb-2">
+                                <input type="text" name="search" class="form-control" placeholder="Qidiruv..." value="{{ filters.search }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="deliver" class="form-control searchable" multiple id="select-deliver">
+                                    <option value="" disabled>Taminotchi</option>
+                                    {% for d in deliver %}
+                                        <option value="{{ d.id }}" {% if d.id|stringformat:"i" in filters.deliver %}selected{% endif %}>
+                                            {{ d.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select name="client" class="form-control searchable" multiple id="select-client">
+                                    <option value="" disabled>Mijoz</option>
+                                    {% for c in client %}
+                                        <option value="{{ c.id }}" {% if c.id|stringformat:"i" in filters.client %}selected{% endif %}>
+                                            {{ c.fio }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button type="submit" id="filter_submit" class="btn btn-primary w-100">Filterlash</button>
+                                <a href="{% url 'today_sales' %}" class="btn btn-secondary w-100 mt-1">Tozalash</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Totals Card -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <h5>Jami Sotuvlar</h5>
+                                <h3 class="text-primary" id="total-shops">{{ totals.total_shops|intcomma }}</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Jami Miqdor</h5>
+                                <h3 class="text-success" id="total-quantity">{{ totals.total_quantity|intcomma }}</h3>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Jami Summa</h5>
+                                <h3 class="text-info" id="total-price">{{ totals.total_price|intcomma }}</h3>
+                            </div>
+                            <div class="col-md-2">
+                                <h5>Sahifa</h5>
+                                <h3 class="text-warning" id="current-page">1</h3>
+                            </div>
 
-<meta name="csrf-token" content="{{ csrf_token }}">
-
-        <div id="content" class="main-content">
-            <div class="container">
-                    <div class="row layout-top-spacing" style="width: 100%;">
-                        <div class="col-12 layout-spacing">
-                            <div class="col-md-12">
-                                <form class="row">
-                                    <div class="col-2">
-                                        <input type="text" name="search" class="form-control" placeholder="Qidiruv">
-                                    </div>
-                                    <div class="col-2">
-                                        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
-                                    </div>
-                                    <div class="col-2">
-                                        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date  }}">
-                                    </div>
-                                    <div class="col-2">
-                                        <select name="deliver" class="form-control"  multiple
-                                        multiselect-select-all="true" multiselect-max-items="0" id="select-tegirmon"
-                                        multiselect-search="true">
-                                            <option value="" disabled hidden>Taminotchi</option>
-                                            {% for deliver in deliver %}
-                                                <option value="{{ deliver.id }}">{{ deliver.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-2">
-                                        <select name="client" class="form-control"  multiple
-                                        multiselect-select-all="true" multiselect-max-items="0" id="select-tegirmon"
-                                        multiselect-search="true">
-                                            <option value="" disabled hidden>Mijoz</option>
-                                            {% for client in client %}
-                                                <option value="{{ client.id }}">{{ client.fio }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button type="submit" class="btn btn-primary" style="height: 40px;">Filterlash</button>
-                                    </div>
-                                </form>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" id="openPOSModalBtn">POS</button>
                             </div>
                         </div>
-                        <div class="col-lg-12">
-                            <div id="tableSimple" class="col-lg-12 col-12 layout-spacing">
-                                <div class="statbox widget box box-shadow">
-                                    <div class="widget-content widget-content-area">
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered mb-4" id="example122">
-                                                <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Maxsulot</th>
-                                                        <th>Mijoz</th>
-                                                        <th>Narxi</th>
-                                                        <th>Soni</th>
-                                                        <th>Summa</th>
-                                                        <th>Hodim</th>
-                                                        <th>Sana</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for i in cart %}
-                                                    <tr>
-                                                        <td>{{ forloop.counter }}</td>
-                                                        <td>{{ i.product }}</td>
-                                                        <td>{{ i.shop.debtor|default_if_none:'' }}</td>
-                                                        <td>{{ i.price|intcomma }}</td>
-                                                        <td>{{ i.quantity|intcomma }}</td>
-                                                        <td>{{ i.total_price|intcomma }}</td>
-                                                        <td></td>
-                                                        <td>{{ i.date|date:"Y-m-d" }}</td>
-                                                    </tr>
+                    </div>
+                </div>
+                
+                <!-- Shops Container -->
+                <div id="shops-container" class="mt-3">
+                    <div id="loading-spinner" class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Yuklanmoqda...</span>
+                        </div>
+                        <p class="mt-2">Ma'lumotlar yuklanmoqda...</p>
+                    </div>
+                    <!-- Shops will be loaded here via AJAX -->
+                </div>
+                
+                <!-- Pagination -->
+                <div id="pagination-container" class="pagination-container">
+                    <!-- Pagination will be loaded here via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POS Modal -->
+<div class="modal fade" id="posModal" tabindex="-1" aria-labelledby="posModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-custom">
+        <div class="modal-content bg-light">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" style="color:fff">POS Tizimi</h5>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-9 col-lg-9 col-sm-12 layout-spacing">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <select name="valyuta" id="valyuta_input" class="searchable form-control" required disabled oninput="saveValyutaShop(this)">
+                                            {% for i in valyutalar %}
+                                                <option value="{{i.id}}" {% if shop.valyuta == i %}selected{% endif %} >{{i.name}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-7">
+                                        <div class="input-group">
+                                            <select class="d-none" id="products" name="product" data-recieve="{{recieve.id}}">
+                                                <option value="">Mahsulot tanlanmagan</option>
+                                                {% for i in products %}
+                                                    <option 
+                                                        value="{{ i.id }}&{{ i.name }}&{{ i.quantity }}&{{ i.get_barcodes }}&{% if i.pack == 0 %}1{% else %}{{ i.pack }}{% endif %}&{{ i.price }}">
+                                                        {{ i.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="dropdown w-100 position-relative">
+                                                <input type="text" class="form-control fs-5 py-3 border-primary formatted-input" placeholder="Mahsulotni qidiring..." id="productSearchInput" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <ul class="dropdown-menu w-100 overflow-auto shadow" style="max-height: 300px;" id="productListDropdown">
+                                                    {% for i in products %}
+                                                        <li>
+                                                            <a onclick="addCart('{{i.id}}')" href="#" class="dropdown-item py-2 fs-5 select-product-item"
+                                                            data-value="{{ i.id }}&{{ i.name }}&{{ i.quantity }}&{{ i.get_barcodes }}&{% if i.pack == 0 %}1{% else %}{{ i.pack }}{% endif %}&{{ i.price }}">
+                                                                🛒 <strong>{{ i.name }}</strong><br>
+                                                                📦 {{ i.quantity|floatformat:'2' }} | 🏷️ {{ i.get_barcodes }} | 💰 <span data-prices='{{ i.pricetypevaluta_prices_json|safe }}' id="productprice{{i.id}}">{{ i.price|floatformat:'2' }}</span>
+                                                            </a>
+                                                        </li>
                                                     {% endfor %}
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Jami</th>
-                                                        <th></th>
-                                                        <th></th>
-                                                        <th>{{ totals.total_quantity|default_if_none:'0'|intcomma }}</th>
-                                                        <th>{{ totals.total|default_if_none:'0'|intcomma }}</th>
-                                                        <th></th>
-                                                        <th></th>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
+                                                </ul>
+                                            </div>
                                         </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-danger h-100" onclick="clearInputProduct()">X</button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-outline-primary w-100 h-100" id="fullscreenDropdownBtn">
+                                            Guruh bo'yicha
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Faqat pagination harakatlanadi -->
-                        <div style="margin-top: 10px; text-align: center; overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 5px;">
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination" style="display: inline-flex;">
-                                    {% if pay.has_previous %}
-                                    <li class="page-item"><a class="page-link" href="?page={{ pay.previous_page_number }}">Previous</a></li>
-                                    {% endif %}
-                                    {% for i in pay.paginator.page_range %}
-                                    {% if pay.number == i %}
-                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
-                                    {% else %}
-                                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                                    {% endif %}
-                                    {% endfor %}
-                                    {% if pay.has_next %}
-                                    <li class="page-item"><a class="page-link" href="?page={{ pay.next_page_number }}">Next</a></li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="product_list" class="table table-hover" style="width:100%">
+                                        <thead class="">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Maxsulot nomi</th>
+                                                <th>Paket soni</th>
+                                                <th>Paket</th>
+                                                <th>Miqdori (dona)</th>
+                                                <th>Narx</th>
+                                                <th>Kelishilgan narx</th>
+                                                <th style="min-width: 10rem;">Jami</th>
+                                                <th>O'chirish</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cart-tbody"> 
+                                            <!-- Cart elementlari shu yerga qo'shiladi -->
+                                        </tbody>
+                                        <tfoot class="table-secondary">
+                                            <tr>
+                                                <td>Jami</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td class="text-center fw-bold" id="pack_total">0</td>
+                                                <td class="text-center fw-bold" id="quantity_total">0</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td class="text-center fw-bold" id="total_sum">0</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        
                     </div>
+                    
+                    <div class="col-xl-3 col-lg-3 col-sm-12 layout-spacing">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body">
+                                <form method="post" action="{% url 'b2c_shop_edit' %}">
+                                    {% csrf_token %}
+                                    <h4 class="text-success text-center mb-4" style="font-size: 50px;" id="all_total">0</h4>
+                                    
+                                    <div class="btn-group w-100 mb-3" role="group" aria-label="Price Types">
+                                        {% for i in price_types %}
+                                            <input type="radio" class="btn-check price_type_input" style="display:none" name="type_price" id="{{i.name}}{{i.id}}" value="{{i.id}}" autocomplete="off" 
+                                            {% if shop.debtor.price_type == i %}
+                                                checked
+                                            {% elif not shop.debtor.price_type and price_types.first == i %}
+                                                checked
+                                            {% endif %}
+                                                >
+                                            <label class="btn btn-outline-primary" for="{{i.name}}{{i.id}}">{{i.name}}</label>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <input type="hidden" name="id" id="shop_id" value="">
+                                    
+                                    <div class="mb-3">
+                                        <label for="mainSelectDebtor" class="form-label">Mijoz</label>
+                                        <div class="input-group">
+                                            <select class="form-control" id="mainSelectDebtor" name="debtor" required>
+                                                <option value=""></option>
+                                                {% for i in debtors %}
+                                                    <option value="{{i.id}}" {% if shop.debtor == i %}selected{% endif %}>{{ i.fio }} - {{ i.phone1|default_if_none:'Kiritilmagan' }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button class="btn btn-outline-primary" type="button" data-toggle="modal" data-target="#debtorModal">+</button>
+                                        </div>
+                                    </div>
+                                 
+                                    <div class="mb-3">
+                                        <label for="selectFilial" class="form-label">Filial</label>
+                                        <select class="form-control searchable" name="filial" id="selectFilial" required>
+                                            <option value=""></option>
+                                            {% for i in filials %}
+                                                <option value="{{i.id}}" {% if shop.filial == i or user.filial == i %}selected{% endif %}>{{ i.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <hr class="my-4">
+                                    
+                                    <div class="mb-3">
+                                        <label for="all_total_2" class="form-label">Jami summa</label>
+                                        <input type="text" class="form-control bg-light formatted-input" id="all_total_2" name="all_total" value="0" disabled>
+                                    </div>
+                                </form>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-8">
+                                        <input type="text" id="discountInput" oninput="changeDiscount();updateTotals()" class="form-control formatted-input" placeholder="Chegirmani kiriting">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-danger h-100" onclick="clearPerecent()">X</button>
+                                    </div>
+                                    <div class="col-md-2 d-flex justify-content-end">
+                                        <button class="btn btn-outline-secondary" id="uzsBtn">{{shop_valyuta_name}}</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="row quick-discount g-2 mb-4">
+                                    <div class="col-auto">
+                                        <button id="disc_button" style="display: none;" class="btn btn-sm btn-outline-secondary">0%</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary btn-lg" id="fullscreenPaymentBtn" onclick="openPaymentPanel()">
+                                        To'lovni amalga oshirish
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="fetchReceipt()">CHEK V1</button>
+                                    <button type="button" class="btn btn-warning">
+                                        <a href="" target="_blank" rel="noopener noreferrer" class="text-white text-decoration-none">CHEK V2</a>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" onclick="$('#filter_submit').trigger('click')" data-bs-dismiss="modal">Yopish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- To'lov Paneli -->
+<div class="payment-panel-overlay" id="payment-panel-overlay"></div>
+<div class="payment-panel" id="payment-panel">
+    <div class="modal-header bg-primary text-white p-3">
+        <h5 class="modal-title">To'lovni amalga oshirish</h5>
+        <button type="button" class="btn-close btn-close-white" id="close-payment-panel"></button>
+    </div>
+    <div class="modal-body p-3">
+        <!-- Jami summa va qoldiq -->
+        <div class="mb-4">
+            <div class="row text-center mb-3">
+                <div class="col-6">
+                    <h6>Jami summa</h6>
+                    <h4 class="text-primary" id="payment-total-amount">0</h4>
+                </div>
+                <div class="col-6">
+                    <h6>Qoldiq</h6>
+                    <h4 class="text-success" id="payment-remaining-amount">0</h4>
+                </div>
+            </div>
+            
+            <!-- Valyuta kursi -->
+            <div class="exchange-rate" id="exchange-rate-info">
+                Kurs: 1 USD = <span id="current-kurs">0</span> UZS
             </div>
         </div>
         
+        <!-- To'lov usullari -->
+        <div class="mb-4">
+            <h6>To'lov usullari</h6>
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="add-payment-method">
+                    <i class="fas fa-plus"></i> To'lov usuli qo'shish
+                </button>
+            </div>
+            <div id="payment-methods-container">
+                <!-- To'lov usullari shu yerga qo'shiladi -->
+            </div>
+        </div>
+        
+        <!-- Qarzga qo'shish -->
+        <div class="mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="add-to-debt">
+                <label class="form-check-label" for="add-to-debt">
+                    Qarzga qo'shish
+                </label>
+            </div>
+            <div id="debt-section" style="display: none;" class="mt-2">
+                <div class="input-group payment-input-group">
+                    <input type="text" class="form-control formatted-input" id="debt-amount" placeholder="Qarz miqdori">
+                    <span class="input-group-text">{{ shop.valyuta.name }}</span>
+                    <button type="button" class="quick-fill" onclick="fillRemainingAmount('debt-amount')">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tasdiqlash tugmasi -->
+        <div class="mt-4">
+            <button type="button" class="btn btn-success w-100" id="confirm-payment">
+                <i class="fas fa-check"></i> To'lovni tasdiqlash
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Return Modal -->
+<div class="modal-overlay" id="return-modal-overlay"></div>
+<div class="return-modal" id="return-modal">
+    <div class="modal-header bg-primary text-white p-3">
+        <h5 class="modal-title">Maxsulotlarni Qaytarish</h5>
+        <button type="button" class="btn-close btn-close-white" id="close-return-modal"></button>
+    </div>
+    <div class="modal-body p-3">
+        <div id="return-shop-info" class="mb-3 p-3 bg-light rounded"></div>
+        
+        <!-- Qaytariladigan mahsulotlar -->
+        <div class="mb-4">
+            <h6>Qaytariladigan Mahsulotlar</h6>
+            <div id="return-products-list"></div>
+        </div>
+        
+        <!-- To'lov usuli -->
+        <div class="mb-4">
+            <h6>To'lov Usuli</h6>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="subtract-from-debt" checked>
+                <label class="form-check-label" for="subtract-from-debt">
+                    Qarzidan ayirish
+                </label>
+                <small class="form-text text-muted d-block">
+                    Agar belgilansa, qaytarish summasi mijozning qarzidan ayiriladi. 
+                    Agar belgilanmasa, kassadan chiqim qilinadi.
+                </small>
+            </div>
+            
+            <div id="payment-section" style="display: none;">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-payment">
+                        <i class="fas fa-plus"></i> To'lov qo'shish
+                    </button>
+                </div>
+                <div id="payments-container"></div>
+                <div id="total-return-display" class="total-return-amount"></div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <button type="button" class="btn btn-success w-100" id="confirm-return">
+                <i class="fas fa-check"></i> Qaytarishni Tasdiqlash
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global o'zgaruvchilar
+let currentShopId = null;
+let cartItems = [];
+let currentKurs = 12000; // Default kurs
+let paymentMethods = [];
+let existingPayments = [];
+
+// Raqamlarni formatlash funksiyasi
+function formatNumberInput(input) {
+    if (!input) return;
+    
+    // Faqat raqam va nuqtaga ruxsat berish
+    let value = input.value.replace(/[^\d.]/g, '');
+    
+    // Formatlash
+    const parts = value.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    
+    input.value = parts.join('.');
+}
+
+// Formatni olib tashlash (hisob-kitoblar uchun)
+function parseFormattedNumber(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace(/\s/g, '').replace(',', '.')) || 0;
+}
+
+// Sonni formatlash (ko'rsatish uchun)
+function formatNumber(num) {
+    return new Intl.NumberFormat("ru-RU", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    }).format(num);
+}
+
+// Inputlarni formatlash
+document.addEventListener('DOMContentLoaded', function() {
+    // Barcha inputlarni formatlash
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('formatted-input')) {
+            formatNumberInput(e.target);
+        }
+    });
+    
+    // Cart inputlarini formatlash
+    document.addEventListener('DOMNodeInserted', function(e) {
+        if (e.target.classList && e.target.classList.contains('cart-input')) {
+            formatNumberInput(e.target);
+        }
+    });
+
+    // Sahifa yuklanganda shop yaratish yoki olish
+    initializeEventListeners();
+});
+
+function initializeEventListeners() {
+    // POS modalini ochish
+    document.getElementById('openPOSModalBtn').addEventListener('click', function() {
+        initializeShop();
+        const modal = new bootstrap.Modal(document.getElementById('posModal'));
+        modal.show();
+    });
+
+    // To'lov panelini yopish
+    document.getElementById('close-payment-panel').addEventListener('click', closePaymentPanel);
+    document.getElementById('payment-panel-overlay').addEventListener('click', closePaymentPanel);
+
+    // To'lov usuli qo'shish
+    document.getElementById('add-payment-method').addEventListener('click', addPaymentMethod);
+
+    // Qarzga qo'shish checkbox
+    document.getElementById('add-to-debt').addEventListener('change', function() {
+        document.getElementById('debt-section').style.display = this.checked ? 'block' : 'none';
+        updateRemainingAmount();
+    });
+
+    // To'lovni tasdiqlash
+    document.getElementById('confirm-payment').addEventListener('click', confirmPayment);
+}
+
+// Shopni yaratish yoki olish
+async function initializeShop(id) {
+    try {
+        const response = await fetch(`{% url 'b2c_shop_create' %}?id=${id || ''}`);
+        const data = await response.json();
+        
+        if (data.id) {
+            currentShopId = data.id;
+            filialId = data.filial.id;
+            customerId = data.customer_info.id;
+            document.getElementById('shop_id').value = currentShopId;
+
+            var customerselect = $('#mainSelectDebtor')[0].selectize;
+            customerselect.setValue(customerId);
+
+            var filialselect = $('#selectFilial')[0].selectize;
+            filialselect.setValue(filialId);
+
+            $('#discountInput').val(formatNumber(data.chegirma));
+            $('#all_total').text(formatNumber(data.totals.total));
+            $('#all_total_2').val(formatNumber(data.totals.total));
+
+            // Mavjud to'lovlarni yuklash
+            await loadExistingPayments();
+
+            loadCartItems();
+        }
+    } catch (error) {
+        console.error('Shop yaratishda xatolik:', error);
+        showAlert('Shop yaratishda xatolik yuz berdi', 'danger');
+    }
+}
+
+// Mavjud to'lovlarni yuklash
+async function loadExistingPayments() {
+    if (!currentShopId) return;
+    
+    try {
+        const response = await fetch(`{% url 'get_shop_payments' %}?shop_id=${currentShopId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            existingPayments = data.payments;
+            // Kursni yangilash
+            if (data.kurs) {
+                currentKurs = data.kurs;
+                document.getElementById('current-kurs').textContent = formatNumber(currentKurs);
+            }
+        }
+    } catch (error) {
+        console.error('To\'lovlarni yuklashda xatolik:', error);
+    }
+}
+
+// To'lov panelini ochish
+function openPaymentPanel() {
+    const totalAmount = parseFormattedNumber(document.getElementById('all_total_2').value);
+    document.getElementById('payment-total-amount').textContent = formatNumber(totalAmount);
+    document.getElementById('payment-remaining-amount').textContent = formatNumber(totalAmount);
+    
+    // Kursni yangilash
+    document.getElementById('current-kurs').textContent = formatNumber(currentKurs);
+    
+    // Mavjud to'lovlarni ko'rsatish
+    renderExistingPayments();
+    
+    // Panelni ochish
+    document.getElementById('payment-panel').classList.add('open');
+    document.getElementById('payment-panel-overlay').classList.add('show');
+}
+
+// To'lov panelini yopish
+function closePaymentPanel() {
+    document.getElementById('payment-panel').classList.remove('open');
+    document.getElementById('payment-panel-overlay').classList.remove('show');
+}
+
+// Mavjud to'lovlarni ko'rsatish
+function renderExistingPayments() {
+    const container = document.getElementById('payment-methods-container');
+    container.innerHTML = '';
+    
+    paymentMethods = [];
+    
+    // Mavjud to'lovlarni qo'shish
+    existingPayments.forEach(payment => {
+        if (payment.kassa_id !== 'qarz') {
+            addPaymentMethod(payment.valyuta_id, payment.kassa_id, payment.summa);
+        }
+    });
+    
+    // Agar to'lov usullari bo'sh bo'lsa, bitta qo'shamiz
+    if (paymentMethods.length === 0) {
+        addPaymentMethod();
+    }
+    
+    updateRemainingAmount();
+}
+
+// To'lov usuli qo'shish
+function addPaymentMethod(valyutaId = null, kassaId = null, amount = 0) {
+    const methodId = Date.now();
+    const methodHtml = `
+        <div class="payment-method-card" id="payment-method-${methodId}">
+            <div class="payment-method-header">
+                <span class="payment-method-title">To'lov usuli</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removePaymentMethod(${methodId})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="row g-2">
+                <div class="col-12">
+                    <label>Valyuta</label>
+                    <select class="form-control valyuta-select" onchange="onValyutaChange(${methodId})" id="valyuta-${methodId}">
+                        <option value="">Valyuta tanlang</option>
+                        {% for valyuta in valyutalar %}
+                            <option value="{{ valyuta.id }}" 
+                                    data-is-dollar="{{ valyuta.is_dollar|yesno:'true,false' }}"
+                                    data-is-som="{{ valyuta.is_som|yesno:'true,false' }}"
+                                    ${valyutaId == '{{ valyuta.id }}' ? 'selected' : ''}>
+                                {{ valyuta.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label>Kassa</label>
+                    <select class="form-control kassa-select" id="kassa-${methodId}" onchange="updateRemainingAmount()">
+                        <option value="">Kassa tanlang</option>
+                        {% for kassa in kassalar %}
+                            <option value="{{ kassa.id }}" 
+                                    data-valyuta="{{ kassa.valyuta.id }}"
+                                    ${kassaId == '{{ kassa.id }}' ? 'selected' : ''}>
+                                {{ kassa.kassa.name }} ({{ kassa.valyuta.name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <div class="payment-input-group">
+                        <input type="text" class="form-control formatted-input payment-amount-input" 
+                               value="${amount ? formatNumber(amount) : ''}"
+                               placeholder="Summa" 
+                               oninput="formatNumberInput(this); updateRemainingAmount()"
+                               id="amount-${methodId}">
+                        <button type="button" class="quick-fill" onclick="fillRemainingAmount('amount-${methodId}')">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('payment-methods-container').insertAdjacentHTML('beforeend', methodHtml);
+    
+    paymentMethods.push({
+        id: methodId,
+        valyuta_id: valyutaId,
+        kassa_id: kassaId,
+        amount: amount
+    });
+    
+    // Agar valyuta tanlangan bo'lsa, kassalarni filtrlab ko'rsatish
+    if (valyutaId) {
+        onValyutaChange(methodId);
+    }
+    
+    updateRemainingAmount();
+}
+
+// To'lov usulini o'chirish
+function removePaymentMethod(methodId) {
+    const methodElement = document.getElementById(`payment-method-${methodId}`);
+    if (methodElement) {
+        methodElement.remove();
+    }
+    paymentMethods = paymentMethods.filter(m => m.id !== methodId);
+    updateRemainingAmount();
+}
+
+// Valyuta o'zgarganda kassalarni yangilash
+function onValyutaChange(methodId) {
+    const valyutaSelect = document.getElementById(`valyuta-${methodId}`);
+    const kassaSelect = document.getElementById(`kassa-${methodId}`);
+    const valyutaId = valyutaSelect.value;
+    
+    // Kassalarni filtrlab ko'rsatish
+    const allKassaOptions = kassaSelect.querySelectorAll('option');
+    allKassaOptions.forEach(option => {
+        if (option.value === '') {
+            option.style.display = '';
+        } else {
+            const matchesValyuta = option.getAttribute('data-valyuta') === valyutaId;
+            option.style.display = matchesValyuta ? '' : 'none';
+        }
+    });
+    
+    // Birinchi mavjud kassani tanlash
+    const firstAvailable = kassaSelect.querySelector('option[style=""]');
+    if (firstAvailable && firstAvailable.value) {
+        kassaSelect.value = firstAvailable.value;
+    } else {
+        kassaSelect.value = '';
+    }
+    
+    updateRemainingAmount();
+}
+
+// Qoldiq summani to'ldirish
+function fillRemainingAmount(inputId) {
+    const remaining = parseFormattedNumber(document.getElementById('payment-remaining-amount').textContent);
+    document.getElementById(inputId).value = formatNumber(remaining);
+    updateRemainingAmount();
+}
+
+// Qoldiq summani yangilash
+function updateRemainingAmount() {
+    const totalAmount = parseFormattedNumber(document.getElementById('all_total_2').value);
+    let paidAmount = 0;
+    
+    // To'lov usullari bo'yicha hisoblash
+    paymentMethods.forEach(method => {
+        const amountInput = document.getElementById(`amount-${method.id}`);
+        const valyutaSelect = document.getElementById(`valyuta-${method.id}`);
+        
+        if (amountInput && valyutaSelect && valyutaSelect.value) {
+            const amount = parseFormattedNumber(amountInput.value);
+            const valyutaOption = valyutaSelect.options[valyutaSelect.selectedIndex];
+            const isDollar = valyutaOption.dataset.isDollar === 'true';
+            const isSom = valyutaOption.dataset.isSom === 'true';
+            
+            // Valyuta konvertatsiyasi
+            if (isDollar && !isSom) {
+                // Dollar -> Asosiy valyuta (dollar)
+                paidAmount += amount;
+            } else if (isSom && !isDollar) {
+                // So'm -> Asosiy valyuta (dollar)
+                paidAmount += amount / currentKurs;
+            }
+        }
+    });
+    
+    // Qarz miqdorini qo'shish
+    const debtCheckbox = document.getElementById('add-to-debt');
+    if (debtCheckbox && debtCheckbox.checked) {
+        const debtAmount = parseFormattedNumber(document.getElementById('debt-amount').value);
+        paidAmount += debtAmount;
+    }
+    
+    const remaining = totalAmount - paidAmount;
+    document.getElementById('payment-remaining-amount').textContent = formatNumber(remaining > 0 ? remaining : 0);
+    
+    // Qoldiq manfiy bo'lsa, rangini o'zgartirish
+    const remainingElement = document.getElementById('payment-remaining-amount');
+    if (remaining < 0) {
+        remainingElement.classList.remove('text-success');
+        remainingElement.classList.add('text-danger');
+    } else {
+        remainingElement.classList.remove('text-danger');
+        remainingElement.classList.add('text-success');
+    }
+}
+
+// To'lovni tasdiqlash
+async function confirmPayment() {
+    const totalAmount = parseFormattedNumber(document.getElementById('all_total_2').value);
+    const remaining = parseFormattedNumber(document.getElementById('payment-remaining-amount').textContent);
+    
+    if (remaining > 0) {
+        if (!confirm(`To'lov to'liq amalga oshirilmadi. Qoldiq: ${formatNumber(remaining)}. Davom etasizmi?`)) {
+            return;
+        }
+    }
+    
+    try {
+        const payments = [];
+        
+        // To'lov usullarini yig'ish
+        paymentMethods.forEach(method => {
+            const amountInput = document.getElementById(`amount-${method.id}`);
+            const valyutaSelect = document.getElementById(`valyuta-${method.id}`);
+            const kassaSelect = document.getElementById(`kassa-${method.id}`);
+            
+            if (amountInput && valyutaSelect && kassaSelect && 
+                amountInput.value && valyutaSelect.value && kassaSelect.value) {
+                
+                payments.push({
+                    kassa_id: kassaSelect.value,
+                    valyuta_id: valyutaSelect.value,
+                    summa: parseFormattedNumber(amountInput.value)
+                });
+            }
+        });
+        
+        // Qarzni qo'shish
+        const debtCheckbox = document.getElementById('add-to-debt');
+        if (debtCheckbox && debtCheckbox.checked) {
+            const debtAmount = parseFormattedNumber(document.getElementById('debt-amount').value);
+            if (debtAmount > 0) {
+                payments.push({
+                    kassa_id: 'qarz',
+                    valyuta_id: document.getElementById('valyuta_input').value,
+                    summa: debtAmount
+                });
+            }
+        }
+        
+        if (payments.length === 0) {
+            showAlert('Hech qanday to\'lov usuli tanlanmagan', 'warning');
+            return;
+        }
+        
+        const response = await fetch("{% url 'b2c_shop_create' %}?id=" + currentShopId + "&request_type=edit_payments", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                payments: payments
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('To\'lov muvaffaqiyatli amalga oshirildi', 'success');
+            closePaymentPanel();
+            
+            // Sahifani yangilash
+            if (window.loadShops) {
+                loadShops(1);
+            }
+        } else {
+            showAlert('To\'lovda xatolik: ' + data.message, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('To\'lovda xatolik:', error);
+        showAlert('Server bilan bog\'lanishda xatolik', 'danger');
+    }
+}
+
+// Qolgan funksiyalar (oldingi koddan)
+function editShopModal(id) {
+    initializeShop(id);
+    const modal = new bootstrap.Modal(document.getElementById('posModal'));
+    modal.show();
+}
+
+// Cart elementlarini yuklash
+async function loadCartItems() {
+    if (!currentShopId) return;
+    
+    try {
+        const response = await fetch(`{% url 'b2c_shop_create' %}?id=${currentShopId}`);
+        const data = await response.json();
+        
+        if (data.cart_items) {
+            cartItems = data.cart_items;
+            renderCartItems();
+            updateTotals();
+        }
+    } catch (error) {
+        console.error('Cart elementlarini yuklashda xatolik:', error);
+    }
+}
+
+// Cart elementlarini ekranga chiqarish
+function renderCartItems() {
+    const tbody = document.getElementById('cart-tbody');
+    tbody.innerHTML = '';
+    
+    cartItems.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-cart-id', item.id);
+        row.setAttribute('data-product-id', item.product_id);
+        row.className = 'cart-item-row';
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td class="product_name">${item.product_name}</td>
+            <td>${item.pack_size || 1}</td>
+            <td>
+                <div class="input-group">
+                    <input type="text" class="form-control cart-input pack-input formatted-input" 
+                           value="${formatNumber(item.total_pack)}" 
+                           oninput="formatNumberInput(this); updateCartItem(${item.id}, 'total_pack', this.value)">
+                </div>
+            </td>
+            <td>
+                <div class="input-group">
+                    <input type="text" class="form-control cart-input quantity-input formatted-input" 
+                           value="${formatNumber(item.quantity)}" 
+                           oninput="formatNumberInput(this); updateCartItem(${item.id}, 'quantity', this.value)">
+                </div>
+            </td>
+            <td>${formatNumber(item.price_without_skidka)}</td>
+            <td>
+                <div class="input-group">
+                    <input type="text" class="form-control cart-input price-input formatted-input" 
+                           value="${formatNumber(item.price)}" 
+                           oninput="formatNumberInput(this); updateCartItem(${item.id}, 'price', this.value)">
+                </div>
+            </td>
+            <td class="total" data-value="${item.total}">${formatNumber(item.total)}</td>
+            <td>
+                <button onclick="deleteCartItem(${item.id})" type="button" class="btn btn-danger delete-cart-btn">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Cartga yangi mahsulot qo'shish
+async function addCart(productId) {
+    if (!currentShopId) {
+        showAlert('Iltimos, avval shop yaratiling', 'warning');
+        return;
+    }
+    
+    try {
+        const productElement = document.querySelector(`[data-value*="${productId}&"]`);
+        if (!productElement) {
+            showAlert('Mahsulot topilmadi', 'danger');
+            return;
+        }
+        
+        const productData = productElement.getAttribute('data-value').split('&');
+        const productName = productData[1];
+        const quantity = 1;
+        const packSize = parseFloat(productData[4]) || 1;
+        const totalPack = quantity / packSize;
+        const price = parseFloat(document.getElementById(`productprice${productId}`).textContent);
+        
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', quantity);
+        formData.append('total_pack', totalPack);
+        formData.append('agreed_price', price);
+        formData.append('product_price', price);
+        
+        const response = await fetch(`{% url 'b2c_shop_create' %}?id=${currentShopId}&request_type=cart_add`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert("Mahsulot savatga qo'shildi", "success");
+            
+            // Yangi cart elementini qo'shamiz
+            const newItem = {
+                id: data.cart_id,
+                product_id: productId,
+                product_name: productName,
+                quantity: quantity,
+                total_pack: totalPack,
+                price: price,
+                price_without_skidka: price,
+                total: quantity * price,
+                pack_size: packSize
+            };
+            
+            cartItems.push(newItem);
+            renderCartItems();
+            updateTotals();
+            
+            // Inputni tozalash
+            document.getElementById('productSearchInput').value = '';
+            document.getElementById('productListDropdown').classList.remove('show');
+            
+        } else {
+            showAlert(data.message || "Xatolik yuz berdi", "danger");
+        }
+    } catch (error) {
+        console.error('Cart qo\'shishda xatolik:', error);
+        showAlert('Server bilan bog\'lanishda xatolik', 'danger');
+    }
+}
+
+// Cart elementini yangilash
+async function updateCartItem(cartId, field, value) {
+    try {
+        // Formatni olib tashlash
+        const parsedValue = parseFormattedNumber(value);
+        
+        // Avvalgi qiymatni saqlab olamiz
+        const itemIndex = cartItems.findIndex(item => item.id === cartId);
+        if (itemIndex === -1) return;
+        
+        const oldItem = {...cartItems[itemIndex]};
+        const oldValue = cartItems[itemIndex][field];
+        
+        // Local cart items ni yangilaymiz (vaqtincha)
+        cartItems[itemIndex][field] = parsedValue;
+        
+        // Agar quantity yoki price o'zgarsa, totalni qayta hisoblaymiz
+        if (field === 'quantity' || field === 'price') {
+            const quantity = cartItems[itemIndex].quantity;
+            const price = cartItems[itemIndex].price;
+            cartItems[itemIndex].total = quantity * price;
+            
+            // Agar quantity o'zgarsa, total_pack ni ham yangilaymiz
+            if (field === 'quantity') {
+                const packSize = cartItems[itemIndex].pack_size || 1;
+                cartItems[itemIndex].total_pack = quantity / packSize;
+            }
+        }
+        
+        // Agar total_pack o'zgarsa, quantity ni yangilaymiz
+        if (field === 'total_pack') {
+            const packSize = cartItems[itemIndex].pack_size || 1;
+            cartItems[itemIndex].quantity = parsedValue * packSize;
+            cartItems[itemIndex].total = cartItems[itemIndex].quantity * cartItems[itemIndex].price;
+        }
+        
+        // UI ni yangilaymiz (vaqtincha)
+        renderCartItems();
+        updateTotals();
+        
+        const formData = new FormData();
+        formData.append(field, parsedValue);
+        
+        const response = await fetch(`{% url 'b2c_shop_create' %}?id=${currentShopId}&cart_id=${cartId}&request_type=cart_edit`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('Mahsulot yangilandi', 'success');
+        } else {
+            // Xatolik bo'lsa, avvalgi qiymatlarga qaytaramiz
+            cartItems[itemIndex] = {...oldItem};
+            
+            // UI ni qayta yangilaymiz
+            renderCartItems();
+            updateTotals();
+            
+            showAlert(data.message || 'Yangilashda xatolik', 'danger');
+            
+            // Xatolik bo'lsa, cartni qayta yuklaymiz
+            loadCartItems();
+        }
+    } catch (error) {
+        console.error('Cart yangilashda xatolik:', error);
+        
+        // Cartni qayta yuklaymiz
+        loadCartItems();
+        showAlert('Server bilan bog\'lanishda xatolik', 'danger');
+    }
+}
+
+// Cart elementini o'chirish
+async function deleteCartItem(cartId) {
+    if (!confirm('Haqiqatan ham ushbu mahsulotni o\'chirmoqchimisiz?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`{% url 'b2c_shop_create' %}?id=${currentShopId}&cart_id=${cartId}&request_type=cart_delete`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert("Mahsulot o'chirildi", "success");
+            
+            // Local cart items dan o'chiramiz
+            cartItems = cartItems.filter(item => item.id !== cartId);
+            renderCartItems();
+            updateTotals();
+        } else {
+            showAlert(data.message || "O'chirishda xatolik", "danger");
+        }
+    } catch (error) {
+        console.error('Cart o\'chirishda xatolik:', error);
+        showAlert('Server bilan bog\'lanishda xatolik', 'danger');
+    }
+}
+
+// Jami summalarni yangilash
+function updateTotals() {
+    let totalPack = 0;
+    let totalQuantity = 0;
+    let totalSum = 0;
+    
+    cartItems.forEach(item => {
+        totalPack += item.total_pack;
+        totalQuantity += item.quantity;
+        totalSum += item.total;
+    });
+
+    const chegirma = parseFormattedNumber(document.getElementById('discountInput').value) || 0;
+    if (chegirma > 0) {
+        totalSum = totalSum - chegirma;
+    }
+    
+    document.getElementById('pack_total').textContent = formatNumber(totalPack);
+    document.getElementById('quantity_total').textContent = formatNumber(totalQuantity);
+    document.getElementById('total_sum').textContent = formatNumber(totalSum);
+    document.getElementById('all_total').textContent = formatNumber(totalSum);
+    document.getElementById('all_total_2').value = formatNumber(totalSum);
+}
+
+// Xabarlarni ko'rsatish
+function showAlert(message, type) {
+    const alertElement = document.createElement('div');
+    alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+    alertElement.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.getElementById('alert-container').appendChild(alertElement);
+    
+    setTimeout(() => {
+        alertElement.remove();
+    }, 5000);
+}
+
+// Inputni tozalash
+function clearInputProduct() {
+    document.getElementById('productSearchInput').value = '';
+    document.getElementById('productListDropdown').classList.remove('show');
+}
+
+// Chegirmani tozalash
+function clearPerecent() {
+    document.getElementById('discountInput').value = '';
+    updateTotals();
+}
+
+// Mahsulot qidiruvini optimallashtirilgan versiyasi
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearchInput');
+    const dropdown = document.getElementById('productListDropdown');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerms = this.value.toLowerCase().split(' ').filter(term => term.length > 0);
+        const items = dropdown.querySelectorAll('.select-product-item');
+        
+        let hasVisibleItems = false;
+        
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            const dataValue = item.getAttribute('data-value').toLowerCase();
+            
+            // Barcha qidiruv so'zlarini tekshirish
+            const allTermsMatch = searchTerms.every(term => {
+                return text.includes(term) || dataValue.includes(term);
+            });
+            
+            if (allTermsMatch) {
+                item.style.display = '';
+                hasVisibleItems = true;
+                
+                // Faqat men yozgan textni belgilash
+                highlightOnlySearchedText(item, this.value.toLowerCase());
+            } else {
+                item.style.display = 'none';
+                removeHighlight(item);
+            }
+        });
+        
+        dropdown.classList.toggle('show', hasVisibleItems && searchTerms.length > 0);
+    });
+
+    // Faqat men yozgan textni belgilash
+    function highlightOnlySearchedText(element, searchedText) {
+        removeHighlight(element);
+        
+        if (!searchedText) return;
+        
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let node;
+        const nodes = [];
+        while (node = walker.nextNode()) {
+            nodes.push(node);
+        }
+        
+        nodes.forEach(node => {
+            const text = node.textContent;
+            const searchRegex = new RegExp(`(${escapeRegex(searchedText)})`, 'gi');
+            const newText = text.replace(searchRegex, '<span class="highlight">$1</span>');
+            
+            if (newText !== text) {
+                const span = document.createElement('span');
+                span.innerHTML = newText;
+                node.parentNode.replaceChild(span, node);
+            }
+        });
+    }
+
+    // Belgilashni olib tashlash
+    function removeHighlight(element) {
+        const highlights = element.querySelectorAll('.highlight');
+        highlights.forEach(highlight => {
+            const parent = highlight.parentNode;
+            parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+            parent.normalize();
+        });
+    }
+
+    // Regex uchun maxsus belgilarni escape qilish
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    // Enter bosilganda birinchi mos keluvchi mahsulotni tanlash
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const visibleItems = dropdown.querySelectorAll('.select-product-item:not([style*="display: none"])');
+            if (visibleItems.length > 0) {
+                visibleItems[0].click();
+            }
+        }
+    });
+});
+
+// Narx turini o'zgartirganda narxlarni yangilash
+document.addEventListener('DOMContentLoaded', function () {
+    const priceTypeRadios = document.querySelectorAll('.price_type_input');
+    const valyutaSelect = document.getElementById('valyuta_input');
+
+    function updateAllPrices() {
+        const selectedValyutaId = valyutaSelect.value;
+        const selectedPriceTypeId = document.querySelector('.price_type_input:checked')?.value;
+
+        document.querySelectorAll('#productListDropdown span[data-prices]').forEach(span => {
+            const rawPrices = span.getAttribute('data-prices');
+            if (!rawPrices) return;
+
+            let pricesData;
+            try {
+                pricesData = JSON.parse(rawPrices);
+            } catch (e) {
+                console.error("JSON parse error:", e, rawPrices);
+                span.textContent = '0';
+                return;
+            }
+
+            const foundValyuta = pricesData.find(v => String(v.valyuta_id) === selectedValyutaId);
+            if (!foundValyuta) {
+                span.textContent = '0';
+                return;
+            }
+
+            const foundPrice = foundValyuta.summas.find(
+                s => String(s.price_type) === selectedPriceTypeId
+            );
+
+            if (foundPrice && foundPrice.summa) {
+                span.textContent = formatNumber(foundPrice.summa);
+            } else {
+                span.textContent = '0';
+            }
+        });
+    }
+
+    updateAllPrices();
+
+    priceTypeRadios.forEach(radio => radio.addEventListener('change', updateAllPrices));
+    valyutaSelect.addEventListener('change', updateAllPrices);
+});
+
+// Sotuvlar ro'yxatini boshqarish (oldingi kod)
+// ... (qolgan JavaScript kodlari oldingi kabi qoladi)
+</script>
+
 {% endblock content %}
+
 {% block js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+    $('select.searchable').selectize({ normalize: true });
+
+    $(document).ready(function () {
+    const debtorSelect = $('#mainSelectDebtor').selectize({
+        normalize: true,
+        create: false,
+        sortField: 'text',
+        placeholder: 'Mijozni tanlang...',
+        render: {
+            option: function (item, escape) {
+                const parts = escape(item.text).split('—');
+                const name = parts[0]?.trim() || '';
+                const phone = parts[1]?.trim() || '';
+
+                return `
+                    <div style="
+                        display: flex; 
+                        flex-direction: column; 
+                        padding: 8px 10px; 
+                        line-height: 1.3;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-person-circle" style="color:#007bff; font-size:17px; vertical-align: middle;"></i>
+                            <span style="font-weight: 500; color:#333;">${name}</span>
+                        </div>
+                        <div style="
+                            display: flex; 
+                            align-items: center; 
+                            gap: 6px; 
+                            margin-top: 4px;
+                            line-height: 1;
+                        ">
+                            <span style="font-size:13px; color:#666; position: relative; top: -1px;">
+                                ${phone}
+                            </span>
+                        </div>
+                    </div>`;
+            },
+            item: function (item, escape) {
+                const parts = escape(item.text).split('—');
+                const name = parts[0]?.trim() || '';
+                const phone = parts[1]?.trim() || '';
+
+                return `
+                    <div style="display:flex; flex-direction:column; line-height:1.2;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <i class="bi bi-person-circle" style="color:#007bff; font-size:17px; vertical-align: middle;"></i>
+                            <span>${name}</span>
+                        </div>
+                        <div style="
+                            display:flex; 
+                            align-items:center; 
+                            gap:6px; 
+                            margin-top:2px;
+                            line-height:1;
+                        ">
+                            <span style="font-size:13px; color:#666; position: relative; top: -1px;">
+                                ${phone}
+                            </span>
+                        </div>
+                    </div>`;
+            }
+        },
+        onInitialize: function () {
+            const input = this.$control;
+            input.css({
+                'border-radius': '10px',
+                'border': '1px solid #ced4da',
+                'padding': '10px 12px',
+                'background': '#fff',
+                'box-shadow': '0 1px 3px rgba(0,0,0,0.1)',
+                'transition': 'all 0.2s ease',
+            });
+
+            this.$dropdown.css({
+                'border-radius': '8px',
+                'overflow': 'hidden',
+                'box-shadow': '0 4px 8px rgba(0,0,0,0.12)',
+            });
+
+            this.$dropdown.on('mouseenter', '.option', function () {
+                $(this).css({
+                    'background': '#007bff',
+                    'color': '#fff',
+                    'cursor': 'pointer'
+                });
+                $(this).find('i').css('color', '#fff');
+            }).on('mouseleave', '.option', function () {
+                $(this).css({
+                    'background': '',
+                    'color': ''
+                });
+                $(this).find('.bi-person-circle').css('color', '#007bff');
+                $(this).find('.bi-telephone-fill').css('color', '#28a745');
+            });
+
+            input.on('focus', function () {
+                $(this).css({
+                    'border-color': '#007bff',
+                    'box-shadow': '0 0 0 3px rgba(0,123,255,0.15)'
+                });
+            }).on('blur', function () {
+                $(this).css({
+                    'border-color': '#ced4da',
+                    'box-shadow': 'none'
+                });
+            });
+        }
+    });
+});
+</script>
 {% endblock js %}

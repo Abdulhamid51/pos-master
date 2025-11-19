@@ -159,43 +159,62 @@
                                     </a>
                                 </li>
                                 {% endif %}
-                                <li class="nav-item">
-                                    <a href="{% url 'last_seen' %}" class="nav-link {% if request.resolver_match.url_name == 'last_seen' %}active{% endif %}">
-                                        <i class="fa-solid fa-seedling"></i>
-                                        <span>Oxirgi ko'rilgan</span>
-                                    </a>
-                                </li>
-                                 <li class="nav-item">
-                                    <a href="{% url 'debtor_type' %}" class="nav-link {% if request.resolver_match.url_name == 'debtor_type' %}active{% endif %}">
-                                        <i class="fa-solid fa-quote-left"></i>
-                                        <span>Mijoz Turi</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{% url 'region' %}" class="nav-link {% if request.resolver_match.url_name == 'region' %}active{% endif %}">
-                                        <i class="fa-solid fa-map-location-dot"></i>
-                                        <span>Mintaqa</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{% url 'teritory' %}" class="nav-link {% if request.resolver_match.url_name == 'teritory' %}active{% endif %}">
-                                        <i class="fa-solid fa-location-dot"></i>    
-                                        <span>Hudud</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{% url 'groups' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
-                                       <i class="fa-solid fa-layer-group"></i>   
-                                        <span>Maxsulot guruhi</span>
-                                    </a>
-                                </li>
 
-                                <li class="nav-item">
-                                    <a href="{% url 'rounding_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
-                                       <i class="fa-solid fa-layer-group"></i>   
-                                        <span>Savdo yahlitlash</span>
-                                    </a>
-                                </li>
+                                {% if custom_user_profile.is_last_seen %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'last_seen' %}" class="nav-link {% if request.resolver_match.url_name == 'last_seen' %}active{% endif %}">
+                                            <i class="fa-solid fa-seedling"></i>
+                                            <span>Oxirgi ko'rilgan</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% if custom_user_profile.is_debtor_type %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'debtor_type' %}" class="nav-link {% if request.resolver_match.url_name == 'debtor_type' %}active{% endif %}">
+                                            <i class="fa-solid fa-quote-left"></i>
+                                            <span>Mijoz Turi</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_region %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'region' %}" class="nav-link {% if request.resolver_match.url_name == 'region' %}active{% endif %}">
+                                            <i class="fa-solid fa-map-location-dot"></i>
+                                            <span>Mintaqa</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_teritory %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'teritory' %}" class="nav-link {% if request.resolver_match.url_name == 'teritory' %}active{% endif %}">
+                                            <i class="fa-solid fa-location-dot"></i>    
+                                            <span>Hudud</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% if custom_user_profile.is_groups %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'groups' %}" class="nav-link {% if request.resolver_match.url_name == 'groups' %}active{% endif %}">
+                                        <i class="fa-solid fa-layer-group"></i>   
+                                            <span>Maxsulot guruhi</span>
+                                        </a>
+                                    </li>
+
+                                {% endif %}
+
+                                {% if custom_user_profile.is_rounding_settings %}
+                                    <li class="nav-item">
+                                        <a href="{% url 'rounding_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'rounding_settings' %}active{% endif %}">
+                                        <i class="fa-solid fa-layer-group"></i>   
+                                            <span>Savdo yahlitlash</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
                             </ul>
                         </div>
                     </div>
@@ -294,14 +313,14 @@
                                                                         <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
                                                                         <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba" value="{{ money.sub_manba }}">
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <!-- <div class="form-group">
                                                                         <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
                                                                         <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
                                                                             {% for i in chiqim_turi %}
                                                                             <option value="{{ i.id }}" {% if money.chiqim_turi == i %} selected {% endif %}>{{ i.nomi }}</option>
                                                                             {% endfor %}
                                                                         </select>
-                                                                    </div>
+                                                                    </div> -->
                                                                     <div class="form-group">
                                                                         <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
                                                                         <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;" {% if money.manba_turi  %} checked {% endif %}>

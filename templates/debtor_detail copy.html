@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Product </title>
+{% endblock title %}
+{% block css %}
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link href="{% static 'assets/css/loader.css' %}" rel="stylesheet" type="text/css"/>
+    <script src="{% static 'assets/js/loader.js' %}"></script>
+    <script src="{% static 'assets/js/apps/contact.js' %}"></script>
+    <link href="{% static 'assets/css/apps/contacts.css' %}" rel="stylesheet" type="text/css"/>
+    <style>
+        td {
+            color: black !important;
+        }
+        .white_class {
+            color: white !important;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+<div id="content" class="main-content">
+    <div class="layout-px-spacing">
+        <div class="middle-content container-xxl p-0">
+            <div class="row layout-spacing layout-top-spacing" id="cancel-row" >
+                <div class="col-lg-12" >
+                    <div class="widget-content searchable-container list">
+                        <div class="searchable-items list">
+                            <div class="items">
+                                <div class="item-content">
+                                    <div class="user-profile">
+                                        <div class="n-chk align-self-center text-center">
+                                            <div class="form-check form-check-primary me-0 mb-0">
+                                            </div>
+                                        </div>
+                                        <div class="n-chk align-self-center text-center">
+                                            <div class="form-check form-check-primary me-0 mb-0">
+                                            </div>
+                                        </div>
+                                         <div class="n-chk align-self-center text-center">
+                                            <div class="form-check form-check-primary me-0 mb-0">
+                                            </div>
+                                        </div>
+                                        <div class="user-meta-info">
+                                            <p class="user-name" data-name="Alan Green">F.I.O: {{ debtor.fio }}</p>
+                                            <!-- <p class="user-work" data-occupation="Web Developer">Web Developer</p> -->
+                                        </div>
+                                    </div>
+                                    <div class="user-email">
+                                        
+                                        <p class="usr-email-addr" data-email="alan@mail.com">Telefon: {{ debtor.phone1|default_if_none:"-" }}</p>
+                                    </div>
+                                    <div class="user-location">
+                                        <p class="info-title">Location: </p>
+                                        <p class="usr-location" data-location="Boston, USA">Tefon 2: {{ debtor.phone2|default_if_none:"-" }}</p>
+                                    </div>
+                                    <div class="user-phone">
+                                        <p class="info-title">Phone: </p>
+                                        <p class="usr-ph-no" data-phone="+1 (070) 123-4567">Hudud :{{ debtor.teritory|default_if_none:"-" }}</p>
+                                    </div>
+                                    <div class="action-btn">
+                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit-2 edit"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> -->
+                                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-minus delete"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg> -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row layout-top-spacing" id="cancel-row">
+            <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                <div class="widget-content widget-content-area br-6">
+                    <div class="row">
+                        <div class="col-md-10">
+                            <form action="">
+                                <div class="row">
+                                    <div class="col-md-7"></div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fa-solid fa-filter"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="{% url 'refresh_debtor' debtor.id %}" class="btn btn-primary" type="button">
+                                            Yangilash
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="html5-extension" class="table table-striped table-bordered display" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Sana</th>
+                                            <th>Turi</th>
+                                            <th>Bizga kirim</th>
+                                            <th>Bizdan chiqim</th>
+                                            <th>Bonus</th>
+                                            <th>Qarzimiz</th>
+                                            <th>Haqqimiz</th>
+                                            <th>Izoh</th>
+                                        </tr>
+                                    </thead>
+                                    {% for v in valyuta %}
+                                    <tbody>
+                                        <tr style="background-color: beige !important;">
+                                            <th></th>
+                                            <th></th>
+                                            <th style="text-align: center;">{{v.name}}</th>
+                                            {% for sm in summa_total_for_valyuta %}
+                                                {% if sm.valyuta == v.id %}
+                                                    <th>{{sm.pay_pay_summa|intcomma}}</th>
+                                                    <th>{{sm.pay_give_summa|intcomma}}</th>
+                                                    <th></th>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                        {% for b in debt_shot %}
+                                            {% if b.valyuta == v %}
+                                                <tr style="background-color: cornflowerblue;">
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th class="white_class">Boshlang'ich qoldiq</th>
+                                                    <th></th>
+                                                    <th></th>
+                                                    <th></th>
+                                                    {% if b.start_summa > 0 %}
+                                                        <th></th>
+                                                        <th>{{b.start_summa|intcomma}}</th>
+                                                        {% else %}
+                                                        <th>{{b.start_summa|intcomma}}</th>
+                                                        <th></th>
+                                                    {% endif %}
+                                                    <th></th>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for py in data %}
+                                            {% if v == py.valyuta %}
+                                                <tr>
+                                                    <td></td>
+                                                    <td>{{py.date|date:'Y-m-d H:i'}}</td>
+                                                    <td>
+                                                        {{py.type_payment}}
+                                                    </th>
+                                                    <td>
+                                                        {{ py.pay_summa|intcomma }}
+                                                    </td>
+                                                    <td>
+                                                        {{ py.give_summa|intcomma }}
+                                                    </td>
+                                                    <td></td> 
+                                                    {% if py.debt_new < 0 %}
+                                                        <td></td>
+                                                        <td>{{ py.debt_new|intcomma }}</td>
+                                                    {% else %}
+                                                        <td>{{ py.debt_new|intcomma }}</td>
+                                                        <td></td>
+                                                    {% endif %}
+                                                    <td>{{ py.comment|default_if_none:'' }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            paging: false  
+        } );
+    </script>
+{% endblock js %}
