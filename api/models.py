@@ -1948,6 +1948,14 @@ class PayHistory(models.Model):
 
         if self.debtor:
             self.debtor.refresh_debt()
+    
+
+    def delete(self, *args, **kwargs):
+        self.summa = 0
+        self.save()
+        super().delete(*args, **kwargs)
+
+
 
 
         
@@ -2188,13 +2196,14 @@ class KassaNew(models.Model):
 class KassaMerge(models.Model):
     kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE, null=True, blank=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
-    start_summa = models.IntegerField(default=0)
-    summa = models.IntegerField(default=0)
+    start_summa = models.FloatField(default=0)
+    summa = models.FloatField(default=0)
     start_date = models.DateField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if self.pk and self.kassa.is_main==False:
             last_close = (
                 CloseCash.objects.filter(kassa_id=self.pk)
@@ -2218,15 +2227,15 @@ class KassaMerge(models.Model):
 
             kirim = (
                 kirim_qs.values('valyuta_id')
-                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=FloatField()))
             ).aggregate(sum=Sum('summa'))['sum'] or 0
             chiqim = (
                 chiqim_qs.values('valyuta_id')
-                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=IntegerField()))
+                .annotate(summa=Coalesce(Sum(F('summa')), 0, output_field=FloatField()))
             ).aggregate(sum=Sum('summa'))['sum'] or 0
 
             self.summa = kirim-chiqim + start_summa
-        super().save(*args, **kwargs)
+        super().save()
 
     def __str__(self):
         return self.kassa.name + " " + self.valyuta.name
@@ -2400,7 +2409,7 @@ class Kirim(models.Model):
     plastik_eski = models.IntegerField(default=0)
     kassa_plastik_yangi = models.IntegerField(default=0)
 
-    summa = models.IntegerField(default=0, null=True)
+    summa = models.FloatField(default=0, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
     kassa_new = models.FloatField(default=0)
@@ -2421,7 +2430,7 @@ class Kirim(models.Model):
         return f'{str(self.qachon)}'
 
     def save(self, *args, **kwargs):
-        if self.kassa:
+        if self.kassa and self.kassa.kassa.is_main == False:
             old_summa = 0
             diff = 0
 
@@ -2449,6 +2458,9 @@ class Kirim(models.Model):
             self.kassa.save()
 
         super().save(*args, **kwargs)
+
+        if self.kassa.kassa.is_main == False:
+            self.kassa.save()
     
     def delete(self, *args, **kwargs):
         self.summa = 0

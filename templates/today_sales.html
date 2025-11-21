@@ -556,20 +556,20 @@
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-md-2">
-                                <h5>Jami Sotuvlar</h5>
+                                <h5>Sotuvlar</h5>
                                 <h3 class="text-primary" id="total-shops">{{ totals.total_shops|intcomma }}</h3>
                             </div>
                             <div class="col-md-3">
-                                <h5>Jami Miqdor</h5>
+                                <h5>SKU</h5>
                                 <h3 class="text-success" id="total-quantity">{{ totals.total_quantity|intcomma }}</h3>
                             </div>
                             <div class="col-md-3">
-                                <h5>Jami Summa</h5>
+                                <h5>To'lov summa</h5>
                                 <h3 class="text-info" id="total-price">{{ totals.total_price|intcomma }}</h3>
                             </div>
                             <div class="col-md-2">
-                                <h5>Sahifa</h5>
-                                <h3 class="text-warning" id="current-page">1</h3>
+                                <h5>Qarz</h5>
+                                <h3 class="text-warning" id="total-debt">1</h3>
                             </div>
 
                             <div class="col-md-2">
@@ -2887,9 +2887,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Jami qiymatlarni yangilash
+    
+
     function updateTotals(data) {
-        document.getElementById('current-page').textContent = data.current_page;
-        document.getElementById('total-price').textContent = parseFloat(data.total_price).toLocaleString();
+
+        let paymentsHTML = '';
+        if (data.payments_by_currency && Object.keys(data.payments_by_currency).length > 0) {
+            paymentsHTML = Object.entries(data.payments_by_currency)
+                .map(([currency, amount]) => `
+                    <h6 class="text-primary"><small>${formatNumber(amount)} ${currency}</small></h6>
+                `).join('');
+        } else {
+            paymentsHTML = '<h6 class="text-primary"><small>0</small></h6>';
+        }
+
+
+        let debtsHTML = '';
+        if (data.debts_by_currency && Object.keys(data.debts_by_currency).length > 0) {
+            debtsHTML = Object.entries(data.debts_by_currency)
+                .map(([currency, amount]) => `
+                    <h6 class="text-primary"><small>${formatNumber(amount)} ${currency}</small></h6>
+                `).join('');
+        } else {
+            paymentsHTML = '<h6 class="text-primary"><small>0</small></h6>';
+        }
+        
+        // document.getElementById('current-page').textContent = data.current_page;
+        $('#total-price').html(paymentsHTML)
+        $('#total-debt').html(debtsHTML)
         document.getElementById('total-quantity').textContent = parseFloat(data.total_quantity).toLocaleString();
         document.getElementById('total-shops').textContent = parseInt(data.total_shops).toLocaleString();
     }
