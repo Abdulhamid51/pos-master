@@ -3333,6 +3333,17 @@ def create_debtor(request):
     tg_id = request.POST.get('tg_id')
     price_type = request.POST.get('price_type')
 
+    last = Debtor.objects.filter(
+        fio=fio,
+        phone1=phone1,
+        phone2=phone2,
+        tg_id=tg_id,
+        price_type_id=price_type,
+    ).last()
+    if last:
+        return JsonResponse({"id": last.id, "name": last.fio, "fio":last.fio})
+
+
     debtor = Debtor.objects.create(
         type_id=type,
         teritory_id=teritory,
@@ -13723,7 +13734,13 @@ def today_sales(request):
         'kassalar': kassalar,
         'debtors': Debtor.objects.filter(),
         'filials': Filial.objects.filter(),
-        'products': ProductFilial.objects.filter(),
+        'products': ProductFilial.objects.filter().annotate(
+            zero_quantity_order=Case(
+                When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
+                default=Value(0),                  # boshqalari 0
+                output_field=IntegerField(),
+            )
+        ).order_by('zero_quantity_order', 'id'),
         'price_types': PriceType.objects.filter(is_activate=True),
         'open_smena': open_smena,
         # 'price_type': PriceType.objects.filter(),
@@ -14510,6 +14527,30 @@ def debtor_history(request, id):
     context['dollar_kurs'] = Course.objects.last().som
     return render(request, 'debtor_detail.html', context)
 
+def get_debts(request, id):
+    debtor = Debtor.objects.get(id=id)
+    
+    # Valyutalar
+    valyutas = Valyuta.objects.filter(is_som_or_dollar=True)
+    valyutas_data = [{
+        'id': v.id,
+        'name': v.name
+    } for v in valyutas]
+    
+    # Hamyonlar
+    wallets = Wallet.objects.filter(customer=debtor)
+    wallets_data = [{
+        'id': w.id,
+        'valyuta_id': w.valyuta.id if w.valyuta else None,
+        'valyuta_name': w.valyuta.name if w.valyuta else '',
+        'summa': w.summa,
+        'start_summa': w.start_summa
+    } for w in wallets]
+    
+    return JsonResponse({
+        'valyutas_for_debt': valyutas_data,
+        'wallets': wallets_data,
+    })
 
 
 @csrf_exempt

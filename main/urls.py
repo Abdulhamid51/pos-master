@@ -421,6 +421,9 @@ urlpatterns = [
 
     path('debt-history/<int:id>/', debt_pay_history, name='debt_pay_history'),
 
+    path('get-debts/<int:id>/', get_debts, name='get_debts'),
+
+
     
 
 

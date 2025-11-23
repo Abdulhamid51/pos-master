@@ -317,13 +317,15 @@
                                     </div>
 
                                 </div>
-                                {% for v in valyutas_for_debt %}
-                                    {% for w in wallets %}
-                                        {% if w.valyuta == v %}
-                                            <p class="text-muted mb-0">{{v.name}}: {{ w.summa|intcomma }}</p>
-                                        {% endif %} 
-                                    {% endfor %} 
-                                {% endfor %}
+                                <div id="pays-div">
+                                    <!-- {% for v in valyutas_for_debt %}
+                                        {% for w in wallets %}
+                                            {% if w.valyuta == v %}
+                                                <p class="text-muted mb-0">{{v.name}}: {{ w.summa|intcomma }}</p>
+                                            {% endif %} 
+                                        {% endfor %} 
+                                    {% endfor %} -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1787,6 +1789,7 @@ function submitDebtPayment() {
             // setTimeout(() => {
             //     location.reload();
             // }, 1500);
+            fetchDebtInfo()
         } else {
             showAlert('To\'lovda xatolik: ' + data.error, 'danger');
         }
@@ -1799,7 +1802,6 @@ function submitDebtPayment() {
 
 
 
-// CSRF token olish uchun yordamchi funksiya
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -1814,5 +1816,40 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// AJAX orqali qarz ma'lumotlarini olish
+function fetchDebtInfo() {
+    const debtorId = "{{ debtor.id }}"; // Template dan olish
+    
+    fetch(`/get-debts/${debtorId}/`)
+        .then(response => response.json())
+        .then(data => {
+            updatePaysDiv(data);
+        })
+        .catch(error => {
+            console.error('Xatolik:', error);
+        });
+}
+
+// #pays-div ni yangilash
+function updatePaysDiv(data) {
+    const paysDiv = document.getElementById('pays-div');
+    if (!paysDiv) return;
+    
+    let html = '';
+    
+    // Valyuta va wallet ma'lumotlarini birlashtirish
+    data.valyutas_for_debt.forEach(valyuta => {
+        // Shu valyutaga tegishli wallet ni topish
+        const wallet = data.wallets.find(w => w.valyuta_id === valyuta.id);
+        const summa = wallet ? wallet.summa : 0;
+        
+        html += `<p class="text-muted mb-0">${valyuta.name}: ${formatNumber(summa)}</p>`;
+    });
+    
+    paysDiv.innerHTML = html;
+}
+
+fetchDebtInfo()
 </script>
 {% endblock js %}
