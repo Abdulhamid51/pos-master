@@ -199,10 +199,15 @@
                                             <th>Telefon</th>
                                             <th>Telefon 2</th>
                                             {% for i in valyuta %}
-                                                <th>{{ i.name }} Qarz</th>
+                                                {% if i.is_som_or_dollar %}
+                                                    <th>{{ i.name }} Qarz</th>
+                                                {% endif %}
                                             {% endfor %}
+
                                             {% for i in valyuta %}
+                                                {% if i.is_som_or_dollar %}
                                                 <th>{{ i.name }} Haq</th>
+                                                {% endif %}
                                             {% endfor %}
                                             <th>Bonus</th>
                                             <th>Boshlang'ich qoldiq</th>

@@ -1151,6 +1151,89 @@ $(document).ready(function() {
 </script>
 
 
+<script>
+
+    // function formatNumber(num) {
+    //     return new Intl.NumberFormat("ru-RU", {
+    //         minimumFractionDigits: 0,
+    //         maximumFractionDigits: 2
+    //     }).format(num).replace(',', '.');
+    // }
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat("ru-RU", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        })
+        .format(num)
+        .replace(',', '.');
+    }
+
+    function cleanValue(value) {
+        // faqat raqam va bitta nuqta qoladi
+        value = value.replace(/[^\d.]/g, '');
+
+        // ikki va undan ko‘p nuqtalarga yo‘l qo‘ymaymiz
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        return value;
+    }
+
+
+    function cleanNumber(str) {
+        return str.replace(/\s/g, '');
+    }
+
+    function formatInput(input) {
+        let value = input.value;
+
+        // Harflarni o‘chirib tashlash
+        value = cleanValue(value);
+
+        // ❗ Oxirida nuqta borligini eslab qolamiz
+        const endsWithDot = value.endsWith('.');
+
+        // Agar faqat nuqta bo'lsa — ruxsat emas
+        if (value === ".") {
+            input.value = "";
+            return;
+        }
+
+        // Agar oddiy son bo‘lsa format qilamiz
+        if (value && !isNaN(value)) {
+            input.value = formatNumber(parseFloat(value));
+        } else {
+            input.value = value;
+            return;
+        }
+
+        // ❗ Formatdan keyin kerak bo'lsa nuqtani qayta qo'yamiz
+        if (endsWithDot) {
+            input.value = input.value + ".";
+        }
+    }
+
+
+
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.make_intcomma').forEach(input => {
+
+            input.addEventListener('keyup', function () {
+                setTimeout(() => formatInput(this), 30);
+            });
+
+            input.addEventListener('blur', function () {
+                formatInput(this);
+            });
+        });
+    });
+
+</script>
+
 
 <script src="{% static 'assets/js/custom.js' %}"></script>
 <!-- END GLOBAL MANDATORY SCRIPTS -->

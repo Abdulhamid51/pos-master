@@ -133,12 +133,19 @@
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Mahsulot</label>
-                                                <select class="form-control searchable" id="product-select" required>
-                                                    <option value="">Tanlang</option>
-                                                    {% for product in products %}
-                                                    <option value="{{ product.id }}">{{ product.name }}</option>
-                                                    {% endfor %}
-                                                </select>
+                                                <div class="input-group">
+                                                    <select class="form-control searchable" id="product-select" required>
+                                                        <option value="">Tanlang</option>
+                                                        {% for product in products %}
+                                                        <option value="{{ product.id }}">{{ product.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new_product_add">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -147,11 +154,11 @@
                                                 <input type="number" step="0.001" class="form-control" id="quantity-input" required>
                                             </div>
                                         </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-2">
                                             <div class="form-group">
                                                 <label>&nbsp;</label>
                                                 <button type="submit" class="btn btn-success btn-block">
-                                                    <i class="fas fa-plus"></i> Qo'shish
+                                                    <i class="fas fa-plus"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -170,7 +177,7 @@
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Mahsulotlar</h5>
                                 <span class="badge badge-primary">
-                                    Jami: {{ active_one.total_quantity|intcomma }} dona
+                                    Jami: {{ active_one.total_quantity|default_if_none:'0'|intcomma }} dona
                                 </span>
                             </div>
                             <div class="card-body">

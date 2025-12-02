@@ -281,7 +281,7 @@ class TeritoryAdmin(admin.ModelAdmin):
 class PayHistoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'debtor', 'desktop_id', 'som', 'dollar', 'date', 'shop', 'summa')
     search_fields = ('id', 'debtor','som', 'dollar', 'date')
-    list_filter = ('debtor',)
+    list_filter = ('debtor', 'for_start')
     date_hierarchy = 'date'
 
 
@@ -445,6 +445,11 @@ class ProductBringPriceAdmin(admin.ModelAdmin):
 @admin.register(KassaNew)
 class KassaNewAdmin(admin.ModelAdmin):
     list_display = ('id', 'filial', 'is_active', 'is_main', 'name', 'kassa_user')
+
+
+@admin.register(SmenaOpen)
+class SmenaOpenAdmin(admin.ModelAdmin):
+    list_display = ('id', 'date', 'filial', 'by_user', 'contract_id')
 
 
 

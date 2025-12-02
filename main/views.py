@@ -25,6 +25,10 @@ from django.views.decorators.http import require_http_methods
 
 
 
+def make_aware_if_needed(dt):
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt)
+    return dt
 
 
 
@@ -4121,6 +4125,256 @@ def Logout(request):
 
 
 
+# def kassa(request):
+#     bugun = timezone.now()
+    
+#     # Get filter parameters
+#     start_date = request.GET.get('start_date')
+#     end_date = request.GET.get('end_date')
+#     deliver = [int(i) for i in request.GET.getlist('deliver') if i]
+#     debtor = [int(i) for i in request.GET.getlist('debtor') if i]
+#     chiqim_turi = request.GET.get('chiqim_turi')
+#     category = [int(i) for i in request.GET.getlist('category') if i]
+#     subcategory = [int(i) for i in request.GET.getlist('subcategory') if i]
+    
+#     # Base querysets
+#     hodimlar = HodimModel.objects.all()
+#     kassa_var = Kassa.objects.first()
+#     expenses = FilialExpense.objects.all()
+#     branches = Filial.objects.all()
+    
+#     # Combined transactions (kirim + chiqim)
+#     transactions = []
+    
+#     # Get kirim and chiqim with common filtering
+#     base_filters = Q()
+#     date_filters = Q()
+    
+#     if start_date and end_date:
+#         date_filters = Q(qachon__gte=start_date, qachon__lte=end_date)
+#     else:
+#         date_filters = Q(qachon__year=bugun.year, qachon__month=bugun.month)
+    
+#     # Apply additional filters
+#     if deliver:
+#         base_filters &= Q(deliver_id__in=deliver)
+#     if debtor:
+#         base_filters &= Q(payhistory__debtor_id__in=debtor)
+#     if chiqim_turi:
+#         base_filters &= Q(qayerga_id=chiqim_turi)
+#     if category:
+#         base_filters &= Q(subcategory__category_id__in=category)
+#     if subcategory:
+#         base_filters &= Q(subcategory_id__in=subcategory)
+    
+#     # Get kirim and chiqim
+#     if request.user.userprofile.staff == 1:
+#         cashes = KassaNew.objects.filter(is_main=True)
+#     else:
+#         cashes = KassaNew.objects.filter(is_main=False, filial=request.user.userprofile.filial)
+        
+#     kirim_qs = Kirim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
+#     chiqim_qs = Chiqim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
+    
+#     # Combine and sort by date
+#     for kirim in kirim_qs:
+#         transactions.append({
+#             'type': 'kirim',
+#             'obj': kirim,
+#             'date': kirim.qachon
+#         })
+    
+#     for chiqim in chiqim_qs:
+#         transactions.append({
+#             'type': 'chiqim', 
+#             'obj': chiqim,
+#             'date': chiqim.qachon
+#         })
+    
+#     # Sort by date (newest first)
+#     transactions.sort(key=lambda x: x['date'], reverse=True)
+    
+#     # Optimize hodimlar_qarz calculation
+#     hodimlar_qarz = []
+#     for hodim in hodimlar:
+#         qarzlar = hodim.hodimqarz_set.filter(tolandi=False)
+#         qarz_som = sum(q.qancha_som for q in qarzlar)
+#         qarz_dol = sum(q.qancha_dol for q in qarzlar)
+        
+#         hodimlar_qarz.append({
+#             'id': hodim.id,
+#             'ism_familya': hodim.toliq_ism_ol(),
+#             'filial': hodim.filial.name,
+#             'qarz_som': qarz_som,
+#             'qarz_dol': qarz_dol,
+#         })
+    
+#     # Optimize expenses calculation
+#     if start_date and end_date:
+#         expenses = expenses.filter(created_at__range=(start_date, end_date))
+#     else:
+#         expenses = expenses.filter(created_at__year=bugun.year, created_at__month=bugun.month)
+    
+#     total_expenses = expenses.aggregate(
+#         total=Coalesce(Sum('total_sum'), 0, output_field=FloatField())
+#     )['total']
+    
+#     # Optimize hodimlar_royxat
+#     current_month_payments = OylikTolov.objects.filter(
+#         sana__year=bugun.year, sana__month=bugun.month
+#     ).values_list('hodim_id', flat=True)
+    
+#     hodimlar_royxat = [hodim for hodim in hodimlar if hodim.id not in current_month_payments]
+    
+#     # Optimize kassa data
+#     kassa_data = []
+#     active_kassa = KassaMerge.objects.filter(is_active=True, kassa__in=cashes).distinct()
+    
+#     for kassa_obj in cashes:
+#         valyuta_data = []
+#         for val in Valyuta.objects.filter(is_activate=True):
+#             total = active_kassa.filter(valyuta=val, kassa=kassa_obj).aggregate(
+#                 summa=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+#             )['summa']
+#             valyuta_data.append({'name': val.name, 'summa': total})
+        
+#         kassa_data.append({
+#             'name': kassa_obj.name,
+#             'valyuta': valyuta_data
+#         })
+    
+#     # Optimize totals calculation
+#     valutas = Valyuta.objects.filter(is_activate=True)
+#     kirim_totals = []
+#     chiqim_totals = []
+    
+#     for v in valutas:
+#         kirim_total = kirim_qs.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum'] or 0
+#         chiqim_total = chiqim_qs.filter(valyuta=v).aggregate(sum=Sum('summa'))['sum'] or 0
+        
+#         kirim_totals.append({'summa': kirim_total})
+#         chiqim_totals.append({'summa': chiqim_total})
+    
+#     # Optimize round_chart
+#     round_chart = []
+#     for kassa_obj in cashes:
+#         som_total = active_kassa.filter(kassa=kassa_obj, valyuta__is_som=True).aggregate(
+#             total=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+#         )['total']
+        
+#         dol_total = active_kassa.filter(kassa=kassa_obj, valyuta__is_dollar=True).aggregate(
+#             total=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+#         )['total']
+        
+#         round_chart.append({
+#             'name': kassa_obj.name,
+#             'summa_som': som_total,
+#             'summa_dol': dol_total,
+#         })
+    
+#     # Optimize chart_month
+#     year = date.fromisoformat(start_date).year if start_date else bugun.year
+#     months = {
+#         1: 'Yan', 2: 'Fev', 3: 'Mart', 4: 'Apr',
+#         5: 'May', 6: 'Iyun', 7: 'Iyul', 8: 'Avg',
+#         9: 'Sen', 10: 'Okt', 11: 'Noy', 12: 'Dek',
+#     }
+    
+#     chart_month = []
+#     for month_num in range(1, 13):
+#         chiqim_sum = chiqim_qs.filter(qachon__year=year, qachon__month=month_num).aggregate(
+#             summa=Coalesce(Sum(F('summa') / F('currency')), 0, output_field=FloatField())
+#         )['summa']
+        
+#         shop_sum = Shop.objects.filter(date__year=year, date__month=month_num).aggregate(
+#             total=Coalesce(
+#                 Sum((F('cart__quantity') * F('cart__price')) / F('kurs')), 
+#                 0, 
+#                 output_field=FloatField()
+#             )
+#         )['total']
+        
+#         chart_month.append({
+#             'month': months[month_num],
+#             'chiqim_summa': chiqim_sum,
+#             'shop_summa': shop_sum,
+#         })
+    
+#     # Prepare context
+#     content = {
+#         'chart_month': chart_month,
+#         'round_chart': round_chart,
+#         'transactions': transactions,
+#         'kassa_active': 'active',
+#         'kassa_true': 'true',
+#         'kirim_totals': kirim_totals,
+#         'chiqim_totals': chiqim_totals,
+#         'hodimlar': hodimlar_royxat,
+#         'barcha_hodimlar': hodimlar,
+#         'categories': ChiqimCategory.objects.all(),
+#         'subcategories': ChiqimSubCategory.objects.all(),
+#         'hodimlar_qarz': hodimlar_qarz,
+#         'kassa': kassa_var,
+#         'valutas': valutas,
+#         'filial': "active",
+#         'filial_t': "true",
+#         'filials': branches,
+#         'total_expenses': total_expenses,
+#         'expenses': expenses,
+#         'chiqim_turi': ChiqimTuri.objects.all(),
+#         'expanse_category': FilialExpenseCategory.objects.all(),
+#         'delivers': Deliver.objects.all(),
+#         'debtors': Debtor.objects.all(),
+#         'valuta': valutas,
+#         'cashes': cashes,
+#         'money_circulation': MoneyCirculation.objects.filter(is_delete=True),
+#         'bugun_year': bugun.year,
+#         'data': kassa_data,
+#         'filters': {
+#             'start_date': start_date,
+#             'end_date': end_date,
+#             'deliver': deliver,
+#             'category': category,
+#             'subcategory': subcategory,
+#             'debtor': debtor
+#         }
+#     }
+    
+#     dollar_kurs = Course.objects.last()
+#     content['dollar_kurs'] = dollar_kurs.som if dollar_kurs else 0
+    
+#     return render(request, 'kassa.html', content)
+
+def get_kassas(request):
+    if request.user.userprofile.staff == 1:
+        cashes = KassaNew.objects.filter(is_main=True)
+    else:
+        cashes = KassaNew.objects.filter(is_main=False, filial=request.user.userprofile.filial)
+
+    
+    # Optimize kassa data
+    kassa_data = []
+    active_kassa = KassaMerge.objects.filter(is_active=True, kassa__in=cashes).distinct()
+    
+    for kassa_obj in cashes:
+        valyuta_data = []
+        for val in Valyuta.objects.filter(is_activate=True):
+            total = active_kassa.filter(valyuta=val, kassa=kassa_obj).aggregate(
+                summa=Coalesce(Sum('summa'), 0, output_field=FloatField())
+            )['summa']
+            valyuta_data.append({'name': val.name, 'summa': total})
+        
+        kassa_data.append({
+            'name': kassa_obj.name,
+            'valyuta': valyuta_data
+        })
+    
+    return JsonResponse({
+        "data": kassa_data
+    })
+    
+
+
 def kassa(request):
     bugun = timezone.now()
     
@@ -4168,9 +4422,30 @@ def kassa(request):
         cashes = KassaNew.objects.filter(is_main=True)
     else:
         cashes = KassaNew.objects.filter(is_main=False, filial=request.user.userprofile.filial)
+
+    
+    # Optimize kassa data
+    kassa_data = []
+    active_kassa = KassaMerge.objects.filter(is_active=True, kassa__in=cashes).distinct()
+    
+    for kassa_obj in cashes:
+        valyuta_data = []
+        for val in Valyuta.objects.filter(is_activate=True):
+            total = active_kassa.filter(valyuta=val, kassa=kassa_obj).aggregate(
+                summa=Coalesce(Sum('summa'), 0, output_field=IntegerField())
+            )['summa']
+            valyuta_data.append({'name': val.name, 'summa': total})
         
-    kirim_qs = Kirim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
-    chiqim_qs = Chiqim.objects.filter(is_approved=True, kassa__kassa__in=cashes).distinct().filter(date_filters & base_filters)
+        kassa_data.append({
+            'name': kassa_obj.name,
+            'valyuta': valyuta_data
+        })
+    
+    # if request.GET.get('request_type') == 'kassas':
+    #     return JsonResponse(kassa_data)
+        
+    kirim_qs = Kirim.objects.filter(is_approved=True, kassa__kassa__in=cashes, summa__gt=0).distinct().filter(date_filters & base_filters)
+    chiqim_qs = Chiqim.objects.filter(is_approved=True, kassa__kassa__in=cashes, summa__gt=0).distinct().filter(date_filters & base_filters)
     
     # Combine and sort by date
     for kirim in kirim_qs:
@@ -4189,6 +4464,7 @@ def kassa(request):
     
     # Sort by date (newest first)
     transactions.sort(key=lambda x: x['date'], reverse=True)
+    
     
     # Optimize hodimlar_qarz calculation
     hodimlar_qarz = []
@@ -4222,22 +4498,6 @@ def kassa(request):
     
     hodimlar_royxat = [hodim for hodim in hodimlar if hodim.id not in current_month_payments]
     
-    # Optimize kassa data
-    kassa_data = []
-    active_kassa = KassaMerge.objects.filter(is_active=True, kassa__in=cashes).distinct()
-    
-    for kassa_obj in cashes:
-        valyuta_data = []
-        for val in Valyuta.objects.filter(is_activate=True):
-            total = active_kassa.filter(valyuta=val, kassa=kassa_obj).aggregate(
-                summa=Coalesce(Sum('summa'), 0, output_field=IntegerField())
-            )['summa']
-            valyuta_data.append({'name': val.name, 'summa': total})
-        
-        kassa_data.append({
-            'name': kassa_obj.name,
-            'valyuta': valyuta_data
-        })
     
     # Optimize totals calculation
     valutas = Valyuta.objects.filter(is_activate=True)
@@ -4267,38 +4527,23 @@ def kassa(request):
             'summa_som': som_total,
             'summa_dol': dol_total,
         })
-    
-    # Optimize chart_month
-    year = date.fromisoformat(start_date).year if start_date else bugun.year
-    months = {
-        1: 'Yan', 2: 'Fev', 3: 'Mart', 4: 'Apr',
-        5: 'May', 6: 'Iyun', 7: 'Iyul', 8: 'Avg',
-        9: 'Sen', 10: 'Okt', 11: 'Noy', 12: 'Dek',
-    }
-    
-    chart_month = []
-    for month_num in range(1, 13):
-        chiqim_sum = chiqim_qs.filter(qachon__year=year, qachon__month=month_num).aggregate(
-            summa=Coalesce(Sum(F('summa') / F('currency')), 0, output_field=FloatField())
-        )['summa']
-        
-        shop_sum = Shop.objects.filter(date__year=year, date__month=month_num).aggregate(
-            total=Coalesce(
-                Sum((F('cart__quantity') * F('cart__price')) / F('kurs')), 
-                0, 
-                output_field=FloatField()
-            )
-        )['total']
-        
-        chart_month.append({
-            'month': months[month_num],
-            'chiqim_summa': chiqim_sum,
-            'shop_summa': shop_sum,
+
+
+    # AJAX so'rovini tekshirish
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Faqat jadval ma'lumotlarini qaytarish
+        html = render(request, 'kassa_table_partial.html', {
+            'transactions': transactions,
+            'kirim_totals': kirim_totals,
+            'chiqim_totals': chiqim_totals,
+            'valutas': valutas,
         })
+        
+        return html
     
     # Prepare context
     content = {
-        'chart_month': chart_month,
+        # 'chart_month': chart_month,
         'round_chart': round_chart,
         'transactions': transactions,
         'kassa_active': 'active',
@@ -4480,111 +4725,201 @@ def hodim_qarzlari(request):
 
 
 
+# def chiqim_qilish(request):
+
+#     """ Kassadan chiqim qiladi """
+
+#     if request.method == 'POST':
+#         pass
+#         subcategory = request.POST.get('subcategory')
+#         kurs = request.POST.get('kurs')
+#         valuta_id = request.POST.get('valuta')
+#         kassa_id = request.POST.get('kassa')
+#         summa = request.POST.get('summa')
+#         izox = request.POST['izox']
+#         debtor = request.POST.get('debtor')
+#         deliver = request.POST.get('deliver')
+#         partner = request.POST.get('partner')
+#         qaysi_oy = int(request.POST.get('qaysi_oy') or datetime.now().month)
+#         qaysi_yil = int(request.POST.get('qaysi_yil') or datetime.now().year)
+#         qaysi = date(qaysi_yil, qaysi_oy, 1)
+#         money_circulation = request.POST.get('money_circulation')
+        
+#         valuta = Valyuta.objects.get(id=valuta_id)
+#         cash = KassaNew.objects.get(id=kassa_id)
+
+#         kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
+
+#         chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory,
+#                                         kassa=kassa, valyuta=valuta, currency=kurs, 
+#                                         summa=summa, money_circulation_id=money_circulation, qaysi=qaysi,
+#                                         )
+
+#         reja = RejaChiqim.objects.create(kassa=cash, valyuta=valuta,
+#                                           plan_total=summa, kurs=kurs, is_confirmed=True,
+#                                           money_circulation_id=money_circulation, qaysi=qaysi,)
+#         chiqim.reja_chiqim=reja
+#         # kassa.summa -= float(summa)
+
+#         # chiqim.kassa_new = kassa.summa
+
+#         if debtor:
+#             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+#             chiqim.payhistory=pay
+#             deb = Debtor.objects.get(id=debtor)
+#             deb.refresh_debt()
+#             text = 'Pul olindi \n'
+#             text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
+#             chat_id = deb.tg_id
+#             send_message(chat_id, text)
+        
+#         if deliver:
+#             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+#             chiqim.payhistory=pay
+#             Deliver.objects.get(id=deliver).refresh_debt()
+
+#         if partner:
+#             pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+#             chiqim.payhistory=pay
+#             ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
+#         kassa.save()
+#         chiqim.save()
+
+#         return redirect(request.META['HTTP_REFERER'])
+
+
+# def chiqim_qilish_edit(request):
+#     """ Chiqimni tahrirlash va kassa qoldiqlarini yangilash """
+#     chiqim_id = request.POST.get('transaction_id')
+#     chiqim = Chiqim.objects.get(id=chiqim_id)
+
+#     eski_summa = float(chiqim.summa)
+#     eski_kurs = float(chiqim.currency)
+
+#     if request.method == 'POST':
+#         yangi_summa = float(request.POST.get('summa'))
+#         yangi_kurs = float(request.POST.get('kurs'))
+#         yangi_izoh = request.POST.get('izox')
+#         yangi_subcat = request.POST.get('subcategory')
+
+#         # Chiqimni yangilash
+#         chiqim.summa = yangi_summa
+#         chiqim.currency = yangi_kurs
+#         chiqim.izox = yangi_izoh
+#         chiqim.subcategory_id = yangi_subcat
+
+#         farq = eski_summa - yangi_summa  # chiqim kamaytirilgan bo‘lsa, qoldiq oshadi
+
+#         kassa = chiqim.kassa
+#         kassa.save()
+
+#         chiqim.save()
+#         return redirect(request.META['HTTP_REFERER'])
+
+
 def chiqim_qilish(request):
-
-    """ Kassadan chiqim qiladi """
-
+    """ Kassadan chiqim qiladi - AJAX versiya """
     if request.method == 'POST':
-        pass
-        subcategory = request.POST.get('subcategory')
-        kurs = request.POST.get('kurs')
-        valuta_id = request.POST.get('valuta')
-        kassa_id = request.POST.get('kassa')
-        summa = request.POST.get('summa')
-        izox = request.POST['izox']
-        debtor = request.POST.get('debtor')
-        deliver = request.POST.get('deliver')
-        partner = request.POST.get('partner')
-        qaysi_oy = int(request.POST.get('qaysi_oy') or datetime.now().month)
-        qaysi_yil = int(request.POST.get('qaysi_yil') or datetime.now().year)
-        qaysi = date(qaysi_yil, qaysi_oy, 1)
-        money_circulation = request.POST.get('money_circulation')
+        try:
+            subcategory = request.POST.get('subcategory')
+            kurs = clean_number(request.POST.get('kurs'))
+            valuta_id = request.POST.get('valuta')
+            kassa_id = request.POST.get('kassa')
+            summa = clean_number(request.POST.get('summa'))
+            izox = request.POST['izox']
+            debtor = request.POST.get('debtor')
+            deliver = request.POST.get('deliver')
+            partner = request.POST.get('partner')
+            qaysi_oy = int(request.POST.get('qaysi_oy') or datetime.now().month)
+            qaysi_yil = int(request.POST.get('qaysi_yil') or datetime.now().year)
+            qaysi = date(qaysi_yil, qaysi_oy, 1)
+            money_circulation = request.POST.get('money_circulation')
+            
+            valuta = Valyuta.objects.get(id=valuta_id)
+            cash = KassaNew.objects.get(id=kassa_id)
+
+            kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
+
+            if kassa.summa < float(summa):
+                return JsonResponse({'success': False, 'message': "Kassa qoldig'i yetarli emas"})
+
+            chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory,
+                                            kassa=kassa, valyuta=valuta, currency=kurs, 
+                                            summa=summa, money_circulation_id=money_circulation, qaysi=qaysi,
+                                            )
+
+            reja = RejaChiqim.objects.create(kassa=cash, valyuta=valuta,
+                                              plan_total=summa, kurs=kurs, is_confirmed=True,
+                                              money_circulation_id=money_circulation, qaysi=qaysi,)
+            chiqim.reja_chiqim=reja
+
+            if debtor:
+                pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+                chiqim.payhistory=pay
+                deb = Debtor.objects.get(id=debtor)
+                deb.refresh_debt()
+                text = 'Pul olindi \n'
+                text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
+                chat_id = deb.tg_id
+                send_message(chat_id, text)
+            
+            if deliver:
+                pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+                chiqim.payhistory=pay
+                Deliver.objects.get(id=deliver).refresh_debt()
+
+            if partner:
+                pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
+                chiqim.payhistory=pay
+                ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
+            kassa.save()
+            chiqim.save()
+
+            return JsonResponse({'success': True, 'message': 'Chiqim muvaffaqiyatli qo\'shildi'})
         
-        valuta = Valyuta.objects.get(id=valuta_id)
-        cash = KassaNew.objects.get(id=kassa_id)
-
-        kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
-
-        chiqim = Chiqim.objects.create(izox=izox, subcategory_id=subcategory,
-                                        kassa=kassa, valyuta=valuta, currency=kurs, 
-                                        summa=summa, money_circulation_id=money_circulation, qaysi=qaysi,
-                                        )
-
-        reja = RejaChiqim.objects.create(kassa=cash, valyuta=valuta,
-                                          plan_total=summa, kurs=kurs, is_confirmed=True,
-                                          money_circulation_id=money_circulation, qaysi=qaysi,)
-        chiqim.reja_chiqim=reja
-        # kassa.summa -= float(summa)
-
-        # chiqim.kassa_new = kassa.summa
-
-        if debtor:
-            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
-            chiqim.payhistory=pay
-            deb = Debtor.objects.get(id=debtor)
-            deb.refresh_debt()
-            text = 'Pul olindi \n'
-            text += f'\t\t\t {chiqim.summa}-{chiqim.valyuta.name}'
-            chat_id = deb.tg_id
-            send_message(chat_id, text)
-        
-        if deliver:
-            pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
-            chiqim.payhistory=pay
-            Deliver.objects.get(id=deliver).refresh_debt()
-
-        if partner:
-            pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=2)
-            chiqim.payhistory=pay
-            ExternalIncomeUser.objects.get(id=partner).refresh_debt()
-
-        kassa.save()
-        chiqim.save()
-
-        return redirect(request.META['HTTP_REFERER'])
-
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
 def chiqim_qilish_edit(request):
-    """ Chiqimni tahrirlash va kassa qoldiqlarini yangilash """
-    chiqim_id = request.POST.get('transaction_id')
-    chiqim = Chiqim.objects.get(id=chiqim_id)
-
-    eski_summa = float(chiqim.summa)
-    eski_kurs = float(chiqim.currency)
-
+    """ Chiqimni tahrirlash va kassa qoldiqlarini yangilash - AJAX versiya """
     if request.method == 'POST':
-        yangi_summa = float(request.POST.get('summa'))
-        yangi_kurs = float(request.POST.get('kurs'))
-        yangi_izoh = request.POST.get('izox')
-        yangi_subcat = request.POST.get('subcategory')
+        try:
+            chiqim_id = request.POST.get('transaction_id')
+            chiqim = Chiqim.objects.get(id=chiqim_id)
+            
 
-        # Chiqimni yangilash
-        chiqim.summa = yangi_summa
-        chiqim.currency = yangi_kurs
-        chiqim.izox = yangi_izoh
-        chiqim.subcategory_id = yangi_subcat
+            yangi_summa = clean_number(request.POST.get('summa'))
+            yangi_kurs = clean_number(request.POST.get('kurs'))
+            yangi_izoh = request.POST.get('izox')
+            yangi_subcat = request.POST.get('subcategory')
 
-        farq = eski_summa - yangi_summa  # chiqim kamaytirilgan bo‘lsa, qoldiq oshadi
+            if chiqim.kassa.summa - chiqim.summa < float(yangi_summa):
+                return JsonResponse({'success': False, 'message': "Kassa qoldig'i yetarli emas"})
 
-        kassa = chiqim.kassa
-        # kassa.summa += farq
-        kassa.save()
 
-        # chiqimlar = Chiqim.objects.filter(kassa=kassa, id__gte=chiqim.id).order_by('id')
-        # qoldiq = kassa.summa
+            # Chiqimni yangilash
+            chiqim.summa = yangi_summa
+            chiqim.currency = yangi_kurs
+            chiqim.izox = yangi_izoh
+            chiqim.subcategory_id = yangi_subcat
 
-        chiqim.save()
+            chiqim.save()
+            if chiqim.kassa:
+                chiqim.kassa.save()
+            
+            return JsonResponse({'success': True, 'message': 'Chiqim muvaffaqiyatli tahrirlandi'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
-        # for ch in chiqimlar:
-        #     if ch.id == chiqim.id:
-        #         qoldiq = qoldiq
-        #     else:
-        #         qoldiq -= float(ch.summa)
+def clean_number(value):
+    """ Raqamni tozalash funksiyasi """
+    if value:
+        return float(str(value).replace(' ', '').replace(',', '.'))
+    return 0
 
-        #     ch.kassa_new = qoldiq
-        #     ch.save()
-
-        return redirect(request.META['HTTP_REFERER'])
 
 
 
@@ -4755,171 +5090,182 @@ def chiqim_qilish_edit(request):
 # from tg_bot.bot import send_message, send_kirim_message
 from django.contrib.humanize.templatetags.humanize import intcomma
 
-def kirim_qilish(request):
+# def kirim_qilish(request):
 
-    """ Kassadan kirim qiladi """
-
-    if request.method == 'POST':
-        pass
-        debtor = request.POST.get('debtor')
-        # plastik = request.POST.get('plastik')
-        kurs = request.POST.get('kurs')
-        debtor = request.POST.get('debtor')
-        deliver = request.POST.get('deliver')
-        partner = request.POST.get('partner')
-        valuta_id = request.POST.get('valuta')
-        kassa_id = request.POST.get('kassa')
-        summa = request.POST.get('summa')
-        izox = request.POST['izox']
-
-        valuta = Valyuta.objects.get(id=valuta_id)
-        cash = KassaNew.objects.get(id=kassa_id)
-
-        kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
-
-        kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
-        
-        # kassa.summa += float(summa)
-
-        kirim.kassa_new = kassa.summa
-        if debtor:
-            pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
-            kirim.payhistory=pay
-            deb = Debtor.objects.get(id=debtor)
-            deb.refresh_debt()
-            text = 'Pul olindi \n'
-            text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
-            text += f'💸 {intcomma(kirim.currency) }'
-            text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}"
-            if kirim.izox:
-                text += f'💬 {kirim.izox}'
-            chat_id = deb.tg_id
-            # send_kirim_message(chat_id, text, kirim.id)
-            RejaChiqim.objects.create(debtor_id=debtor, comment=izox, kassa=kassa.kassa, valyuta=valuta,kurs=kurs, plan_total=summa,is_confirmed=True)
-        
-        if deliver:
-            pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
-            kirim.payhistory=pay
-            Deliver.objects.get(id=deliver).refresh_debt()
-            RejaTushum.objects.create(deliver_id=deliver, kassa=kassa.kassa, comment=izox, valyuta=valuta, kurs=kurs, plan_total=summa,is_confirmed=True)
-
-        if partner:
-            pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
-            kirim.payhistory=pay
-            ExternalIncomeUser.objects.get(id=partner).refresh_debt()
-
-
-        kassa.save()
-        kirim.save()
-       
-
-        return redirect(request.META['HTTP_REFERER'])
-
-
-def kirim_qilish_edit(request):
-    """ Kirimni tahrirlash va kassa qoldiqlarini yangilash """
-    kirim_id = request.POST.get('transaction_id')
-    kirim = Kirim.objects.get(id=kirim_id)
-    eski_summa = float(kirim.summa)
-    eski_kurs = float(kirim.currency)
-
-    if request.method == 'POST':
-        yangi_summa = float(request.POST.get('summa'))
-        yangi_kurs = float(request.POST.get('kurs'))
-        yangi_izoh = request.POST.get('izox')
-
-        # Obyektni yangilash
-        kirim.summa = yangi_summa
-        kirim.currency = yangi_kurs
-        kirim.izox = yangi_izoh
-
-        if kirim.payhistory:
-            kirim.payhistory.summa = yangi_summa
-            kirim.payhistory.currency = yangi_kurs
-            kirim.payhistory.comment = yangi_izoh
-            kirim.payhistory.save()
-
-        # Kassa farqini hisoblaymiz
-        # farq = yangi_summa - eski_summa
-
-        # KassaMerge dagi qiymatni yangilaymiz
-        # kassa = kirim.kassa
-        # kassa.summa += farq
-
-        # Hozirgi kirim va keyingi kirimlar uchun kassa_new qiymatlarini yangilaymiz
-        # kirimlar = Kirim.objects.filter(kassa=kassa, id__gte=kirim.id).order_by('id')
-        # qoldiq = kassa.summa
-        # kassa.save()
-        kirim.save()
-
-        # for k in kirimlar:
-        #     if k.id == kirim.id:
-        #         qoldiq = qoldiq  # aynan bu obyekt uchun qoldiq shundoq bo'ladi
-        #     else:
-        #         qoldiq += float(k.summa)
-
-        #     k.kassa_new = qoldiq
-        #     k.save()
-
-        # Agar qarzdor bo‘lsa, uning qarzini yangilaymiz
-        # if kirim.payhistory and kirim.payhistory.debtor:
-        #     kirim.payhistory.debtor.refresh_debt()
-        return redirect(request.META['HTTP_REFERER'])
-
-    
-
-# def kirim_qilish_edit(request):
-
-#     """ Kassadan kirimni tahrirlaydi """
+#     """ Kassadan kirim qiladi """
 
 #     if request.method == 'POST':
-#         kirim_id = request.POST.get('kirim_id')
-#         plastik = request.POST.get('plastik')
-#         qancha_som = request.POST.get('qancha_som')
-#         qancha_dol = request.POST.get('qancha_dol')
-#         qancha_hisob_raqamdan = request.POST.get('qancha_hisob_raqamdan')
+#         pass
+#         debtor = request.POST.get('debtor')
+#         # plastik = request.POST.get('plastik')
+#         kurs = request.POST.get('kurs')
+#         debtor = request.POST.get('debtor')
+#         deliver = request.POST.get('deliver')
+#         partner = request.POST.get('partner')
+#         valuta_id = request.POST.get('valuta')
+#         kassa_id = request.POST.get('kassa')
+#         summa = request.POST.get('summa')
 #         izox = request.POST['izox']
-#         kassa_var = Kassa.objects.first()
+
+#         valuta = Valyuta.objects.get(id=valuta_id)
+#         cash = KassaNew.objects.get(id=kassa_id)
+
+#         kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
+
+#         kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
+        
+#         # kassa.summa += float(summa)
+
+#         kirim.kassa_new = kassa.summa
+#         if debtor:
+#             pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+#             kirim.payhistory=pay
+#             deb = Debtor.objects.get(id=debtor)
+#             deb.refresh_debt()
+#             text = 'Pul olindi \n'
+#             text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
+#             text += f'💸 {intcomma(kirim.currency) }'
+#             text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}"
+#             if kirim.izox:
+#                 text += f'💬 {kirim.izox}'
+#             chat_id = deb.tg_id
+#             # send_kirim_message(chat_id, text, kirim.id)
+#             RejaChiqim.objects.create(debtor_id=debtor, comment=izox, kassa=kassa.kassa, valyuta=valuta,kurs=kurs, plan_total=summa,is_confirmed=True)
+        
+#         if deliver:
+#             pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+#             kirim.payhistory=pay
+#             Deliver.objects.get(id=deliver).refresh_debt()
+#             RejaTushum.objects.create(deliver_id=deliver, kassa=kassa.kassa, comment=izox, valyuta=valuta, kurs=kurs, plan_total=summa,is_confirmed=True)
+
+#         if partner:
+#             pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+#             kirim.payhistory=pay
+#             ExternalIncomeUser.objects.get(id=partner).refresh_debt()
 
 
-#         chiqim = Kirim.objects.get(id=kirim_id)
-#         if izox:
-#             chiqim.izox = izox
-#         if qancha_som:
-#             chiqim.qancha_som_eski = chiqim.qancha_som
-#             kassa_var.som -= chiqim.qancha_som
-#             chiqim.qancha_som = qancha_som
-#             kassa_var.som += int(qancha_som)
-#             chiqim.kassa_som_yangi = kassa_var.som
-#             chiqim.kassa_som_eski = chiqim.kassa_som_yangi - int(qancha_som)
+#         kassa.save()
+#         kirim.save()
+       
+
+#         return redirect(request.META['HTTP_REFERER'])
+
+
+# def kirim_qilish_edit(request):
+#     """ Kirimni tahrirlash va kassa qoldiqlarini yangilash """
+#     kirim_id = request.POST.get('transaction_id')
+#     kirim = Kirim.objects.get(id=kirim_id)
+#     eski_summa = float(kirim.summa)
+#     eski_kurs = float(kirim.currency)
+
+#     if request.method == 'POST':
+#         yangi_summa = float(request.POST.get('summa'))
+#         yangi_kurs = float(request.POST.get('kurs'))
+#         yangi_izoh = request.POST.get('izox')
+
+#         # Obyektni yangilash
+#         kirim.summa = yangi_summa
+#         kirim.currency = yangi_kurs
+#         kirim.izox = yangi_izoh
+
+#         if kirim.payhistory:
+#             kirim.payhistory.summa = yangi_summa
+#             kirim.payhistory.currency = yangi_kurs
+#             kirim.payhistory.comment = yangi_izoh
+#             kirim.payhistory.save()
+
+#         kirim.save()
+
+       
+#         return redirect(request.META['HTTP_REFERER'])
+
+def kirim_qilish(request):
+    """ Kassadan kirim qiladi - AJAX versiya """
+    if request.method == 'POST':
+        try:
+            debtor = request.POST.get('debtor')
+            kurs = clean_number(request.POST.get('kurs'))
+            debtor = request.POST.get('debtor')
+            deliver = request.POST.get('deliver')
+            partner = request.POST.get('partner')
+            valuta_id = request.POST.get('valuta')
+            kassa_id = request.POST.get('kassa')
+            summa = clean_number(request.POST.get('summa'))
+            izox = request.POST['izox']
+
+            valuta = Valyuta.objects.get(id=valuta_id)
+            cash = KassaNew.objects.get(id=kassa_id)
+
+            kassa = KassaMerge.objects.filter(kassa=cash, valyuta=valuta).last() or KassaMerge.objects.create(kassa=cash, valyuta=valuta)
+
+            kirim = Kirim.objects.create(izox=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa)
             
-#         if plastik:
-#             chiqim.plastik_eski = chiqim.plastik
-#             kassa_var.plastik -= chiqim.plastik
-#             chiqim.plastik = plastik
-#             kassa_var.plastik += int(plastik)
-#             chiqim.kassa_plastik_yangi = kassa_var.plastik
-#             chiqim.kassa_plastik_eski = chiqim.kassa_plastik_yangi - int(plastik)
-
-#         if qancha_dol:
-#             chiqim.qancha_dol_eski = chiqim.qancha_dol
-#             kassa_var.dollar -= chiqim.qancha_dol
-#             chiqim.qancha_dol = qancha_dol
-#             kassa_var.dollar += int(qancha_dol)
-#             chiqim.kassa_dol_yangi = kassa_var.dollar
-#             chiqim.kassa_dol_eski = chiqim.kassa_dol_yangi - int(qancha_dol)
+            kirim.kassa_new = kassa.summa
+            if debtor:
+                pay = PayHistory.objects.create(debtor_id=debtor, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+                kirim.payhistory=pay
+                deb = Debtor.objects.get(id=debtor)
+                deb.refresh_debt()
+                text = 'Pul olindi \n'
+                text += f'💴 {intcomma(kirim.summa)} {kirim.valyuta.name}'
+                text += f'💸 {intcomma(kirim.currency) }'
+                text += f"📅 {kirim.qachon.strftime('%Y-%m-%d %H:%M')}"
+                if kirim.izox:
+                    text += f'💬 {kirim.izox}'
+                chat_id = deb.tg_id
+                # send_kirim_message(chat_id, text, kirim.id)
+                RejaChiqim.objects.create(debtor_id=debtor, comment=izox, kassa=kassa.kassa, valyuta=valuta,kurs=kurs, plan_total=summa,is_confirmed=True)
             
-#         if qancha_hisob_raqamdan:
-#             chiqim.qancha_hisob_raqamdan_eski = chiqim.qancha_hisob_raqamdan
-#             kassa_var.hisob_raqam -= chiqim.qancha_hisob_raqamdan
-#             chiqim.qancha_hisob_raqamdan = qancha_hisob_raqamdan
-#             kassa_var.hisob_raqam += int(qancha_hisob_raqamdan)
-#             chiqim.kassa_hisob_raqam_yangi = kassa_var.hisob_raqam
-#             chiqim.kassa_hisob_raqam_eski = chiqim.kassa_hisob_raqam_yangi - int(qancha_hisob_raqamdan)
-#         chiqim.save()
-#         kassa_var.save()
+            if deliver:
+                pay = PayHistory.objects.create(deliver_id=deliver, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+                kirim.payhistory=pay
+                Deliver.objects.get(id=deliver).refresh_debt()
+                RejaTushum.objects.create(deliver_id=deliver, kassa=kassa.kassa, comment=izox, valyuta=valuta, kurs=kurs, plan_total=summa,is_confirmed=True)
 
-#         return redirect('/kassa/')
+            if partner:
+                pay = PayHistory.objects.create(external_income_user_id=partner, comment=izox, kassa=kassa, valyuta=valuta, currency=kurs, summa=summa, type_pay=1)
+                kirim.payhistory=pay
+                ExternalIncomeUser.objects.get(id=partner).refresh_debt()
+
+            kassa.save()
+            kirim.save()
+
+            return JsonResponse({'success': True, 'message': 'Kirim muvaffaqiyatli qo\'shildi'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+def kirim_qilish_edit(request):
+    """ Kirimni tahrirlash va kassa qoldiqlarini yangilash - AJAX versiya """
+    if request.method == 'POST':
+        try:
+            kirim_id = request.POST.get('transaction_id')
+            kirim = Kirim.objects.get(id=kirim_id)
+            
+            yangi_summa = clean_number(request.POST.get('summa'))
+            yangi_kurs = clean_number(request.POST.get('kurs'))
+            yangi_izoh = request.POST.get('izox')
+
+            # Obyektni yangilash
+            kirim.summa = yangi_summa
+            kirim.currency = yangi_kurs
+            kirim.izox = yangi_izoh
+
+            if kirim.payhistory:
+                kirim.payhistory.summa = yangi_summa
+                kirim.payhistory.currency = yangi_kurs
+                kirim.payhistory.comment = yangi_izoh
+                kirim.payhistory.save()
+
+            kirim.save()
+            if kirim.kassa:
+                kirim.kassa.save()
+
+            return JsonResponse({'success': True, 'message': 'Kirim muvaffaqiyatli tahrirlandi'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
 
 
 def oylik_tolash(request):
@@ -6135,6 +6481,8 @@ def add_expanse_type(request):
 
 
 def new_product_add(request):
+    from_ajax = request.GET.get('from_ajax')
+
     barcodes = request.POST.get('list_barcode', '[]')
     barcode_list = json.loads(barcodes)
     name = request.POST.get('name')
@@ -6151,6 +6499,7 @@ def new_product_add(request):
     valyuta = request.POST.get('valyuta')
     shelf_code = request.POST.get('shelf_code')
     other_filials = Filial.objects.all()
+    filial_pr_id = None
     for filial in other_filials:
         pr = ProductFilial.objects.create(
             name=name,
@@ -6167,12 +6516,23 @@ def new_product_add(request):
         )
         if quantity:
             pr.quantity = quantity
-        if deliver:
-            pr.deliver.add(Deliver.objects.get(id=deliver))
+        pr.deliver = Deliver.objects.get(id=deliver)
+        # if deliver:
+        #     pr.deliver.add(Deliver.objects.get(id=deliver))
         pr.save()
+
+        if filial.id == int(filial_id):
+            filial_pr_id = pr.id
         for barcode in barcode_list:
             if barcode:
                 ProductBarcode.objects.create(barcode=barcode, product=pr)
+    filial_pr = ProductFilial.objects.get(id=filial_pr_id)
+    if from_ajax:
+        return JsonResponse({
+            'success': True,
+            "id": filial_pr.id,
+            "name": filial_pr.name
+        })
     messages.success(request, "Muvaffaqiyatli saqlandi")
 
     return redirect(request.META['HTTP_REFERER'])
@@ -12331,6 +12691,9 @@ def close_cash_list(request):
     kassa_id = request.GET.get('kassa_id')
 
     close = SmenaClose.objects.filter()
+
+    if request.user.userprofile.staff != 1:
+        close = close.filter(filial=request.user.userprofile.filial)
     kassas = KassaNew.objects.filter(is_active=True)
 
     if start_date and end_date:
@@ -12358,7 +12721,7 @@ def close_cash_list(request):
 
     context = {
         'close_accepted': close.filter(is_confirmed=True),
-        'close_not_accepted': SmenaClose.objects.filter(is_confirmed=False),
+        'close_not_accepted': SmenaClose.objects.filter(is_confirmed=False) if request.user.userprofile.staff == 1 else SmenaClose.objects.filter(is_confirmed=False, filial=request.user.userprofile.filial),
         'kassas': kassas,
         'valyutas': valyutas,
         'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
@@ -12461,7 +12824,7 @@ def close_cash_confirmed(request, id):
             for close_cash in smena_close.closecashes.all():
                 # Har bir valyuta uchun mos kassani topish
                 try:
-                    kassa_merge = KassaMerge.objects.get(kassa=to_kassa, valyuta=close_cash.kassa.valyuta)
+                    kassa_merge, created = KassaMerge.objects.get_or_create(kassa=to_kassa, valyuta=close_cash.kassa.valyuta)
                     
                     # Confirmed summani olish
                     summa_confirmed = request.POST.get(f'summa_confirmed{close_cash.id}')
@@ -12957,7 +13320,6 @@ class Recieves(LoginRequiredMixin, TemplateView):
         context['delivers'] = Deliver.objects.all().order_by('-id')
         context['recieves'] = Recieve.objects.filter(status__in=[0, 1], is_prexoded=False).order_by('-id')
         context['dollar_kurs'] = Course.objects.last().som
-        context['products'] = ProductFilial.objects.all()
         context['expanse_types'] = RecieveExpanseTypes.objects.all()
         context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
         context['groups'] = Groups.objects.all()
@@ -12975,6 +13337,9 @@ class Recieves(LoginRequiredMixin, TemplateView):
         active_id = self.request.GET.get('active')
         if active_id and Recieve.objects.filter(id=active_id):
             context['active_one'] = Recieve.objects.get(id=active_id)
+        
+        context['products'] = ProductFilial.objects.filter(deliver=context['active_one'].deliver) if context.get('active_one') else []
+
         return context
 
 @require_http_methods(["POST"])
@@ -13185,8 +13550,8 @@ def product_prices_get(request, product_id):
         product = get_object_or_404(ProductFilial, id=product_id)
         
         bring_prices = []
-        for valyuta in Valyuta.objects.all():
-            bring_price = ProductBringPrice.objects.filter(product=product, valyuta=valyuta).last()
+        for valyuta in Valyuta.objects.filter(is_som_or_dollar=True):
+            bring_price = ProductBringPrice.objects.filter(product=product, valyuta=valyuta).last() or ProductBringPrice.objects.create(product=product, valyuta=valyuta)
             bring_prices.append({
                 'valyuta': valyuta.name,
                 'valyuta_id': valyuta.id,
@@ -13196,10 +13561,10 @@ def product_prices_get(request, product_id):
             })
         
         sell_prices = []
-        for valyuta in Valyuta.objects.all():
+        for valyuta in Valyuta.objects.filter(is_som_or_dollar=True):
             price_types_data = []
             for price_type in PriceType.objects.all():
-                ppt = ProductPriceType.objects.filter(type=price_type, product=product, valyuta=valyuta).first()
+                ppt = ProductPriceType.objects.filter(type=price_type, product=product, valyuta=valyuta).first() or ProductPriceType.objects.create(type=price_type, product=product, valyuta=valyuta)
                 price_types_data.append({
                     'id': ppt.id if ppt else None,
                     'name': ppt.type.name,
@@ -13489,7 +13854,7 @@ def product_prices_get(request, product_id):
 
 
 
-
+@login_required
 def today_sales(request):
     today = datetime.now().date()
     start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
@@ -13557,7 +13922,7 @@ def today_sales(request):
         else:
             filial = request.user.userprofile.filial
     
-    shops = shops.filter(filial=filial).distinct()
+    shops = shops.filter(filial=filial, cart__isnull=False).distinct()
 
     if client:
         shops = shops.filter(debtor_id__in=client)
@@ -13707,14 +14072,31 @@ def today_sales(request):
     
     open_smena = None
     # if request.user.userprofile.staff != 1:
-    last_close = SmenaClose.objects.filter(filial=filial, date__date=today).order_by('-date').last()
+    # last_close = SmenaClose.objects.filter(filial=filial, date__date=today).order_by('-date').last()
+
+    # if last_close:
+    #     # Oxirgi smena yopilgan vaqtdan keyin ochilgan SmenaOpenni topamiz
+    #     open_smena = SmenaOpen.objects.filter(
+    #         filial=filial,
+    #         date__gt=last_close.date  # faqat oxirgi yopilishdan keyingi smenalarni olamiz
+    #     ).order_by('date').first()
+
+
+    last_close = SmenaClose.objects.filter(
+        filial=filial,
+        # date__date=today
+    ).order_by('-date').last()
+
+    print(last_close.id if last_close else "No last close")
 
     if last_close:
-        # Oxirgi smena yopilgan vaqtdan keyin ochilgan SmenaOpenni topamiz
+        lc = last_close.date.replace(microsecond=0)
+
         open_smena = SmenaOpen.objects.filter(
             filial=filial,
-            date__gt=last_close.date  # faqat oxirgi yopilishdan keyingi smenalarni olamiz
+            date__gt=lc
         ).order_by('date').first()
+
     else:
         # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
         open_smena = SmenaOpen.objects.filter(
@@ -14298,7 +14680,7 @@ def complete_payment(request):
 
 def debtor_history(request, id):
     today = datetime.now().date()
-    start_date = request.GET.get('start_date', today.strftime('2025-11-01'))
+    start_date = request.GET.get('start_date', today.strftime('2025-01-01'))
     # start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
     end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
     operation_type = request.GET.get('operation_type', '')
@@ -14403,25 +14785,46 @@ def debtor_history(request, id):
     
     # To'lovlarni olish (faqat qarz to'lovlari)
     if not operation_type or operation_type == 'payment':
-        payments = PayHistory.objects.filter(
-            date__date__range=(start_date, end_date),
-            debtor=debtor, 
-            shop__isnull=True,
-            for_debt__isnull=True,
-        ).distinct().select_related('valyuta', 'kassa').order_by('-date')
+        # payments = PayHistory.objects.filter(
+        #     date__date__range=(start_date, end_date),
+        #     debtor=debtor, 
+        #     shop__isnull=True,
+        #     for_debt__isnull=True,
+        # ).distinct().select_related('valyuta', 'kassa').order_by('-date')
+
+        if operation_type == 'payment':
+            payments = PayHistory.objects.filter(
+                date__date__range=(start_date, end_date),
+                debtor=debtor,
+                shop__isnull=True,
+                for_start=False,
+                # for_debt__isnull=False,    # qarz bilan bog‘langan
+                main_pay__isnull=True,     # asosiy to‘lov emas
+            ).distinct().select_related('valyuta', 'kassa').order_by('-date')
+
+        else:  # operation_type bo‘lmasa yoki boshqa
+            payments = PayHistory.objects.filter(
+                date__date__range=(start_date, end_date),
+                debtor=debtor,
+                for_start=False,
+                shop__isnull=True,
+                for_debt__isnull=True,     # hozirgi holat
+            ).distinct().select_related('valyuta', 'kassa').order_by('-date')
+
         
         for payment in payments:
             operation = {
                 'type': 'payment',
                 'id': payment.id,
                 'date': payment.date.strftime('%Y-%m-%d %H:%M'),
-                'summa': payment.summa,
+                'summa': payment.remaining if not operation_type else payment.summa,
                 'valyuta': payment.valyuta.name if payment.valyuta else 'Noma\'lum',
                 'kassa': payment.kassa.kassa.name if payment.kassa else 'Noma\'lum',
                 'type_pay': payment.get_type_pay_display(),
                 'is_debt': payment.is_debt
             }
-            all_operations.append(operation)
+            if operation['summa'] > 0:
+                all_operations.append(operation)
     
     # Chiqimlarni olish
     if not operation_type or operation_type == 'chiqim':
@@ -14460,7 +14863,9 @@ def debtor_history(request, id):
     payments = PayHistory.objects.filter(
         date__date__range=(start_date, end_date),
         debtor=debtor,
-        is_debt=False
+        is_debt=False,
+        for_start=False,
+        main_pay__isnull=True
     )
 
     for payment in payments:
@@ -14514,6 +14919,7 @@ def debtor_history(request, id):
     context = {
         'debtor': debtor,
         'valyutas_for_debt': Valyuta.objects.filter(is_som_or_dollar=True),
+        'valyutas': Valyuta.objects.filter(is_activate=True),
         'wallets': Wallet.objects.filter(customer=debtor),
         'totals': totals,
         'cashes': cashes,
@@ -14543,12 +14949,13 @@ def get_debts(request, id):
         'id': w.id,
         'valyuta_id': w.valyuta.id if w.valyuta else None,
         'valyuta_name': w.valyuta.name if w.valyuta else '',
-        'summa': w.summa,
+        'summa': w.summa if debtor.fio != "Naqd" else 0,
         'start_summa': w.start_summa
     } for w in wallets]
     
     return JsonResponse({
         'valyutas_for_debt': valyutas_data,
+        # 'valyutas': Valyuta.objects.filter(is_activate=True),
         'wallets': wallets_data,
     })
 
@@ -14663,6 +15070,294 @@ def debt_pay_history(request, id):
     })
 
 
+
+
+
+
+
+
+
+class ConvertCurrencyView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            
+            from_kassa_id = data.get('from_kassa_id')
+            to_kassa_id = data.get('to_kassa_id')
+            from_valyuta_id = data.get('from_valyuta_id')
+            to_valyuta_id = data.get('to_valyuta_id')
+            amount = float(data.get('amount', 0))
+            currency_rate = float(data.get('currency_rate', 1))
+            converted_amount = float(data.get('converted_amount', 1))
+            comment = data.get('comment', '')
+            
+            # Kassalarni tekshirish
+            from_kassa = KassaMerge.objects.filter(kassa_id=from_kassa_id, valyuta_id=from_valyuta_id).last()
+            if not from_kassa:
+                from_kassa = KassaMerge.objects.create(kassa_id=from_kassa_id, valyuta_id=from_valyuta_id)
+                
+            to_kassa = KassaMerge.objects.filter(kassa_id=to_kassa_id, valyuta_id=to_valyuta_id).last()
+            if not to_kassa:
+                to_kassa = KassaMerge.objects.create(kassa_id=to_kassa_id, valyuta_id=to_valyuta_id)
+            
+            if from_kassa.summa < amount:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Manba kassada yetarli mablag\' yo\'q'
+                })
+            
+            # Birinchi kassa uchun chiqim yaratish
+            # expense_payment = PayHistory.objects.create(
+            #     summa=float(amount),
+            #     kassa=from_kassa,
+            #     valyuta_id=from_valyuta_id,
+            #     type_pay='2',  # Chiqim
+            #     # turi='5',
+            #     comment=f"Konvertatsiya: {comment}",
+            #     currency=currency_rate,
+            #     by_user=request.user
+            # )
+
+            expense_payment = Chiqim.objects.create(izox=f"Konvertatsiya: {comment}", summa=float(amount),
+                                            kassa=from_kassa, valyuta_id=from_valyuta_id, currency=currency_rate, 
+                                            )
+            
+            # Ikkinchi kassa uchun kirim yaratish
+            # income_payment = PayHistory.objects.create(
+            #     summa=float(converted_amount),
+            #     kassa=to_kassa,
+            #     valyuta_id=to_valyuta_id,
+            #     type_pay='1',  # Kirim
+            #     # turi='5',
+            #     comment=f"Konvertatsiya: {comment}",
+            #     currency=currency_rate,
+            #     by_user=request.user
+            # )
+
+            income_payment = Kirim.objects.create(izox=f"Konvertatsiya: {comment}", kassa=to_kassa, valyuta_id=to_valyuta_id, currency=currency_rate, summa=float(converted_amount))
+            
+            # Kassa balanslarini yangilash
+            
+            # Konvertatsiya tarixini saqlash
+            convert = CashConvertHistory.objects.create(
+                converter=request.user.userprofile,
+                from_valyuta_id=from_valyuta_id,
+                to_valyuta_id=to_valyuta_id,
+                from_cash=from_kassa,
+                to_cash=to_kassa,
+                summa=amount,
+                summa2=converted_amount,
+                currency=currency_rate,
+                comment=comment,
+                # from_cash_before=from_kassa.summa + amount,
+                # from_cash_after=from_kassa.summa,
+                # to_cash_before=to_kassa.summa - converted_amount,
+                # to_cash_after=to_kassa.summa,
+                pay1=expense_payment,
+                pay2=income_payment,
+            )
+
+
+            from_kassa.save()
+            to_kassa.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Konvertatsiya muvaffaqiyatli amalga oshirildi',
+                'convert_id': convert.id,
+                'expense_id': expense_payment.id,
+                'income_id': income_payment.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Xatolik: {str(e)}'
+            })
+
+class ConvertDetailView(LoginRequiredMixin, View):
+    def get(self, request, convert_id):
+        try:
+            convert = CashConvertHistory.objects.get(id=convert_id)
+            
+            convert_data = {
+                'id': convert.id,
+                'from_cash': {
+                    'cash': {
+                        'id': convert.from_cash.kassa.id,
+                        'name': convert.from_cash.kassa.name
+                    }
+                },
+                'to_cash': {
+                    'cash': {
+                        'id': convert.to_cash.kassa.id,
+                        'name': convert.to_cash.kassa.name
+                    }
+                },
+                'from_valyuta_id': convert.from_valyuta.id,
+                'to_valyuta_id': convert.to_valyuta.id,
+                'som': float(convert.summa),
+                'som2': float(convert.summa2),
+                'currency': float(convert.currency),
+                'comment': convert.comment or ''
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'convert': convert_data
+            })
+            
+        except CashConvertHistory.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Konvertatsiya topilmadi'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Xatolik: {str(e)}'
+            })
+
+class ConvertUpdateView(LoginRequiredMixin, View):
+    def put(self, request):
+        try:
+            data = json.loads(request.body)
+            
+            convert_id = data.get('convert_id')
+            from_kassa_id = data.get('from_kassa_id')
+            to_kassa_id = data.get('to_kassa_id')
+            from_valyuta_id = data.get('from_valyuta_id')
+            to_valyuta_id = data.get('to_valyuta_id')
+            amount = clean_number(float(data.get('amount', 0)))
+            currency_rate = clean_number(float(data.get('currency_rate', 1)))
+            converted_amount = clean_number(float(data.get('converted_amount', 0)))
+            comment = data.get('comment', '')
+            
+            # Konvertatsiyani topish
+            convert = CashConvertHistory.objects.get(id=convert_id)
+            
+            # Eski to'lovlarni topish
+            expense_payment = convert.pay1
+            income_payment = convert.pay2
+            
+            
+            
+            # Yangi kassalarni tekshirish
+            from_kassa = KassaMerge.objects.filter(kassa_id=from_kassa_id, valyuta_id=from_valyuta_id).last()
+            if not from_kassa:
+                from_kassa = KassaMerge.objects.create(kassa_id=from_kassa_id, valyuta_id=from_valyuta_id)
+            
+            to_kassa = KassaMerge.objects.filter(kassa_id=to_kassa_id, valyuta_id=to_valyuta_id).last()
+            if not to_kassa:
+                to_kassa = KassaMerge.objects.create(kassa_id=to_kassa_id, valyuta_id=to_valyuta_id)
+            
+            # Yangi kassa balanslarini tekshirish
+            if float(from_kassa.summa) + float(expense_payment.summa) < amount:
+                # Agar yetarli mablag' bo'lmasa, eski balanslarni qaytarish
+                
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Manba kassada yetarli mablag\' yo\'q'
+                })
+            
+            # To'lovlarni yangilash
+            expense_payment.summa = float(amount)
+            expense_payment.kassa = from_kassa
+            expense_payment.valyuta_id = from_valyuta_id
+            expense_payment.currency = currency_rate
+            expense_payment.izox = f"Konvertatsiya: {comment}"
+            
+            income_payment.summa = float(converted_amount)
+            income_payment.kassa = to_kassa
+            income_payment.valyuta_id = to_valyuta_id
+            income_payment.currency = currency_rate
+            income_payment.izox = f"Konvertatsiya: {comment}"
+            
+            expense_payment.save()
+            income_payment.save()
+            
+            # Kassa balanslarini yangilash
+    
+            
+            # from_kassa.save()
+            # to_kassa.save()
+            
+            # Konvertatsiya ma'lumotlarini yangilash
+            convert.from_cash = from_kassa
+            convert.to_cash = to_kassa
+            convert.from_valyuta_id = from_valyuta_id
+            convert.to_valyuta_id = to_valyuta_id
+            convert.summa = amount
+            convert.summa2 = converted_amount
+            convert.currency = currency_rate
+            convert.comment = comment
+            convert.save()
+
+            from_kassa.save()
+            to_kassa.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Konvertatsiya muvaffaqiyatli yangilandi'
+            })
+            
+        except CashConvertHistory.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Konvertatsiya topilmadi'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Xatolik: {str(e)}'
+            })
+
+class ConvertDeleteView(LoginRequiredMixin, View):
+    def post(self, request, convert_id):
+        try:
+            convert = CashConvertHistory.objects.get(id=convert_id)
+            
+            # Faqat admin va kassir o'chirishi mumkin
+            if request.user.type not in [1, 12]:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ruxsat yo\'q'
+                })
+            
+            # Kassa balanslarini tiklash
+            from_kassa = convert.from_cash
+            to_kassa = convert.to_cash
+            
+            
+            # from_kassa.save()
+            # to_kassa.save()
+            
+            # To'lovlarni o'chirish
+            if convert.pay1:
+                convert.pay1.delete()
+            if convert.pay2:
+                convert.pay2.delete()
+            
+            # Konvertatsiyani o'chirish
+            convert.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Konvertatsiya muvaffaqiyatli o\'chirildi'
+            })
+            
+        except CashConvertHistory.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Konvertatsiya topilmadi'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Xatolik: {str(e)}'
+            })
+
+
 # Kirim.objects.update(kassa_new=0)
 # Chiqim.objects.update(kassa_new=0)
 
@@ -14674,5 +15369,5 @@ def debt_pay_history(request, id):
 #         i.cart.shop.save()
 
 
-# for i in Debtor.objects.filter(id=3817):
+# for i in Debtor.objects.filter():
 #     i.refresh_debt()

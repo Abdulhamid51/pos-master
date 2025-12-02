@@ -262,6 +262,8 @@ evn
 env
 .gisdo
 
+*.xlsx
+
 
 *.sqlite3
 *.json

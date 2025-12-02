@@ -11,13 +11,9 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+
 <style>
-    /* .kirim-row { 
-        background-color: rgba(40, 167, 69, 0.1) !important; 
-    }
-    .chiqim-row { 
-        background-color: rgba(220, 53, 69, 0.1) !important; 
-    } */
     .badge-kirim { background-color: #28a745; color: white; }
     .badge-chiqim { background-color: #dc3545; color: white; }
     .transaction-type-badge {
@@ -37,6 +33,17 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .alert-fixed {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+    }
 </style>
 {% endblock css %}
 
@@ -48,10 +55,10 @@
         <div class="row layout-top-spacing">
 
             <!-- Kassa Summary Cards -->
-            <div class="col-xl-12 col-lg-8 col-sm-12 layout-spacing">
+            <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
                 <div class="widget-content widget-content-area br-6">
-                    <div class="row">    
-                        {% for i in data %}
+                    <div class="row" id="kassa-cards-container">    
+                        <!-- {% for i in data %}
                         <div class="col-xl-3 col-md-3 mb-4 text-center">
                             <div class="card border-left-primary shadow h-100 py-2 kassa-card">
                                 <div class="card-body">
@@ -69,22 +76,13 @@
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
+                        {% endfor %} -->
                     </div>
                 </div>
             </div>
 
-            <!-- Action Button -->
-            <!-- <div class="col-12" style="display: flex;justify-content: end;">
-                <div class="row">
-                    <button style="width: 15rem;margin-right: 2rem;margin-bottom: 2rem;" type="submit" class="btn btn-primary form-control">
-                        <a style="color: #fff;" href="{% url 'accept_expanse' %}">Chiqimlarni tasdiqlash</a>
-                    </button>
-                </div>
-            </div> -->
-
             <!-- Filters -->
-            <form class='col-12' style="margin: 1rem 2rem 1rem 1rem;">
+            <form class='col-12' style="margin: 1rem 2rem 1rem 1rem;" id="filterForm">
                 <div class="row">
                     <div class="col-md-3">
                         <label>Boshlangich sana</label>
@@ -127,26 +125,29 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button style="margin-top: 1.8rem;" type="submit" class="btn btn-primary form-control">Filterlash</button>
+                        <button style="margin-top: 1.8rem;" type="submit" class="btn btn-primary form-control" id="filterButton">Filterlash</button>
                     </div>
                 </div>
             </form>
 
             <!-- Combined Transactions Table -->
-            <div class="col-xl-12 col-lg-8 col-sm-12 layout-spacing">
+            <div class="col-xl-12 col-lg-12 col-sm-12 layout-spacing">
                 <div class="widget-content widget-content-area br-6">
                     <div class="row">
                         <div class="col-6">
                             <h4>Pul o'tkazmalari tarixi</h4>
                         </div>
                         <div class="col-6 text-right">
-                            <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#KirimModal">Kirim qilish</button>
-                            <button class="btn btn-warning" data-toggle="modal" data-target="#ChiqimModal">Chiqim qilish</button>
+                            <!-- <button class="btn btn-success mr-2" data-toggle="modal" data-target="#KirimModal">Kirim qilish</button> -->
+                            <button class="btn btn-danger ml-5" data-toggle="modal" data-target="#ChiqimModal">Chiqim qilish</button>
+                            <button class="btn btn-info" onclick="openConvertModal()">
+                                <i class="fa fa-exchange"></i> Konvertatsiya
+                            </button>
                         </div>
                     </div>
                     <div class="table-responsive mb-4 mt-4">
-                        <table class="multi-table table " style="width:100%" id="transactionsTable">
-                            <thead>
+                        <table class="multi-table table table-nowrap" style="width:100%" id="transactionsTable">
+                            <thead id="transactionsTableHead">
                                 <tr>
                                     <th style="text-align: left;">#</th>
                                     <th style="text-align: left;">Turi</th>
@@ -157,103 +158,32 @@
                                     {% for v in valutas %}
                                         <th style="text-align: left;">{{ v.name }}</th>
                                     {% endfor %}
-                                    <!-- <th style="text-align: left;">Qoldiq</th> -->
                                     <th style="text-align: left;">Hamkor</th>
                                     <th style="text-align: left;">Izox</th>
                                     <th style="text-align: left;">Sana</th>
                                     <th style="text-align: left;">Harakatlar</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {% for transaction in transactions %}
-                                <tr class="{% if transaction.type == 'kirim' %}kirim-row{% else %}chiqim-row{% endif %}">
-                                    <td style="text-align: left;">{{ forloop.counter }}</td>
-                                    <td style="text-align: left;">
-                                        <span class="transaction-type-badge {% if transaction.type == 'kirim' %}badge-kirim{% else %}badge-chiqim{% endif %}">
-                                            {{ transaction.type|upper }}
-                                        </span>
-                                    </td>
-                                    <td style="text-align: left;">{{ transaction.obj.kassa.kassa.name|default:"-" }}</td>
-                                    <td style="text-align: left;">{{ transaction.obj.kassa.valyuta.name|default:"-" }}</td>
-                                    <td style="text-align: left;">
-                                        {% if transaction.type == 'chiqim' %}
-                                            {{ transaction.obj.money_circulation.name|default:"-" }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td style="text-align: left;">
-                                        {% if transaction.type == 'chiqim' and transaction.obj.qaysi %}
-                                            {{ transaction.obj.qaysi|date:'Y-m' }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    {% for q in transaction.obj.summa_for_valutas %}
-                                        <td style="text-align: left;">{{ q.summa|default:0|intcomma }}</td>
-                                    {% endfor %}
-                                    <!-- <td style="text-align: left;">{{ transaction.obj.kassa_new|default:0|intcomma }}</td> -->
-                                    <td style="text-align: left;">{{ transaction.obj.payhistory.kontr_agent|default_if_none:'' }}</td>
-                                    <td style="text-align: left;">{{ transaction.obj.izox|default:''|truncatewords:5 }}</td>
-                                    <td style="text-align: left;">{{ transaction.obj.qachon|date:'Y-m-d H:i' }}</td>
-                                    <td style="text-align: left;">
-                                        <button class="btn btn-primary btn-sm edit-transaction" 
-                                                data-id="{{ transaction.obj.id }}"
-                                                data-type="{{ transaction.type }}"
-                                                data-summa="{{ transaction.obj.summa }}"
-                                                data-kurs="{{ transaction.obj.currency }}"
-                                                data-izox="{{ transaction.obj.izox }}">
-                                            <i class="fas fa-edit"></i> Tahrirlash
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                {% endfor %}
+                            <tbody id="transactionsTableBody">
+                                
                             </tbody>
-                            <tfoot>
-                                <tr>
+                            <tfoot id="transactionsTableFooter">
+                                <!-- <tr>
                                     <th style="text-align: left;" colspan="6">Jami kirim:</th>
                                     {% for q in kirim_totals %}
                                         <th style="text-align: left;" class="text-success">{{ q.summa|default_if_none:'0'|intcomma }}</th>
                                     {% endfor %}
                                     <th style="text-align: left;" colspan="4"></th>
                                 </tr>
-
                                 <tr>
                                     <th style="text-align: left;" colspan="6">Jami chiqim:</th>
                                     {% for q in chiqim_totals %}
                                         <th style="text-align: left;" class="text-danger">{{ q.summa|default_if_none:'0'|intcomma }}</th>
                                     {% endfor %}
                                     <th style="text-align: left;" colspan="4"></th>
-                                </tr>
+                                </tr> -->
                             </tfoot>
-
-                            <!-- <tfoot>
-
-                            </tfoot> -->
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="col-xl-8 col-lg-12 col-sm-12 layout-spacing">
-                <div class="widget-content widget-content-area br-6">
-                    <canvas id="chiqimChart" width="600" height="400"></canvas>
-                </div>
-            </div>
-
-            <div class="col-xl-4 col-lg-12 col-sm-12 layout-spacing">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="widget-content widget-content-area br-6">
-                            <div id="piechart_3d" style="width: 100%; height: 250px;"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="widget-content widget-content-area br-6 mt-4">
-                            <div id="piechart_dol_3d" style="width: 100%; height: 250px;"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -279,12 +209,12 @@
                     
                     <div class="form-group">
                         <label for="editSumma">Summa</label>
-                        <input class="form-control" type="number" id="editSumma" name="summa" placeholder="Summa" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" id="editSumma" name="summa" placeholder="Summa" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="editKurs">Kurs</label>
-                        <input class="form-control" type="number" id="editKurs" name="kurs" placeholder="Kurs" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" id="editKurs" name="kurs" placeholder="Kurs" required>
                     </div>
                     
                     <div class="form-group">
@@ -294,7 +224,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                    <button type="submit" class="btn btn-primary" id="editTransactionSubmit">Saqlash</button>
                 </div>
             </div>
         </form>
@@ -304,7 +234,7 @@
 <!-- Kirim Modal -->
 <div class="modal fade" id="KirimModal" tabindex="-1" role="dialog" aria-labelledby="KirimModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form action="{% url 'kirim_qilish' %}" method="POST">
+        <form id="kirimForm" method="POST">
             {% csrf_token %}
             <div class="modal-content">
                 <div class="modal-header">
@@ -324,7 +254,6 @@
                         </select>
                     </div>
                     
-                        
                     <div class="form-group">
                         <label for="kirimKassa">Kassa</label>
                         <select name="kassa" id="kirimKassa" class="form-control" required>
@@ -337,12 +266,12 @@
                     
                     <div class="form-group">
                         <label for="kirimSumma">Summa</label>
-                        <input class="form-control" type="number" name="summa" placeholder="Summa" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" name="summa" placeholder="Summa" required>
                     </div>
 
                     <div class="form-group">
                         <label for="kirimKurs">Kurs</label>
-                        <input class="form-control" type="number" name="kurs" value="{{dollar_kurs}}" placeholder="Kurs" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" name="kurs" value="{{dollar_kurs|intcomma}}" placeholder="Kurs" required>
                     </div>
                     
                     <div class="form-group">
@@ -352,7 +281,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                    <button type="submit" class="btn btn-primary" id="kirimSubmit">Saqlash</button>
                 </div>
             </div>
         </form>
@@ -362,7 +291,7 @@
 <!-- Chiqim Modal -->
 <div class="modal fade" id="ChiqimModal" tabindex="-1" role="dialog" aria-labelledby="ChiqimModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <form action="{% url 'chiqim_qilsih' %}" method="POST">
+        <form id="chiqimForm" method="POST">
             {% csrf_token %}
             <div class="modal-content">
                 <div class="modal-header">
@@ -432,12 +361,12 @@
                     
                     <div class="form-group">
                         <label for="chiqimSumma">Summa</label>
-                        <input class="form-control" type="number" name="summa" placeholder="Summa" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" name="summa" placeholder="Summa" required>
                     </div>
 
                     <div class="form-group">
                         <label for="chiqimKurs">Kurs</label>
-                        <input class="form-control" type="number" name="kurs" value="{{dollar_kurs}}" placeholder="Kurs" required step="0.01">
+                        <input class="form-control make_intcomma" type="text" name="kurs" value="{{dollar_kurs|intcomma}}" placeholder="Kurs" required>
                     </div>
                     
                     <div class="form-group">
@@ -447,36 +376,103 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                    <button type="submit" class="btn btn-primary" id="chiqimSubmit">Saqlash</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Success Message Modal -->
-{% if messages %}
-<div class="modal fade" id="MessageModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="MessageModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+
+
+<!-- Konvertatsiya modal oynasi -->
+<div class="modal fade" id="convertModal">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #fff;">
             <div class="modal-header">
-                <h5 class="modal-title" id="MessageModalLabel" style="color: green;">Xabar</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title" id="convertModalTitle">Valuta konvertatsiyasi</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
+                <form id="convertForm">
+                    <input type="hidden" id="convertId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Qaysi kassadan</label>
+                                <select class="form-control selectize" id="fromKassa" required>
+                                    <option value="">Tanlang</option>
+                                    {% for cash in cashes %}
+                                    <option value="{{ cash.id }}">{{ cash.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Qaysi valyutadan</label>
+                                <select class="form-control selectize" id="fromValuta" required>
+                                    <option value="">Tanlang</option>
+                                    {% for valuta in valutas %}
+                                    <option value="{{ valuta.id }}" data-sum_or_dollar="{% if valuta.is_som %}1{% elif valuta.is_dollar %}2{% endif %}">{{ valuta.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Qaysi kassaga</label>
+                                <select class="form-control selectize" id="toKassa" required>
+                                    <option value="">Tanlang</option>
+                                    {% for cash in cashes %}
+                                    <option value="{{ cash.id }}">{{ cash.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Qaysi valyutaga</label>
+                                <select class="form-control selectize" id="toValuta" required>
+                                    <option value="">Tanlang</option>
+                                    {% for valuta in valutas %}
+                                    <option value="{{ valuta.id }}" data-sum_or_dollar="{% if valuta.is_som %}1{% elif valuta.is_dollar %}2{% endif %}">{{ valuta.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Summa</label>
+                        <input type="text" class="form-control make_intcomma" id="convertAmount" 
+                            onkeyup="formatNumber(this)" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Kurs</label>
+                        <input type="text" class="form-control make_intcomma" id="convertRate" 
+                            onkeyup="formatNumber(this)" value="{{dollar_kurs|intcomma}}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Konvert qilingan summa</label>
+                        <input type="text" class="form-control" id="convertedAmount" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Izoh</label>
+                        <textarea class="form-control" id="convertComment" rows="2"></textarea>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="submitConvert()" id="submitConvertBtn">Konvertatsiya</button>
             </div>
         </div>
     </div>
 </div>
-{% endif %}
+
+
+<!-- Success Message Container -->
+<div id="messageContainer" class="alert-fixed"></div>
 
 {% endblock content %}
 
@@ -492,13 +488,301 @@
 <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js" integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+
+
 
 <script>
+    // Konvertatsiya funksiyalari
+    function openConvertModal(convertId = null) {
+        editingConvertId = convertId;
+        const modal = $('#convertModal');
+        
+        if (convertId) {
+            // Tahrirlash rejimi
+            $('#convertModalTitle').text('Konvertatsiyani tahrirlash');
+            $('#submitConvertBtn').text('Yangilash');
+            loadConvertData(convertId);
+        } else {
+            // Yangi qo'shish rejimi
+            $('#convertModalTitle').text('Valuta konvertatsiyasi');
+            $('#submitConvertBtn').text('Konvertatsiya');
+            resetConvertForm();
+        }
+        
+        modal.modal('show');
+    }
+
+    function resetConvertForm() {
+        $('#convertForm')[0].reset();
+        $('#convertId').val('');
+        editingConvertId = null;
+        
+        // Selectizelarni tozalash
+        $('#fromKassa')[0].selectize.clear();
+        $('#toKassa')[0].selectize.clear();
+        $('#fromValuta')[0].selectize.clear();
+        $('#toValuta')[0].selectize.clear();
+    }
+
+    function loadConvertData(convertId) {
+        fetch(`/kassa/convert/${convertId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const convert = data.convert;
+                    
+                    $('#convertId').val(convertId);
+                    $('#fromKassa')[0].selectize.setValue(convert.from_cash.cash.id);
+                    $('#toKassa')[0].selectize.setValue(convert.to_cash.cash.id);
+                    $('#fromValuta')[0].selectize.setValue(convert.from_valyuta_id);
+                    $('#toValuta')[0].selectize.setValue(convert.to_valyuta_id);
+                    $('#convertAmount').val(formatNumber(parseFloat(convert.som)));
+                    $('#convertRate').val(formatNumber(parseFloat(convert.currency)));
+                    $('#convertedAmount').val(formatNumber(parseFloat(convert.som2)));
+                    $('#convertComment').val(convert.comment || '');
+                    
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading conversion data:', error);
+                showMessage('Ma\'lumotlarni yuklashda xatolik', 'error');
+            });
+    }
+
+    function submitConvert() {
+        const amount = cleanNumber($('#convertAmount').val());
+        const amount2 = cleanNumber($('#convertedAmount').val());
+        const rate = cleanNumber($('#convertRate').val());
+        
+        //if (!amount || parseFloat(amount) <= 0 || !rate || parseFloat(rate) <= 0) {
+        //   showMessage('Summa va kurs noto\'g\'ri kiritilgan', 'error');
+        //    return;
+        //}
+
+        const formData = {
+            from_kassa_id: $('#fromKassa').val(),
+            to_kassa_id: $('#toKassa').val(),
+            from_valyuta_id: $('#fromValuta').val(),
+            to_valyuta_id: $('#toValuta').val(),
+            amount: amount,
+            converted_amount: amount2,
+            currency_rate: rate,
+            comment: $('#convertComment').val()
+        };
+        
+        // Agar tahrirlash bo'lsa, ID ni qo'shamiz
+        if (editingConvertId) {
+            formData.convert_id = editingConvertId;
+        }
+        
+        // Majburiy maydonlarni tekshirish
+        if (!formData.from_kassa_id || !formData.to_kassa_id || !formData.from_valyuta_id || !formData.to_valyuta_id) {
+            showMessage('Barcha maydonlarni to\'ldiring', 'error');
+            return;
+        }
+        
+        const url = editingConvertId ? '/kassa/update-convert/' : '/kassa/convert-currency/';
+        const method = editingConvertId ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                $('#convertModal').modal('hide');
+                loadKassaCards()
+                reload_table();
+                editingConvertId = null;
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Xatolik yuz berdi', 'error');
+            console.error('Error:', error);
+        });
+    }
+
+    // Konvertatsiyani tahrirlash
+    function editConversion(convertId) {
+        openConvertModal(convertId);
+    }
+
+    // Konvertatsiyani o'chirish
+    function deleteConversion(convertId) {
+        if (confirm('Haqiqatdan ham bu konvertatsiyani o\'chirmoqchimisiz?')) {
+            fetch(`/kassa/convert/${convertId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // loadPaymentHistory();
+                    // loadKassaStats();
+                    loadKassaCards()
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Xatolik yuz berdi', 'error');
+                console.error('Error:', error);
+            });
+        }
+    }
+
+    // Konvertatsiya hisoblash
+    function calculateConversion() {
+        const fromValutaSelect = $('#fromValuta')[0].selectize;
+        const toValutaSelect = $('#toValuta')[0].selectize;
+
+        const fromValuta = fromValutaSelect.getValue();
+        const toValuta = toValutaSelect.getValue();
+
+        if (!fromValuta || !toValuta) {
+            $('#convertedAmount').val('');
+            return;
+        }
+
+        const fromValutaType = fromValutaSelect.options[fromValuta]?.sum_or_dollar;
+        const toValutaType = toValutaSelect.options[toValuta]?.sum_or_dollar;
+
+
+        const amount = parseFloat(cleanNumber($('#convertAmount').val())) || 0;
+        const rate = parseFloat(cleanNumber($('#convertRate').val())) || 0;
+        
+        let converted = 0;
+        
+        if (fromValutaType == 1 && toValutaType == 2) {
+            converted = amount / rate;
+        } else if (fromValutaType == 2 && toValutaType == 1) {
+            converted = amount * rate;
+        } else {
+            converted = amount;
+        }
+        
+        if (!isNaN(converted)) {
+            $('#convertedAmount').val(formatNumber(converted));
+        }
+    }
+
+    // Event listenerlar
     $(document).ready(function() {
-        // Initialize DataTable
-        $('#transactionsTable').DataTable({
+        // Selectize instance larini kutish
+        setTimeout(function() {
+            const fromValutaSelect = $('#fromValuta')[0].selectize;
+            const toValutaSelect = $('#toValuta')[0].selectize;
+            
+            // Selectize o'zgarishlarini kuzatish
+            fromValutaSelect.on('change', function() {
+                calculateConversion();
+            });
+            
+            toValutaSelect.on('change', function() {
+                calculateConversion();
+            });
+            
+            // Input maydonlarida o'zgarish bo'lganda
+            $('#convertAmount, #convertRate').on('input', function() {
+                calculateConversion();
+            });
+            
+        }, 100);
+    });
+
+</script>
+
+
+
+
+
+
+
+<script>
+    // // Formatlash funksiyalari
+    // function formatNumber(num) {
+    //     return new Intl.NumberFormat("ru-RU", {
+    //         minimumFractionDigits: 0,
+    //         maximumFractionDigits: 2
+    //     }).format(num).replace(',', '.');
+    // }
+
+    // function cleanNumber(str) {
+    //     return str.replace(/\s/g, '');
+    // }
+
+    // Xabar ko'rsatish funksiyasi
+    function showMessage(message, type = 'success') {
+        const messageContainer = document.getElementById('messageContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        
+        messageContainer.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        
+        // 5 soniyadan so'ng xabarni yashirish
+        setTimeout(() => {
+            const alert = messageContainer.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+
+    // Loading holatini boshqarish
+    function setLoading(element, isLoading) {
+        if (isLoading) {
+            element.classList.add('loading');
+            element.disabled = true;
+        } else {
+            element.classList.remove('loading');
+            element.disabled = false;
+        }
+    }
+
+    // URL parametrlarini yangilash
+    function updateURLParams(formData) {
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                if (Array.isArray(value)) {
+                    value.forEach(v => params.append(key, v));
+                } else {
+                    params.append(key, value);
+                }
+            }
+        }
+        
+        const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        window.history.replaceState({}, '', newURL);
+    }
+
+    $(document).ready(function() {
+        // DataTable ni ishga tushirish
+        let dataTable = $('#transactionsTable').DataTable({
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
             buttons: {
                 buttons: [
@@ -521,15 +805,174 @@
             "stripeClasses": [],
             "lengthMenu": [10, 20, 50, 100],
             "paging": false,
-            // "order": [[1, 'desc']], // Sort by date column
             "scrollY": "500px",
             "scrollCollapse": true,
         });
 
-        // Edit transaction modal handler
-        $('.edit-transaction').on('click', function() {
+        // Format inputlari
+        // document.querySelectorAll('.make_intcomma').forEach(input => {
+        //     input.addEventListener('keyup', function() {
+        //         setTimeout(() => formatInput(this), 50);
+        //     });
+            
+        //     input.addEventListener('blur', function() {
+        //         formatInput(this);
+        //     });
+        // });
+        
+        // function formatInput(input) {
+        //     let value = cleanNumber(input.value);
+        //     if (value) {
+        //         input.value = formatNumber(parseFloat(value));
+        //     }
+        // }
+
+        // Filter form AJAX
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const filterButton = document.getElementById('filterButton');
+            
+            setLoading(filterButton, true);
+            
+            // AJAX so'rovi
+            $.ajax({
+                url: window.location.pathname,
+                type: 'GET',
+                data: $(this).serialize(),
+                success: function(response) {
+                    // Jadval ma'lumotlarini yangilash
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(response, 'text/html');
+                    dataTable.destroy();
+                    $('#transactionsTable').empty()
+                    $('#transactionsTable').append(response)
+        
+                    
+                    // DataTable ni yangilash
+                    
+                    dataTable = $('#transactionsTable').DataTable({
+                        paging: false,           // sahifalashni o‘chirish
+                        scrollX: true,        // vertikal scroll
+                        scrollY: '500px',        // vertikal scroll
+                        scrollCollapse: true,    // scroll bo‘sh joyga moslashadi
+                        stripeClasses: [],       // striping klasslarni olib tashlash
+                        lengthMenu: [10, 20, 50, 100], // page length variantlari
+                        dom: 'Bfrtip',           // buttons + filter + table + info + pagination
+                        buttons: [               // export tugmalari
+                            'copy', 'csv', 'excel', 'print'
+                        ],
+                        language: {              // oddiy o‘zgartirilgan til
+                            searchPlaceholder: "Izlash",
+                            search: "",
+                            info: "_PAGE_ / _PAGES_"
+                        }
+                    });
+
+                    // URL ni yangilash
+                    updateURLParams(formData);
+                    
+                    // showMessage('Filter muvaffaqiyatli qo\'llandi', 'success');
+                },
+                error: function() {
+                    showMessage('Filterlashda xatolik yuz berdi', 'error');
+                },
+                complete: function() {
+                    setLoading(filterButton, false);
+                }
+            });
+        });
+
+        // Kirim qo'shish AJAX
+        $('#kirimForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+
+            formData.set('summa', cleanNumber(formData.get('summa')));
+            formData.set('kurs', cleanNumber(formData.get('kurs')));
+
+            const submitButton = document.getElementById('kirimSubmit');
+            
+            setLoading(submitButton, true);
+            
+            $.ajax({
+                url: "{% url 'kirim_qilish' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#KirimModal').modal('hide');
+                        $('.modal-backdrop').remove();
+                        document.getElementById('kirimForm').reset();
+                        
+                        // Sahifani yangilash
+                        // location.reload();
+                        loadKassaCards();
+                        reload_table();
+                    }
+                    else {
+                        showMessage('Kirim qilishda xatolik yuz berdi: ' + response.message, 'error');
+                    }
+
+                },
+                error: function(xhr) {
+                    showMessage('Kirim qilishda xatolik yuz berdi: ' + xhr.responseText, 'error');
+                },
+                complete: function() {
+                    setLoading(submitButton, false);
+                }
+            });
+        });
+
+        // Chiqim qo'shish AJAX
+        $('#chiqimForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+
+
+            formData.set('summa', cleanNumber(formData.get('summa')));
+            formData.set('kurs', cleanNumber(formData.get('kurs')));
+
+            const submitButton = document.getElementById('chiqimSubmit');
+            
+            setLoading(submitButton, true);
+            
+            $.ajax({
+                url: "{% url 'chiqim_qilsih' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#ChiqimModal').modal('hide');
+                        $('.modal-backdrop').remove();
+                        document.getElementById('chiqimForm').reset();
+
+                        loadKassaCards();
+                        reload_table()
+                    }
+                    else {
+                        showMessage('Kirim qilishda xatolik yuz berdi: ' + response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    showMessage('Chiqim qilishda xatolik yuz berdi: ' + xhr.responseText, 'error');
+                },
+                complete: function() {
+                    setLoading(submitButton, false);
+                }
+            });
+        });
+
+        // Tahrirlash modalini ochish
+        $(document).on('click', '.edit-transaction', function() {
             const transactionId = $(this).data('id');
-            console.log(transactionId, 'pppppp')
             const transactionType = $(this).data('type');
             const summa = $(this).data('summa');
             const kurs = $(this).data('kurs');
@@ -537,11 +980,12 @@
             
             $('#editTransactionId').val(transactionId);
             $('#editTransactionType').val(transactionType);
-            $('#editSumma').val(summa);
-            $('#editKurs').val(kurs);
+            console.log(formatNumber(summa))
+            $('#editSumma').val(formatNumber(summa))
+            $('#editKurs').val(formatNumber(kurs))
             $('#editIzox').val(izox);
             
-            // Set form action based on transaction type
+            // Form action ni sozlash
             if (transactionType === 'kirim') {
                 $('#editTransactionForm').attr('action', "{% url 'kirim_qilish_edit' %}");
             } else {
@@ -551,111 +995,150 @@
             $('#EditTransactionModal').modal('show');
         });
 
-        // Show message modal if there are messages
-        {% if messages %}
-            $('#MessageModal').modal('show');
-        {% endif %}
+        // Tahrirlash formasi AJAX
+        $('#editTransactionForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
 
-        // Initialize charts
-        initializeCharts();
-    });
+            formData.set('summa', cleanNumber(formData.get('summa')));
+            formData.set('kurs', cleanNumber(formData.get('kurs')));
+            
+            const submitButton = document.getElementById('editTransactionSubmit');
+            
+            setLoading(submitButton, true);
+            
+            // Summa va kurs qiymatlarini tozalash
+            const summaInput = document.getElementById('editSumma');
+            const kursInput = document.getElementById('editKurs');
+            
+            if (summaInput) {
+                formData.set('summa', cleanNumber(summaInput.value));
+            }
+            if (kursInput) {
+                formData.set('kurs', cleanNumber(kursInput.value));
+            }
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#EditTransactionModal').modal('hide');
+                        $('.modal-backdrop').remove();
+                        
+                        // Sahifani yangilash
+                        // location.reload();
 
-    function initializeCharts() {
-        // Bar Chart
-        const chartData = {{ chart_month|safe }};
-        const labels_month = chartData.map(item => item.month);
-        const chiqim_data = chartData.map(item => item.chiqim_summa);
-        const shop_data = chartData.map(item => item.shop_summa);
-
-        const ctx_month = document.getElementById('chiqimChart').getContext('2d');
-        new Chart(ctx_month, {
-            type: 'bar',
-            data: {
-                labels: labels_month,
-                datasets: [
-                    {
-                        label: 'Chiqim',
-                        data: chiqim_data,
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Savdo',
-                        data: shop_data,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        loadKassaCards();
+                        reload_table();
                     }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
+                    else {
+                        showMessage('Kirim qilishda xatolik yuz berdi: ' + response.message, 'error');
                     }
                 },
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Oylar bo\'yicha chiqim va savdo'
-                    }
+                error: function(xhr) {
+                    showMessage('Tahrirlashda xatolik yuz berdi: ' + xhr.responseText, 'error');
+                },
+                complete: function() {
+                    setLoading(submitButton, false);
                 }
-            }
+            });
         });
 
-        // Pie Charts
-        google.charts.load("current", {packages:["corechart"]});
-        google.charts.setOnLoadCallback(drawCharts);
-
-        function drawCharts() {
-            // Som pie chart
-            const data_som = google.visualization.arrayToDataTable([
-                ['Name', 'Summa'],
-                {% for item in round_chart %}
-                    ['{{ item.name }}', {{ item.summa_som }}],
-                {% endfor %}
-            ]);
-            
-            const options_som = {
-                title: 'Kassadagi pul Som',
-                is3D: true,
-                pieSliceText: 'value',
-                backgroundColor: 'transparent',
-                sliceVisibilityThreshold: 0
-            };
-            
-            const chart_som = new google.visualization.PieChart(document.getElementById('piechart_3d'));
-            chart_som.draw(data_som, options_som);
-
-            // Dollar pie chart
-            const data_dol = google.visualization.arrayToDataTable([
-                ['Name', 'Summa'],
-                {% for item in round_chart %}
-                    ['{{ item.name }}', {{ item.summa_dol }}],
-                {% endfor %}
-            ]);
-            
-            const options_dol = {
-                title: 'Kassadagi pul Dollar',
-                is3D: true,
-                pieSliceText: 'value',
-                backgroundColor: 'transparent',
-                sliceVisibilityThreshold: 0
-            };
-            
-            const chart_dol = new google.visualization.PieChart(document.getElementById('piechart_dol_3d'));
-            chart_dol.draw(data_dol, options_dol);
-        }
-    }
-
-    // Handle window resize for charts
-    $(window).on('resize', function() {
-        initializeCharts();
+        // Modal yopilganda formani tozalash
+        $('.modal').on('hidden.bs.modal', function() {
+            $(this).find('form').trigger('reset');
+        });
     });
 </script>
+
+
+
+<script>
+    // Kassa kartalarini yangilash funksiyasi
+    function loadKassaCards() {
+        console.log('rrrrr')
+        $.ajax({
+            url: "{% url 'get_kassas' %}",
+            type: 'GET',
+            data: {
+                'request_type': 'kassas'
+            },
+            success: function(kassaData) {
+                let kassaCardsHTML = '';
+
+                // Faqat data ni olamiz
+                kassaData.data.forEach(function(kassa) {
+
+                    let valyutaHTML = '';
+
+                    kassa.valyuta.forEach(function(val) {
+                        let formattedSumma = formatNumber(val.summa);
+                        valyutaHTML += `<div class="h5 mb-0 font-weight-bold text-gray-800">${val.name} ${formattedSumma}</div>`;
+                    });
+
+                    kassaCardsHTML += `
+                        <div class="col-xl-4 col-md-6 mb-4 text-center">
+                            <div class="card border-left-primary shadow h-100 py-2 kassa-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">${kassa.name}</div>
+                                            ${valyutaHTML}
+                                        </div>
+                                        <div class="col-auto">
+                                            <img src="/static/assets/img/dollar.svg" width="30px" alt="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $('#kassa-cards-container').html(kassaCardsHTML);
+            },
+
+            error: function(xhr, status, error) {
+                console.error('Kassa ma\'lumotlarini yuklashda xatolik:', error);
+            }
+        });
+    }
+    
+    function reload_table() {
+        $('#filterButton').trigger('click');
+    }
+    $(document).ready(function() {
+        setTimeout(function() {
+            loadKassaCards();
+            reload_table();
+        }, 700); // 1000 millisekund = 1 sekund
+    });
+</script>
+
+<script>
+    $('select.selectize').selectize({ normalize: true });
+</script>
+
+<script>
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
 {% endblock js %}

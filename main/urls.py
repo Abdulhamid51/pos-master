@@ -419,16 +419,17 @@ urlpatterns = [
     path('b2c_shop_edit_ajax/', b2c_shop_edit_ajax, name='b2c_shop_edit_ajax'),
     path('pay-debt/', pay_debt, name='pay_debt'),
 
+    path('get_kassas/', get_kassas, name='get_kassas'),
+
+
     path('debt-history/<int:id>/', debt_pay_history, name='debt_pay_history'),
 
     path('get-debts/<int:id>/', get_debts, name='get_debts'),
 
 
-    
-
-
-
-    # path(),
-    # path(),
+    path('kassa/convert-currency/', ConvertCurrencyView.as_view(), name='convert_currency'),
+    path('kassa/convert/<int:convert_id>/', ConvertDetailView.as_view(), name='convert_detail'),
+    path('kassa/update-convert/', ConvertUpdateView.as_view(), name='update_convert'),
+    path('kassa/convert/<int:convert_id>/delete/', ConvertDeleteView.as_view(), name='delete_convert'),
 
 ]

@@ -286,7 +286,7 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <h6>{{ debtor.fio }}</h6>
                                 <p class="text-muted mb-0">
                                     Telefon: {{ debtor.phone1|default:"Kiritilmagan" }}
@@ -297,35 +297,52 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <h6>Boshlang'ich qarz</h6>
-                                {% for v in valyutas_for_debt %}
-                                    {% for w in wallets %}
-                                        {% if w.valyuta == v %}
-                                            <p class="text-muted mb-0">{{v.name}}: {{ w.start_summa|intcomma }}</p>
-                                        {% endif %} 
-                                    {% endfor %} 
-                                {% endfor %}
+                                <h6>Boshlang'ich balans</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mt-2">
+                                            <strong>Qarz:</strong>
+                                            {% for v in valyutas_for_debt %}
+                                                {% for w in wallets %}
+                                                    {% if w.valyuta == v and w.start_summa <= 0 %}
+                                                        <p class="text-danger mb-0">
+                                                            {{ v.name }}: {{ w.start_summa|intcomma }}
+                                                        </p>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mt-2">
+                                            <strong>Haq:</strong>
+                                            {% for v in valyutas_for_debt %}
+                                                {% for w in wallets %}
+                                                    {% if w.valyuta == v and w.start_summa >= 0 %}
+                                                        <p class="text-success mb-0">
+                                                            {{ v.name }}: {{ w.start_summa|intcomma }}
+                                                        </p>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div class="col-md-4">
                                 <div class="row">
                                     <div class="col-md-8">
-                                        <h6>Qarz</h6>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <a class="btn btn-primary" type="button" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"> <i class="fa-solid fa-download"></i> Kirim</a>
+                                        <h6>Balans</h6>
                                     </div>
 
                                 </div>
                                 <div id="pays-div">
-                                    <!-- {% for v in valyutas_for_debt %}
-                                        {% for w in wallets %}
-                                            {% if w.valyuta == v %}
-                                                <p class="text-muted mb-0">{{v.name}}: {{ w.summa|intcomma }}</p>
-                                            {% endif %} 
-                                        {% endfor %} 
-                                    {% endfor %} -->
                                 </div>
+                            </div>
+                            <div class="col-md-4">
+                                <a class="btn btn-primary" type="button" data-toggle="modal" data-target="#exampleModalPay{{debtors.id}}" data-whatever="@getbootstrap"> <i class="fa-solid fa-download"></i> Kirim</a>
                             </div>
                         </div>
                     </div>
@@ -490,43 +507,55 @@
 
 <div class="modal fade" id="exampleModalPay" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{% url 'kirim_qilish' %}" method="POST">
+        <form id="kirimForm" method="POST">
             {% csrf_token %}
+            <input type="hidden" name="debtor" value="{{debtor.id}}">
             <div class="modal-content">
-                <input type="hidden" name="debtor" value="{{debtor.id}}">
                 <div class="modal-header">
-                <h5 class="modal-title" id="KirimModalLabel">Pul olish</h5>
-            
+                    <h5 class="modal-title" id="KirimModalLabel">Kirim qilish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body">
-                    <label for="">Valyuta</label>
-                    <select name="valuta" id="" class="form-control">
-                        <option value="">- - - - - - - </option>
-                        {% for v in valyutas_for_debt %}
-                            <option value="{{ v.id }}">{{ v.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <br>
-                    <label for="">Kassa</label>
-                    <select name="kassa" id="" class="form-control">
-                        <option value="">- - - - - - - </option>
-                        {% for k in cashes %}
-                            <option value="{{ k.id }}">{{ k.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <br>
-                    <label for="">Summa</label>
-                    <input class="form-control" type="number" value="" name="summa" placeholder="Summa"><br>
-
-                    <label for="">Kurs</label>
-                    <input class="form-control" type="number" value="{{dollar_kurs}}" name="kurs" placeholder="Kurs" required><br>
-                    <textarea name="izox" class="form-control" id="" cols="30" rows="5" placeholder="Izox"></textarea>
+                    <div class="form-group">
+                        <label for="kirimValuta">Valyuta</label>
+                        <select name="valuta" id="kirimValuta" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for v in valyutas %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     
+                    <div class="form-group">
+                        <label for="kirimKassa">Kassa</label>
+                        <select name="kassa" id="kirimKassa" class="form-control" required>
+                            <option value="">- - - - - - - </option>
+                            {% for k in cashes %}
+                                <option value="{{ k.id }}">{{ k.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="kirimSumma">Summa</label>
+                        <input class="form-control make_intcomma" type="text" name="summa" placeholder="Summa" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kirimKurs">Kurs</label>
+                        <input class="form-control make_intcomma" type="text" name="kurs" value="{{dollar_kurs|intcomma}}" placeholder="Kurs" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="kirimIzox">Izox</label>
+                        <textarea name="izox" class="form-control" rows="3" placeholder="Izox"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                <button type="submit" class="btn btn-primary">Saqlash</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="kirimClose">Yopish</button>
+                    <button type="submit" class="btn btn-primary" id="kirimSubmit">Saqlash</button>
                 </div>
             </div>
         </form>
@@ -1587,9 +1616,6 @@ function displayDebtHistory(data, operationId) {
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <strong>Qoldiq qarz:</strong> ${parseFloat(data.remaining_debt).toLocaleString()} ${data.valyuta_name}
                     </div>
-                    <button class="btn btn-primary btn-sm" onclick="payDebt(${operationId}, ${data.remaining_debt}, '${data.valyuta_name}')">
-                        <i class="fas fa-money-bill-wave me-1"></i> Qarzni To'lash
-                    </button>
                 </div>
             </div>
         `;
@@ -1831,25 +1857,114 @@ function fetchDebtInfo() {
         });
 }
 
-// #pays-div ni yangilash
 function updatePaysDiv(data) {
     const paysDiv = document.getElementById('pays-div');
     if (!paysDiv) return;
-    
-    let html = '';
-    
-    // Valyuta va wallet ma'lumotlarini birlashtirish
+
+    let qarzHTML = `
+        <div class="col-md-6">
+            <strong>Qarz:</strong>
+            <div class="mt-2">
+    `;
+
+    let haqHTML = `
+        <div class="col-md-6">
+            <strong>Haq:</strong>
+            <div class="mt-2">
+    `;
+
+    // Valyuta + Wallet larni bog‘lash
     data.valyutas_for_debt.forEach(valyuta => {
-        // Shu valyutaga tegishli wallet ni topish
         const wallet = data.wallets.find(w => w.valyuta_id === valyuta.id);
         const summa = wallet ? wallet.summa : 0;
-        
-        html += `<p class="text-muted mb-0">${valyuta.name}: ${formatNumber(summa)}</p>`;
+
+        if (summa <= 0) {
+            qarzHTML += `
+                <p class="text-danger mb-0">
+                    ${valyuta.name}: ${formatNumber(summa)}
+                </p>
+            `;
+        } else {
+            haqHTML += `
+                <p class="text-success mb-0">
+                    ${valyuta.name}: ${formatNumber(summa)}
+                </p>
+            `;
+        }
     });
-    
-    paysDiv.innerHTML = html;
+
+    qarzHTML += `</div></div>`;
+    haqHTML += `</div></div>`;
+
+    // Yakuniy HTML — ikki ustunli
+    paysDiv.innerHTML = `
+        <div class="row">
+            ${qarzHTML}
+            ${haqHTML}
+        </div>
+    `;
 }
 
+
 fetchDebtInfo()
+</script>
+
+
+<script>
+    $('#kirimForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+
+        formData.set('summa', cleanNumber(formData.get('summa')));
+        formData.set('kurs', cleanNumber(formData.get('kurs')));
+
+
+        const submitButton = document.getElementById('kirimSubmit');
+        
+        setLoading(submitButton, true);
+        
+        $.ajax({
+            url: "{% url 'kirim_qilish' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    // $('#KirimModal').modal('hide');
+                    // $('.modal-backdrop').remove();
+                    $('#kirimClose').trigger('click')
+                    document.getElementById('kirimForm').reset();
+                    
+                    // Sahifani yangilash
+                    // location.reload();
+                    $('#filterbutton').trigger('click');
+                    fetchDebtInfo()
+                }
+                else {
+                    showAlert('Kirim qilishda xatolik yuz berdi: ' + response.message, 'error');
+                }
+
+            },
+            error: function(xhr) {
+                showAlert('Kirim qilishda xatolik yuz berdi: ' + xhr.responseText, 'error');
+            },
+            complete: function() {
+                setLoading(submitButton, false);
+            }
+        });
+    });
+
+
+    function setLoading(element, isLoading) {
+        if (isLoading) {
+            element.classList.add('loading');
+            element.disabled = true;
+        } else {
+            element.classList.remove('loading');
+            element.disabled = false;
+        }
+    }
 </script>
 {% endblock js %}

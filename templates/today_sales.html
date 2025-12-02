@@ -681,7 +681,7 @@
                 <div class="row mb-3">
                     <div class="col-12 d-flex justify-content-between align-items-center">
                         <h3><i class="fa fa-payment"></i> To'lovni amalga oshirish</h3>
-                        <button class="btn btn-danger" data-bs-dismiss="modal">
+                        <button class="btn btn-danger" data-bs-dismiss="modal" onclick="clearInputBox()">
                             <i class="fas fa-times"></i> 
                         </button>
                     </div>
@@ -733,6 +733,14 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="summary-card">
+                                    <div class="row" id="pays-div">
+                                        <!-- <div class="col-md-6">
+                                            <div class="summary-title">Qarzi:</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="summary-title">Haqqi:</div>
+                                        </div> -->
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -779,7 +787,7 @@
                             
                             <div class="col-md-3 mb-3 plus_button" id="qarzModalButton">
                                 <div class="payment-method" data-kassa-id="qarz" data-valyuta-id="">
-                                    <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'" onclick="showQarzInputBox(this)">
+                                    <div class="method-box" onmouseover="this.style.borderColor='#007bff'" onmouseout="this.style.borderColor='rgba(0,0,0,0.129)'" >
                                         <i class="fa-solid fa-money-bill-transfer"></i>
                                         <p>Qarzga</p>
                                         <button class="toggle-input">
@@ -797,18 +805,22 @@
                                         <div class="mb-2">
                                             <label class="small">Valyuta</label>
                                             <select class="form-control form-control-sm" id="qarzBoxValyuta">
-                                                <option value="">Tanlang</option>
+                                                <!-- <option value="">Tanlang</option> -->
                                                 {% for valyuta in valyutalar %}
-                                                    <option value="{{ valyuta.id }}" 
-                                                            data-name="{{ valyuta.name }}"
-                                                            data-is-dollar="{{ valyuta.is_dollar|yesno:'true,false' }}"
-                                                            
-                                                            {% if valyuta.name == 'Som' %}
-                                                                selected
-                                                            {% endif %}
-                                                                >
-                                                        {{ valyuta.name }}
-                                                    </option>
+                                                    
+                                                    {% if valyuta.is_som_or_dollar %}
+                                                        <option value="{{ valyuta.id }}" 
+                                                                data-name="{{ valyuta.name }}"
+                                                                data-is-dollar="{{ valyuta.is_dollar|yesno:'true,false' }}"
+                                                                
+                                                                {% if valyuta.name == 'Som' %}
+                                                                    selected
+                                                                {% endif %}
+                                                                    >
+                                                            {{ valyuta.name }}
+                                                        </option>
+                                                    {% endif %}
+                                                        
                                                 {% endfor %}
                                             </select>
                                         </div>
@@ -1016,7 +1028,7 @@
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-8">
-                                        <input type="number" id="discountInput" onchange="updateShopDetails()" oninput="updateTotals()" class="form-control" placeholder="Chegirmani kiriting">
+                                        <input type="text" id="discountInput" onchange="updateShopDetails()" oninput="updateTotals()" class="form-control make_intcomma" placeholder="Chegirmani kiriting">
                                     </div>
                                     <div class="col-md-2">
                                         <button class="btn btn-danger h-100" onclick="clearPerecent()">X</button>
@@ -1600,7 +1612,7 @@ function updateShopDetails() {
     // Selectize instansiyalaridan qiymatlarni olish
     const debtorSelectize = $('#mainSelectDebtor')[0]?.selectize;
     const filialSelectize = $('#selectFilial')[0]?.selectize;
-    let chegirma = $('#discountInput').val() || 0;
+    let chegirma = cleanNumber($('#discountInput').val()) || 0;
 
     const debtorId = debtorSelectize ? debtorSelectize.getValue() : '';
     const filialId = filialSelectize ? filialSelectize.getValue() : '';
@@ -1669,14 +1681,17 @@ async function initializeShop(id) {
             customerId = data.customer_info.id
             document.getElementById('shop_id').value = currentShopId;
 
+            
+            console.log(data.chegirma, 'oo')
+            $('#discountInput').val(formatNumber(data.chegirma))
+            $('#all_total').val(data.totals.total)
+
+
             var customerselect = $('#mainSelectDebtor')[0].selectize;
-            customerselect.setValue(customerId);
+            customerselect.setValue(customerId, true); // silent:true
 
             var filialselect = $('#selectFilial')[0].selectize;
-            filialselect.setValue(filialId);
-
-            $('#discountInput').val(data.chegirma)
-            $('#all_total').val(data.totals.total)
+            filialselect.setValue(filialId, true); // silent:true
 
             loadCartItems();
             // await loadExistingPayments();
@@ -1969,7 +1984,7 @@ function updateTotals() {
         totalSum += item.total;
     });
 
-    chegirma = parseFloat(document.getElementById('discountInput').value) || 0;
+    chegirma = parseFloat(cleanNumber(document.getElementById('discountInput').value)) || 0;
     if (chegirma > 0) {
         totalSum = totalSum - chegirma;
     }
@@ -1978,42 +1993,42 @@ function updateTotals() {
     document.getElementById('quantity_total').textContent = formatNumber(totalQuantity);
     document.getElementById('total_sum').textContent = formatNumber(totalSum);
     document.getElementById('all_total').textContent = formatNumber(totalSum);
-    document.getElementById('all_total_2').value = totalSum;
+    document.getElementById('all_total_2').value = formatNumber(totalSum);
 }
 
 // Sonlarni formatlash
-function formatNumber(num) {
-    return new Intl.NumberFormat("ru-RU", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-    }).format(num).replace(',', '.');
-}
+// function formatNumber(num) {
+//     return new Intl.NumberFormat("ru-RU", {
+//         minimumFractionDigits: 0,
+//         maximumFractionDigits: 2
+//     }).format(num).replace(',', '.');
+// }
 
-function formatInput(input) {
-    let value = input.value.replace(/\s/g, '');
-    if (value && !isNaN(value)) {
-        input.value = formatNumber(parseFloat(value));
-    }
-}
+// function formatInput(input) {
+//     let value = input.value.replace(/\s/g, '');
+//     if (value && !isNaN(value)) {
+//         input.value = formatNumber(parseFloat(value));
+//     }
+// }
 
 
-function cleanNumber(str) {
-    return str.replace(/\s/g, '');
-}
+// function cleanNumber(str) {
+//     return str.replace(/\s/g, '');
+// }
 
 
 // Barcha .make_intcomma inputlariga event qo'shish
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.make_intcomma').forEach(input => {
-        input.addEventListener('keyup', function() {
-            setTimeout(() => formatInput(this), 50);
-        });
+// document.addEventListener('DOMContentLoaded', function() {
+//     document.querySelectorAll('.make_intcomma').forEach(input => {
+//         input.addEventListener('keyup', function() {
+//             setTimeout(() => formatInput(this), 50);
+//         });
         
-        input.addEventListener('blur', function() {
-            formatInput(this);
-        });
-    });
-});
+//         input.addEventListener('blur', function() {
+//             formatInput(this);
+//         });
+//     });
+// });
 
 
 // Xabarlarni ko'rsatish
@@ -2440,6 +2455,7 @@ function showInputBox(item) {
         inputBox.show();
 
         const input = inputBox.find('input');
+        input.val('')
             let inputValue = 0
             if (isDollar) {
                 inputValue = (parseFloat(input.val()) || 0) * currentKurs;
@@ -2449,7 +2465,8 @@ function showInputBox(item) {
 
         input.trigger('focus');
 
-        let tolashSummasi = parseFloat(calculatePaymentTotal().replace(/\s+/g, '')) + inputValue;
+        let tolashSummasi = parseFloat(calculatePaymentTotal().replace(/\s+/g, ''));
+
         console.log(calculatePaymentTotal().replace(/\s+/g, ''), inputValue)
         console.log(tolashSummasi)
 
@@ -2526,7 +2543,65 @@ $(document).on('input', '.payment-input', function() {
 
 
 
+function fetchDebtInfo() {
+    const debtorSelectize = $('#mainSelectDebtor')[0]?.selectize;
+    const debtorId = debtorSelectize ? debtorSelectize.getValue() : '';
+    
+    fetch(`/get-debts/${debtorId}/`)
+        .then(response => response.json())
+        .then(data => {
+            updatePaysDiv(data);
+        })
+        .catch(error => {
+            console.error('Xatolik:', error);
+        });
+}
 
+function updatePaysDiv(data) {
+    const paysDiv = document.getElementById('pays-div');
+    if (!paysDiv) return;
+
+    let qarzHTML = `
+        <div class="col-md-6">
+            <strong>Qarz:</strong>
+            <div class="mt-2">
+    `;
+
+    let haqHTML = `
+        <div class="col-md-6">
+            <strong>Haq:</strong>
+            <div class="mt-2">
+    `;
+
+    // Valyuta + Wallet larni bog‘lash
+    data.valyutas_for_debt.forEach(valyuta => {
+        const wallet = data.wallets.find(w => w.valyuta_id === valyuta.id);
+        const summa = wallet ? wallet.summa : 0;
+
+        if (summa <= 0) {
+            qarzHTML += `
+                <p class="text-danger mb-0">
+                    ${valyuta.name}: ${formatNumber(summa)}
+                </p>
+            `;
+        } else {
+            haqHTML += `
+                <p class="text-success mb-0">
+                    ${valyuta.name}: ${formatNumber(summa)}
+                </p>
+            `;
+        }
+    });
+
+    qarzHTML += `</div></div>`;
+    haqHTML += `</div></div>`;
+
+    // Yakuniy HTML — ikki ustunli
+    paysDiv.innerHTML = `
+            ${qarzHTML}
+            ${haqHTML}
+    `;
+}
 
 $(document).ready(function() {
     // DOM elementni olish (jQuery elementning [0]-chi elementi)
@@ -2553,7 +2628,7 @@ $(document).ready(function() {
         document.querySelectorAll('.input-box').forEach(element => {
             element.style.display = 'none';
         });
-
+        fetchDebtInfo()
         fullscreenPaymentModal.show();
         calculatePaymentTotal();
         loadExistingPaymentsForModal();
@@ -2668,7 +2743,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let html = '';
         shops.forEach((shop, index) => {
-            if (shop.total_price) {
 
                 // To'lov jami larini formatlash
                 let paymentTotalsHtml = '';
@@ -2889,7 +2963,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 `;
-            }
         });
         
         shopsContainer.innerHTML = html;
@@ -3357,7 +3430,7 @@ function showQarzInputBox(element) {
 
     qarzInputBox = $(qarzInputBox)
     const input = qarzInputBox.find('#qarzBoxSumma');
-
+    input.val('')
 
     let inputValue = 0
     if (isDollar) {
@@ -3367,9 +3440,8 @@ function showQarzInputBox(element) {
     }
     input.trigger('focus');
 
-    let tolashSummasi = parseFloat(calculatePaymentTotal().replace(/\s+/g, '')) + inputValue;
-    console.log(calculatePaymentTotal().replace(/\s+/g, ''), inputValue)
-    console.log(tolashSummasi, 'ooooooooo')
+    let tolashSummasi = parseFloat(calculatePaymentTotal().replace(/\s+/g, '')); 
+
 
 
     // Agar dollar bo‘lsa, kursga ko‘ra hisoblash
@@ -3403,7 +3475,20 @@ function showQarzInputBox(element) {
     updatePaymentTotal();
 }
 
+function clearInputBox() {
+    let qarzInputBox = document.getElementById('qarzInputBox');
+    qarzInputBox.style.display = 'none';
+    // const input = qarzInputBox.find('#qarzBoxSumma');
+    // input.value = ''
 
+
+    // document.getElementById('qarzBoxValyuta').value = '';
+    document.getElementById('qarzBoxSumma').value = '';
+    document.getElementById('qarzBoxDueDate').value = '';
+    document.getElementById('qarzBoxComment').value = '';
+
+
+}
 
 // Qarz input boxini yopish
 function hideQarzInputBox() {
@@ -3634,7 +3719,7 @@ async function Yakunlash() {
             payments: paymentResult.payments,
             total_required: totalRequired,
             total_paid: totalPaid,
-            chegirma: parseFloat($('#discountInput').val()) || 0
+            chegirma: parseFloat(cleanNumber($('#discountInput').val())) || 0
         };
 
         console.log(paymentData, 'ooooooo')
@@ -3673,7 +3758,7 @@ async function Yakunlash() {
             // Ma'lumotlarni tozalash
             $('.payment-input').val('');
             $('.input-box').hide();
-            document.getElementById('qarzBoxValyuta').value = '';
+            // document.getElementById('qarzBoxValyuta').value = '';
             document.getElementById('qarzBoxSumma').value = '';
             document.getElementById('qarzBoxDueDate').value = '';
             document.getElementById('qarzBoxComment').value = '';
@@ -3754,7 +3839,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal yopilganda inputlarni tozalash
     $('#fullscreenPayment').on('hidden.bs.modal', function() {
     // Faqat qarz inputlarini tozalash, kassa inputlarini emas
-        document.getElementById('qarzBoxValyuta').value = '';
+        // document.getElementById('qarzBoxValyuta').value = '';
         document.getElementById('qarzBoxSumma').value = '';
         document.getElementById('qarzBoxDueDate').value = '';
         document.getElementById('qarzBoxComment').value = '';
@@ -3836,7 +3921,7 @@ function updateCheckWithProducts() {
         `;
     });
     
-    chegirma = parseFloat($('#discountInput').val()) || 0;
+    chegirma = parseFloat(cleanNumber($('#discountInput').val())) || 0;
     const totalWithDiscount = totalWithoutDiscount - chegirma;
     
     // Chek qiymatlarini yangilash
@@ -3956,7 +4041,7 @@ function hideQarzInputBox() {
 // Modal yopilganda inputlarni tozalash
 $('#fullscreenPayment').on('hidden.bs.modal', function() {
     // Qarz inputlarini tozalash
-    document.getElementById('qarzBoxValyuta').value = '';
+    // document.getElementById('qarzBoxValyuta').value = '';
     document.getElementById('qarzBoxSumma').value = '';
     document.getElementById('qarzBoxDueDate').value = '';
     document.getElementById('qarzBoxComment').value = '';

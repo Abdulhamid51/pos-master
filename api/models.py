@@ -754,7 +754,7 @@ class ProductFilial(models.Model):
     @property
     def pricetypevaluta_prices(self):
         data = []
-        for v in Valyuta.objects.all():
+        for v in Valyuta.objects.filter(is_som_or_dollar=True):
             dt = {
                 'valuta': v.name,
                 "valyuta_id": v.id,
@@ -781,7 +781,7 @@ class ProductFilial(models.Model):
     @property
     def bring_prices(self):
         data = []
-        for i in Valyuta.objects.all():
+        for i in Valyuta.objects.filter(is_som_or_dollar=True):
             pr = ProductBringPrice.objects.filter(valyuta=i, product=self).last()
             dt = {
                 "valyuta": i.name,
@@ -1026,7 +1026,7 @@ class RecieveItem(models.Model):
     @property
     def dollar_price_for_count(self):
 
-        return round(self.dollar_price / self.quantity, 2) if self.quantity else 0
+        return round(self.dollar_price / self.quantity, 2) if self.quantity > 0 else 0
 
     @property
     def percent(self):
@@ -1038,7 +1038,7 @@ class RecieveItem(models.Model):
     
     @property
     def expanse_for_count(self):
-        return round(self.expanse / self.quantity, 2)
+        return round(self.expanse / self.quantity, 2) if self.quantity else 0
     @property
     def cost(self):
         return self.dollar_price_for_count + (self.expanse_for_count)
@@ -1608,7 +1608,96 @@ class Debtor(models.Model):
         customer = self
         valyutalar = Valyuta.objects.filter(is_som_or_dollar=True)
 
-        # Ma'lumotlarni oldindan olib kelamiz (1 marta query)
+        for valyuta in valyutalar:
+            wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
+            summa = wallet.start_summa * -1
+
+            debt_start, created = PayHistory.objects.get_or_create(
+                # shop=shop,
+                for_start=True,
+                debtor=customer,
+                valyuta=valyuta,
+                is_debt=True,
+            )
+            PayHistory.objects.filter(id=debt_start.id).update(summa=summa)
+            # debt_start.summa = 0
+
+
+        PayHistory.objects.filter(debtor=self, main_pay__isnull=False).delete()
+
+        debts = (
+            PayHistory.objects.filter(debtor=customer, is_debt=True).order_by('date')
+        )
+
+
+        pays = (
+            PayHistory.objects.filter(debtor=customer, is_debt=False, shop__isnull=True, for_debt__isnull=True)
+            .order_by('date')
+            .select_related('valyuta')
+        ).distinct()
+
+
+
+        for pay in pays:
+            remaining_pay = pay.summa  # asosiy to'lov qoldig'i
+
+            for debt in debts:
+                print('aaaaaa', remaining_pay, debt.rest_debt)
+                if remaining_pay <= 0:
+                    break
+                if debt.rest_debt <= 0:
+                    continue
+                print(debt.rest_debt)
+                # Agar valyutalar bir xil bo'lsa
+                if pay.valyuta_id == debt.valyuta_id:
+                    taken = min(remaining_pay, debt.rest_debt)
+
+                else:
+                    # Pay dollar, debt som → summa som bo‘yicha
+                    if pay.valyuta.is_dollar and not debt.valyuta.is_dollar:
+                        taken = min(remaining_pay * pay.currency, debt.rest_debt)  # dollar → som
+                    # Pay som, debt dollar → summa dollar bo‘yicha
+                    elif not pay.valyuta.is_dollar and debt.valyuta.is_dollar:
+                        taken = min(remaining_pay / pay.currency, debt.rest_debt)  # som → dollar
+                    else:
+                        taken = min(remaining_pay, debt.rest_debt)
+
+                # Bulk create uchun, **summa qarz valyutasida**
+                linked_objects = []
+                linked_objects.append(
+                    PayHistory(
+                        debtor=pay.debtor,
+                        valyuta=debt.valyuta,  # qarz valyutasiga mos
+                        kassa=pay.kassa,
+                        date=pay.date,
+                        summa=taken,           # ⚠️ qarz valyutasida
+                        is_debt=False,
+                        main_pay=pay,
+                        for_debt=debt,
+                    )
+                )
+
+                if linked_objects:
+                    PayHistory.objects.bulk_create(linked_objects)
+
+                # To'lovdan yechish — har doim pay valyutasida kamaytiramiz
+                if pay.valyuta_id == debt.valyuta_id:
+                    remaining_pay -= taken
+                elif pay.valyuta.is_dollar and not debt.valyuta.is_dollar:
+                    remaining_pay -= taken / pay.currency  # som → dollar qaytarib
+                elif not pay.valyuta.is_dollar and debt.valyuta.is_dollar:
+                    remaining_pay -= taken * pay.currency  # dollar → som qaytarib
+
+            # pay uchun qolgan summani saqlaymiz
+            # pay._new_remain = remaining_pay
+            PayHistory.objects.filter(id=pay.id).update(remaining=remaining_pay)
+
+        # Bulk create
+        # if linked_objects:
+        #     PayHistory.objects.bulk_create(linked_objects)
+
+
+
         pay_history_qs = list(
             PayHistory.objects.filter(debtor=customer, is_debt=False, shop__isnull=True, for_debt__isnull=True).distinct()
             .select_related('valyuta')
@@ -1642,18 +1731,25 @@ class Debtor(models.Model):
         bonus_to_update = []
 
         for valyuta in valyutalar:
+            debt_start, created = PayHistory.objects.get_or_create(
+                # shop=shop,
+                for_start=True,
+                debtor=customer,
+                valyuta=valyuta,
+                is_debt=True,
+            )
+            
             events = valyuta_events.get(valyuta.id, [])
 
             # So'nggi Wallet yoki yangisini topamiz
             wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
-            summa = wallet.start_summa
+            summa = -debt_start.rest_debt
             print("start: ", wallet.start_summa)
 
             for event in events:
                 if isinstance(event, PayHistory):
                     event.debt_old = summa
-                    # if not event.is_debt:
-                    summa += event.summa if event.type_pay == 1 else -event.summa
+                    summa += event.remaining if event.type_pay == 1 else -event.remaining
                     event.debt_new = summa
                     payhistory_to_update.append(event)
 
@@ -1661,7 +1757,6 @@ class Debtor(models.Model):
                     event.debt_old = summa
                     debt = PayHistory.objects.filter(is_debt=True, shop=event).first().rest_debt if PayHistory.objects.filter(is_debt=True, shop=event) else 0
                     summa -= debt
-                    print("summa: ", debt)
                     event.debt_new = summa
                     shop_to_update.append(event)
                 
@@ -1672,7 +1767,6 @@ class Debtor(models.Model):
                     bonus_to_update.append(event)
 
             wallet.summa = summa
-            print(summa, 'aaaaa')
             wallets_to_update.append(wallet)
 
         # Hammasini bir marta yangilaymiz
@@ -1712,8 +1806,8 @@ class Wallet(models.Model):
     deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True)
     partner = models.ForeignKey("ExternalIncomeUser", on_delete=models.CASCADE, blank=True, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
-    summa = models.IntegerField(default=0)
-    start_summa = models.IntegerField(default=0)
+    summa = models.FloatField(default=0)
+    start_summa = models.FloatField(default=0)
     start_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -1774,7 +1868,8 @@ class Debt(models.Model):
 
 
 class PayHistory(models.Model):
-    for_debt = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
+    for_debt = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='debt_children')
+    main_pay = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='pay_children')
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, blank=True, null=True, related_name="shop_pays")
     return_product = models.ForeignKey("ReturnProduct", on_delete=models.CASCADE, blank=True, null=True)
     desktop_id = models.IntegerField(blank=True, null=True)
@@ -1806,6 +1901,15 @@ class PayHistory(models.Model):
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
     is_debt = models.BooleanField(default=False)
+    for_start = models.BooleanField(default=False)
+    
+    remaining = models.FloatField(default=0)
+
+    by_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    
+    # @property
+    # def remain(self):
+    #     return self.summa
 
     @property
     def in_som(self):
@@ -2296,11 +2400,11 @@ class Chiqim(models.Model):
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
 
-    summa = models.IntegerField(default=0, null=True)
+    summa = models.FloatField(default=0, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, null=True, blank=True)
     kassa = models.ForeignKey("KassaMerge", on_delete=models.CASCADE, null=True, blank=True)
     kassa_new = models.FloatField(default=0)
-    currency = models.IntegerField(default=0)
+    currency = models.FloatField(default=0)
     
     user_profile = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, blank=True, null=True)
     mobil_user = models.ForeignKey(MobilUser, on_delete=models.SET_NULL, blank=True, null=True)
@@ -2363,6 +2467,11 @@ class Chiqim(models.Model):
         self.summa = 0
         self.save()
         super().delete(*args, **kwargs)
+    
+    @property
+    def conversion_id(self):
+        last = CashConvertHistory.objects.filter(pay1=self).order_by('-id').first()
+        return last.id if last else None
 
 
 
@@ -2418,6 +2527,11 @@ class Kirim(models.Model):
     izox = models.TextField()
     qachon  = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=True)
+
+    @property
+    def conversion_id(self):
+        last = CashConvertHistory.objects.filter(pay2=self).order_by('-id').first()
+        return last.id if last else None
 
     @property
     def summa_for_valutas(self):
@@ -3440,3 +3554,37 @@ class RoundingSettings(models.Model):
         return settings
 
 
+class CashConvertHistory(models.Model):
+    converter = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    from_valyuta = models.ForeignKey(Valyuta, on_delete=models.SET_NULL, null=True, related_name='from_valuta')
+    to_valyuta = models.ForeignKey(Valyuta, on_delete=models.SET_NULL, null=True, related_name='to_valuta')
+
+    from_cash_before = models.FloatField(default=0)
+    from_cash = models.ForeignKey(KassaMerge, on_delete=models.SET_NULL, null=True, related_name='from_cash')
+    from_cash_after = models.FloatField(default=0)
+
+
+    to_cash_before = models.FloatField(default=0)
+    to_cash = models.ForeignKey(KassaMerge, on_delete=models.SET_NULL, null=True, related_name='to_cash')
+    to_cash_after = models.FloatField(default=0)
+    # from_cash = models.CharField(max_length=255)
+    # to_cash = models.CharField(max_length=255)
+    summa = models.FloatField(default=0)
+    summa2 = models.FloatField(default=0)
+
+    currency = models.FloatField(default=0)
+    comment = models.CharField(max_length=255, default="Kassalar urtasida convert")
+    created_date = models.DateTimeField(default=timezone.now)
+
+    pay1 = models.ForeignKey(Chiqim, on_delete=models.SET_NULL, null=True, blank=True, related_name='cash_convert_from_payment')
+    pay2 = models.ForeignKey(Kirim, on_delete=models.SET_NULL, null=True, blank=True, related_name='cash_convert_to_payment')
+
+    @property
+    def date(self):
+        return self.created_date
+
+    def __str__(self):
+        return self.comment
+
+    class Meta:
+        verbose_name_plural = "Kassalar urtasida convert"

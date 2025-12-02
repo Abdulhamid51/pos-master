@@ -1,0 +1,87 @@
+{% load humanize %}
+<!-- kassa_table_partial.html -->
+
+<thead>
+    <tr>
+        <th style="text-align: left;">#</th>
+        <th style="text-align: left;">Turi</th>
+        <th style="text-align: left;">Kassa</th>
+        <th style="text-align: left;">Valyuta</th>
+        <th style="text-align: left;">Pul Muomalasi</th>
+        <th style="text-align: left;">Qaysi oy uchun</th>
+        {% for v in valutas %}
+            <th style="text-align: left;">{{ v.name }}</th>
+        {% endfor %}
+        <th style="text-align: left;">Hamkor</th>
+        <th style="text-align: left;">Izox</th>
+        <th style="text-align: left;">Sana</th>
+        <th style="text-align: left;">Harakatlar</th>
+    </tr>
+</thead>
+
+<tbody id="transactionsTableBody">
+    {% for transaction in transactions %}
+    <tr class="{% if transaction.type == 'kirim' %}kirim-row{% else %}chiqim-row{% endif %}" id="transaction-{{ transaction.obj.id }}">
+        <td style="text-align: left;white-space: nowrap;white-space: nowrap;">{{ forloop.counter }}</td>
+        <td style="text-align: left;white-space: nowrap;">
+            <span class="transaction-type-badge {% if transaction.type == 'kirim' %}badge-kirim{% else %}badge-chiqim{% endif %}">
+                {{ transaction.type|upper }}
+            </span>
+        </td>
+        <td style="text-align: left;white-space: nowrap;">{{ transaction.obj.kassa.kassa.name|default:"-" }}</td>
+        <td style="text-align: left;white-space: nowrap;">{{ transaction.obj.kassa.valyuta.name|default:"-" }}</td>
+        <td style="text-align: left;white-space: nowrap;">
+            {% if transaction.type == 'chiqim' %}
+                {{ transaction.obj.money_circulation.name|default:"-" }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td style="text-align: left;white-space: nowrap;">
+            {% if transaction.type == 'chiqim' and transaction.obj.qaysi %}
+                {{ transaction.obj.qaysi|date:'Y-m' }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        {% for q in transaction.obj.summa_for_valutas %}
+            <td style="text-align: left;white-space: nowrap;">{{ q.summa|default:0|intcomma }}</td>
+        {% endfor %}
+        <td style="text-align: left;white-space: nowrap;">{{ transaction.obj.payhistory.kontr_agent|default_if_none:'' }}</td>
+        <td style="text-align: left;white-space: nowrap;">{{ transaction.obj.izox|default:''|truncatewords:5 }}</td>
+        <td style="text-align: left;white-space: nowrap;">{{ transaction.obj.qachon|date:'Y-m-d H:i' }}</td>
+        <td style="text-align: left;white-space: nowrap;">
+            {% if not transaction.obj.conversion_id %}
+                <button class="btn btn-primary btn-sm edit-transaction" 
+                        data-id="{{ transaction.obj.id }}"
+                        data-type="{{ transaction.type }}"
+                        data-summa="{{ transaction.obj.summa }}"
+                        data-kurs="{{ transaction.obj.currency }}"
+                        data-izox="{{ transaction.obj.izox }}">
+                    <i class="fas fa-edit"></i> Tahrirlash
+                </button>
+            {% else %}
+                <button class="btn btn-primary btn-sm" onclick="editConversion('{{transaction.obj.conversion_id}}')">
+                    <i class="fas fa-edit"></i> Tahrirlash
+                </button>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+<tfoot id="transactionsTableFooter">
+    <tr>
+        <th style="text-align: left;white-space: nowrap;" colspan="6">Jami kirim:</th>
+        {% for q in kirim_totals %}
+            <th style="text-align: left;white-space: nowrap;" class="text-success">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+        {% endfor %}
+        <th style="text-align: left;white-space: nowrap;" colspan="4"></th>
+    </tr>
+    <tr>
+        <th style="text-align: left;white-space: nowrap;" colspan="6">Jami chiqim:</th>
+        {% for q in chiqim_totals %}
+            <th style="text-align: left;white-space: nowrap;" class="text-danger">{{ q.summa|default_if_none:'0'|intcomma }}</th>
+        {% endfor %}
+        <th style="text-align: left;white-space: nowrap;" colspan="4"></th>
+    </tr>
+</tfoot>
