@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from api.models import ProductFilial, Debtor, MCart, MOrder, ProductPriceType, Sum
+from api.models import ProductFilial, Debtor, MCart, MOrder, ProductPriceType, Sum, PriceType, UserProfile
 from django.http.response import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -9,10 +9,13 @@ from django.views.decorators.http import require_GET
 def abot_index(request, chat_id):
     is_telegram = request.headers.get('User-Agent', '').lower().find('telegram') != -1
     customer = Debtor.objects.filter(tg_id=chat_id).first()
-    if not customer:
-        return JsonResponse({'error': 'Customer not found'}, status=404)
+    seller = UserProfile.objects.filter(tg_id=chat_id).first()
+    if not customer and not seller:
+        return JsonResponse({'error': 'User topilmadi'}, status=404)
+    if seller:
+        customer = Debtor.objects.filter(fio="Naqd").first()
     product = ProductFilial.objects.order_by('-id').values('id', 'name', 'quantity', 'image', 'som', 'measurement_type__name')
-    price_type = customer.price_type
+    price_type = PriceType.objects.filter(name="Standart").first()
     product_price = ProductPriceType.objects.filter(type=price_type, valyuta__is_som=True).values('product_id').annotate(sum=Sum('price'))
     product_dict = {item['product_id']:item for item in product_price}
     data = []
@@ -22,12 +25,13 @@ def abot_index(request, chat_id):
             'name':i['name'],
             'quantity':i['quantity'],
             'image':i['image'],
-            'som':product_dict.get(i['id'], {}).get('sum',10),
+            'som':ProductPriceType.objects.filter(type=price_type, valyuta__is_som=True).filter(product_id=i['id']).first().price if ProductPriceType.objects.filter(type=price_type, valyuta__is_som=True).filter(product_id=i['id']) else 0,
+            # 'som':product_dict.get(i['id'], {}).get('sum', 0),
             'measurement_type__name':i['measurement_type__name'],
         }
         data.append(dt)
 
-    m_order = MOrder.objects.filter(debtor=customer, status=1).last()
+    m_order = MOrder.objects.filter(debtor=customer, status=1, seller=seller).last() or MOrder.objects.create(debtor=customer, status=1, seller=seller)
     cart_data = []
     if m_order:
         m_cart = MCart.objects.filter(m_order=m_order)
@@ -43,6 +47,7 @@ def abot_index(request, chat_id):
 
     context = {
         'product': data,
+        'product_dict': product_dict,
         'customer': customer,
         'is_telegram': is_telegram,
         'chat_id': chat_id,
@@ -54,11 +59,15 @@ def abot_index(request, chat_id):
 def add_to_cart(request, chat_id):
     try:
         data = json.loads(request.body)
+        seller = UserProfile.objects.filter(tg_id=chat_id).first()
         customer = Debtor.objects.filter(tg_id=chat_id).first()
+
+        if seller:  
+            customer = Debtor.objects.filter(fio="Naqd").first()
         if not customer:
             return JsonResponse({'error': 'Customer not found'}, status=404)
         
-        m_order = MOrder.objects.filter(debtor=customer, status=1).last()
+        m_order = MOrder.objects.filter(debtor=customer, status=1, seller=seller).last()
         if not m_order:
             m_order = MOrder.objects.create(debtor=customer, status=1)
         
@@ -86,10 +95,16 @@ def add_to_cart(request, chat_id):
 def remove_from_cart(request, chat_id):
     try:
         data = json.loads(request.body)
+        seller = UserProfile.objects.filter(tg_id=chat_id).first()
         customer = Debtor.objects.filter(tg_id=chat_id).first()
-        if not customer:
-            return JsonResponse({'error': 'Customer not found'}, status=404)
-        m_order = MOrder.objects.filter(debtor=customer, status=1).last()
+        # if not customer:
+        #     return JsonResponse({'error': 'Customer not found'}, status=404)
+        if seller:
+            customer = Debtor.objects.filter(fio="Naqd").first()
+        if customer:
+            m_order = MOrder.objects.filter(debtor=customer, status=1).last()
+        if seller:
+            m_order = MOrder.objects.filter(debtor=customer, status=1, seller=seller).last()
         if not m_order:
             return JsonResponse({'ok': True})  
         cart_item = MCart.objects.filter(
@@ -105,10 +120,14 @@ def remove_from_cart(request, chat_id):
 @csrf_exempt
 def mobile_done_cart(request, chat_id):
     try:
+        seller = UserProfile.objects.filter(tg_id=chat_id).first()
         customer = Debtor.objects.filter(tg_id=chat_id).first()
+
+        if seller:
+            customer = Debtor.objects.filter(fio="Naqd").first()
         if not customer:
             return JsonResponse({'error': 'Customer not found'}, status=404)
-        m_order = MOrder.objects.filter(debtor=customer, status=1).last()
+        m_order = MOrder.objects.filter(debtor=customer, status=1, seller=seller).last()
         if not m_order:
             return JsonResponse({'error': 'No active order found'}, status=404)
         m_order.status = 2 
@@ -120,7 +139,14 @@ def mobile_done_cart(request, chat_id):
 
 
 def debtor_orders(request, chat_id):
-    order = MOrder.objects.filter(debtor__tg_id=chat_id)
+    seller = UserProfile.objects.filter(tg_id=chat_id).first()
+    customer = Debtor.objects.filter(tg_id=chat_id).first()
+
+    if customer:
+        order = MOrder.objects.filter(debtor__tg_id=chat_id)
+    if seller:
+        order = MOrder.objects.filter(seller=seller)
+
     context = {
         'order': order,
         'chat_id': chat_id,

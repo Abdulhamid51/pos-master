@@ -814,9 +814,9 @@
             <div class="product-title">{{ product.name }}</div>
             <div class="price-quantity">
               <div class="product-price">{{ product.som|intcomma }} sum</div>
-              <div class="product-quantity">{{ product.quantity }} {{product.measurement_type__name|default_if_none:'-'}}</div>
+              <div class="product-quantity">{{ product.quantity|floatformat:'2'|intcomma }} {{product.measurement_type__name|default_if_none:''}}</div>
               <div class="product-id" style="display: none;">{{ product.id }}</div>
-              <div class="product-measurement" style="display: none;">{{product.measurement_type__name|default_if_none:'-'}}</div>
+              <div class="product-measurement" style="display: none;">{{product.measurement_type__name|default_if_none:''}}</div>
             </div>
           </div>
           <div class="add-btn-container">
@@ -851,7 +851,7 @@
         </div>
         
         <div class="quantity-control">
-          <button class="quantity-btn" onclick="changeQuantity(1)">-</button>
+          <button class="quantity-btn" onclick="minusQuantity(1)">-</button>
           <input type="text" class="quantity-input" id="quantityInput" value="0" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*">
           <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
         </div>
@@ -1004,6 +1004,17 @@
         } else {
             input.value = formatQuantity(currentProductMaxQuantity);
         }
+    }
+
+    function minusQuantity(change) {
+        const input = document.getElementById('quantityInput');
+        let currentValue = parseQuantity(input.value);
+        let newValue = currentValue - change;
+        
+        if (newValue < 0) newValue = 0;
+        if (newValue > currentProductMaxQuantity) newValue = currentProductMaxQuantity;
+        
+        input.value = formatQuantity(newValue);
     }
 
     function changeQuantity(change) {

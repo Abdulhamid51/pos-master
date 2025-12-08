@@ -187,6 +187,8 @@ class OylikTolov(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE, null=True,blank=True, related_name='userprofile')
+
+    tg_id = models.CharField(max_length=255, null=True, blank=True)
     
     staffs = [
         (1, 'director'),
@@ -2634,6 +2636,7 @@ from django.db.models import ExpressionWrapper
 
 class MOrder(models.Model):
     user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
+    seller = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
@@ -2651,6 +2654,7 @@ class MOrder(models.Model):
 class MCart(models.Model):
     m_order = models.ForeignKey(MOrder, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(MobilUser, on_delete=models.CASCADE, null=True, blank=True)
+    seller = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE)
     quantity = models.FloatField()
