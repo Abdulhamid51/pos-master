@@ -12,7 +12,7 @@ urlpatterns = [
     path('get-ltv-data/', get_ltv_data, name='get_ltv_data'),
     path('filial/', Filials.as_view(), name='filial'),
     path('saler/', Saler.as_view(), name='saler'),
-    path('ombor/', Ombor.as_view(), name='ombor'),
+    # path('ombor/', Ombor.as_view(), name='ombor'),
     path('omborqabul/', OmborQabul.as_view(), name='omborqabul'),
     path('omborqabul/<int:pk>/', ArticleDetailView.as_view(), name='omborqabuldetail'),
     path('omborqabul_recieve_detail/<int:id>/', omborqabul_recieve_detail, name='omborqabul_recieve_detail'),
@@ -149,6 +149,7 @@ urlpatterns = [
     path('refresh_debtor_debt/<id>/', refresh_debtor_debt, name='refresh_debtor_debt'),
     # path('today_sales/', today_sales, name='today_sales'),
     path('today-sales/', today_sales, name='today_sales'),
+    path('sales-finished/', sales_finished, name='sales_finished'),
     path('return-products/', return_products, name='return_products'),
     path('get-kassalar-by-valyuta/', get_kassalar_by_valyuta, name='get_kassalar_by_valyuta'),
 
@@ -431,5 +432,14 @@ urlpatterns = [
     path('kassa/convert/<int:convert_id>/', ConvertDetailView.as_view(), name='convert_detail'),
     path('kassa/update-convert/', ConvertUpdateView.as_view(), name='update_convert'),
     path('kassa/convert/<int:convert_id>/delete/', ConvertDeleteView.as_view(), name='delete_convert'),
+
+
+
+    path('ombor/', OmborView.as_view(), name='ombor'),
+    path('ombor/get-products/', GetProductsView.as_view(), name='get_products'),
+    path('ombor/get-product/', GetProductView.as_view(), name='get_product'),
+    path('ombor/edit-product/', EditProductView.as_view(), name='edit_product'),
+    # path('ombor/check-barcode/', CheckBarcodeView.as_view(), name='check_barcode'),
+    path('ombor/upload-excel/', upload_excel, name='upload_excel'),
 
 ]

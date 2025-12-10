@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% block title %}
+    <title>Ombor </title>
+{% endblock title %}
+{% block css %}
+
+    <!-- BEGIN PAGE LEVEL STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_miscellaneous.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <!-- END PAGE LEVEL STYLES -->
+
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+
+                <div class="row layout-top-spacing layout-spacing">
+                    <div class="col-lg-12">
+                        <div class="statbox widget box box-shadow">
+                            <div class="widget-header">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h4>Ombordagi Mahsulotlar</h4>
+                                    </div>    
+                                    <div class="col-md-4 text-right">
+                                        <button style="margin: 1rem;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#excel_import">
+                                        Excel import 
+                                    </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="widget-content-area">
+                                <div class="table-responsive mb-4">
+                                    <table id="html5-extension" class="table table-hover">
+                                        <thead>
+                                            <tr class="">
+                                                <th class="">№</th>
+                                                <th>Mahsulot</th>
+                                                <th>Ishlab chiqaruvchi</th>
+                                                <th>Soni</th>
+                                                <th>Barcode</th>
+                                                <th>Guruh</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ombor in ombors %}
+                                                <tr class="">
+                                                    <td class="">{{ forloop.counter }}</td>
+                                                    <td>{{ ombor.name }}</td>
+                                                    <td>{{ ombor.preparer }}</td>
+                                                    <td>{{ ombor.quantity|floatformat:1|intcomma }}</td>
+                                                    <td>
+                                                        {% for x in ombor.product_barcode %}
+                                                            {{x.barcode}}<br>
+                                                        {% endfor %}
+                                                    </td>
+                                                    <td>{{ ombor.group }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Jami:</th>
+                                                <th></th>
+                                                <th></th>
+                                                <th>{{ total_quantity|intcomma }}</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+        </div>
+
+
+        <div class="modal fade" id="excel_import" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+            <form  class="modal-content" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="recieve_item_add_product_name">Excel import</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" >
+
+                        <div class="form-group mb-3">
+                            <label for="excel_file" class="form-label">Excel faylni tanlang:</label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" name="excel_file" id="excel_file" accept=".xlsx" required>
+                                <button class="btn" type="button" onclick="downloadTemplate()">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/custom_miscellaneous.js'%}"></script>
+        <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <!-- END PAGE LEVEL SCRIPTS -->
+        <script>
+        $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+    </script>
+
+
+<script>
+    function downloadTemplate() {
+        window.location.href = "{% static 'mahsulot_filial_shablon.xlsx' %}";
+    }
+</script>
+{% endblock js %}

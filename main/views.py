@@ -2725,17 +2725,185 @@ class Saler(LoginRequiredMixin, TemplateView):
         return context
 
 
-class Ombor(LoginRequiredMixin, TemplateView):
+# class Ombor(LoginRequiredMixin, TemplateView):
+#     template_name = 'ombor.html'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['ombor'] = 'active'
+#         context['ombor_t'] = 'true'
+#         context['ombors'] = ProductFilial.objects.all()
+#         context['total_quantity'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
+
+#         return context
+
+
+
+class OmborView(LoginRequiredMixin, TemplateView):
     template_name = 'ombor.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ombor'] = 'active'
         context['ombor_t'] = 'true'
-        context['ombors'] = ProductFilial.objects.all()
-        context['total_quantity'] = ProductFilial.objects.aggregate(Sum('quantity'))['quantity__sum']
-
+        context['groups'] = Groups.objects.all()
+        context['filials'] = Filial.objects.all()
+        context['delivers'] = Deliver.objects.all()
+        context['measurement_types'] = MeasurementType.objects.all()
         return context
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GetProductsView(LoginRequiredMixin, View):
+    def get(self, request):
+        try:
+            # DataTable parametrlari
+            draw = int(request.GET.get('draw', 1))
+            start = int(request.GET.get('start', 0))
+            length = 50
+            
+            # Filter parametrlari
+            search_value = request.GET.get('search[value]', '')
+            if not search_value:
+                search_value = request.GET.get('search', '')
+            
+            group = request.GET.get('group', '')
+            deliver = request.GET.get('deliver', '')
+            
+            # Query
+            products = ProductFilial.objects.filter()
+            if request.user.userprofile.filial:
+                products = products.filter(filial=request.user.userprofile.filial)
+            # Search filter
+            if search_value:
+                products = products.filter(
+                    Q(name__icontains=search_value) |
+                    Q(barcodes__barcode__icontains=search_value)
+                ).distinct()
+            
+            # Group filter
+            if group:
+                products = products.filter(group_id=group)
+            
+            # Deliver filter
+            if deliver:
+                products = products.filter(deliver_id=deliver)
+            
+            # Jami hisoblash
+            total_records = ProductFilial.objects.filter(filial__isnull=True).count()
+            filtered_records = products.count()
+            
+            # Jami miqdor
+            total_quantity = products.aggregate(Sum('quantity'))['quantity__sum'] or 0
+            
+            # Pagination
+            products = products[start:start + length]
+            
+            # Data tayyorlash
+            data = []
+            for product in products:
+                barcodes = list(product.product_barcode.all().values_list('barcode', flat=True))
+                data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'deliver': product.deliver.name if product.deliver else '',
+                    'quantity': str(product.quantity) if product.quantity else '0',
+                    'barcodes': barcodes,
+                    'barcodes_text': ', '.join(barcodes),
+                    'group': product.group.name if product.group else '',
+                    'filial': product.filial.name if product.filial else '',
+                })
+            
+            return JsonResponse({
+                'draw': draw,
+                'recordsTotal': total_records,
+                'recordsFiltered': filtered_records,
+                'data': data,
+                'total_quantity': total_quantity
+            })
+            
+        except Exception as e:
+            print(f"Error in GetProductsView: {str(e)}")  # Debug uchun
+            return JsonResponse({
+                'draw': int(request.GET.get('draw', 1)),
+                'recordsTotal': 0,
+                'recordsFiltered': 0,
+                'data': [],
+                'total_quantity': 0,
+                'error': str(e)
+            }, status=500)
+
+
+# Mahsulot ma'lumotlarini olish (edit uchun)
+@method_decorator(csrf_exempt, name='dispatch')
+class GetProductView(LoginRequiredMixin, View):
+    def get(self, request):
+        try:
+            product_id = request.GET.get('id')
+            product = ProductFilial.objects.get(id=product_id)
+            
+            return JsonResponse({
+                'success': True,
+                'product': {
+                    'id': product.id,
+                    'name': product.name,
+                    'deliver_id': product.deliver.id if product.deliver else '',
+                    'pack': str(product.pack) if product.pack else '',
+                    'group_id': product.group.id if product.group else '',
+                    'measurement_type_id': product.measurement_type.id if product.measurement_type else '',
+                    'min_count': str(product.min_count) if product.min_count else '',
+                    'quantity': str(product.quantity) if product.quantity else '',
+                    'shelf_code': product.shelf_code or '',
+                    'ready': product.ready or '1',
+                    'barcodes': [b.barcode for b in product.product_barcode.all()]
+                }
+            })
+        except ProductFilial.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Mahsulot topilmadi'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+# Mahsulotni tahrirlash
+@method_decorator(csrf_exempt, name='dispatch')
+class EditProductView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            product_id = request.POST.get('product_id')
+            product = ProductFilial.objects.get(id=product_id)
+            
+            # Ma'lumotlarni yangilash
+            product.name = request.POST.get('name')
+            product.deliver_id = request.POST.get('deliver_id')
+            product.pack = request.POST.get('pack', '0').replace(',', '.')
+            product.group_id = request.POST.get('group_id')
+            product.measurement_type_id = request.POST.get('measurement_type_id')
+            product.min_count = request.POST.get('min_count', '0').replace(',', '.')
+            # product.quantity = request.POST.get('quantity', '0').replace(',', '.')
+            product.shelf_code = request.POST.get('shelf_code', '0')
+            product.ready = request.POST.get('ready', '1')
+            product.save()
+            
+            # Eski barcodelarni o'chirish
+            ProductBarcode.objects.filter(product=product).delete()
+            
+            # Yangi barcodelarni qo'shish
+            barcodes = request.POST.get('barcodes', '[]')
+            barcode_list = json.loads(barcodes)
+            for barcode in barcode_list:
+                if barcode.strip():
+                    ProductBarcode.objects.create(barcode=barcode.strip(), product=product)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Mahsulot muvaffaqiyatli yangilandi',
+                'product_id': product.id
+            })
+            
+        except ProductFilial.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Mahsulot topilmadi'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
 
 
 class OmborQabul(LoginRequiredMixin, TemplateView):
@@ -6497,7 +6665,7 @@ def new_product_add(request):
     # ready = request.POST.get('ready')
     quantity = str(request.POST.get('quantity')).replace(',', '.')
     valyuta = request.POST.get('valyuta')
-    shelf_code = request.POST.get('shelf_code')
+    shelf_code = request.POST.get('shelf_code', '0')
     other_filials = Filial.objects.all()
     filial_pr_id = None
     for filial in other_filials:
@@ -13853,6 +14021,280 @@ def product_prices_get(request, product_id):
 #     return JsonResponse([])
 
 
+@login_required
+def sales_finished(request):
+    today = datetime.now().date()
+    start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
+    end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
+    
+    # PayHistory ni prefetch qilamiz
+    pay_history_prefetch = Prefetch(
+        'shop_pays',
+        queryset=PayHistory.objects.filter().select_related('valyuta', 'kassa'),
+        to_attr='payment_history'
+    )
+    
+    # ReturnProduct ni prefetch qilamiz
+    return_prefetch = Prefetch(
+        'cart__returns',
+        queryset=ReturnProduct.objects.select_related('by_user', 'cart__product'),
+        to_attr='return_history'
+    )
+
+    
+    # Chiqim ni prefetch qilamiz
+    chiqim_prefetch = Prefetch(
+        'chiqims',
+        queryset=Chiqim.objects.filter().select_related('valyuta', 'kassa'),
+        to_attr='chiqim_history'
+    )
+    
+    
+    # Asosiy queryset - Shop modelini olamiz
+    shops = Shop.objects.filter(
+        date__date__range=(start_date, end_date),
+        is_savdo=True, shop_pays__isnull=False
+    ).select_related('debtor', 'saler', 'valyuta').prefetch_related(
+        'cart', 
+        pay_history_prefetch,
+        return_prefetch,
+        chiqim_prefetch
+    ).order_by('-date')
+    
+    client = request.GET.getlist('client')
+    filial_id = request.GET.get('filial')
+    search = request.GET.get('search')
+    
+    # Filters dictionary
+    filters = {
+        'start_date': start_date,
+        'end_date': end_date,
+        'search': search or '',
+        'client': client,
+        'filial': filial_id
+    }
+    
+    if search:
+        shops = shops.filter(
+            Q(cart__product__name__icontains=search) |
+            Q(debtor__fio__icontains=search)
+        ).distinct()
+
+    filial = None
+    if filial_id:
+        filial = filial_id
+    else:
+        if request.user.userprofile.staff == 1:
+            filial = Filial.objects.filter(is_activate=True).first()
+        else:
+            filial = request.user.userprofile.filial
+    
+    shops = shops.filter(filial=filial, cart__isnull=False).distinct()
+
+    if client:
+        shops = shops.filter(debtor_id__in=client)
+
+    # AJAX so'rov bo'lsa, faqat ma'lumotlarni qaytaramiz
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        page_number = request.GET.get('page', 1)
+        paginator = Paginator(shops, 50)
+        page_obj = paginator.get_page(page_number)
+        
+        shops_data = []
+        for shop in page_obj:
+            # To'lovlarni guruhlaymiz
+            payment_totals = {}
+            chiqim_totals = {}
+            payment_details = []
+            chiqim_details = []
+
+            for chiqim in shop.chiqim_history:
+                if chiqim.summa > 0:
+                    valyuta_name = chiqim.valyuta.name if chiqim.valyuta else 'Noma\'lum'
+                    kassa_name = chiqim.kassa.kassa.name if chiqim.kassa else 'Noma\'lum'
+                    
+                    # Har bir valyuta bo'yicha jami
+                    if valyuta_name not in chiqim_totals:
+                        chiqim_totals[valyuta_name] = 0
+                    chiqim_totals[valyuta_name] += chiqim.summa
+                    
+                    chiqim_details.append({
+                        'summa': chiqim.summa,
+                        'valyuta': chiqim.valyuta.name if chiqim.valyuta else 'Noma\'lum',
+                        'date': chiqim.qachon.strftime('%Y-%m-%d %H:%M'),
+                        'kassa': chiqim.kassa.kassa.name if chiqim.kassa and chiqim.kassa.kassa else 'Noma\'lum',
+                    })
+            
+            for payment in shop.payment_history:
+                if payment.summa > 0:
+                    valyuta_name = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
+                    kassa_name = payment.kassa.kassa.name if payment.kassa else 'Noma\'lum'
+                    
+                    # Har bir valyuta bo'yicha jami
+                    if valyuta_name not in payment_totals:
+                        payment_totals[valyuta_name] = 0
+                    payment_totals[valyuta_name] += payment.summa
+                    
+                    # To'lov tafsilotlari
+                    payment_details.append({
+                        'summa': payment.summa,
+                        'type_pay': payment.type_pay,
+                        'valyuta': valyuta_name,
+                        'kassa': kassa_name,
+                        'date': payment.date.strftime('%Y-%m-%d %H:%M'),
+                        'is_debt': payment.is_debt
+                    })
+            
+            # Qaytarilgan mahsulotlar
+            return_details = []
+            for cart in shop.cart.all():
+                for return_item in cart.return_history:
+                    return_details.append({
+                        'product_name': cart.product.name,
+                        'return_quantity': return_item.return_quan,
+                        'date': return_item.date.strftime('%Y-%m-%d %H:%M'),
+                        'returned_by': return_item.by_user.first_name,
+                    })
+
+
+            
+            shop_data = {
+                'id': shop.id,
+                'debtor_name': shop.debtor.fio if shop.debtor else 'Noma\'lum mijoz',
+                'debtor_id': shop.debtor.id if shop.debtor else None,
+                'date': shop.date.strftime('%Y-%m-%d %H:%M'),
+                'total_price': shop.total_price,
+                'total_quantity': shop.product_count,
+                'total_returned_sum': shop.total_returned_sum,
+                'status': shop.get_status_display(),
+                'status_code': shop.status,
+                'chegirma': shop.chegirma,
+                'valyuta_name': shop.valyuta.name if shop.valyuta else '',
+                'valyuta_is_dollar': shop.valyuta.is_dollar if shop.valyuta else False,
+                'kurs': shop.kurs,
+                'payment_totals': payment_totals,
+                'chiqim_totals': chiqim_totals,
+                'payment_details': payment_details,
+                'chiqim_details': chiqim_details,
+                'return_details': return_details,
+                'carts': [],
+            }
+            
+            for cart in shop.cart.all():
+                shop_data['carts'].append({
+                    'id': cart.id,
+                    'product_name': str(cart.product),
+                    'price': cart.price,
+                    'quantity': cart.quantity,
+                    'total': cart.total_price,
+                    'total_returned': cart.total_returned,
+                    'bring_price': cart.bring_price
+                })
+            
+            shops_data.append(shop_data)
+        
+        payments_by_currency = {}
+
+        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=False).distinct():
+            currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
+            if currency not in payments_by_currency:
+                payments_by_currency[currency] = 0
+            payments_by_currency[currency] += payment.summa
+        
+
+        debts_by_currency = {}
+
+        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=True).distinct():
+            currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
+            if currency not in debts_by_currency:
+                debts_by_currency[currency] = 0
+            debts_by_currency[currency] += payment.summa
+
+            
+        return JsonResponse({
+            'shops': shops_data,
+            'has_previous': page_obj.has_previous(),
+            'has_next': page_obj.has_next(),
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'total_count': paginator.count,
+
+            'total_price': sum(shop.total_price for shop in shops),
+            'total_quantity': sum(shop.product_count for shop in shops),
+            'total_shops': shops.count(),
+            'payments_by_currency': payments_by_currency,
+            'debts_by_currency': debts_by_currency
+        })
+    
+    # Oddiy so'rov bo'lsa, template render qilamiz
+    totals = {
+        'total_price': sum(shop.total_price for shop in shops),
+        'total_quantity': sum(shop.product_count for shop in shops),
+        'total_shops': shops.count(),
+    }
+    
+    # Valyuta va kassalar ro'yxati
+    valyutalar = Valyuta.objects.filter(is_activate=True)
+    kassalar = KassaMerge.objects.filter(is_active=True, kassa__is_main=False).distinct().select_related('kassa', 'valyuta')
+    
+    open_smena = None
+    # if request.user.userprofile.staff != 1:
+    # last_close = SmenaClose.objects.filter(filial=filial, date__date=today).order_by('-date').last()
+
+    # if last_close:
+    #     # Oxirgi smena yopilgan vaqtdan keyin ochilgan SmenaOpenni topamiz
+    #     open_smena = SmenaOpen.objects.filter(
+    #         filial=filial,
+    #         date__gt=last_close.date  # faqat oxirgi yopilishdan keyingi smenalarni olamiz
+    #     ).order_by('date').first()
+
+
+    last_close = SmenaClose.objects.filter(
+        filial=filial,
+        # date__date=today
+    ).order_by('-date').last()
+
+    print(last_close.id if last_close else "No last close")
+
+    if last_close:
+        lc = last_close.date.replace(microsecond=0)
+
+        open_smena = SmenaOpen.objects.filter(
+            filial=filial,
+            date__gt=lc
+        ).order_by('date').first()
+
+    else:
+        # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
+        open_smena = SmenaOpen.objects.filter(
+            filial=filial,
+            date__date=today
+        ).last()
+
+
+        # open_smena = SmenaOpen.objects.filter(filial=request.user.userprofile.filial, date__date=today).last()
+    context = {
+        'totals': totals,
+        'filters': filters,
+        'today': today,
+        'deliver': Deliver.objects.all(),
+        'client': Debtor.objects.all(),
+        'valyutalar': valyutalar,
+        'kassalar': kassalar,
+        'debtors': Debtor.objects.filter(),
+        'filials': Filial.objects.filter(),
+        'products': ProductFilial.objects.filter().annotate(
+            zero_quantity_order=Case(
+                When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
+                default=Value(0),                  # boshqalari 0
+                output_field=IntegerField(),
+            )
+        ).order_by('zero_quantity_order', 'id'),
+        'price_types': PriceType.objects.filter(is_activate=True),
+        'open_smena': open_smena,
+        # 'price_type': PriceType.objects.filter(),
+    }
+    return render(request, 'today_sales.html', context)
 
 @login_required
 def today_sales(request):
@@ -13886,8 +14328,8 @@ def today_sales(request):
     # Asosiy queryset - Shop modelini olamiz
     shops = Shop.objects.filter(
         date__date__range=(start_date, end_date),
-        is_savdo=True
-    ).select_related('debtor', 'saler', 'valyuta').prefetch_related(
+        is_savdo=True, shop_pays__isnull=True
+    ).distinct().select_related('debtor', 'saler', 'valyuta').prefetch_related(
         'cart', 
         pay_history_prefetch,
         return_prefetch,
@@ -15371,3 +15813,8 @@ class ConvertDeleteView(LoginRequiredMixin, View):
 
 # for i in Debtor.objects.filter():
 #     i.refresh_debt()
+
+
+# for i in ProductFilial.objects.all():
+#     i.filial = Filial.objects.first()
+#     i.save()

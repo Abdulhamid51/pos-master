@@ -427,13 +427,18 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name == 'mobile_order_list' %}show{% elif url_name == 'mobile_order_detail' %}show{% elif url_name == 'todays_practices' %}show{% elif url_name == 'today_sales' %}show{% elif url_name == 'shops' %}show{% elif url_name == 'b2c_shop' %}show{% elif url_name == 'b2c_shop_detail' %}show{% elif url_name == 'b2b_shop' %}show{% elif url_name == 'b2b_shop_ajax' %}show{% endif %}" 
+                            <ul class="collapse submenu list-unstyled {% if url_name == 'mobile_order_list' %}show{% elif url_name == 'mobile_order_detail' %}show{% elif url_name == 'todays_practices' %}show{% elif url_name == 'today_sales' %}show{% elif url_name == 'sales_finished' %}show{% elif url_name == 'shops' %}show{% elif url_name == 'b2c_shop' %}show{% elif url_name == 'b2c_shop_detail' %}show{% elif url_name == 'b2b_shop' %}show{% elif url_name == 'b2b_shop_ajax' %}show{% endif %}" 
                             id="narx-sotuvlar" data-parent="#accordionExample">
                             
                                 {% if custom_user_profile.is_bugungi_sotuvlar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'today_sales' %}active{% endif %}">
                                         <a href="{% url 'today_sales' %}">Sotuv bo'limi</a>
                                     </li>
+
+                                    <li class="menu {% if request.resolver_match.url_name == 'sales_finished' %}active{% endif %}">
+                                        <a href="{% url 'sales_finished' %}">Yakunlangan sotuvlar</a>
+                                    </li>
+
                                 {% endif %}
                                 {% if custom_user_profile.is_buyurtmalar %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'shops' %}active{% endif %}">

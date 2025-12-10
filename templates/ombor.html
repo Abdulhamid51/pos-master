@@ -2,165 +2,808 @@
 {% load static %}
 {% load humanize %}
 {% block title %}
-    <title>Ombor </title>
+    <title>Ombor</title>
 {% endblock title %}
-{% block css %}
 
+{% block css %}
     <!-- BEGIN PAGE LEVEL STYLES -->
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_miscellaneous.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
-    <!-- END PAGE LEVEL STYLES -->
-
-    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
     <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
-    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <!-- END PAGE LEVEL STYLES -->
+    <style>
+        .barcode-group {
+            margin-bottom: 5px;
+        }
+        .barcode-input-error {
+            border-color: #dc3545 !important;
+        }
+        .filter-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
 {% endblock css %}
+
 {% block content %}
-        <!--  BEGIN CONTENT AREA  -->
-        <div id="content" class="main-content">
-            <div class="layout-px-spacing">
-
-                <div class="row layout-top-spacing layout-spacing">
-                    <div class="col-lg-12">
-                        <div class="statbox widget box box-shadow">
-                            <div class="widget-header">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h4>Ombordagi Mahsulotlar</h4>
-                                    </div>    
-                                    <div class="col-md-4 text-right">
-                                        <button style="margin: 1rem;" type="button" class="btn btn-primary" data-toggle="modal" id="recieve_item_add_button" data-target="#excel_import">
-                                        Excel import 
+    <!--  BEGIN CONTENT AREA  -->
+    <div id="content" class="main-content">
+        <div class="layout-px-spacing">
+            <div class="row layout-top-spacing layout-spacing">
+                <div class="col-lg-12">
+                    <div class="statbox widget box box-shadow">
+                        <div class="widget-header">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4>Ombordagi Mahsulotlar</h4>
+                                </div>    
+                                <div class="col-md-4 text-right">
+                                    <button style="margin: 1rem;" type="button" class="btn btn-success" data-toggle="modal" data-target="#new_product_add">
+                                        <i class="fa fa-plus"></i> Yangi mahsulot
                                     </button>
-                                    </div>
+                                    <button style="margin: 1rem;" type="button" class="btn btn-primary" data-toggle="modal" data-target="#excel_import">
+                                        <i class="fa fa-file-excel"></i> Excel import 
+                                    </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="widget-content-area">
-                                <div class="table-responsive mb-4">
-                                    <table id="html5-extension" class="table table-hover">
-                                        <thead>
-                                            <tr class="">
-                                                <th class="">№</th>
-                                                <th>Mahsulot</th>
-                                                <th>Ishlab chiqaruvchi</th>
-                                                <th>Soni</th>
-                                                <th>Barcode</th>
-                                                <th>Guruh</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for ombor in ombors %}
-                                                <tr class="">
-                                                    <td class="">{{ forloop.counter }}</td>
-                                                    <td>{{ ombor.name }}</td>
-                                                    <td>{{ ombor.preparer }}</td>
-                                                    <td>{{ ombor.quantity|floatformat:1|intcomma }}</td>
-                                                    <td>
-                                                        {% for x in ombor.product_barcode %}
-                                                            {{x.barcode}}<br>
-                                                        {% endfor %}
-                                                    </td>
-                                                    <td>{{ ombor.group }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Jami:</th>
-                                                <th></th>
-                                                <th></th>
-                                                <th>{{ total_quantity|intcomma }}</th>
-                                                <th></th>
-                                                <th></th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                        <!-- Filterlar -->
+                        <div class="filter-card">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Nomi yoki barcode bo'yicha qidirish...">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" id="groupFilter">
+                                        <option value="">Barcha guruhlar</option>
+                                        {% for group in groups %}
+                                            <option value="{{ group.id }}">{{ group.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" id="deliverFilter">
+                                        <option value="">Barcha ishlab chiqaruvchilar</option>
+                                        {% for deliver in delivers %}
+                                            <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-secondary" id="clearFilters">
+                                        <i class="fa fa-times"></i> Filterlarni tozalash
+                                    </button>
                                 </div>
                             </div>
+                        </div>
 
-
+                        <!-- Jadval -->
+                        <div class="widget-content-area">
+                            <div class="table-responsive mb-4">
+                                <table id="html5-extension" class="table table-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>№</th>
+                                            <th>Mahsulot</th>
+                                            <th>Ishlab chiqaruvchi</th>
+                                            <th>Soni</th>
+                                            <th>Barcode</th>
+                                            <th>Guruh</th>
+                                            <th>Filial</th>
+                                            <th>Harakatlar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- DataTable tomonidan to'ldiriladi -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Jami:</th>
+                                            <th></th>
+                                            <th></th>
+                                            <th id="totalQuantity">0</th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                </div>
+            </div>
         </div>
+    </div>
 
-
-        <div class="modal fade" id="excel_import" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-            <form  class="modal-content" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+    <!-- Yangi Mahsulot Qo'shish Modal -->
+    <div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form id="newProductForm" class="modal-content" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                    <div class="modal-header">
-                    <h5 class="modal-title" id="recieve_item_add_product_name">Excel import</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle1">Yangi mahsulot qo'shish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="name">Nomi *</label>
+                                <input type="text" class="form-control" name="name" id="newName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="">Filial</label>
+                                
+                                {% if user.userprofile.staff == 1 %}
+                                <select class="form-control" name="filial_id" id="newFilial">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for filial in filials %}
+                                        <option value="{{ filial.id }}">{{ filial.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% else %}
+                                    <input type="hidden" name="filial_id" value="{{ user.userprofile.filial.id }}">
+                                {% endif %}
+                                    
+                            </div>
+                            <div class="col-md-6">
+                                <label for="deliver">Ishlab chiqaruvchi *</label>
+                                <select class="form-control" required name="deliver" id="newDeliver">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for deliver in delivers %}
+                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="measurement_type">O'lchov birligi *</label>
+                                <select class="form-control" required name="measurement_type" id="newMeasurementType">
+                                    {% for measurement in measurement_types %}
+                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ready">Turi *</label>
+                                <select class="form-control" required name="ready" id="newReady">
+                                    <option value="1">Xom ashyo</option>
+                                    <option value="2">Yarim tayyor</option>
+                                    <option value="3">Tayyor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="min_count">Minimal miqdor</label>
+                                <input type="number" class="form-control" name="min_count" id="newMinCount">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="group">Guruh *</label>
+                                <select class="form-control" required name="group" id="newGroup">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for group in groups %}
+                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="shelf_code">Polka kodi</label>
+                                <input type="text" class="form-control" name="shelf_code" id="newShelfCode">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="pack">Paketdagi soni</label>
+                                <input type="number" step="any" class="form-control" name="pack" id="newPack">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quantity">Boshlang'ich miqdori</label>
+                                <input type="number" step="any" class="form-control" name="quantity" id="newQuantity">
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <label for="">Barcodes</label>
+                                <div id="newBarcodeContainer">
+                                    <div class="input-group barcode-group">
+                                        <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Har bir barcode uchun + tugmasini bosing</small>
+                                <input type="hidden" id="newDataList" name="list_barcode" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-body" >
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                        <div class="form-group mb-3">
-                            <label for="excel_file" class="form-label">Excel faylni tanlang:</label>
-                            <div class="input-group">
-                                <input type="file" class="form-control" name="excel_file" id="excel_file" accept=".xlsx" required>
-                                <button class="btn" type="button" onclick="downloadTemplate()">
-                                    <i class="fa fa-download"></i>
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form id="editProductForm" class="modal-content">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Mahsulotni tahrirlash</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editProductId" name="product_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editName">Nomi *</label>
+                                <input type="text" class="form-control" id="editName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editDeliverId">Ishlab chiqaruvchi *</label>
+                                <select class="form-control" id="editDeliverId" name="deliver_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for deliver in delivers %}
+                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editPack">Paketdagi soni</label>
+                                <input type="number" step="0.01" class="form-control" id="editPack" name="pack">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editGroupId">Guruh *</label>
+                                <select class="form-control" id="editGroupId" name="group_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for group in groups %}
+                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editMeasurementTypeId">O'lchov birligi *</label>
+                                <select class="form-control" id="editMeasurementTypeId" name="measurement_type_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for measurement in measurement_types %}
+                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editMinCount">Minimal miqdor</label>
+                                <input type="number" step="0.01" class="form-control" id="editMinCount" name="min_count">
+                            </div>
+                        </div>
+                        <!-- <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editQuantity">Miqdori</label>
+                                <input type="number" step="0.01" class="form-control" id="editQuantity" name="quantity" readonly>
+                            </div>
+                        </div> -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editShelfCode">Polka kodi</label>
+                                <input type="text" class="form-control" id="editShelfCode" name="shelf_code">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editReady">Turi</label>
+                                <select class="form-control" id="editReady" name="ready">
+                                    <option value="1">Xom ashyo</option>
+                                    <option value="2">Yarim tayyor</option>
+                                    <option value="3">Tayyor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Barcodes</label>
+                                <div id="editBarcodeContainer">
+                                    <!-- Barcode inputlari bu yerda yaratiladi -->
+                                </div>
+                                <small class="form-text text-muted">Har bir barcode uchun + tugmasini bosing</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Excel Import Modal -->
+    <div class="modal fade" id="excel_import" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form class="modal-content" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalCenterTitle">Excel import</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="excel_file" class="form-label">Excel faylni tanlang:</label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" name="excel_file" id="excel_file" accept=".xlsx" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" onclick="downloadTemplate()">
+                                    <i class="fa fa-download"></i> Shablon
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
-                        <button type="submit" class="btn btn-primary">Saqlash</button>
-                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Yuklash</button>
                 </div>
             </form>
-            </div>
         </div>
+    </div>
 {% endblock content %}
-{% block js %}
 
+{% block js %}
     <!-- BEGIN PAGE LEVEL SCRIPTS -->
     <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
-    <script src="{% static 'plugins/table/datatable/custom_miscellaneous.js'%}"></script>
-        <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
-    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
     <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
     <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
     <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
     <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
     <!-- END PAGE LEVEL SCRIPTS -->
-        <script>
-        $('#html5-extension').DataTable( {
+
+    <script>
+    $(document).ready(function() {
+        // DataTable ni ishga tushirish
+        var table = $('#html5-extension').DataTable({
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-            buttons: {
-                buttons: [
-                    { extend: 'copy', className: 'btn' },
-                    { extend: 'csv', className: 'btn' },
-                    { extend: 'excel', className: 'btn' },
-                    { extend: 'print', className: 'btn' }
-                ]
+            buttons: [
+                { extend: 'copy', className: 'btn' },
+                { extend: 'csv', className: 'btn' },
+                { extend: 'excel', className: 'btn' },
+                { extend: 'print', className: 'btn' }
+            ],
+            serverSide: true,
+            processing: true,
+            pageLength: 50,
+            ajax: {
+                url: "{% url 'get_products' %}",
+                type: 'GET',
+                data: function(d) {
+                    // Faqat kerakli parametrlarni yuborish
+                    return {
+                        draw: d.draw,
+                        start: d.start,
+                        length: d.length,
+                        search: $('#searchInput').val(),
+                        group: $('#groupFilter').val(),
+                        deliver: $('#deliverFilter').val(),
+                        order_column: d.order.length > 0 ? d.columns[d.order[0].column].data : null,
+                        order_dir: d.order.length > 0 ? d.order[0].dir : null
+                    };
+                }
             },
-            "oLanguage": {
-                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
-                "sInfo": " _PAGE_ / _PAGES_",
-                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-                "sSearchPlaceholder": "Izlash",
-               "sLengthMenu": "Results :  _MENU_",
+            columns: [
+                { 
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                    orderable: false
+                },
+                { data: 'name' },
+                { data: 'deliver' },
+                { 
+                    data: 'quantity',
+                    render: function(data) {
+                        return parseFloat(data).toLocaleString('uz-UZ', {minimumFractionDigits: 2});
+                    }
+                },
+                { 
+                    data: 'barcodes_text',
+                    render: function(data) {
+                        return data || '';
+                    }
+                },
+                { data: 'group' },
+                { data: 'filial' },
+                {
+                    data: 'id',
+                    render: function(data, type, row) {
+                        return `
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-btn" 
+                                        data-id="${data}">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                            </div>
+                        `;
+                    },
+                    orderable: false
+                }
+            ],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Uzbek.json"
             },
-            "stripeClasses": [],
-            "lengthMenu": [10, 20, 50, 100],
-            "pageLength": 15
-        } );
+            drawCallback: function(settings) {
+                // Jami miqdorni yangilash
+                if (settings.json && settings.json.total_quantity) {
+                    $('#totalQuantity').text(
+                        parseFloat(settings.json.total_quantity).toLocaleString('uz-UZ', {minimumFractionDigits: 2})
+                    );
+                }
+            }
+        });
+
+        // Filter funksiyalari
+        $('#searchInput').on('keyup', function() {
+            table.ajax.reload();
+        });
+
+        $('#groupFilter, #deliverFilter').on('change', function() {
+            table.ajax.reload();
+        });
+
+        $('#clearFilters').on('click', function() {
+            $('#searchInput').val('');
+            $('#groupFilter').val('');
+            $('#deliverFilter').val('');
+            table.ajax.reload();
+        });
+
+        // ========== YANGI MAHSULOT QO'SHISH FUNKSIYALARI ==========
+        
+        // Yangi barcode input qo'shish
+        $('#newBarcodeContainer').on('click', '.new-add-barcode-btn', function() {
+            var container = $(this).closest('.barcode-group');
+            var input = container.find('.new-barcode-input');
+            var barcode = input.val().trim();
+            
+            if (!barcode) {
+                showToast('Diqqat', 'Barcode kiritilmagan!', 'warning');
+                return;
+            }
+            
+            // Barcode mavjudligini tekshirish
+            checkBarcodeExists(barcode, null, function(exists) {
+                if (exists) {
+                    showToast('Xatolik', 'Bu barcode allaqachon mavjud!', 'error');
+                } else {
+                    // Yangi input qo'shish
+                    var newGroup = $(`
+                        <div class="input-group barcode-group">
+                            <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                            </div>
+                        </div>
+                    `);
+                    $('#newBarcodeContainer').append(newGroup);
+                }
+            });
+        });
+
+        // Yangi barcode tekshirish
+        $('#newBarcodeContainer').on('input', '.new-barcode-input', function() {
+            var barcode = $(this).val().trim();
+            if (barcode) {
+                checkBarcodeExists(barcode, null, function(exists) {
+                    if (exists) {
+                        $(this).addClass('barcode-input-error');
+                        showToast('Xatolik', 'Bu barcode allaqachon mavjud!', 'error');
+                    } else {
+                        $(this).removeClass('barcode-input-error');
+                    }
+                }.bind(this));
+            }
+        });
+
+        // Yangi mahsulot formani yuborish
+        $('#newProductForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Barcha barcodelarni yig'ish
+            var barcodes = [];
+            $('#newBarcodeContainer .new-barcode-input').each(function() {
+                var barcode = $(this).val().trim();
+                if (barcode) {
+                    barcodes.push(barcode);
+                }
+            });
+            
+            // FormData yaratish
+            var formData = new FormData(this);
+            formData.append('list_barcode', JSON.stringify(barcodes));
+            
+            // AJAX so'rov
+            $.ajax({
+                url: "{% url 'new_product_add' %}?from_ajax=true",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Muvaffaqiyatli', response.message || 'Mahsulot muvaffaqiyatli qo\'shildi!', 'success');
+                        $('#new_product_add').modal('hide');
+                        $('#newProductForm')[0].reset();
+                        $('#newBarcodeContainer').html(`
+                            <div class="input-group barcode-group">
+                                <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                                </div>
+                            </div>
+                        `);
+                        table.ajax.reload();
+                    } else {
+                        showToast('Xatolik', response.message || 'Xatolik yuz berdi!', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Xatolik', 'Server bilan bog\'lanishda xatolik!', 'error');
+                }
+            });
+        });
+
+        // ========== TAXRIRLASH FUNKSIYALARI ==========
+        
+        // Edit modalini ochish
+        $(document).on('click', '.edit-btn', function() {
+            var productId = $(this).data('id');
+            loadProductForEdit(productId);
+        });
+
+        // Mahsulot ma'lumotlarini yuklash
+        function loadProductForEdit(productId) {
+            $.ajax({
+                url: "{% url 'get_product' %}",
+                type: 'GET',
+                data: { id: productId },
+                success: function(response) {
+                    if (response.success) {
+                        var product = response.product;
+                        
+                        // Formani to'ldirish
+                        $('#editProductId').val(product.id);
+                        $('#editName').val(product.name);
+                        $('#editDeliverId').val(product.deliver_id);
+                        $('#editPack').val(product.pack);
+                        $('#editGroupId').val(product.group_id);
+                        $('#editMeasurementTypeId').val(product.measurement_type_id);
+                        $('#editMinCount').val(product.min_count);
+                        // $('#editQuantity').val(product.quantity);
+                        $('#editShelfCode').val(product.shelf_code);
+                        $('#editReady').val(product.ready);
+                        
+                        // Barcodelarni to'ldirish
+                        $('#editBarcodeContainer').empty();
+                        if (product.barcodes && product.barcodes.length > 0) {
+                            product.barcodes.forEach(function(barcode) {
+                                addEditBarcodeInput(barcode);
+                            });
+                        } else {
+                            addEditBarcodeInput();
+                        }
+                        
+                        // Modalni ochish
+                        $('#editProductModal').modal('show');
+                    } else {
+                        showToast('Xatolik', response.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // Edit modalida barcode input qo'shish
+        function addEditBarcodeInput(value = '') {
+            var inputGroup = $(`
+                <div class="input-group barcode-group">
+                    <input type="text" class="form-control edit-barcode-input" placeholder="Barcode..." value="${value}">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary edit-add-barcode-btn">+</button>
+                    </div>
+                </div>
+            `);
+            
+            $('#editBarcodeContainer').append(inputGroup);
+        }
+
+        // Edit barcode tekshirish
+        $('#editBarcodeContainer').on('input', '.edit-barcode-input', function() {
+            var barcode = $(this).val().trim();
+            var productId = $('#editProductId').val();
+            
+            if (barcode) {
+                checkBarcodeExists(barcode, productId, function(exists) {
+                    if (exists) {
+                        $(this).addClass('barcode-input-error');
+                        showToast('Xatolik', 'Bu barcode boshqa mahsulotda mavjud!', 'error');
+                    } else {
+                        $(this).removeClass('barcode-input-error');
+                    }
+                }.bind(this));
+            }
+        });
+
+        // Edit modalida yangi barcode qo'shish
+        $('#editBarcodeContainer').on('click', '.edit-add-barcode-btn', function() {
+            var container = $(this).closest('.barcode-group');
+            var input = container.find('.edit-barcode-input');
+            var barcode = input.val().trim();
+            var productId = $('#editProductId').val();
+            
+            if (!barcode) {
+                showToast('Diqqat', 'Barcode kiritilmagan!', 'warning');
+                return;
+            }
+            
+            checkBarcodeExists(barcode, productId, function(exists) {
+                if (exists) {
+                    showToast('Xatolik', 'Bu barcode boshqa mahsulotda mavjud!', 'error');
+                } else {
+                    addEditBarcodeInput();
+                }
+            });
+        });
+
+        // Edit formani yuborish
+        $('#editProductForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Barcha barcodelarni yig'ish
+            var barcodes = [];
+            $('#editBarcodeContainer .edit-barcode-input').each(function() {
+                var barcode = $(this).val().trim();
+                if (barcode) {
+                    barcodes.push(barcode);
+                }
+            });
+            
+            // FormData yaratish
+            var formData = new FormData();
+            formData.append('product_id', $('#editProductId').val());
+            formData.append('name', $('#editName').val());
+            formData.append('deliver_id', $('#editDeliverId').val());
+            formData.append('pack', $('#editPack').val() || 0);
+            formData.append('group_id', $('#editGroupId').val());
+            formData.append('measurement_type_id', $('#editMeasurementTypeId').val());
+            formData.append('min_count', $('#editMinCount').val() || 0);
+            // formData.append('quantity', $('#editQuantity').val() || 0);
+            formData.append('shelf_code', $('#editShelfCode').val() || 1);
+            formData.append('ready', $('#editReady').val());
+            formData.append('barcodes', JSON.stringify(barcodes));
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            // AJAX so'rov
+            $.ajax({
+                url: "{% url 'edit_product' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Muvaffaqiyatli', response.message || 'Mahsulot muvaffaqiyatli tahrirlandi!', 'success');
+                        $('#editProductModal').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        showToast('Xatolik', response.message || 'Xatolik yuz berdi!', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Xatolik', 'Server bilan bog\'lanishda xatolik!', 'error');
+                }
+            });
+        });
+
+        // ========== UMUMIY FUNKSIYALAR ==========
+        
+        // Barcode mavjudligini tekshirish
+        function checkBarcodeExists(barcode, excludeId, callback) {
+            if (!barcode.trim()) {
+                callback(false);
+                return;
+            }
+            
+            $.ajax({
+                url: "{% url 'filter_product_barcode' %}",
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 
+                    barcode: barcode,
+                    exclude_id: excludeId 
+                }),
+                success: function(response) {
+                    if (response.exists) {
+                        callback(true);
+                    } else {
+                        callback(false);
+                    }
+                },
+                error: function() {
+                    callback(false);
+                }
+            });
+        }
+
+        // Toast bildirishnoma funksiyasi
+        function showToast(title, message, type) {
+            var toastClass = type === 'success' ? 'bg-success' : 
+                            type === 'warning' ? 'bg-warning' : 'bg-danger';
+            
+            var toast = $(`
+                <div class="toast align-items-center text-white ${toastClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}:</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `);
+            
+            $('#toastContainer').append(toast);
+            var bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+            
+            // Toast o'chganda o'chirish
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+
+        // Excel template yuklab olish
+        window.downloadTemplate = function() {
+            window.location.href = "{% static 'mahsulot_filial_shablon.xlsx' %}";
+        };
+
+        // Modal yopilganda formani tozalash
+        $('#new_product_add').on('hidden.bs.modal', function() {
+            $('#newProductForm')[0].reset();
+            $('#newBarcodeContainer').html(`
+                <div class="input-group barcode-group">
+                    <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                    </div>
+                </div>
+            `);
+        });
+
+        $('#editProductModal').on('hidden.bs.modal', function() {
+            $('#editProductForm')[0].reset();
+            $('#editBarcodeContainer').empty();
+        });
+    });
     </script>
 
-
-<script>
-    function downloadTemplate() {
-        window.location.href = "{% static 'mahsulot_filial_shablon.xlsx' %}";
-    }
-</script>
+    <!-- Toast container -->
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 {% endblock js %}

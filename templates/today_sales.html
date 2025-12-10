@@ -902,7 +902,7 @@
                                                 <ul class="dropdown-menu w-100 overflow-auto shadow" style="max-height: 300px;" id="productListDropdown">
                                                     {% for i in products %}
                                                         <li>
-                                                            <a onclick="addCart('{{i.id}}')" href="#" class="dropdown-item py-2 fs-5 select-product-item"
+                                                            <a onclick="addCart('{{i.id}}');$(this).val('')" href="#" class="dropdown-item py-2 fs-5 select-product-item"
                                                             data-value="{{ i.id }}&{{ i.name }}&{{ i.quantity }}&{{ i.get_barcodes }}&{% if i.pack == 0 %}1{% else %}{{ i.pack }}{% endif %}&{{ i.price }}${{i.measurement_type.name}}">
                                                                 🛒 <strong>{{ i.name }}</strong><br>
                                                                 📦 <span id="quantity{{i.id}}">{{ i.quantity|floatformat:'2' }}</span> | 🏷️ {{ i.get_barcodes }} | 💰 <span data-prices='{{ i.pricetypevaluta_prices_json|safe }}' data-quantity="{{ i.quantity }}" id="productprice{{i.id}}">{{ i.price|floatformat:'2' }}</span>
@@ -1836,11 +1836,12 @@ async function addCart(productId) {
             
             // Inputni tozalash
             document.getElementById('productSearchInput').value = '';
-            document.getElementById('productListDropdown').classList.remove('show');
+            // document.getElementById('productListDropdown').classList.remove('show');
+            $('#productSearchInput').input();
 
             updateProductQuantity(data.product_id, data.rest)
             
-        } else {
+        } else {        
             showAlert(data.message || "Xatolik yuz berdi", "danger");
         }
     } catch (error) {
@@ -2226,6 +2227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('productListDropdown');
     
     searchInput.addEventListener('input', function() {
+        alert('ok')
         const query = this.value.trim().toLowerCase();
         const searchTerms = query.split(/\s+/).filter(term => term.length > 0);
         const items = Array.from(dropdown.querySelectorAll('.select-product-item'));
@@ -2758,6 +2760,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!paymentTotalsHtml) {
                     paymentTotalsHtml = '<div class="text-muted">To\'lovlar mavjud emas</div>';
                 }
+
+
+
+
+                const paymentByCurrency = {};
+                let totalPaid = 0;
+
+                if (shop.payment_details && shop.payment_details.length > 0) {
+                    shop.payment_details.forEach(payment => {
+                        if (!paymentByCurrency[payment.valyuta]) {
+                            paymentByCurrency[payment.valyuta] = 0;
+                        }
+                        paymentByCurrency[payment.valyuta] += payment.summa;
+                        totalPaid += payment.summa;
+                    });
+                }
+
+
+
+
+                let paymentDisplayHTML = '';
+                if (Object.keys(paymentByCurrency).length > 0) {
+                    paymentDisplayHTML = Object.entries(paymentByCurrency).map(([currency, amount]) => `
+                        <div><strong>${formatNumber(amount)} ${currency}</strong></div>
+                    `).join('');
+                } else {
+                    paymentDisplayHTML = '<div><strong>0</strong></div>';
+                }
+
     
                 let chiqimTotalsHtml = '';
                 for (const [valyuta, summa] of Object.entries(shop.chiqim_totals)) {
@@ -2804,7 +2835,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <small class="text-muted">Mahsulotlar</small>
                                 </div>
                                 <div>
-                                    ${paymentTotalsHtml ? Object.keys(shop.payment_totals).length + ' hil to\'lov' : 'To\'lov yo\'q'}
+                                    ${paymentDisplayHTML}
+                                    <small class="text-muted">To'langan</small>
                                 </div>
     
                                 <div class="action-buttons">
@@ -4302,6 +4334,49 @@ function openDebtorModal() {
         }
     }, 200);
 }
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearchInput');
+    
+    searchInput.addEventListener('keydown', function(e) {
+        // Enter tugmasi bosilganda (key code 13)
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault(); // Form submit bo'lishining oldini olish
+            
+            // Dropdown ro'yxatidan birinchi elementni topish
+            const firstProductItem = document.querySelector('#productListDropdown .select-product-item:not([style*="display: none"])');
+            
+            if (firstProductItem) {
+                // Product ID ni olish
+                const productId = firstProductItem.getAttribute('data-value').split('&')[0];
+                
+                // Cartga qo'shish funksiyasini chaqirish
+                addCart(productId);
+                
+                // Inputni tozalash
+                searchInput.value = '';
+                
+                // Dropdownni yopish
+                // document.getElementById('productListDropdown').classList.remove('show');
+                // $('#productSearchInput').trigger('input'); // Inputni yangilash uchun
+            } else {
+                // Agar maxsulot topilmasa
+                showAlert('Hech qanday maxsulot topilmadi', 'warning');
+            }
+        }
+    });
+    
+    // ESC tugmasi bosilganda inputni tozalash va dropdownni yopish
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            searchInput.value = '';
+            // document.getElementById('productListDropdown').classList.remove('show');
+        }
+    });
+});
 </script>
 
 {% endblock js %}
