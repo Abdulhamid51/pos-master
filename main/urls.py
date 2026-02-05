@@ -24,7 +24,8 @@ urlpatterns = [
     path('add_recieve/',  add_recieve, name='add_recieve'),
     path('delete_recieve/<int:id>/',  delete_recieve, name='delete_recieve'),
     path('delete_recieve_item/<int:id>/',  delete_recieve_item, name='delete_recieve_item'),
-    path('recieve/',  Recieves.as_view(), name='recieve'),
+    path('receive-item/update/', update_receive_item, name='update_receive_item'),
+    path('receive-item/delete/', delete_receive_item, name='delete_receive_item'),
     path('recieve_completion/<int:id>/',  recieve_completion, name='recieve_completion'),
     path('fakturatarix/', FakturaTarix.as_view(), name='fakturatarix'),
     path('warefaktura/', WareFakturas.as_view(), name='warefaktura'),
@@ -442,4 +443,17 @@ urlpatterns = [
     # path('ombor/check-barcode/', CheckBarcodeView.as_view(), name='check_barcode'),
     path('ombor/upload-excel/', upload_excel, name='upload_excel'),
 
+    path('get-products-forsale', get_products_forsale, name='get_products_forsale'),
+
+    path('today_sales_naqt/', today_sales_naqt, name='today_sales_naqt'),
+    path('today_sales_qarz/', today_sales_qarz, name='today_sales_qarz'),
+    path('today_sales_taminotchi/', today_sales_taminotchi, name='today_sales_taminotchi'),
+    path('barcodes_list_view/', barcodes_list_view, name='barcodes_list_view'),
+    path('api/product/<int:product_id>/<int:price_type>', get_product_data_barcode, name='get_product_data_barcode'),
+    path('new_qabul/', new_qabul, name='new_qabul'),
+    path('qabul_detail/<int:id>', new_qabul_detail, name='new_qabul_detail'),
+    path('recieve_edit/', recieve_edit, name='recieve_edit'),
+    path('add_new_item/', add_new_item, name='add_new_item'),
+    path('product_price_type_edit/', product_price_type_edit, name='product_price_type_edit'),
+    path('refresh_product_price_types/', refresh_product_price_types, name='refresh_product_price_types'),
 ]

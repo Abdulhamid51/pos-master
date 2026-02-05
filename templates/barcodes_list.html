@@ -1,0 +1,1888 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+<title>Narx teglari</title>
+{% endblock title %}
+
+{% block css %}
+<link href="{% static 'assets/css/scrollspyNav.css'%}" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="{% static 'assets/css/forms/theme-checkbox-radio.css'%}">
+<link href="{% static 'assets/css/tables/table-basic.css'%}" rel="stylesheet" type="text/css" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css"
+    integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+<style>
+    /* Markaziy qism: Katta narx */
+    .price-container {
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .price-value {
+        font-size: 18pt;
+        /* Barkod yo'qligi uchun kattaroq qilish mumkin */
+        font-weight: 900;
+    }
+
+    .currency {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-left: 1mm;
+    }
+
+    /* Har bir chek uchun alohida konteyner stili */
+    .barcode_1 {
+        width: 60mm;
+        height: 40mm;
+        padding: 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        line-height: 1;
+        overflow: hidden;
+    }
+
+    /* Yuqori qism: Shtrix kod va usti chizilgan narx */
+    .barcode_1 .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .barcode_1 .barcode-area {
+        text-align: center;
+    }
+
+    .barcode_1 .barcode-lines {
+        font-size: 24px;
+        letter-spacing: -1px;
+        font-weight: normal;
+    }
+
+    .barcode_1 .barcode-number {
+        font-size: 10pt;
+        font-weight: bold;
+        margin-top: -2px;
+    }
+
+    .barcode_1 .old-price {
+        font-size: 14pt;
+        font-weight: bold;
+        position: relative;
+    }
+
+    .barcode_1 .old-price::after {
+        content: "";
+        position: absolute;
+        left: -5%;
+        top: 50%;
+        width: 110%;
+        height: 2px;
+        background: black;
+        transform: rotate(-15deg);
+        /* Usti chizilgan chiziq */
+    }
+
+
+    /* Pastki qism */
+    .barcode_1 .product-name {
+        font-size: 9pt;
+        font-weight: normal;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .barcode_1 .date-time {
+        font-size: 7pt;
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    .barcode_1 .barcode-svg {
+        width: 100%;
+        max-height: 35px;
+        /* Chek o'lchamiga qarab sozlang */
+        display: block;
+    }
+
+    .barcode_1 .barcode-area {
+        width: 60%;
+        /* Shtrix-kodga ko'proq joy ajratish */
+    }
+
+    /* Barcode_2 maxsus stillari */
+    .barcode_2 {
+        width: 60mm;
+        height: 40mm;
+        padding: 1.5mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        line-height: 1.1;
+        overflow: hidden;
+    }
+
+    .barcode_2 .pos-market {
+        font-size: 8pt;
+        text-align: center;
+        font-weight: normal;
+    }
+
+    .barcode_2 .product-name {
+        font-size: 9pt;
+        /* Biroz kichraytiramizki, sig'sin */
+        font-weight: normal;
+        text-align: center;
+        margin-top: 1mm;
+        /* Matnni ikki qatorga bo'lish: */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+        min-height: 9pt;
+        line-height: 1.1;
+    }
+
+    .barcode_2 .main-price-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0px;
+    }
+
+    .barcode_2 .big-price {
+        font-size: 40pt;
+        font-weight: 900;
+        letter-spacing: -2px;
+    }
+
+    .barcode_2 .currency-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-left: 4px;
+    }
+
+    .barcode_2 .so-m {
+        font-size: 17pt;
+        font-weight: bold;
+    }
+
+    .barcode_2 .cents {
+        font-size: 20pt;
+        font-weight: bold;
+        margin-top: -4px;
+    }
+
+    .barcode_2 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .barcode_2 .barcode-svg {
+        width: 90%;
+        max-height: 30px;
+        display: block;
+    }
+
+    .barcode_2 .date-time {
+        font-size: 8pt;
+        text-align: right;
+        margin-top: 1mm;
+    }
+
+    /* Barcode_3 maxsus stillari (60x40mm) */
+    .barcode_3 {
+        width: 60mm;
+        height: 40mm;
+        padding: 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /* Elementlarni yuqori va pastga tarqatadi */
+        box-sizing: border-box;
+        color: #000;
+    }
+
+    .barcode_3 .pos-market {
+        font-size: 9pt;
+        /* Rasmda juda katta va qalin */
+        text-align: center;
+        font-weight: 900;
+        margin-bottom: 1mm;
+    }
+
+    .barcode_3 .product-name {
+        font-size: 11pt;
+        /* Mahsulot nomi ham sezilarli katta */
+        font-weight: normal;
+        text-align: center;
+        line-height: 1.1;
+        white-space: normal;
+        /* Matnni keyingi qatorga o'tkazish */
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        /* 3 qatorgacha ko'rsatadi */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex-grow: 1;
+        /* O'rtadagi bo'shliqni to'ldiradi */
+    }
+
+    .barcode_3 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .barcode_3 .barcode-svg {
+        width: 95%;
+        max-height: 40px;
+        display: block;
+    }
+
+    .barcode_3 .date-time {
+        font-size: 9pt;
+        text-align: right;
+        margin-top: 1mm;
+    }
+
+    /* Barcode_4 maxsus stillari (60x30mm) */
+    .barcode_4 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_4 .pos-market {
+        font-size: 7pt;
+        text-align: center;
+        margin-bottom: 0.5mm;
+    }
+
+    .barcode_4 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: center;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+    }
+
+    .barcode_4 .price-row-horizontal {
+        text-align: center;
+
+        margin-top: 0px;
+    }
+
+    .barcode_4 .price-value {
+        font-size: 15pt;
+        font-weight: 900;
+    }
+
+    .barcode_4 .currency-label {
+        font-size: 10pt;
+        font-weight: bold;
+        margin-left: 2mm;
+    }
+
+    .barcode_4 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: -1mm;
+    }
+
+    .barcode_4 .barcode-svg {
+        width: 95%;
+        max-height: 27px;
+        /* 30mm lik chek uchun balandlik qisqartirildi */
+        display: block;
+    }
+
+    .barcode_4 .date-time {
+        font-size: 7pt;
+        text-align: right;
+        margin-top: 0px;
+    }
+
+    /* Barcode_5 maxsus stillari (60x30mm) */
+    .barcode_5 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_5 .label-main-wrapper {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Vertikal yozuv stili */
+    .barcode_5 .vertical-store-name {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        /* Pastdan yuqoriga o'qilishi uchun */
+        text-align: center;
+        font-size: 8pt;
+        font-weight: bold;
+        border-right: 0.5px solid #eee;
+        padding-left: 1mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .barcode_5 .content-right {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-left: 2mm;
+    }
+
+    .barcode_5 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: center;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .barcode_5 .price-row-horizontal {
+        text-align: center;
+        margin: 0.5mm 0;
+    }
+
+    .barcode_5 .price-value {
+        font-size: 18pt;
+        font-weight: 900;
+    }
+
+    .barcode_5 .currency-label {
+        font-size: 12pt;
+        font-weight: bold;
+    }
+
+    .barcode_5 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .barcode_5 .barcode-svg {
+        width: 90%;
+        max-height: 27px;
+        display: block;
+    }
+
+    .barcode_5 .date-time {
+        font-size: 7pt;
+        text-align: right;
+    }
+
+    /* Barcode_6 maxsus stillari (60x30mm) */
+    .barcode_6 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .barcode_6 .pos-market {
+        font-size: 7pt;
+        text-align: center;
+    }
+
+    .barcode_6 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: center;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-top: 0.5mm;
+    }
+
+    .barcode_6 .main-price-row {
+        text-align: center;
+        margin-top: 5px;
+    }
+
+    .barcode_6 .price-value {
+        font-size: 18pt;
+        font-weight: 900;
+    }
+
+    .barcode_6 .currency-label {
+        font-size: 12pt;
+        font-weight: bold;
+    }
+
+    /* Pastki qism tartibi */
+    .barcode_6 .bottom-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-top: -1mm;
+    }
+
+    .barcode_6 .old-price-container {
+        width: 25%;
+    }
+
+    .barcode_6 .old-price {
+        font-size: 11pt;
+        font-weight: bold;
+        position: relative;
+        display: inline-block;
+    }
+
+    .barcode_6 .old-price::after {
+        content: "";
+        position: absolute;
+        left: -5%;
+        top: 50%;
+        width: 110%;
+        height: 1.5px;
+        background: black;
+        transform: rotate(-10deg);
+    }
+
+    .barcode_6 .barcode-area {
+        width: 75%;
+    }
+
+    .barcode_6 .barcode-svg {
+        width: 100%;
+        max-height: 27px;
+    }
+
+    .barcode_6 .date-time {
+        font-size: 7pt;
+        text-align: right;
+        width: 100%;
+    }
+
+    /* Barcode_7 maxsus stillari (60x30mm) */
+    .barcode_7 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_7 .top-date-row {
+        text-align: right;
+        font-size: 7pt;
+        margin-bottom: -1mm;
+    }
+
+    .barcode_7 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: left;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+    }
+
+    .barcode_7 .main-price-row {
+        text-align: center;
+        margin: 0.5mm 0;
+    }
+
+    .barcode_7 .price-value {
+        font-size: 18pt;
+        font-weight: 900;
+    }
+
+    .barcode_7 .currency-label {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-left: 1mm;
+    }
+
+    .barcode_7 .bottom-info-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-top: -1mm;
+    }
+
+    .barcode_7 .barcode-area {
+        width: 55%;
+    }
+
+    .barcode_7 .barcode-svg {
+        width: 100%;
+        max-height: 27px;
+    }
+
+    .barcode_7 .price-info-text {
+        width: 40%;
+        text-align: right;
+        line-height: 1.2;
+    }
+
+    .barcode_7 .unit-price {
+        font-size: 10pt;
+        font-weight: bold;
+    }
+
+    .barcode_7 .store-name {
+        font-size: 10pt;
+        font-weight: normal;
+    }
+
+    /* Barcode_8 maxsus stillari (60x30mm) */
+    .barcode_8 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_8 .pos-market {
+        font-size: 8pt;
+        text-align: center;
+        margin-bottom: 1mm;
+    }
+
+    .barcode_8 .product-name {
+        font-size: 10pt;
+        /* Narx yo'qligi sababli nomi kattaroq */
+        font-weight: normal;
+        text-align: center;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: normal;
+    }
+
+    .barcode_8 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin: 1mm 0;
+    }
+
+    .barcode_8 .barcode-svg {
+        width: 100%;
+        max-height: 35px;
+        /* CODE128 uchun optimal balandlik */
+        display: block;
+    }
+
+    .barcode_8 .date-time {
+        font-size: 9pt;
+        text-align: right;
+    }
+
+    /* Barcode_9 maxsus stillari (60x30mm) */
+    .barcode_9 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1.5mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_9 .pos-market {
+        font-size: 7pt;
+        /* Rasmga muvofiq sezilarli va qalin */
+        text-align: center;
+        font-weight: 900;
+    }
+
+    .barcode_9 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: center;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-top: 0.5mm;
+    }
+
+    .barcode_9 .main-price-row {
+        text-align: center;
+        margin: 0.5mm 0;
+    }
+
+    .barcode_9 .price-value {
+        font-size: 15pt;
+        font-weight: 900;
+    }
+
+    .barcode_9 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: -1mm;
+    }
+
+    .barcode_9 .barcode-svg {
+        width: 85%;
+        max-height: 20px;
+        display: block;
+    }
+
+    .barcode_9 .date-time {
+        font-size: 6pt;
+        text-align: right;
+        margin-top: 0px;
+    }
+
+    /* Barcode_10 maxsus stillari (60x30mm) */
+    .barcode_10 {
+        margin-top: 15px;
+        width: 60mm;
+        height: 30mm;
+        padding: 1mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+        line-height: 1;
+    }
+
+    .barcode_10 .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .barcode_10 .barcode-area {
+        width: 55%;
+    }
+
+    .barcode_10 .barcode-svg {
+        width: 100%;
+        max-height: 25px;
+    }
+
+    .barcode_10 .old-price {
+        font-size: 14pt;
+        font-weight: bold;
+        position: relative;
+        margin-top: 1mm;
+    }
+
+    .barcode_10 .old-price::after {
+        content: "";
+        position: absolute;
+        left: -5%;
+        top: 50%;
+        width: 110%;
+        height: 2px;
+        background: black;
+        transform: rotate(-15deg);
+    }
+
+    .barcode_10 .main-price-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: -2mm;
+        /* 30mm lik chekda joy tejash uchun */
+    }
+
+    .barcode_10 .big-price {
+        font-size: 30pt;
+        font-weight: 900;
+        letter-spacing: -1px;
+    }
+
+    .barcode_10 .currency-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-left: 3px;
+    }
+
+    .barcode_10 .so-m {
+        font-size: 12pt;
+        font-weight: bold;
+    }
+
+    .barcode_10 .cents {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-top: -3px;
+    }
+
+    .barcode_10 .product-name {
+        font-size: 8pt;
+        font-weight: normal;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .barcode_10 .date-time {
+        font-size: 7.5pt;
+        text-align: right;
+        margin-top: 0px;
+    }
+
+    /* Barcode_11 maxsus stillari (40x30mm) */
+    .barcode_11 {
+        width: 40mm;
+        height: 30mm;
+        padding: 1mm 1.5mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+        line-height: 1;
+    }
+
+    .barcode_11 .pos-market {
+        font-size: 7pt;
+        text-align: center;
+        margin-bottom: 0.5mm;
+    }
+
+    .barcode_11 .product-name {
+        font-size: 8pt;
+        font-weight: bold;
+        text-align: center;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 18pt;
+        /* Ikki qator uchun aniq joy */
+    }
+
+    .barcode_11 .price-row {
+        text-align: center;
+        margin: 0.5mm 0;
+    }
+
+    .barcode_11 .price-value {
+        font-size: 18pt;
+        font-weight: 900;
+    }
+
+    .barcode_11 .currency {
+        font-size: 12pt;
+        font-weight: bold;
+        margin-left: 1mm;
+    }
+
+    .barcode_11 .footer-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .barcode_11 .barcode-svg {
+        width: 100%;
+        max-height: 18px;
+        /* Juda kichik joy ajratiladi */
+    }
+
+    .barcode_11 .date-time {
+        font-size: 6pt;
+        align-self: flex-end;
+        margin-top: 0.5mm;
+    }
+
+    /* Barcode_12 maxsus stillari (40x30mm) */
+    .barcode_12 {
+        width: 40mm;
+        height: 30mm;
+        padding: 1.5mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_12 .pos-market {
+        font-size: 8pt;
+        text-align: center;
+    }
+
+    .barcode_12 .product-name {
+        font-size: 8pt;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .barcode_12 .date-time {
+        font-size: 7pt;
+        text-align: right;
+    }
+
+    /* Barcode_13 maxsus stillari (40x30mm) */
+    .barcode_13 {
+        width: 40mm;
+        height: 30mm;
+        padding: 1.5mm 2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_13 .pos-market {
+        font-size: 8pt;
+        text-align: center;
+    }
+
+    .barcode_13 .product-name {
+        font-size: 8pt;
+        font-weight: bold;
+        text-align: center;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-top: 1mm;
+    }
+
+    .barcode_13 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        flex-grow: 1;
+        /* Barkod ko'proq joy egallashi uchun */
+        align-items: center;
+    }
+
+    .barcode_13 .barcode-svg {
+        width: 100%;
+        max-height: 35px;
+        /* Narxsiz dizaynda barkod kattaroq ko'rinadi */
+        display: block;
+    }
+
+    .barcode_13 .date-time {
+        font-size: 7pt;
+        text-align: right;
+        margin-top: 1mm;
+    }
+
+    /* Barcode_14 maxsus stillari (30x20mm) */
+    .barcode_14 {
+        width: 30mm;
+        height: 20mm;
+        padding: 0.5mm 1mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        font-family: 'Arial Narrow', sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_14 .product-name {
+        font-size: 6pt;
+        font-weight: normal;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .barcode_14 .price-row {
+        text-align: center;
+        line-height: 1;
+    }
+
+    .barcode_14 .price-value {
+        font-size: 12pt;
+        font-weight: 900;
+    }
+
+    .barcode_14 .currency {
+        font-size: 8pt;
+    }
+
+    .barcode_14 .barcode-svg {
+        width: 100%;
+        height: 12px;
+        /* Juda past barkod */
+    }
+
+    /* Barcode_15 maxsus stillari (30x20mm) */
+    .barcode_15 {
+        width: 30mm;
+        height: 20mm;
+        padding: 1mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_15 .product-name {
+        font-size: 7pt;
+        font-weight: normal;
+        text-align: left;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        /* Joy ko'pligi sababli 3 qator */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .barcode_15 .price-row {
+        text-align: center;
+        margin-top: -1mm;
+    }
+
+    .barcode_15 .price-value {
+        font-size: 14pt;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+    }
+
+    .barcode_15 .currency {
+        font-size: 11pt;
+        font-weight: bold;
+    }
+
+    .barcode_15 .date-time {
+        font-size: 5pt;
+        /* O'ta kichik sana */
+        text-align: right;
+    }
+
+    /* Barcode_16 maxsus stillari (30x20mm) */
+    .barcode_16 {
+        width: 30mm;
+        height: 20mm;
+        padding: 0.8mm 1.2mm;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        font-family: 'Arial Narrow', Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #000;
+        overflow: hidden;
+    }
+
+    .barcode_16 .product-name {
+        font-size: 7pt;
+        font-weight: normal;
+        text-align: center;
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        /* 2 qator nomi uchun */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 0.5mm;
+    }
+
+    .barcode_16 .barcode-area {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        flex-grow: 1;
+        align-items: center;
+    }
+
+    .barcode_16 .barcode-svg {
+        width: 100%;
+        max-height: 25px;
+        /* Narxsiz bo'lgani uchun barkod balandroq */
+        display: block;
+    }
+
+    .barcode_16 .date-time {
+        font-size: 5pt;
+        text-align: right;
+        margin-top: 0.5mm;
+    }
+</style>
+
+<style>
+    .label-card {
+        cursor: pointer;
+    }
+
+    .label-card.active {
+        outline: 3px solid #0d6efd;
+        border-radius: 10px;
+    }
+
+    /* PRINT */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-active,
+        .print-active * {
+            visibility: visible;
+        }
+
+        .print-active {
+            position: fixed;
+            left: 0;
+            top: 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+
+        }
+    }
+</style>
+<style>
+    /* Tanlash paneli uchun stilar */
+    .selection-panel {
+        margin-top: 55px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        top: 0;
+        z-index: 1000;
+    }
+
+    /* .selection-panel .row {
+        align-items: center;
+    } */
+
+    .label-card {
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .label-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .label-card.selected {
+        border: 3px solid #4361ee;
+        background-color: rgba(67, 97, 238, 0.05);
+    }
+
+    .print-btn-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+    }
+
+    .print-btn-container .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Chek elementlarini aniqlash uchun class'lar */
+    .price-value-element {
+        /* Umumiy narx elementlari */
+        font-weight: bold;
+    }
+
+    .old-price-element {
+        /* Eski narx (ustiga chizilgan) */
+        text-decoration: line-through;
+    }
+
+    .product-name-element {
+        /* Mahsulot nomi */
+        font-weight: normal;
+    }
+
+    .barcode-element {
+        /* Shtrix-kod */
+        display: block;
+    }
+
+    /* Preview uchun stilar */
+    .preview-container {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .preview-container.show {
+        display: block;
+    }
+
+    .preview-label {
+        transform: scale(1.1);
+        margin: 20px auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div id="content" class="main-content">
+    <div class="container">
+        <!-- Tanlash paneli -->
+
+        <!-- Chek dizaynlari (oldingi kod) -->
+        <div class="row container">
+            <div class="selection-panel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="productSelect">Mahsulotni tanlang</label>
+                            <select id="productSelect" class="form-control searchable" style="width: 100%;"
+                                onchange="refreshAllData()">
+                                <option value="">Mahsulotni tanlang...</option>
+                                {% for product in products %}
+                                <option value="{{ product.id }}">
+                                    {{ product.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="quantity">Narx turi</label>
+                            <select id="priceTypeSelect" class="form-control"
+                                style="width: 100%; height: 35px; padding: 5px;" onchange="refreshAllData()">
+                                {% for type in price_types %}
+                                <option value="{{ type.id }}">
+                                    {{ type.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="quantity">Soni</label>
+                            <input type="number" id="quantity" class="form-control" value="1" min="1"
+                                onkeyup="refreshAllData()" style="width: 100%; height: 35px; padding: 5px;">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="old_price">Eski narxi</label>
+                            <input type="number" id="old_price" class="form-control" min="1"
+                                onkeyup="refreshOldPrice(this.value)" style="width: 100%; height: 35px; padding: 5px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview ko'rinishi -->
+                <div id="previewContainer" class="preview-container">
+                    <h6>Tanlangan chek namunasi:</h6>
+                    <div id="previewLabel" class="preview-label" style="width: 60mm; margin: 0 auto;"></div>
+                </div>
+            </div>
+            <div class="col-12 mt-4 mb-2">
+                (60х40 мм)
+            </div>
+            <div class="col-12 labels-grid row">
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_1')">
+                    <div class="barcode_1" id="label_1">
+                        <div class="header-row">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_1"></svg>
+                            </div>
+                            <div class="old-price">175 000</div>
+                        </div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ</div>
+                            <div class="date-time">13.01.2026 15:55:03</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_2')">
+                    <div class="barcode_2" id="label_2">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_2"></svg>
+                            </div>
+                            <div class="date-time">13.01.2026 16:47:28</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_3')">
+                    <div class="barcode_3" id="label_3">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">
+                            ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ ШОКОЛАДНЫМИ
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_3"></svg>
+                            </div>
+                            <div class="date-time">13.01.2026 17:01:08</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-4 mb-2">
+                (60х30 мм)
+            </div>
+            <div class="col-12 labels-grid row">
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_4')">
+                    <div class="barcode_4" id="label_4">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_4"></svg>
+                            </div>
+                            <div class="date-time">13.01.2026 17:02:06</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_5')">
+                    <div class="barcode_5" id="label_5">
+                        <div class="label-main-wrapper">
+                            <div class="vertical-store-name">Pos market</div>
+
+                            <div class="content-right">
+                                <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                                <div class="price-container">
+                                    <span class="price-value">175 000</span>
+                                    <span class="currency">So`m</span>
+                                </div>
+
+                                <div class="footer-area">
+                                    <div class="barcode-area">
+                                        <svg class="barcode-svg" id="barcode_gen_5"></svg>
+                                    </div>
+                                    <div class="date-time">13.01.2026 17:02:06</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_6')">
+                    <div class="barcode_6" id="label_6">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">
+                            ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ ШОКОЛАДНЫМИ
+                        </div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="bottom-row">
+                            <div class="old-price-container">
+                                <span class="old-price">175 000</span>
+                            </div>
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_6"></svg>
+                            </div>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_7')">
+                    <div class="barcode_7" id="label_7">
+                        <div class="top-date-row">
+                            <span class="date-only">13.01.2026</span>
+                        </div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="bottom-info-row">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_7"></svg>
+                            </div>
+                            <div class="price-info-text">
+                                <div class="unit-price">Цена за: <span class="count"></span> шт.</div>
+                                <div class="store-name">Pos market</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_8')">
+                    <div class="barcode_8" id="label_8">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="barcode-area">
+                            <svg class="barcode-svg" id="barcode_gen_8"></svg>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_9')">
+                    <div class="barcode_9" id="label_9">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">
+                            ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ ШОКОЛАДНЫМИ
+                        </div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_9"></svg>
+                            </div>
+                            <div class="date-time">13.01.2026 17:02:06</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-3" onclick="selectLabel(this, 'label_10')">
+                    <div class="barcode_10" id="label_10">
+                        <div class="header-row">
+                            <div class="barcode-area">
+                                <svg class="barcode-svg" id="barcode_gen_10"></svg>
+                            </div>
+                            <div class="old-price">175 000</div>
+                        </div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ</div>
+                            <div class="date-time">13.01.2026 17:02:06</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-4 mb-2">
+                (40х30 мм)
+            </div>
+            <div class="col-12 labels-grid row">
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_11')">
+                    <div class="barcode_11" id="label_11">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="footer-area">
+                            <svg class="barcode-svg" id="barcode_gen_11"></svg>
+                            <div class="date-time">13.01.2026</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_12')">
+                    <div class="barcode_12" id="label_12">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_13')">
+                    <div class="barcode_13" id="label_13">
+                        <div class="pos-market">Pos market</div>
+
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="barcode-area">
+                            <svg class="barcode-svg" id="barcode_gen_13"></svg>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-4 mb-2">
+                (30x20 мм)
+            </div>
+            <div class="col-12 labels-grid row">
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_14')">
+                    <div class="barcode_14" id="label_14">
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="barcode-area">
+                            <svg id="barcode_gen_14"></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_15')">
+                    <div class="barcode_15" id="label_15">
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМ...</div>
+
+                        <div class="price-container">
+                            <span class="price-value">175 000</span>
+                            <span class="currency">So`m</span>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+                <div class="label-card col-md-2" onclick="selectLabel(this, 'label_16')">
+                    <div class="barcode_16" id="label_16">
+                        <div class="product-name">ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ...</div>
+
+                        <div class="barcode-area">
+                            <svg class="barcode-svg" id="barcode_gen_16"></svg>
+                        </div>
+
+                        <div class="date-time">13.01.2026 17:02:06</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chop etish uchun maxsus maydon -->
+<div id="printable-area" style="display: none;"></div>
+
+<!-- Print tugmasi -->
+<div class="print-btn-container">
+    <button class="btn btn-primary btn-lg" onclick="printSelectedLabel()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="feather feather-printer">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Chop etish
+    </button>
+</div>
+
+{% endblock content %}
+
+{% block js %}
+<!-- JsBarcode -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<!-- CSRF token -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js"
+    integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+    const csrfToken = document.querySelector('[name=csrf-token]').content;
+</script>
+
+<script>
+    // O'zgaruvchilar
+    let selectedLabelId = null;
+    let currentProduct = null;
+    let barcodeInstances = {};
+
+    function refreshAllData() {
+        const productId = $('#productSelect').val();
+        const priceType = $('#priceTypeSelect').val();
+        if (productId) {
+            fetchProductData(productId, priceType);
+
+        } else {
+            resetLabels();
+        }
+    };
+
+    function refreshOldPrice(price) {
+        // Eski narxni yangilash
+        document.querySelectorAll('.old-price').forEach(el => {
+            el.textContent = formatPrice(price);
+        });
+    }
+
+    $(document).ready(function () {
+
+        $('select.searchable').selectize({ normalize: true });
+
+        initializeBarcodes();
+    });
+
+    // Mahsulot ma'lumotlarini olish
+    function fetchProductData(productId, priceType) {
+        fetch(`/api/product/${productId}/${priceType}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentProduct = data;
+                    updateAllLabels();
+                } else {
+                    alert('Mahsulot topilmadi!');
+                }
+            })
+            .catch(error => {
+                console.error('Xatolik:', error);
+                alert('Server xatosi!');
+            });
+    }
+
+    // Barcha cheklarni yangilash
+    function updateAllLabels() {
+        if (!currentProduct) {
+            alert('Iltimos, mahsulot tanlang!');
+            return;
+        }
+
+        const quantity = parseInt($('#quantity').val()) || 1;
+        const totalPrice = currentProduct.price * quantity;
+
+        // Format narx
+        const priceStr = formatPrice(totalPrice);
+        const [main, cents] = splitPrice(priceStr);
+
+        // Barcha cheklarda yangilash
+        updateLabelElements({
+            name: currentProduct.name,
+            price: priceStr,
+            count: quantity,
+            barcode: currentProduct.barcode
+        });
+        console.log('updateAllLabels');
+
+        // Barkodlarni qayta yaratish
+        regenerateBarcodes(currentProduct.barcode);
+
+        // Sana/vaqtni yangilash
+        updateDateTime();
+    }
+
+    // Barcha chek elementlarini yangilash
+    function updateLabelElements(data) {
+        // Mahsulot nomini yangilash
+        document.querySelectorAll('.product-name').forEach(el => {
+            el.textContent = data.name;
+        });
+
+        // Narxlarni yangilash
+        document.querySelectorAll('.price-value').forEach(el => {
+            el.textContent = data.price;
+        });
+
+        document.querySelectorAll('.count').forEach(el => {
+            el.textContent = data.count;
+        });
+
+        // Barkod raqamini yangilash
+        document.querySelectorAll('.barcode-number').forEach(el => {
+            el.textContent = data.barcode;
+        });
+    }
+
+    // Barkodlarni qayta yaratish
+    function regenerateBarcodes(barcodeNumber) {
+        // Har bir chek uchun barkod
+        for (let i = 1; i <= 16; i++) {
+            const barcodeId = `#barcode_gen_${i}`;
+            try {
+                JsBarcode(barcodeId, barcodeNumber, getBarcodeOptions(i));
+                // Instanceni saqlash
+                barcodeInstances[i] = barcodeNumber;
+            } catch (e) {
+                console.error(`Barcode ${i} xatosi:`, e);
+            }
+        }
+    }
+
+    // Har bir chek uchun barkod parametrlari
+    function getBarcodeOptions(labelNum) {
+        const options = {
+            format: "CODE128",
+            displayValue: true,
+            background: "transparent",
+            margin: 0
+        };
+
+        // Har bir chek uchun maxsus parametrlar
+        switch (labelNum) {
+            case 1:
+                return { ...options, width: 2, height: 40, fontSize: 14 };
+            case 2:
+                return { ...options, width: 2, height: 35, fontSize: 14 };
+            case 3:
+                return { ...options, width: 2.5, height: 50, fontSize: 16 };
+            case 4:
+                return { ...options, width: 1.8, height: 30, fontSize: 12 };
+            case 5:
+                return { ...options, width: 1.6, height: 30, fontSize: 12 };
+            case 6:
+                return { ...options, width: 1.4, height: 25, fontSize: 12 };
+            case 7:
+                return { ...options, width: 1.5, height: 25, fontSize: 12 };
+            case 8:
+                return { ...options, width: 2.5, height: 45, fontSize: 14 };
+            case 9:
+                return { ...options, width: 2, height: 30, fontSize: 12 };
+            case 10:
+                return { ...options, width: 1.4, height: 30, fontSize: 12 };
+            case 11:
+                return { ...options, width: 1.2, height: 20, fontSize: 10 };
+            case 13:
+                return { ...options, width: 1.6, height: 35, fontSize: 12 };
+            case 14:
+                return { ...options, width: 1.3, height: 15, fontSize: 10, displayValue: false };
+            case 16:
+                return { ...options, width: 1.7, height: 25, fontSize: 10 };
+            default:
+                return { ...options, width: 2, height: 40, fontSize: 14 };
+        }
+    }
+
+    // Dastlabki barkodlarni yaratish
+    function initializeBarcodes() {
+        const defaultBarcode = "6921734977878";
+        regenerateBarcodes(defaultBarcode);
+    }
+
+    // Sana/vaqtni yangilash
+    function updateDateTime() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU');
+        const timeStr = now.toLocaleTimeString('ru-RU');
+
+        document.querySelectorAll('.date-time').forEach(el => {
+            el.textContent = `${dateStr} ${timeStr}`;
+        });
+    }
+
+    // Narxni formatlash
+    function formatPrice(price) {
+        return Math.round(price).toLocaleString('ru-RU').replace(/,/g, ' ');
+    }
+
+    // Narxni asosiy va sent qismlarga ajratish
+    function splitPrice(priceStr) {
+        console.log('splitPrice', priceStr)
+        const parts = priceStr.split(' ');
+        if (parts.length >= 2) {
+            const last = parts.pop();
+            return [parts.join(' '), last];
+        }
+        return [priceStr, '000'];
+    }
+
+
+    // Reset barcha cheklar
+    function resetLabels() {
+        currentProduct = null;
+        const defaultData = {
+            name: "ВАФЛИ СЛАДОНЕЖ С ШОКОЛАДНЫМИ",
+            price: "175 000",
+            mainPrice: "175",
+            cents: "000",
+            barcode: "6921734977878"
+        };
+
+        updateLabelElements(defaultData);
+        regenerateBarcodes(defaultData.barcode);
+        updateDateTime();
+        document.getElementById('previewContainer').classList.remove('show');
+    }
+</script>
+<script>
+    let selectedLabel = null;
+
+    function selectLabel(card, labelId) {
+        document.querySelectorAll('.label-card')
+            .forEach(el => el.classList.remove('active'));
+        card.classList.add('active');
+        selectedLabel = document.getElementById(labelId);
+    }
+
+    function printSelectedLabel() {
+        if (!selectedLabel) return;
+        selectedLabel.classList.add('print-active');
+        window.print();
+        selectedLabel.classList.remove('print-active');
+    }
+</script>
+
+{% endblock js %}

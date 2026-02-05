@@ -211,6 +211,13 @@
                                                     <label for="recipient-code" class="col-form-label">Kodi</label>
                                                     <input type="text" class="form-control" id="recipient-code" name="code" required>
                                                 </div>
+                                                <div class="form-group">
+                                                    <label for="">Sotish turi</label>
+                                                    <select name="type" id="" class="form-control">
+                                                        <option value="dona">Dona</option>
+                                                        <option value="optom">Optom</option>
+                                                    </select>
+                                                </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
                                                     <button type="submit" class="btn btn-primary">Saqlash</button>
@@ -227,6 +234,7 @@
                                             <th class="">№</th>
                                             <th>Nomi</th>
                                             <th>Kodi</th>
+                                            <th>Sotish turi</th>
                                             <th>Tahrirlash</th>
                                             <th>Ochirish</th>
                                         </tr>
@@ -237,6 +245,7 @@
                                                 <td>{{ forloop.counter }}</td>
                                                 <th> <a href="{% url 'product_price_type' price.id %}">{{ price.name }}</a></th>
                                                 <th>{{ price.code }}</th>
+                                                <th>{% if price.is_dona %}Dona{% elif price.is_optom %}Optom{% endif %}</th>
                                                 <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ price.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
                                                 <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ price.id }}"><i class="fa-solid fa-trash"></i></button></th>
                                             </tr>
@@ -254,6 +263,21 @@
                                                                 <div class="form-group">
                                                                     <label for="recipient-code" class="col-form-label">Kodi</label>
                                                                     <input type="text" class="form-control" id="recipient-code" name="code" value="{{ price.code }}">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="">Sotish turi</label>
+                                                                    <select name="type" id="" class="form-control">
+                                                                        <option 
+                                                                        {% if price.is_dona == True %}
+                                                                            selected
+                                                                        {% endif %}
+                                                                             value="dona">Dona</option>
+                                                                        <option 
+                                                                        {% if price.is_optom == True %}
+                                                                            selected
+                                                                        {% endif %}
+                                                                             value="optom">Optom</option>
+                                                                    </select>
                                                                 </div>
                                                                 <div class="modal-footer">
                                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>

@@ -1,0 +1,35 @@
+body {
+    /* border: 1px solid red; */
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .box_to_print {
+    /* border: 2px solid red !important; */
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+  
+  .logo {
+    background-color: black !important;
+    width: 100px;
+  }
+  .logo_container {
+    background-color: black !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+  }
+  @media print {
+    .logo_container {
+      background-color: black !important;
+    }
+    .logo {
+      /* background-color: black !important; */
+    }
+    body {
+      background-color: black !important;
+    }
+  }
+  

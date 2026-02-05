@@ -22,6 +22,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
+from django.db import connection, reset_queries
+from django.contrib.auth.decorators import login_required
+
 
 
 
@@ -2854,7 +2857,10 @@ class GetProductView(LoginRequiredMixin, View):
                     'quantity': str(product.quantity) if product.quantity else '',
                     'shelf_code': product.shelf_code or '',
                     'ready': product.ready or '1',
-                    'barcodes': [b.barcode for b in product.product_barcode.all()]
+                    'barcodes': [{
+                        "barcode": i.barcode,
+                        "quantity": i.quantity,
+                    } for i in product.product_barcode.all()]
                 }
             })
         except ProductFilial.DoesNotExist:
@@ -2886,11 +2892,38 @@ class EditProductView(LoginRequiredMixin, View):
             ProductBarcode.objects.filter(product=product).delete()
             
             # Yangi barcodelarni qo'shish
-            barcodes = request.POST.get('barcodes', '[]')
-            barcode_list = json.loads(barcodes)
-            for barcode in barcode_list:
-                if barcode.strip():
-                    ProductBarcode.objects.create(barcode=barcode.strip(), product=product)
+            # barcodes = request.POST.get('barcodes', '[]')
+            # barcode_list = json.loads(barcodes)
+            # for barcode in barcode_list:
+            #     if barcode.strip():
+            #         ProductBarcode.objects.create(barcode=barcode.strip(), product=product)
+
+            barcodes_json = request.POST.get('barcodes')
+
+            if barcodes_json:
+                # JSON string ni parse qilish
+                barcodes_list = json.loads(barcodes_json)
+                
+                # Oldingi barcodelarni o'chirish
+                product.barcodes.all().delete()  # related_name='barcodes' ekanligini eslang
+                
+                # Yangi barcodelarni yaratish
+                for item in barcodes_list:
+                    barcode_value = item.get('barcode', '')
+                    quantity_value = item.get('quantity', 1)
+                    
+                    if barcode_value:
+                        # quantity ni to'g'ri formatga keltirish
+                        try:
+                            quantity = float(quantity_value)
+                        except (ValueError, TypeError):
+                            quantity = 1.0
+                        
+                        ProductBarcode.objects.create(
+                            product=product,
+                            barcode=barcode_value,
+                            quantity=quantity
+                        )
             
             return JsonResponse({
                 'success': True,
@@ -3675,6 +3708,7 @@ def deliver_detail(request, id):
    
     pay = PayHistory.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     recieve = Recieve.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
+    shop = Shop.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     bonus = Bonus.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     return_product = ReturnProductToDeliver.objects.filter(deliver_id=id, date__date__range=(start_date, end_date))
     returh_item = ReturnProductToDeliverItem.objects.filter(returnproduct__in=return_product)
@@ -3683,7 +3717,7 @@ def deliver_detail(request, id):
             'id':ret.id,
         }
    
-    infos = sorted(chain(pay, recieve, bonus), key=lambda instance: instance.date)
+    infos = sorted(chain(pay, recieve, shop, bonus), key=lambda instance: instance.date)
     data = []
     for i in infos:
         dt = {
@@ -3704,6 +3738,10 @@ def deliver_detail(request, id):
         elif i._meta.model_name == 'recieve':
             dt['type_payment'] = 'Maxsulot qabul'
             dt['pay_summa'] = i.total_bring_price
+
+        elif i._meta.model_name == 'shop':
+            dt['type_payment'] = 'Sotildi'
+            dt['pay_summa'] = i.total_price_to_refresh
         
         elif i._meta.model_name == 'bonus':
             dt['type_payment'] = 'Bonus berildi'
@@ -6359,7 +6397,7 @@ def add_recieve(request):
 
     obj = Recieve.objects.create(name=name, deliver_id=deliver, filial_id=filial, date=date, valyuta_id=valyuta, kurs=kurs, payment_date=payment_date)
 
-    RejaChiqim.objects.create(payment_date=str(payment_date)[:10], total=0, kurs=kurs, valyuta_id=valyuta,)
+    RejaChiqim.objects.create(payment_date=str(payment_date)[:10], total=0, kurs=kurs, valyuta_id=valyuta)
     page = request.META['HTTP_REFERER']
     url_parts = urlparse(page)
     query = dict(parse_qsl(url_parts.query))
@@ -6579,7 +6617,7 @@ def get_product_prices(request):
 
     data = {
         'bring_prices': product.bring_prices,
-        'sell_prices': product.pricetypevaluta_prices,
+        'sell_prices': json.dump(product.pricetypevaluta_prices_json),
         'price_types': [i.name for i in PriceType.objects.all()],
     }
 
@@ -6646,8 +6684,9 @@ def add_expanse_type(request):
     RecieveExpanseTypes.objects.create(name=name)
     return redirect(request.META.get('HTTP_REFERER'))
 
+from django.db import transaction
 
-
+@transaction.atomic
 def new_product_add(request):
     from_ajax = request.GET.get('from_ajax')
 
@@ -6656,16 +6695,16 @@ def new_product_add(request):
     name = request.POST.get('name')
     deliver = request.POST.get('deliver')
     barcode = request.POST.get('barcode')
-    pack = str(request.POST.get('pack')).replace(',', '.')
+    pack = str(request.POST.get('pack')).replace(',', '.') if request.POST.get('pack') else 1
     season = request.POST.get('season')
     group = request.POST.get('group')
     measurement_type = request.POST.get('measurement_type')
-    min_count = request.POST.get('min_count')
+    min_count = request.POST.get('min_count') if request.POST.get('min_count') else 0
     filial_id = request.POST.get('filial_id')
     # ready = request.POST.get('ready')
     quantity = str(request.POST.get('quantity')).replace(',', '.')
     valyuta = request.POST.get('valyuta')
-    shelf_code = request.POST.get('shelf_code', '0')
+    shelf_code = request.POST.get('shelf_code', '0') if request.POST.get('shelf_code') else 0
     other_filials = Filial.objects.all()
     filial_pr_id = None
     for filial in other_filials:
@@ -6695,11 +6734,24 @@ def new_product_add(request):
             if barcode:
                 ProductBarcode.objects.create(barcode=barcode, product=pr)
     filial_pr = ProductFilial.objects.get(id=filial_pr_id)
+    price_types = PriceType.objects.filter(is_activate=True)
+    for i in price_types:
+        ProductPriceType.objects.get_or_create(
+            product=filial_pr,
+            valyuta=Valyuta.objects.filter(is_som=True).order_by('id').first(),
+            type=i
+        )
+        ProductPriceType.objects.get_or_create(
+            product=filial_pr,
+            valyuta=Valyuta.objects.filter(is_dollar=True).order_by('id').first(),
+            type=i
+        )
+
     if from_ajax:
         return JsonResponse({
             'success': True,
             "id": filial_pr.id,
-            "name": filial_pr.name
+            "name": filial_pr.name,
         })
     messages.success(request, "Muvaffaqiyatli saqlandi")
 
@@ -7677,9 +7729,13 @@ def price_type(request):
 def price_type_add(request):
     name = request.POST.get('name')
     code = request.POST.get('code')
+    is_dona = True if request.POST.get('type') == 'dona' else False 
+    is_optom = True if request.POST.get('type') == 'optom' else False 
     PriceType.objects.create(
         name=name,
         code=code,
+        is_dona=is_dona,
+        is_optom=is_optom
     )
     return redirect(request.META['HTTP_REFERER'])
 
@@ -7687,9 +7743,13 @@ def price_type_add(request):
 def price_type_edit(request, id):
     name = request.POST.get('name')
     code = request.POST.get('code')
+    is_dona = True if request.POST.get('type') == 'dona' else False 
+    is_optom = True if request.POST.get('type') == 'optom' else False 
     price = PriceType.objects.get(id=id)
     price.name=name
     price.code=code
+    price.is_dona=is_dona
+    price.is_optom=is_optom
     price.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -8113,7 +8173,7 @@ def shop_nakladnoy(request, order_id):
             'status': shop.status,
             'seller': shop.saler.user.get_full_name() if shop.saler else 'Noma\'lum',
             'date_time': shop.date,
-            'customer': shop.debtor.fio if shop.debtor else 'Noma\'lum mijoz',
+            'customer': shop.get_name_dis,
             'valyuta': shop.valyuta.name if shop.valyuta else '',
             'customer_phone': shop.debtor.phone1 if shop.debtor else '',
             'customer_address': shop.debtor.address if shop.debtor else '',
@@ -9269,17 +9329,19 @@ def money_circulation_add(request):
     name = request.POST.get('name', '')
     manba = request.POST.get('manba')
     sub_manba = request.POST.get('sub_manba')
-    xarajat_turi = request.POST.get('xarajat_turi')
-    chiqim_turi = request.POST.get('chiqim_turi')
+    # xarajat_turi = request.POST.get('xarajat_turi')
+    # chiqim_turi = request.POST.get('chiqim_turi')
     manba_turi = request.POST.get('manba_turi')
+    for_qabul = request.POST.get('for_qabul')
     MoneyCirculation.objects.create(
         name=name,
         manba=manba,
         sub_manba=sub_manba,
         # xarajat_turi_id=xarajat_turi,
-        chiqim_turi_id=chiqim_turi,
-        manba_turi=True if manba_turi == 'on' else False, 
-        )
+        # chiqim_turi_id=chiqim_turi,
+        manba_turi=True if manba_turi == 'on' else False,
+        for_qabul=True if for_qabul == 'on' else False,
+    )
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -9292,6 +9354,7 @@ def money_circulation_edit(request, id):
     xarajat_turi = request.POST.get('xarajat_turi')
     chiqim_turi = request.POST.get('chiqim_turi')
     manba_turi = request.POST.get('manba_turi')
+    for_qabul = request.POST.get('for_qabul')
 
     money.name = name
     money.manba = manba
@@ -9299,6 +9362,7 @@ def money_circulation_edit(request, id):
     # money.xarajat_turi_id = xarajat_turi
     money.chiqim_turi_id = chiqim_turi
     money.manba_turi = True if manba_turi == 'on' else False
+    money.for_qabul = True if for_qabul == 'on' else False
     money.save()
     return redirect(request.META['HTTP_REFERER'])
 
@@ -10609,56 +10673,111 @@ def get_monday_saturday_pairs(year, month):
         current += timedelta(days=7)
     return result
 
-
-
-
+@login_required
 def tolov_kalendar_fin(request):
     today = datetime.today()
-    year = int(request.GET.get('year', today.year))
-    month = int(request.GET.get('month', today.month))
+    year = int(request.GET.get('year')) if request.GET.get('year') else today.year
+    month = int(request.GET.get('month')) if request.GET.get('month') else today.month
+
     weeks = get_monday_saturday_pairs(year, month)
+
     data_reja = []
     data_chiqim = []
+
+    circulations = MoneyCirculation.objects.filter(is_delete=False).order_by('name')
+
     for week in weeks:
         dushanba = week['dushanba']
         shanba = week['shanba']
-        
-        weekly_reja_tushum = RejaTushum.objects.filter(is_active=True,payment_date__gte=dushanba, payment_date__lte=shanba)
-        weekly_reja_chiqim = RejaChiqim.objects.filter(is_active=True ,payment_date__gte=dushanba, payment_date__lte=shanba)
 
-        plan_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
-        total_reja = weekly_reja_tushum.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
+        # ================== REJA TUSHUM ==================
+        objects_reja = []
 
-        if plan_reja or total_reja > 0:
-            dt_reja = {
-                'plan': plan_reja,
-                'total': total_reja,
-                'count':week['count']
-            }
-            data_reja.append(dt_reja)
-        chiqim_plan = weekly_reja_chiqim.aggregate(all=Coalesce(Sum('plan_total'), 0, output_field=IntegerField()))['all']
-        chiqim_total = weekly_reja_chiqim.aggregate(all=Coalesce(Sum('total'), 0, output_field=IntegerField()))['all']
-        if chiqim_plan or chiqim_total > 0:
-            dt_chiqim = {
-                'plan': chiqim_plan,
-                'total': chiqim_total,
-                'count':week['count']
-            }
-            data_chiqim.append(dt_chiqim)
-            
-    filter = {
-        "year":year,
-        "month":str(month),
-    }
+        for mc in circulations:
+            qs = RejaTushum.objects.filter(
+                is_active=True,
+                money_circulation=mc,
+                payment_date__gte=dushanba,
+                payment_date__lte=shanba
+            )
+
+            plan = qs.aggregate(
+                s=Coalesce(Sum('plan_total'), Value(0), output_field=IntegerField())
+            )['s']
+
+            total = qs.aggregate(
+                s=Coalesce(Sum('total'), Value(0), output_field=IntegerField())
+            )['s']
+
+            percent = (total / plan * 100) if plan else 0
+
+            objects_reja.append({
+                'name': mc.name,
+                'plan': plan,
+                'total': total,
+                'percent': round(percent, 2)
+            })
+
+        total_plan = sum(i['plan'] for i in objects_reja)
+        total_total = sum(i['total'] for i in objects_reja)
+        total_percent = (total_total / total_plan * 100) if total_plan else 0
+
+        data_reja.append({
+            'week_count': week['count'],
+            'plan': total_plan,
+            'total': total_total,
+            'percent': round(total_percent, 2),
+            'objects': objects_reja
+        })
+
+        # ================== REJA CHIQIM ==================
+        objects_chiqim = []
+
+        for mc in circulations:
+            qs = RejaChiqim.objects.filter(
+                is_active=True,
+                money_circulation=mc,
+                date__gte=dushanba,
+                date__lte=shanba
+            )
+
+            plan = qs.aggregate(
+                s=Coalesce(Sum('plan_total'), Value(0), output_field=IntegerField())
+            )['s']
+
+            total = qs.aggregate(
+                s=Coalesce(Sum('total'), Value(0), output_field=IntegerField())
+            )['s']
+
+            percent = (total / plan * 100) if plan else 0
+
+            objects_chiqim.append({
+                'name': mc.name,
+                'plan': plan,
+                'total': total,
+                'percent': round(percent, 2)
+            })
+
+        total_plan_c = sum(i['plan'] for i in objects_chiqim)
+        total_total_c = sum(i['total'] for i in objects_chiqim)
+        total_percent_c = (total_total_c / total_plan_c * 100) if total_plan_c else 0
+
+        data_chiqim.append({
+            'week_count': week['count'],
+            'plan': total_plan_c,
+            'total': total_total_c,
+            'percent': round(total_percent_c, 2),
+            'objects': objects_chiqim
+        })
+
     context = {
-        'weeks':weeks,
-        'data_reja':data_reja,
-        'data_chiqim':data_chiqim,
-        'filter':filter,
+        'weeks': weeks,
+        'data_reja': data_reja,
+        'data_chiqim': data_chiqim,
+        'filter': {'year': year, 'month': str(month)},
     }
+
     return render(request, 'fin/tolov_kalendar_fin.html', context)
-
-
 
 def reja_tushum_fin(request):
     reja = RejaTushum.objects.all()
@@ -11110,7 +11229,10 @@ def payment_shop_ajax(request, id):
     objec.type_pay = 2
     objec.save()
     shop.save()
-    shop.debtor.refresh_debt()
+    if shop.debtor:
+        shop.debtor.refresh_debt()
+    if shop.deliver:
+        shop.deliver.refresh_debt()
     return JsonResponse({'success': True})
 
 def product_remove_quantity(request, shop_id):
@@ -11255,7 +11377,10 @@ def payment_shop(request, shop_id):
                 last.summa = summa
                 last.payment_date = payment_date
                 last.save()
-            shop.debtor.refresh_debt()
+            if shop.debtor:
+                shop.debtor.refresh_debt()
+            if shop.deliver:
+                shop.deliver.refresh_debt()
             return JsonResponse({'success': True, 'message': 'Payment successful'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
@@ -12344,7 +12469,6 @@ def mobile_order_detail(request, id):
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
-from django.contrib.auth.decorators import login_required
 
 import json
 
@@ -12474,6 +12598,8 @@ def return_shop(request, id):
             loop.product.save()
         if shop.debtor:
             shop.debtor.refresh_debt()
+        if shop.deliver:
+            shop.deliver.refresh_debt()
         shop.status = 3
         shop.save()
     return redirect(request.META['HTTP_REFERER'])
@@ -13093,11 +13219,35 @@ def edit_product(request):
             product.save()
             
             # Update barcodes
-            barcodes = request.POST.getlist('barcodes[]')
-            product.product_barcode.all().delete()  # Remove old barcodes
-            for barcode in barcodes:
-                if barcode.strip():  # Only save non-empty barcodes
-                    ProductBarcode.objects.create(product=product, barcode=barcode.strip())
+            barcodes_json = request.POST.get('barcodes')
+            print(barcodes_json, 'iiiii')
+            if barcodes_json:
+                # JSON string ni parse qilish
+                barcodes_list = json.loads(barcodes_json)
+                
+                # Oldingi barcodelarni o'chirish
+                product.barcodes.all().delete()  # related_name='barcodes' ekanligini eslang
+                
+                # Yangi barcodelarni yaratish
+                for item in barcodes_list:
+                    print(item)
+                    barcode_value = item.get('barcode', '')
+                    quantity_value = item.get('quantity', 1)
+                    
+                    if barcode_value:
+                        # quantity ni to'g'ri formatga keltirish
+                        try:
+                            quantity = float(quantity_value)
+                        except (ValueError, TypeError):
+                            quantity = 1.0
+                        
+                        ProductBarcode.objects.create(
+                            product=product,
+                            barcode=barcode_value,
+                            quantity=quantity
+                        )
+
+
             
             return JsonResponse({
                 'status': 'success',
@@ -13199,7 +13349,10 @@ def get_product_data(request, product_id):
             'group': product.group_id,
             'measurement_type': product.measurement_type_id,
             'deliver': product.deliver_id,
-            'barcodes': list(product.product_barcode.values_list('barcode', flat=True))
+            'barcodes': [{
+                "barcode": i.barcode,
+                "quantity": i.quantity,
+            } for i in product.product_barcode.all()]
         })
     except ProductFilial.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Product not found'}, status=404)
@@ -13505,10 +13658,63 @@ class Recieves(LoginRequiredMixin, TemplateView):
         active_id = self.request.GET.get('active')
         if active_id and Recieve.objects.filter(id=active_id):
             context['active_one'] = Recieve.objects.get(id=active_id)
+        if context.get('active_one'):
+            products = list(ProductFilial.objects.filter(deliver=context['active_one'].deliver).select_related('group').only('id', 'name', 'group', 'bring_prices_json', 'quantity'))
         
-        context['products'] = ProductFilial.objects.filter(deliver=context['active_one'].deliver) if context.get('active_one') else []
+        context['products'] = products if context.get('active_one') else []
+        context['products_all'] = list(ProductFilial.objects.filter().select_related('group').only('id', 'name', 'group', 'bring_prices_json', 'quantity'))
 
         return context
+
+
+
+@require_POST
+def update_receive_item(request):
+    data = json.loads(request.body)
+
+    item = RecieveItem.objects.select_related('recieve').get(
+        id=data['item_id']
+    )
+    new_bring_price = data.get('bring_price')
+    if new_bring_price:
+        # Asosiy valyutadagi kelish narxini yangilash
+        main_bring_price = ProductBringPrice.objects.filter(
+            recieveitem=item,
+            valyuta=item.recieve.valyuta
+        ).first()
+        if main_bring_price:
+            main_bring_price.price = float(new_bring_price)
+            main_bring_price.save()
+    item.product.quantity += item.quantity
+    item.quantity = float(data.get('quantity', 0))
+    item.product.quantity -= item.quantity
+    item.product.save()
+    item.save()
+
+    return JsonResponse({
+        'success': True,
+        'total': f"{int(item.total_bring_price):,}".replace(',', ' '),
+        'dollar_price': f"{int(item.dollar_price_for_count):,}".replace(',', ' '),
+        'percent': int(item.percent),
+        'expanse': f"{int(item.expanse):,}".replace(',', ' '),
+        'cost': f"{int(item.cost):,}".replace(',', ' ')
+    })
+
+
+@require_POST
+def delete_receive_item(request):
+    data = json.loads(request.body)
+    item_id = data.get('item_id')
+
+    try:
+        item = RecieveItem.objects.get(id=item_id)
+        item.product.quantity -= item.quantity
+        item.product.save()
+        item.delete()
+        return JsonResponse({'success': True})
+    except RecieveItem.DoesNotExist:
+        return JsonResponse({'success': False})
+    
 
 @require_http_methods(["POST"])
 @csrf_exempt
@@ -13521,8 +13727,8 @@ def recieve_create(request):
             filial_id=data.get('filial'),
             valyuta_id=data.get('valyuta'),
             kurs=data.get('kurs', 1),
+            payment_date=data.get('deadline', None) if data.get('deadline') else None,
             date=timezone.now(),
-            payment_date=timezone.now()
         )
         return JsonResponse({'success': True, 'recieve_id': recieve.id, 'message': 'Qabul yaratildi'})
     except Exception as e:
@@ -13647,7 +13853,8 @@ def recieve_expense_create(request, recieve_id):
         recieve = get_object_or_404(Recieve, id=recieve_id)
         RecieveExpanses.objects.create(
             recieve=recieve,
-            type_id=data.get('type'),
+            # type_id=data.get('type'),
+            circulation_id=data.get('circulation'),
             summa=float(data.get('summa', 0)),
             valyuta_id=data.get('valyuta'),
             externaluser_id=data.get('externaluser'),
@@ -14030,7 +14237,7 @@ def sales_finished(request):
     # PayHistory ni prefetch qilamiz
     pay_history_prefetch = Prefetch(
         'shop_pays',
-        queryset=PayHistory.objects.filter().select_related('valyuta', 'kassa'),
+        queryset=PayHistory.objects.filter().select_related('valyuta', 'kassa').order_by('valyuta'),
         to_attr='payment_history'
     )
     
@@ -14160,7 +14367,7 @@ def sales_finished(request):
             
             shop_data = {
                 'id': shop.id,
-                'debtor_name': shop.debtor.fio if shop.debtor else 'Noma\'lum mijoz',
+                'debtor_name': shop.get_name_dis,
                 'debtor_id': shop.debtor.id if shop.debtor else None,
                 'date': shop.date.strftime('%Y-%m-%d %H:%M'),
                 'total_price': shop.total_price,
@@ -14194,17 +14401,24 @@ def sales_finished(request):
             shops_data.append(shop_data)
         
         payments_by_currency = {}
+        debtpayments_by_currency = {}
 
-        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=False).distinct():
+        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=False).order_by('valyuta').distinct():
             currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
             if currency not in payments_by_currency:
                 payments_by_currency[currency] = 0
             payments_by_currency[currency] += payment.summa
         
+        for payment in PayHistory.objects.filter(is_debt=False, date__date__gte=start_date, date__date__lte=end_date, shop__isnull=True, for_debt__isnull=True).order_by('valyuta').distinct():
+            currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
+            if currency not in debtpayments_by_currency:
+                debtpayments_by_currency[currency] = 0
+            debtpayments_by_currency[currency] += payment.summa
+        
 
         debts_by_currency = {}
 
-        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=True).distinct():
+        for payment in PayHistory.objects.filter(shop__in=shops, is_debt=True).order_by('valyuta').distinct():
             currency = payment.valyuta.name if payment.valyuta else 'Noma\'lum'
             if currency not in debts_by_currency:
                 debts_by_currency[currency] = 0
@@ -14223,7 +14437,8 @@ def sales_finished(request):
             'total_quantity': sum(shop.product_count for shop in shops),
             'total_shops': shops.count(),
             'payments_by_currency': payments_by_currency,
-            'debts_by_currency': debts_by_currency
+            'debts_by_currency': debts_by_currency,
+            'debtpayments_by_currency': debtpayments_by_currency,
         })
     
     # Oddiy so'rov bo'lsa, template render qilamiz
@@ -14261,19 +14476,20 @@ def sales_finished(request):
 
         open_smena = SmenaOpen.objects.filter(
             filial=filial,
-            date__gt=lc
+            # date__gt=lc
         ).order_by('date').first()
 
     else:
         # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
         open_smena = SmenaOpen.objects.filter(
             filial=filial,
-            date__date=today
+            # date__date=today
         ).last()
 
 
         # open_smena = SmenaOpen.objects.filter(filial=request.user.userprofile.filial, date__date=today).last()
     context = {
+        'history': True,
         'totals': totals,
         'filters': filters,
         'today': today,
@@ -14283,23 +14499,24 @@ def sales_finished(request):
         'kassalar': kassalar,
         'debtors': Debtor.objects.filter(),
         'filials': Filial.objects.filter(),
-        'products': ProductFilial.objects.filter().annotate(
-            zero_quantity_order=Case(
-                When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
-                default=Value(0),                  # boshqalari 0
-                output_field=IntegerField(),
-            )
-        ).order_by('zero_quantity_order', 'id'),
+        # 'products': ProductFilial.objects.filter(quantity__gt=0).select_related('measurement_type', 'group', 'filial', 'deliver').prefetch_related('barcodes').annotate(
+        #     zero_quantity_order=Case(
+        #         When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
+        #         default=Value(0),                  # boshqalari 0
+        #         output_field=IntegerField(),
+        #     )
+        # ).order_by('zero_quantity_order', 'id'),
         'price_types': PriceType.objects.filter(is_activate=True),
         'open_smena': open_smena,
         # 'price_type': PriceType.objects.filter(),
     }
     return render(request, 'today_sales.html', context)
 
+
 @login_required
 def today_sales(request):
     today = datetime.now().date()
-    start_date = request.GET.get('start_date', today.strftime('%Y-%m-%d'))
+    start_date = request.GET.get('start_date', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     end_date = request.GET.get('end_date', today.strftime('%Y-%m-%d'))
     
     # PayHistory ni prefetch qilamiz
@@ -14435,7 +14652,7 @@ def today_sales(request):
             
             shop_data = {
                 'id': shop.id,
-                'debtor_name': shop.debtor.fio if shop.debtor else 'Noma\'lum mijoz',
+                'debtor_name': shop.get_name_dis,
                 'debtor_id': shop.debtor.id if shop.debtor else None,
                 'date': shop.date.strftime('%Y-%m-%d %H:%M'),
                 'total_price': shop.total_price,
@@ -14485,9 +14702,14 @@ def today_sales(request):
                 debts_by_currency[currency] = 0
             debts_by_currency[currency] += payment.summa
 
-            
+        active_shops = [
+            {'id': i.id, 'date': i.date.strftime("%H:%M")} 
+            for i in Shop.objects.prefetch_related('cart').filter(is_savdo=True, shop_pays__isnull=True, cart__isnull=False, cart__quantity__gt=0).distinct().order_by('-date')
+        ]
+
         return JsonResponse({
             'shops': shops_data,
+            'active_shops': active_shops,
             'has_previous': page_obj.has_previous(),
             'has_next': page_obj.has_next(),
             'current_page': page_obj.number,
@@ -14536,14 +14758,14 @@ def today_sales(request):
 
         open_smena = SmenaOpen.objects.filter(
             filial=filial,
-            date__gt=lc
+            # date__gt=lc
         ).order_by('date').first()
 
     else:
         # Agar hali hech qachon yopilmagan bo‘lsa, bugungi smenani olamiz
         open_smena = SmenaOpen.objects.filter(
             filial=filial,
-            date__date=today
+            # date__date=today
         ).last()
 
 
@@ -14556,17 +14778,19 @@ def today_sales(request):
         'client': Debtor.objects.all(),
         'valyutalar': valyutalar,
         'kassalar': kassalar,
-        'debtors': Debtor.objects.filter(),
+        'debtors': Debtor.objects.exclude(fio='Naqd'),
+        'delivers': Deliver.objects.filter(),
         'filials': Filial.objects.filter(),
-        'products': ProductFilial.objects.filter().annotate(
-            zero_quantity_order=Case(
-                When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
-                default=Value(0),                  # boshqalari 0
-                output_field=IntegerField(),
-            )
-        ).order_by('zero_quantity_order', 'id'),
+        # 'products': ProductFilial.objects.filter().annotate(
+        #     zero_quantity_order=Case(
+        #         When(quantity=0, then=Value(1)),  # quantity=0 bo'lsa 1
+        #         default=Value(0),                  # boshqalari 0
+        #         output_field=IntegerField(),
+        #     )
+        # ).order_by('zero_quantity_order', 'id'),
         'price_types': PriceType.objects.filter(is_activate=True),
         'open_smena': open_smena,
+        'payment_types': PaymentTypeName.objects.all(),
         # 'price_type': PriceType.objects.filter(),
     }
     return render(request, 'today_sales.html', context)
@@ -14579,11 +14803,23 @@ def b2c_shop_edit_ajax(request):
         shop = Shop.objects.get(id=shop_id)
         filial = request.POST.get('filial')
         debtor = request.POST.get('debtor')
+        deliver = request.POST.get('deliver')
         chegirma = request.POST.get('chegirma')
+        valyuta = request.POST.get('valyuta')
 
         shop.filial = Filial.objects.get(id=filial)
-        shop.debtor = Debtor.objects.get(id=debtor)
-        shop.chegirma = float(chegirma)
+        if debtor:
+            shop.debtor = Debtor.objects.get(id=debtor)
+            shop.deliver = None
+        elif deliver:
+            shop.deliver = Deliver.objects.get(id=deliver)
+            shop.debtor = None
+        else:
+            shop.deliver = None
+            shop.debtor = Debtor.objects.filter(fio='Naqd').last() or Debtor.objects.create(fio='Naqd')
+
+        # shop.chegirma = float(chegirma)
+        shop.valyuta_id = int(valyuta)
         shop.save()
         return JsonResponse({'success': True, 'message': 'Shop yangilandi'})
     except Exception as e:
@@ -14596,20 +14832,32 @@ def b2c_shop_create(request):
     
     # Shopni olish yoki yaratish
     shop_id = request.GET.get('id')
-    if not shop_id:
+    if not shop_id or shop_id == 'null':
         filial = user.filial if user.staff != 1 else Filial.objects.first()
         shop = Shop.objects.create(
             valyuta=Valyuta.objects.first(), 
             filial=filial, 
             debtor=Debtor.objects.get(fio="Naqd")
         )
+        if Brand.objects.last() and Brand.objects.last().main_valyuta:
+            shop.valyuta = Brand.objects.last().main_valyuta
+            shop.save()
         shop_id = shop.id
     else:
         shop = Shop.objects.get(id=shop_id)
     
     request_type = request.GET.get('request_type')
+
+    if request_type == 'change_tab':
+        tab = request.GET.get('tab')
+        shop.tab = tab
+        shop.save()
+        return JsonResponse({
+            'success': True
+        })
     
     if request_type == 'delete_all':
+        products = []
         pays = PayHistory.objects.filter(shop=shop)
         carts = Cart.objects.filter(shop=shop)
         for i in pays:
@@ -14617,10 +14865,18 @@ def b2c_shop_create(request):
             i.kassa.save()
         
         for i in carts:
+            product=i.product
+            product.quantity += i.quantity
             i.delete()
+            product.save()
+            products.append({
+                "id": product.id,
+                "rest": product.quantity
+            })
         
         return JsonResponse({
-            "success": True
+            "success": True,
+            'products': products,
         })
     
     if request_type == 'cart_add':
@@ -14674,12 +14930,18 @@ def _handle_cart_add(request, shop):
             product.quantity -= quantity
             product.save()
 
+        active_shops = [
+            {'id': i.id, 'date': i.date.strftime("%H:%M")} 
+            for i in Shop.objects.prefetch_related('cart').filter(is_savdo=True, shop_pays__isnull=True, cart__isnull=False, cart__quantity__gt=0).distinct().order_by('-date')
+        ]
+
         return JsonResponse({
             'success': True,
             'message': "Mahsulot qo'shildi",
             'cart_id': cart_item.id,
             'product_id': cart_item.product.id,
-            'rest': product.quantity
+            'rest': product.quantity,
+            'active_shops': active_shops,
         })
 
     except ProductFilial.DoesNotExist:
@@ -14691,8 +14953,10 @@ def _handle_cart_edit(request, cart_id):
     """Cartdagi mahsulotni tahrirlash"""
     cart = Cart.objects.get(id=cart_id)
     quantity = float(request.POST.get('quantity', cart.quantity))
+    discount = float(request.POST.get('discount', cart.discount))
     total_pack = float(request.POST.get('total_pack', cart.total_pack))
     agreed_price = float(request.POST.get('price', cart.price))
+    price_without_skidka = float(request.POST.get('price_without_skidka', cart.price_without_skidka))
 
     try:
         with transaction.atomic():
@@ -14703,6 +14967,8 @@ def _handle_cart_edit(request, cart_id):
             product.quantity += cart_item.quantity  # eski quantity qaytarib qo'yiladi
             product.quantity -= quantity     # yangi quantity ayiriladi
 
+
+
             if product.quantity < 0:
                 return JsonResponse({
                     'success': False,
@@ -14712,18 +14978,25 @@ def _handle_cart_edit(request, cart_id):
                 })
 
             cart_item.quantity = quantity
+            cart_item.price_without_skidka = price_without_skidka
             cart_item.total_pack = total_pack
             cart_item.price = agreed_price
+            cart_item.discount = discount
             cart_item.total = quantity * cart_item.price
 
             cart_item.save()
             product.save()
 
+            active_shops = [
+                {'id': i.id, 'date': i.date.strftime("%H:%M")} 
+                for i in Shop.objects.prefetch_related('cart').filter(is_savdo=True, shop_pays__isnull=True, cart__isnull=False, cart__quantity__gt=0).distinct().order_by('-date')
+            ]
             return JsonResponse({
                 'success': True,
                 'message': 'Maxsulot o\'zgartirildi',
                 'rest': product.quantity,
                 'product_id': product.id,
+                'active_shops': active_shops
             })
 
     except Cart.DoesNotExist:
@@ -14744,7 +15017,11 @@ def _handle_cart_delete(cart_id):
             product.save()
             cart.delete()
 
-        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi", 'rest': product.quantity, 'product_id': product.id})
+        active_shops = [
+            {'id': i.id, 'date': i.date.strftime("%H:%M")} 
+            for i in Shop.objects.prefetch_related('cart').filter(is_savdo=True, shop_pays__isnull=True, cart__isnull=False, cart__quantity__gt=0).distinct().order_by('-date')
+        ]
+        return JsonResponse({'success': True, 'message': "Mahsulot o'chirildi", 'rest': product.quantity, 'product_id': product.id, 'active_shops': active_shops})
     
     except Cart.DoesNotExist:
         return JsonResponse({'success': False, 'message': "Mahsulot allaqachon o'chirilgan"})
@@ -14814,7 +15091,10 @@ def _handle_edit_payments(request, shop):
                     )
             
             # Mijoz qarzini yangilash
-            shop.debtor.refresh_debt()
+            if shop.debtor:
+                shop.debtor.refresh_debt()
+            if shop.deliver:
+                shop.deliver.refresh_debt()
             
             return JsonResponse({'success': True, 'message': 'To\'lov muvaffaqiyatli amalga oshirildi'})
             
@@ -14838,23 +15118,46 @@ def _get_shop_data(shop):
             'valyuta_id': payment.valyuta.id if payment.valyuta else shop.valyuta.id,
             'summa': payment.summa
         })
-    
-    last_pay = PayHistory.objects.filter(debtor=shop.debtor).last()
-    customer_info = {
-        'id': shop.debtor.id,
-        'last_pay': last_pay.date if last_pay else None,
-        'valyuta': [
-            {
-                'summa': 0,  # Bu joyda haqiqiy qarz hisobini qo'shing
-                'name': x.name
-            }
-            for x in Valyuta.objects.all()
-        ]
-    }
-
+    customer_info = None
+    deliver_info = None
+    customer_name = 'Naqd'
+    if shop.debtor:
+        last_pay = PayHistory.objects.filter(debtor=shop.debtor).last()
+        customer_info = {
+            'id': shop.debtor.id,
+            'last_pay': last_pay.date if last_pay else None,
+            'valyuta': [
+                {
+                    'summa': 0,  # Bu joyda haqiqiy qarz hisobini qo'shing
+                    'name': x.name
+                }
+                for x in Valyuta.objects.all()
+            ]
+        }
+        customer_name = shop.debtor.fio
+    elif shop.deliver:
+        last_pay = PayHistory.objects.filter(deliver=shop.deliver).last()
+        deliver_info = {
+            'id': shop.deliver.id,
+            'last_pay': last_pay.date if last_pay else None,
+            'valyuta': [
+                {
+                    'summa': 0,  # Bu joyda haqiqiy qarz hisobini qo'shing
+                    'name': x.name
+                }
+                for x in Valyuta.objects.all()
+            ]
+        }
+        customer_name = shop.deliver.name
     return JsonResponse({
         'id': shop.id,
+        'tab': shop.tab,
+        'active_shops': [
+            {'id': i.id, 'date': i.date.strftime("%H:%M")} 
+            for i in Shop.objects.prefetch_related('cart').filter(is_savdo=True, shop_pays__isnull=True, cart__isnull=False, cart__quantity__gt=0).distinct().order_by('-date')
+        ],
         'customer_info': customer_info,
+        'deliver_info': deliver_info,
         # 'valyuta_name': customer_info,
         'filial': {
             "id": shop.filial.id
@@ -14863,7 +15166,10 @@ def _get_shop_data(shop):
         'total_price': totals['total'] - shop.chegirma,
         'totals': totals,
         'valyuta_name': shop.valyuta.name,
+        'valyuta_id': shop.valyuta.id,
         'chegirma': shop.chegirma,
+        'customer_name': customer_name,
+        'date': shop.date.strftime("%d-%m-%Y %H:%M"),
         'existing_payments': existing_payments,
         'cart_items': [{
             'id': item.id,
@@ -14874,6 +15180,7 @@ def _get_shop_data(shop):
             'quantity': item.quantity,
             'price_without_skidka': item.price_without_skidka,
             'price': item.price,
+            'discount': item.discount if item.discount not in [float('inf'), float('-inf')] else 0,
             'total': item.total,
             'product_measure': item.product.measurement_type.name if item.product and item.product.measurement_type else '',
         } for item in Cart.objects.filter(shop=shop)]
@@ -14893,6 +15200,7 @@ def get_shop_payments(request):
         for payment in PayHistory.objects.filter(shop=shop).select_related('kassa', 'valyuta'):
             payment_data = {
                 'type': 'qarz' if payment.is_debt else 'payment',
+                'debtor_id': payment.debtor.id,
                 'summa': float(payment.summa),
                 'valyuta_id': payment.valyuta.id if payment.valyuta else shop.valyuta.id,
                 'valyuta_name': payment.valyuta.name if payment.valyuta else shop.valyuta.name,
@@ -14965,6 +15273,7 @@ def complete_payment(request):
             data = json.loads(request.body)
             shop_id = data.get('shop_id')
             payments = data.get('payments', [])
+            payment_type = data.get('payment_type')
             total_required = data.get('total_required', 0)
             total_paid = data.get('total_paid', 0)
             chegirma = data.get('chegirma', 0)
@@ -14972,6 +15281,8 @@ def complete_payment(request):
             with transaction.atomic():
                 shop = Shop.objects.select_for_update().get(id=shop_id)
                 
+                if not shop.debtor or not shop.deliver:
+                    debtor = Debtor.objects.filter(fio="Naqd").last() or Debtor.objects.create(fio="Naqd")
                 # Shop statusini yangilash
                 shop.status = 2  # To'langan
                 shop.chegirma = chegirma
@@ -14992,7 +15303,7 @@ def complete_payment(request):
                         
                         if summa > 0:
                             kassa_merge, created = KassaMerge.objects.get_or_create(
-                                id=kassa_id, 
+                                id=kassa_id,
                                 defaults={'summa': 0}
                             )
                             
@@ -15007,7 +15318,9 @@ def complete_payment(request):
                             if pay_history:
                                 # Mavjud bo'lsa, yangilash
                                 pay_history.summa = summa
+                                pay_history.payment_type_id = payment_type
                                 pay_history.save()
+                                print('aaaaaaaaa', payment_type)
                             else:
                                 # Yangi yaratish
                                 pay_history = PayHistory.objects.create(
@@ -15015,9 +15328,12 @@ def complete_payment(request):
                                     kassa=kassa_merge,
                                     valyuta_id=valyuta_id,
                                     debtor=shop.debtor,
+                                    deliver=shop.deliver,
                                     summa=summa,
-                                    is_debt=False
+                                    is_debt=False,
+                                    payment_type_id=payment_type
                                 )
+                                print('bbbbbbbb', payment_type)
                             
                             updated_payment_ids.add(pay_history.id)
                             
@@ -15057,14 +15373,15 @@ def complete_payment(request):
                             # Qarz uchun PayHistory ni topish
                             pay_history = PayHistory.objects.filter(
                                 shop=shop,
-                                valyuta=valyuta,
+                                # valyuta=valyuta,
                                 is_debt=True,
-                                payment_date=due_date
+                                # payment_date=due_date
                             ).last()
                             
                             if pay_history:
                                 # Mavjud bo'lsa, yangilash
                                 pay_history.summa = summa
+                                pay_history.valyuta = valyuta
                                 pay_history.comment = comment
                                 pay_history.payment_date = due_date
                                 pay_history.save()
@@ -15099,7 +15416,10 @@ def complete_payment(request):
                         pass   
                 
                 # Mijoz qarzini yangilash
-                shop.debtor.refresh_debt()
+                if shop.debtor:
+                    shop.debtor.refresh_debt()
+                if shop.deliver:
+                    shop.deliver.refresh_debt()
                 
                 return JsonResponse({
                     'success': True, 
@@ -15800,6 +16120,39 @@ class ConvertDeleteView(LoginRequiredMixin, View):
             })
 
 
+
+def get_products_forsale(request):
+    filial_id = request.GET.get('filial')
+    if not filial_id:
+        return JsonResponse({'success': False, 'error': 'Filial tanlanmagan'})
+
+    # .values() - lug'at ko'rinishida olish eng tezkor usul
+    products = list(ProductFilial.objects.filter(filial_id=filial_id).values(
+        'id', 'name', 'quantity', 'pack',
+        'barcodes_text', 
+        'pricetypevaluta_prices_json',
+        m_name=F('measurement_type__name')
+    ))
+
+    # Ma'lumotlarni frontend kutayotgan formatga o'tkazamiz
+    # Hech qanday murakkab JSON yaratish sikllari kerak emas!
+    results = []
+    for p in products:
+        results.append({
+            'id': p['id'],
+            'name': p['name'],
+            'barcodes': p['barcodes_text'] or '',
+            'quantity': float(p['quantity']),
+            'pack': p['pack'] if p['pack'] != 0 else 1,
+            'measurement_type': p['m_name'] or '',
+            # JSONField bazadan allaqachon obyekt bo'lib keladi
+            'pricetypevaluta_prices_json': p['pricetypevaluta_prices_json'] or [],
+            'get_barcodes': p['barcodes_text'] or ''
+        })
+
+    return JsonResponse({'success': True, 'products': results})
+
+
 # Kirim.objects.update(kassa_new=0)
 # Chiqim.objects.update(kassa_new=0)
 
@@ -15818,3 +16171,542 @@ class ConvertDeleteView(LoginRequiredMixin, View):
 # for i in ProductFilial.objects.all():
 #     i.filial = Filial.objects.first()
 #     i.save()
+
+
+# ProductFilial.objects.all().delete()
+
+# with transaction.atomic():
+#     with open('test.json', 'r', encoding='utf-8') as file:
+#         data = json.load(file)  # JSON faylni Python obyektiga o'giradi
+#         for i in data:
+#             pr = ProductFilial.objects.create(
+#                 name=i['name'],
+#                 quantity=i['quantity'],
+#                 barcode=i['barcode'],
+#                 group_id=i['gurux'],
+#                 measurement_type=MeasurementType.objects.filter(name=i['measurement']).last() or MeasurementType.objects.create(name=i['measurement']),
+#                 preparer=i['preparer'],
+#                 min_count=i['min_count'],
+#                 filial=Filial.objects.first()
+#             )
+#             valyuta = Valyuta.objects.filter(is_dollar=True).last()
+#             ProductBringPrice.objects.create(valyuta=valyuta, product=pr, price=i['t_price'])
+#             for p in PriceType.objects.all():
+#                 ProductPriceType.objects.create(valyuta=valyuta, type=p, product=pr, price=i['price'])
+            
+#             print(pr)
+
+
+
+
+
+# Debtor.objects.all().delete()
+# Wallet.objects.filter().delete()
+# with transaction.atomic():
+#     with open('test1.json', 'r', encoding='utf-8') as file:
+#         data = json.load(file)  # JSON faylni Python obyektiga o'giradi
+#         for i in data:
+#             db = Debtor.objects.filter(
+#                 fio=i['mijoz_fish'],
+#                 # phone1=i['tel_1'],
+#                 # phone2=i['tel_2'],
+#                 # group_id=i['qarz_som'],
+#                 # preparer=i['qarz_dollar'],
+
+#             ).last()
+#             if db:
+#                 dollar = Valyuta.objects.filter(is_dollar=True).last()
+#                 som = Valyuta.objects.filter(is_som=True).last()
+#                 Wallet.objects.get_or_create(customer=db, valyuta=som, start_summa=-1*i['qarz_som'])
+#                 Wallet.objects.get_or_create(customer=db, valyuta=dollar, start_summa=-1*i['qarz_dollar'])
+                
+#                 print(db)
+
+
+# for i in ProductFilial.objects.all():
+#     ProductBarcode.objects.get_or_create(product=i, barcode=i.barcode)
+
+
+# for i in Wallet.objects.filter():
+#     i.start_summa = i.start_summa * -1
+#     i.save()
+
+#     if i.customer:
+#         i.customer.refresh_debt()
+    
+#     print()
+
+
+# for i in Debtor.objects.all():
+#         i.refresh_debt()
+
+# for i in Wallet.objects.all():
+#     print(i.start_summa, i.valyuta)
+
+
+
+
+# for i in ProductFilial.objects.all():
+#     i.refresh_bring_prices()
+#     i.refresh_barcodes()
+#     i.refresh_prices()
+#     print(i)
+
+# import pandas as pd
+
+
+# @transaction.atomic
+# def excel_to_json_filtered(input_file='nasrulloh1991_493.xlsx', output_file='data.json'):
+#     """
+#     Excel fayldan faqat kerakli ustunlarni JSON formatiga o'tkazadi
+#     va ma'lumotlarni ma'lumotlar bazasiga saqlaydi.
+#     """
+#     # Excel faylini o'qish
+#     df = pd.read_excel(input_file)
+    
+#     # Valyuta va narx turlarini bir marta olish
+#     som_valyuta = Valyuta.objects.get(is_som=True)
+#     optom_price_type, _ = PriceType.objects.get_or_create(name="Optom")
+#     dona_price_type, _ = PriceType.objects.get_or_create(name="Dona")
+#     pereclisheniya_price_type, _ = PriceType.objects.get_or_create(name="Перечисления")
+    
+#     # JSON tayyorlash
+#     items = []
+#     created_products = []
+    
+#     for index, row in df.iterrows():
+#         try:
+#             # Ma'lumotlarni olish va tozalash
+#             name = str(row.get('Наименование товара', '')).strip()
+#             barcode = str(row.get('Баркод товара', '')).strip()
+            
+#             # NaN qiymatlar uchun tekshirish
+#             quantity_raw = row.get('Количество')
+#             quantity = float(quantity_raw) if pd.notna(quantity_raw) else 0
+            
+#             price_post_raw = row.get('Цена поступления')
+#             price_post = float(price_post_raw) if pd.notna(price_post_raw) else 0
+            
+#             price_optom_raw = row.get('Оптом цена')
+#             price_optom = float(price_optom_raw) if pd.notna(price_optom_raw) else 0
+            
+#             price_dona_raw = row.get('Цена за единицу')
+#             price_dona = float(price_dona_raw) if pd.notna(price_dona_raw) else 0
+            
+#             price_per_raw = row.get('Цена перечисление')
+#             price_per = float(price_per_raw) if pd.notna(price_per_raw) else 0
+            
+#             # Mahsulot nomi va barkod bo'sh bo'lmasligi kerak
+#             if not name or not barcode:
+#                 print(f"⚠️  O'tkazib yuborildi - nom yoki barkod yo'q: {name}")
+#                 continue
+            
+#             # Mahsulotni yaratish
+#             pr = ProductFilial.objects.create(
+#                 name=name, 
+#                 quantity=quantity, 
+#                 start_quantity=quantity, 
+#                 ready=3,
+#                 filial = Filial.objects.last()
+#             )
+            
+#             # Barkod yaratish
+#             ProductBarcode.objects.create(
+#                 product=pr, 
+#                 quantity=1, 
+#                 barcode=barcode
+#             )
+            
+#             # Kelish narxi
+#             ProductBringPrice.objects.get_or_create(
+#                 product=pr, 
+#                 valyuta=som_valyuta, 
+#                 defaults={'price': price_post}
+#             )
+            
+#             # Narx turlarini yaratish
+#             # 1. Optom narxi
+#             pr1, created = ProductPriceType.objects.get_or_create(
+#                 type=optom_price_type,
+#                 product=pr,
+#                 valyuta=som_valyuta,
+#                 defaults={'price': price_optom}
+#             )
+#             if not created and pr1.price != price_optom:
+#                 pr1.price = price_optom
+#                 pr1.save()
+            
+#             # 2. Dona narxi
+#             pr2, created = ProductPriceType.objects.get_or_create(
+#                 type=dona_price_type,
+#                 product=pr,
+#                 valyuta=som_valyuta,
+#                 defaults={'price': price_dona}
+#             )
+#             if not created and pr2.price != price_dona:
+#                 pr2.price = price_dona
+#                 pr2.save()
+            
+#             # 3. Перечисления narxi
+#             pr3, created = ProductPriceType.objects.get_or_create(
+#                 type=pereclisheniya_price_type,
+#                 product=pr,
+#                 valyuta=som_valyuta,
+#                 defaults={'price': price_per}
+#             )
+#             if not created and pr3.price != price_per:
+#                 pr3.price = price_per
+#                 pr3.save()
+            
+#             # JSON uchun ma'lumot
+#             item = {
+#                 "tartib_raqami": index + 1,
+#                 "Наименование товара": name,
+#                 "Баркод товара": barcode,
+#                 "Количество": quantity,
+#                 "Цена поступления": price_post,
+#                 "Оптом цена": price_optom,
+#                 "Цена за единицу": price_dona,
+#                 "Цена перечисление": price_per,
+#                 "status": "created",
+#                 "product_id": pr.id
+#             }
+            
+#             items.append(item)
+#             created_products.append(pr)
+#             print(f"✅ Yaratildi: {name[:50]}... (ID: {pr.id})")
+            
+#         except Exception as e:
+#             print(f"❌ Xatolik {index+1}-qatorda: {e}")
+#             # Transactionni rollback qilish uchun exceptionni qaytarish
+#             raise
+    
+#     # JSON formatida saqlash
+#     result = {
+#         "items": items,
+#         "total_created": len(created_products),
+#         "total_in_file": len(df),
+#         "status": "success"
+#     }
+    
+#     with open(output_file, 'w', encoding='utf-8') as f:
+#         json.dump(result, f, ensure_ascii=False, indent=2)
+    
+#     print(f"\n✅ Muvaffaqiyatli! {len(created_products)}/{len(df)} ta mahsulot saqlandi.")
+#     print(f"📁 JSON fayl: {output_file}")
+    
+#     return result
+
+
+# # Yordamchi funksiya - barcha mahsulotlarni tekshirish
+# def check_products_in_file(input_file='nasrulloh1991_493.xlsx'):
+#     """
+#     Excel fayldagi mahsulotlarni tekshirish
+#     """
+#     df = pd.read_excel(input_file)
+    
+#     print(f"📊 Fayldagi jami qatorlar: {len(df)}")
+#     print("\n🔍 Birinchi 5 ta mahsulot:")
+#     for i in range(min(5, len(df))):
+#         row = df.iloc[i]
+#         print(f"  {i+1}. {row.get('Наименование товара', '')[:50]}... | "
+#               f"Barkod: {row.get('Баркод товара', '')} | "
+#               f"Miqdor: {row.get('Количество', 0)}")
+    
+#     # Barkodlarni tekshirish
+#     barcodes = df['Баркод товара'].astype(str).tolist()
+#     existing_barcodes = ProductBarcode.objects.filter(barcode__in=barcodes).values_list('barcode', flat=True)
+    
+#     print(f"\n⚠️  Ma'lumotlar bazasida mavjud barkodlar: {len(existing_barcodes)} ta")
+#     if existing_barcodes:
+#         print(f"  Namuna: {list(existing_barcodes[:3])}")
+    
+#     return df
+
+
+# # Ishga tushirish uchun funksiya
+# def run_import():
+#     """
+#     Import jarayonini ishga tushirish
+#     """
+#     print("=" * 60)
+#     print("📦 EXCEL FAYLDAN MAHSULOTLARNI IMPORT QILISH")
+#     print("=" * 60)
+    
+#     try:
+#         # Avval tekshirish
+#         check_products_in_file()
+        
+#         # Import qilish
+#         print("\n" + "=" * 60)
+#         print("🔄 IMPORT JARAYONI BOSHLANDI...")
+#         print("=" * 60)
+        
+#         result = excel_to_json_filtered()
+        
+#         print("\n" + "=" * 60)
+#         print("✅ IMPORT MUVOFFAQIYATLI YAKUNLANDI!")
+#         print("=" * 60)
+        
+#         return result
+        
+#     except Exception as e:
+#         print(f"\n❌ IMPORT JARAYONIDA XATOLIK: {e}")
+#         return None
+
+# run_import()
+
+# ProductFilial.objects.filter().update(measurement_type=MeasurementType.objects.last())
+
+def today_sales_naqt(request):
+    valyutalar = Valyuta.objects.filter(is_activate=True)
+    kassalar = KassaMerge.objects.filter(is_active=True, kassa__is_main=False).distinct().select_related('kassa', 'valyuta')
+    context = {
+        'kassalar': kassalar,
+        'valyutalar': valyutalar
+    }
+    return render(request, 'components/today_sales_naqt.html', context)
+
+def today_sales_qarz(request):
+    valyutalar = Valyuta.objects.filter(is_activate=True)
+    kassalar = KassaMerge.objects.filter(is_active=True, kassa__is_main=False).distinct().select_related('kassa', 'valyuta')
+    context = {
+        'kassalar': kassalar,
+        'valyutalar': valyutalar,
+        'debtors': Debtor.objects.filter(),
+    }
+    return render(request, 'components/today_sales_qarz.html', context)
+
+def today_sales_taminotchi(request):
+    valyutalar = Valyuta.objects.filter(is_activate=True)
+    kassalar = KassaMerge.objects.filter(is_active=True, kassa__is_main=False).distinct().select_related('kassa', 'valyuta')
+    context = {
+        'kassalar': kassalar,
+        'valyutalar': valyutalar,
+        'debtors': Deliver.objects.filter(),
+    }
+    return render(request, 'components/today_sales_taminotchi.html', context)
+
+
+@login_required
+def barcodes_list_view(request):
+    products = ProductFilial.objects.all().values('id', 'name', 'barcode')
+    price_types = PriceType.objects.all()
+    return render(request, 'barcodes_list.html', {'products': products, 'price_types': price_types})
+
+def get_product_data_barcode(request, product_id, price_type):
+    try:
+        product = ProductFilial.objects.get(id=product_id)
+        valyuta = Valyuta.objects.filter(is_som=True).last()
+        
+        # Barcodeni olish (xatolikka yo'l qo'ymaslik uchun)
+        barcode_obj = ProductBarcode.objects.filter(product=product, quantity__lte=1).last()
+        barcode = barcode_obj.barcode if barcode_obj else product.barcode
+        
+        # Narxni olish (xatolikka yo'l qo'ymaslik uchun)
+        price_obj = ProductPriceType.objects.filter(
+            type_id=price_type, 
+            product_id=product_id, 
+            valyuta=valyuta
+        ).last()
+        
+        price = price_obj.price if price_obj else 0
+        
+        data = {
+            'name': product.name,
+            'price': float(price),
+            'barcode': barcode,
+            'id': product.id,
+            'success': True
+        }
+    except Exception as e:
+        data = {
+            'success': False, 
+            'error': str(e)
+        }
+    
+    return JsonResponse(data)
+
+
+@login_required
+def new_qabul(request):
+    if request.user.userprofile.is_qabul == False:
+        return redirect('/')
+    start_date = request.GET.get('start_date') if request.GET.get('start_date') else datetime.today().replace(day=1).strftime('%Y-%m-%d')
+    end_date = request.GET.get('end_date') if request.GET.get('end_date') else datetime.today().strftime('%Y-%m-%d')
+    deliver = request.GET.get('deliver')
+    filial = request.GET.get('filial')
+    receives = Recieve.objects.filter(date__date__gte=start_date, date__date__lte=end_date)
+    if deliver:
+        receives = receives.filter(deliver_id=deliver)
+    if filial:
+        receives = receives.filter(filial_id=filial)
+    context = {
+        'receives': receives,
+        'start_date': start_date,
+        'end_date': end_date,
+        'filial_selected': int(filial) if filial else filial,
+        'deliver_selected': int(deliver) if deliver else deliver,
+        'rec_count': sum([i.total_quantity or 0 for i in receives]),
+        'rec_total': sum([i.total_bring_price or 0 for i in receives]),
+    }
+    context['delivers'] = Deliver.objects.all().order_by('-id')
+
+    context['dollar_kurs'] = Course.objects.last().som
+
+    context['filial'] = Filial.objects.filter(is_activate=True)
+
+    context['valyutas'] = Valyuta.objects.filter()
+
+    return render(request, 'qabul.html', context)
+
+@login_required
+def new_qabul_detail(request, id):
+    if request.user.userprofile.is_qabul == False:
+        return redirect('/')
+    if id == 0:
+        rec = None
+        kurs = Course.objects.last().som
+        payment_date = datetime.now().date() + timedelta(days=30)
+        rec_date = datetime.now().date()
+    else:
+        rec = Recieve.objects.get(id=id)
+        kurs = rec.kurs
+        payment_date = rec.payment_date
+        rec_date = rec.date
+    context = {
+        'rec': rec,
+        'kurs': kurs,
+        'payment_date': payment_date.strftime('%Y-%m-%d'),
+        'rec_date': rec_date.strftime('%Y-%m-%d')
+    }
+    context['products'] = ProductFilial.objects.filter() if rec else []
+    context['delivers'] = Deliver.objects.all().order_by('-id')
+    context['filial'] = Filial.objects.filter(is_activate=True)
+    context['valyutas'] = Valyuta.objects.filter(is_som_or_dollar=True)
+    context['measurement_type'] = MeasurementType.objects.filter() if rec else []
+    context['groups'] = Groups.objects.filter() if rec else []
+    context['price_types'] = PriceType.objects.filter(is_activate=True) if rec else []
+
+    # context['expanse_types'] = RecieveExpanseTypes.objects.all()
+    context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
+    context['delivers'] = Deliver.objects.all().order_by('-id')
+    context['circulations'] = MoneyCirculation.objects.filter(is_delete=False, for_qabul=True)
+    
+    return render(request, 'qabul_detail.html', context)
+
+@login_required
+def recieve_edit(request):
+    data = json.loads(request.body)
+    
+    if data.get('rec_id'):
+        rec = Recieve.objects.get(id=data.get('rec_id'))
+        rec.name = data.get('name')
+        rec.deliver_id = data.get('deliver')
+        rec.filial_id = data.get('filial')
+        rec.valyuta_id = data.get('valyuta')
+        rec.kurs = float(data.get('kurs'))
+        rec.payment_date = data.get('deadline') if data.get('deadline') else None
+        rec.date = data.get('date') if data.get('date') else rec.date
+        rec.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Saqlandi'
+        })
+    else:
+        rec = Recieve.objects.create(
+            name=data.get('name'),
+            deliver_id=data.get('deliver'),
+            filial_id=data.get('filial'),
+            valyuta_id=data.get('valyuta'),
+            kurs=float(data.get('kurs')),
+            payment_date=data.get('deadline') if data.get('deadline') else None,
+            date=data.get('date') if data.get('date') else datetime.now()
+        )
+        return JsonResponse({
+            'success': True,
+            'message': 'Yaraldi',
+            'rec_id': rec.id
+        })
+
+@require_POST
+def product_price_type_edit(request):
+    data = json.loads(request.body)
+    pr_pr = ProductPriceType.objects.get(id=data['id'])
+    pr_pr.price = float(data['price'])
+    pr_pr.save()
+    return JsonResponse({
+        'success': True
+    })
+
+@require_POST
+def add_new_item(request):
+    # need: pr_id, rec_id, optom, dona
+    data = json.loads(request.body)
+    product = ProductFilial.objects.get(id=data.get('pr_id'))
+    rec = Recieve.objects.get(id=data.get('rec_id'))
+    optom = Decimal(data.get('optom') if data.get('optom') else 0)
+    dona = Decimal(data.get('dona') if data.get('dona') else 0)
+    uzs = Valyuta.objects.filter(is_som=True).order_by('id').first()
+    usd = Valyuta.objects.filter(is_dollar=True).order_by('id').first()
+    last_uzs = RecieveItem.objects.filter(product=product, recieve__valyuta=uzs).order_by('id').last()
+    last_usd = RecieveItem.objects.filter(product=product, recieve__valyuta=usd).order_by('id').last()
+    last_br_price_uzs = Decimal(last_uzs.bring_price if last_uzs else 0)
+    last_br_price_usd = Decimal(last_usd.bring_price if last_usd else 0)
+    print(last_uzs)
+    print(last_usd)
+    re_item = RecieveItem.objects.create(
+        recieve=rec,
+        product=product,
+        quantity=1
+    )
+    re_item.product.quantity -= 1
+    re_item.product.save()
+    ProductBringPrice.objects.create(
+        recieveitem=re_item,
+        product=product,
+        valyuta=uzs,
+        price=float(last_br_price_uzs)
+    )
+    ProductBringPrice.objects.create(
+        recieveitem=re_item,
+        product=product,
+        valyuta=usd,
+        price=float(last_br_price_usd)
+    )
+    for pr_price in product.price_types.all():
+        if pr_price.valyuta == uzs:
+            if pr_price.type.is_optom:
+                pr_price.price = last_br_price_uzs + ((last_br_price_uzs / 100) * optom) if last_br_price_uzs != 0 else 0
+            elif pr_price.type.is_dona:
+                pr_price.price = last_br_price_uzs + ((last_br_price_uzs / 100) * dona) if last_br_price_uzs != 0 else 0
+        elif pr_price.valyuta == usd:
+            if pr_price.type.is_optom:
+                pr_price.price = last_br_price_usd + ((last_br_price_usd / 100) * optom) if last_br_price_usd != 0 else 0
+            elif pr_price.type.is_dona:
+                pr_price.price = last_br_price_usd + ((last_br_price_usd / 100) * dona) if last_br_price_usd != 0 else 0
+        pr_price.save()
+    
+    return JsonResponse({
+        'success': True
+    })
+    
+@require_POST
+def refresh_product_price_types(request):
+    data = json.loads(request.body)
+    rec = Recieve.objects.get(id=data.get('rec_id'))
+    optom = Decimal(data.get('optom') if data.get('optom') else 0)
+    dona = Decimal(data.get('dona') if data.get('dona') else 0)
+    rec_items = RecieveItem.objects.filter(recieve=rec)
+    for item in rec_items:
+        product = item.product
+        bring_price = Decimal(item.bring_price)
+        for pr_price in product.price_types.filter(valyuta=rec.valyuta):
+            if pr_price.type.is_optom:
+                pr_price.price = bring_price + ((bring_price / 100) * optom) if bring_price != 0 else 0
+            elif pr_price.type.is_dona:
+                pr_price.price = bring_price + ((bring_price / 100) * dona) if bring_price != 0 else 0
+            pr_price.save()
+    return JsonResponse({
+        'success': True
+    })

@@ -1,4 +1,4 @@
-from api.models import UserProfile, Course
+from api.models import UserProfile, Course, Brand
 def add_custom_data(request):
     if request.user.is_authenticated:
         user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -10,6 +10,9 @@ def add_custom_data(request):
 def course_context(request):
     course = Course.objects.last()
     kurs = course.som if course else 0
+
+    brand = Brand.objects.last()
     return {
-        'kurs_dollar':str(kurs).replace(',','')
+        'kurs_dollar':str(kurs).replace(',',''),
+        'brand': brand
     }

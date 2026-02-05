@@ -830,7 +830,13 @@ return `
                         `<button class="btn btn-warning btn-sm mt-2" onclick="payDebt(${operation.remaining_debt_id}, ${operation.remaining_debt}, '${operation.remaining_valyuta}')">To'lash</button>` : 
                         `<button class="btn btn-success btn-sm mt-2" disabled>To'landi</button>`
                     }
-                    <button class="btn btn-primary btn-sm mt-2" onclick="showDebtList(${operation.remaining_debt_id})"><i class="fa fa-list"></i></button>
+                    ${operation.remaining_debt_id ? 
+                        `<button class="btn btn-primary btn-sm mt-2" onclick="showDebtList(${operation.remaining_debt_id})">
+                            <i class="fa fa-list"></i>
+                        </button>` 
+                        : ''
+                    }
+
                 </div>
             </div>
         </div>
