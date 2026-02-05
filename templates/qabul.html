@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Qabul </title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+     <style>
+        #alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999; /* Modal z-index'idan yuqori qilish */
+            width: 30rem;
+        }
+     </style>
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                 <div style="z-index: 100000000000;" id="alert-container"></div>
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+
+
+                        <div class="widget-content widget-content-area br-6">
+                            <form method="get" class="row">
+                                <div class="col-md-10 d-flex">
+                                    <input style="margin-left: 1rem;" value="{{start_date}}" type="date" class="form-control" name="start_date">
+                                    <input style="margin-left: 1rem;" value="{{end_date}}" type="date" class="form-control" name="end_date">
+                                    <select style="margin-left: 1rem;" name="filial" class="form-control" id="">
+                                        <option value="">Filial</option>
+                                        {% for i in filial %}
+                                        <option 
+                                        {% if filial_selected == i.id %}
+                                            selected
+                                        {% endif %}
+                                             value="{{i.id}}">{{i.name}}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+                                    <select style="margin-left: 1rem;" name="deliver" class="form-control" id="">
+                                        <option value="">Yetkazib beruvchi</option>
+                                        {% for i in delivers %}
+                                        <option 
+                                        {% if deliver_selected == i.id %}
+                                            selected
+                                        {% endif %}
+                                             value="{{i.id}}">{{i.name}}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+                                    <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
+                                </div>
+                                <div class="col-md-2">
+                                    <a class="btn btn-primary" href="/qabul_detail/0">
+                                        <i class="fas fa-plus"></i> Yangi Qabul
+                                    </a>
+                                </div>
+
+                            </form>
+                            <div class="table-responsive mb-4 mt-4">
+                                <table id="html5-extension" class="table table-hover non-hover" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Partiya</th>
+                                            <th>Yetkazib beruvchi</th>
+                                            <th>Sana</th>
+                                            <th>Valyuta</th>
+                                            <th>Soni</th>
+                                            <th>Jami narxi</th>
+                                            <th>To'lov sanasi</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody> 
+                                        
+                                        {% for sh in receives %}
+                                            <tr>
+                                                <td>{{forloop.counter}}</td>
+                                                <td><a href="{% url 'new_qabul_detail' sh.id %}">{{sh.name|default:'------'}}</a></td>
+                                                <td><a href="{% url 'new_qabul_detail' sh.id %}">{{sh.deliver.name|default:'------'}}</a></td>
+                                                <td>{{sh.date|date:'Y-m-d'}}</td>
+                                                <td>{{sh.valyuta.name}}</td>
+                                                <td>{{sh.total_quantity|intcomma}}</td>
+                                                <td>{{sh.total_bring_price|intcomma}}</td>
+                                                <td>{{sh.payment_date|date:'Y-m-d'}}</td>
+                                                <td>
+                                                    <button class="btn btn-danger" type="button" onclick="deleteRecieve({{ sh.id }})"><i class="fa fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td></td>
+                                            <th>Jami:</th>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <th>{{rec_count|intcomma}}</th>
+                                            <th>{{rec_total|intcomma}}</th>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="modal fade" id="createRecieveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yangi Qabul</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createRecieveForm">
+                    <div class="form-group">
+                        <label>Partiya nomi</label>
+                        <input type="text" class="form-control" name="name" value="{{ last_part }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Yetkazib beruvchi</label>
+                        <select class="form-control" name="deliver" required>
+                            {% for deliver in delivers %}
+                            <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filial</label>
+                        <select class="form-control" name="filial" required>
+                            {% for filial in filial %}
+                            <option value="{{ filial.id }}">{{ filial.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valyuta</label>
+                        <select class="form-control" name="valyuta" required>
+                            {% for valyuta in valyutas %}
+                            <option value="{{ valyuta.id }}">{{ valyuta.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kurs</label>
+                        <input type="number" step="any" class="form-control" name="kurs" value="{{ dollar_kurs }}" id="dollar-kurs-base" required>
+                    </div>
+                    <div class="form-group">
+                        <label>To'lov sanasi</label>
+                        <input type="date" class="form-control" name="deadline">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Bekor qilish</button>
+                <button type="button" class="btn btn-primary" onclick="createRecieve()">Yaratish</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block js %}
+
+    <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+    <script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+    <!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+    <script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+    <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+    <script>
+
+            // Qabulni o'chirish
+    function deleteRecieve(recieveId) {
+        if (!confirm('Haqiqatan ham bu qabulni o\'chirmoqchimisiz?')) return;
+        
+        $('#loading').show();
+        
+        $.ajax({
+            url: `/recieve/${recieveId}/delete/`,
+            type: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = "{% url 'new_qabul' %}";
+                } else {
+                    showAlert(response.message, 'error');
+                }
+                $('#loading').hide();
+            },
+            error: function() {
+                showAlert('Xatolik yuz berdi!', 'error');
+                $('#loading').hide();
+            }
+        });
+    }
+    function createRecieve() {
+        const formData = {
+            name: $('#createRecieveForm input[name="name"]').val(),
+            deliver: $('#createRecieveForm select[name="deliver"]').val(),
+            filial: $('#createRecieveForm select[name="filial"]').val(),
+            valyuta: $('#createRecieveForm select[name="valyuta"]').val(),
+            kurs: $('#createRecieveForm input[name="kurs"]').val(),
+            deadline: $('#createRecieveForm input[name="deadline"]').val(),
+        };
+        
+        $.ajax({
+            url: "{% url 'recieve_create' %}",
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    $('#createRecieveModal').modal('hide');
+                    window.location.href = `/qabul_detail/${response.recieve_id}`;
+                } else {
+                    showAlert(response.message, 'error');
+                }
+            },
+            error: function() {
+                showAlert('Xatolik yuz berdi!', 'error');
+                $('#loading').hide();
+            }
+        });
+    }
+        let trs = $('#html5-extension').DataTable( {
+            dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            buttons: {
+                buttons: [
+                    { extend: 'copy', className: 'btn' },
+                    { extend: 'csv', className: 'btn' },
+                    { extend: 'excel', className: 'btn' },
+                    { extend: 'print', className: 'btn' }
+                ]
+            },
+            "oLanguage": {
+                "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
+                "sInfo": " _PAGE_ / _PAGES_",
+                "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                "sSearchPlaceholder": "Izlash",
+               "sLengthMenu": "Results :  _MENU_",
+            },
+            "stripeClasses": [],
+            "lengthMenu": [10, 20, 50, 100],
+            "pageLength": 15
+        } );
+
+    function showAlert(message, type) {
+        const alertElement = document.createElement('div');
+        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+        alertElement.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertElement.style.zIndex = '10000000';
+        alertElement.style.position = 'relative';
+
+        
+        document.getElementById('alert-container').appendChild(alertElement);
+        
+        setTimeout(() => {
+            alertElement.remove();
+        }, 3000);
+    }
+    </script>
+{% endblock js %}

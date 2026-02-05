@@ -1,0 +1,59 @@
+                                <div style="width: 100%;">
+                                    <select name="valyuta"
+                                            id="valyuta_input"
+                                            class="searchable form-control">
+                                        {% for i in valyutalar %}
+                                            <option data-is_som="{{ i.is_som }}" data-is_dollar="{{ i.is_dollar }}" value="{{i.id}}" {% if shop.valyuta == i %}selected{% endif %}>
+                                                {{ i.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3 mt-3">
+                                    <label for="mainSelectDebtor" class="form-label">Mijoz</label>
+                                    <div class="input-group">
+                                        <select class="form-control mainSelectDebtor" id="mainSelectDebtor" name="debtor" required onchange="updateShopDetails()">
+                                            <option value=""></option>
+                                            {% for i in debtors %}
+                                                <option value="{{i.id}}">{{ i.fio }} {% if i.fio != 'Naqd' %} - {{ i.phone1|default_if_none:'Kiritilmagan' }}{% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button onclick="openDebtorModal()" type="button" class="btn btn-outline-primary" style="height: 2.6rem;">+</button>
+                                    </div>
+                                </div>
+                                    <div class="">
+                                    <h4>To'lov: </h4>
+                                </div>
+
+                                <div class="form-group">
+                                    {% for v in kassalar %}
+                                    <div class="input-group paymentinputs" data-kassa-id="{{ v.id }}" data-valyuta-id="{{v.valyuta.id}}">
+                                        <div class="payment-method" data-kassa-id="{{ v.id }}" data-valyuta-id="{{ v.valyuta.id }}" data-valyuta-name="{{ v.valyuta.name }}"></div>
+                                        <input placeholder="{{ v.valyuta }}" data-qarz="false"  onkeyup="formatInput(this);updatePaymentTotal();" min="0" type="text" step="any" class="form-control payment-input mb-2" oninput="" style="height: 2.2rem;border-radius: 2px;">
+                                        <button onclick="calculaterest(this)" type="button" class="btn btn-primary" style="width: 3rem; padding: 0.4rem;height: 2.2rem;"
+                                        data-is-dollar='{{v.valyuta.is_dollar}}' {% if v.valyuta.is_dollar %} data-dollar="true"{% else %} data-dollar="false" {% endif %}><i class="fa fa-plus"></i></button>
+                                    </div>
+                                    {% endfor %}
+                                    
+                                    <div class="input-group paymentinputs" data-kassa-id="qarz">
+                                        <div class="payment-method" data-kassa-id="qarz" data-valyuta-id="{{valyutalar.first.id}}" data-valyuta-name="{{valyutalar.first.name}}"></div>
+
+                                        <input id="qarzsumma" placeholder="Qarzga" data-qarz="true" onkeyup="formatInput(this);updatePaymentTotal();" min="0" type="text" step="any" class="form-control payment-input mb-2" oninput="" style="height: 2.2rem;border-radius: 2px;">
+                                        <select name="qarzvalyuta" id="qarzvalyuta" style="width: 6rem;height: 2.2rem;">
+                                            
+                                            {% for i in valyutalar %}
+                                                <option value="{{ i.id }}" data-id_dollar="{{i.is_dollar}}">{{ i.name }}</option>
+                                            {% endfor %}
+                                                
+                                        </select>
+                                    </div>
+                                    
+                                </div>
+                                <div class="">
+                                    <label for="">To'lov sanasi</label>
+                                    <input type="date" class="form-control" id="qarzdate">
+
+                                    <label for="">Izoh</label>
+                                    <textarea name="" class="form-control" id="qarzcomment"></textarea>
+                                </div>

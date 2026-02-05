@@ -19,7 +19,13 @@ from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 
 
+class Brand(models.Model):
+    name = models.CharField(max_length=200)
+    logo = models.FileField(blank=True, null=True)
+    main_valyuta = models.ForeignKey("Valyuta", on_delete=models.SET_NULL, blank=-True, null=True)
 
+    phone1 = models.CharField(max_length=200, blank=True, null=True)
+    phone2 = models.CharField(max_length=200, blank=True, null=True)
 
 # class UserCustom(AbstractUser):
 #     is_bussines = models.BooleanField(default=False)
@@ -63,6 +69,7 @@ class Valyuta(models.Model):
     is_som = models.BooleanField(default=False)
     is_som_or_dollar = models.BooleanField(default=False)
     is_activate = models.BooleanField(default=True)
+    icon = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -382,6 +389,12 @@ class Deliver(models.Model):
             .order_by('date')
         )
 
+        shop_qs = list(
+            Shop.objects.filter(deliver=deliver)
+            .select_related('valyuta')
+            .order_by('date')
+        )
+
         return_qs = list(
             ReturnProductToDeliver.objects.filter(deliver=deliver, is_activate=False)
             .prefetch_related('returnproducttodeliver__valyuta')
@@ -389,13 +402,12 @@ class Deliver(models.Model):
         )
 
         valyuta_events = defaultdict(list)
-        for event in chain(pay_history_qs, recieve_qs, bonus_qs):
+        for event in chain(pay_history_qs, recieve_qs, bonus_qs, shop_qs):
             valyuta_events[event.valyuta_id].append(event)
 
         # ReturnProductToDeliver hodisalarini valyuta bo‘yicha ajratamiz
         for return_event in return_qs:
             items = return_event.returnproducttodeliver.all()
-            print(items)
             # Har bir valyutaga to‘plangan summalarni hisoblab chiqamiz
             valyuta_summalari = defaultdict(float)
             for item in items:
@@ -414,6 +426,7 @@ class Deliver(models.Model):
         wallets_to_update = []
         payhistory_to_update = []
         shop_to_update = []
+        recieve_to_update = []
         bonus_to_update = []
         return_to_update = []
 
@@ -434,6 +447,12 @@ class Deliver(models.Model):
                 elif isinstance(event, Recieve):
                     event.debt_old = summa
                     summa += event.total_bring_price
+                    event.debt_new = summa
+                    recieve_to_update.append(event)
+
+                elif isinstance(event, Shop):
+                    event.debt_old = summa
+                    summa += event.total_price_to_refresh
                     event.debt_new = summa
                     shop_to_update.append(event)
 
@@ -457,8 +476,10 @@ class Deliver(models.Model):
             Wallet.objects.bulk_update(wallets_to_update, ['summa'])
         if payhistory_to_update:
             PayHistory.objects.bulk_update(payhistory_to_update, ['debt_old', 'debt_new'])
+        if recieve_to_update:
+            Recieve.objects.bulk_update(recieve_to_update, ['debt_old', 'debt_new'])
         if shop_to_update:
-            Recieve.objects.bulk_update(shop_to_update, ['debt_old', 'debt_new'])
+            Shop.objects.bulk_update(recieve_to_update, ['debt_old', 'debt_new'])
         if bonus_to_update:
             Bonus.objects.bulk_update(bonus_to_update, ['debt_old', 'debt_new'])
         if return_to_update:
@@ -728,9 +749,12 @@ class ProductFilial(models.Model):
     ]
     ready = models.IntegerField(choices=status_ready, null=True, blank=True)
 
+    barcodes_text = models.TextField(blank=True, null=True)
+    pricetypevaluta_prices_json = models.JSONField(blank=True, null=True)
+    bring_prices_json = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return self.name 
+        return self.name
     
     class Meta:
         verbose_name_plural = '3.1) Product Filial'
@@ -774,10 +798,27 @@ class ProductFilial(models.Model):
             data.append(dt)
         return data
     
-    @property
-    def pricetypevaluta_prices_json(self):
+    def refresh_prices(self):
         import json
-        return json.dumps(self.pricetypevaluta_prices)
+        self.pricetypevaluta_prices_json = json.dumps(self.pricetypevaluta_prices)
+        super(ProductFilial, self).save()
+
+    
+    
+
+    
+    def refresh_barcodes(self):
+        barcodes_with_quantity = []
+
+        for barcode_obj in self.product_barcode.all():
+            barcodes_with_quantity.append(f"{barcode_obj.barcode}x{barcode_obj.quantity}")
+
+        self.barcodes_text = ','.join(barcodes_with_quantity)
+        super(ProductFilial, self).save()
+    
+    # @property
+    # def pricetypevaluta_prices_json(self):
+    #     return json.dumps(self.pricetypevaluta_prices)
 
 
     @property
@@ -793,6 +834,12 @@ class ProductFilial(models.Model):
             }
             data.append(dt)
         return data
+
+
+    def refresh_bring_prices(self):
+        import json
+        self.bring_prices_json = self.bring_prices
+        super(ProductFilial, self).save()
 
         
     def return_recieves(self, start_date, end_date, deliver_id):
@@ -831,6 +878,14 @@ class ProductFilial(models.Model):
             )
         )['foo']
         return total
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['filial']), # Filial bo'yicha tezkor filter
+            models.Index(fields=['name']),   # Mahsulot nomi bo'yicha qidiruv uchun
+            models.Index(fields=['barcode']), # Agar asosiy modelda barcode bo'lsa
+        ]
+
 
 
 
@@ -908,10 +963,30 @@ def update_product_in_other_filials(sender, instance: ProductFilial, created, **
 
 class ProductBarcode(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='barcodes')
+    quantity = models.FloatField(default=1)
     barcode = models.CharField(max_length=255)
 
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.product.refresh_barcodes()
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['product']), # Product ID bo'yicha bog'lanish
+            models.Index(fields=['barcode']), # Barkod bo'yicha qidiruv
+        ]
+
+
+class PaymentTypeName(models.Model):
+    name = models.CharField(max_length=250)
+    icon = models.CharField(max_length=100)
+    is_naqd = models.BooleanField(default=True)
+    valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     
+    def __str__(self):
+        return self.name
 
 class Recieve(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -949,7 +1024,7 @@ class Recieve(models.Model):
     
     @property
     def kelish_total(self):
-        return sum([i.quantity + i.som for i in self.receiveitem.all()])
+        return sum([i.quantity * i.som for i in self.receiveitem.all()])
         # return self.receiveitem.all().aggregate(foo=Sum(F('quantity') * F('som')))['foo']
 
     @property
@@ -960,7 +1035,7 @@ class Recieve(models.Model):
 
     @property
     def total_quantity(self):
-        return self.receiveitem.all().aggregate(foo=Sum(F('quantity')))['foo']
+        return self.receiveitem.all().aggregate(foo=Sum(F('quantity')))['foo'] or 0
 
     
     @property
@@ -990,13 +1065,20 @@ class Recieve(models.Model):
         verbose_name_plural = '4) Recieve'
 
 
+class PriceTypePercentage(models.Model):
+    price_type = models.ForeignKey('PriceType', on_delete=models.CASCADE)
+    recieve = models.ForeignKey(Recieve, on_delete=models.CASCADE, related_name='price_percentages')
+    percentage = models.FloatField(default=0)
+
+
 class RecieveExpanseTypes(models.Model):
     name = models.CharField(max_length=200)
 
 
 class RecieveExpanses(models.Model):
     recieve = models.ForeignKey(Recieve, on_delete=models.CASCADE, related_name='expanses')
-    type = models.ForeignKey(RecieveExpanseTypes, on_delete=models.PROTECT)
+    type = models.ForeignKey(RecieveExpanseTypes, on_delete=models.PROTECT, blank=True, null=True)
+    circulation = models.ForeignKey('MoneyCirculation', on_delete=models.SET_NULL, blank=True, null=True)
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     externaluser = models.ForeignKey("ExternalIncomeUser", on_delete=models.SET_NULL, blank=True, null=True)
     summa = models.FloatField(default=0)
@@ -1164,6 +1246,11 @@ class ProductBringPrice(models.Model):
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE)
     price = models.FloatField(default=0)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        self.product.refresh_bring_prices()
+
 
 
 
@@ -1235,6 +1322,7 @@ class Shop(models.Model):
     call_center = models.CharField(max_length=200, blank=True, null=True)
     # call_center = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name='call_center_orders')
     debtor = models.ForeignKey("Debtor", on_delete=models.CASCADE, blank=True, null=True, related_name='debtor_shops')
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, blank=True, null=True, related_name='deliver_shops')
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='shop', blank=True, null=True)
     
     #qarzni qaytarish sanasi
@@ -1255,10 +1343,18 @@ class Shop(models.Model):
     nds_count = models.IntegerField(default=0)
     debt_old = models.IntegerField(default=0)
     debt_new = models.IntegerField(default=0)
+    tab = models.CharField(max_length=20, blank=True, null=True, default='naqd-tab')
     status = models.IntegerField(choices=((1, 'Yaratildi'),(2, 'Tasdiqlandi'), (3, 'Qaytarildi')), default=1)
     chiqims = models.ManyToManyField('Chiqim', blank=True)
 
-    # @property
+    @property
+    def get_name_dis(self): 
+        if self.debtor:
+            return self.debtor.fio 
+        elif self.deliver:
+            return self.deliver.name 
+        else:
+            'Noma\'lum'
 
     @property
     def total_price(self):
@@ -1386,6 +1482,9 @@ class Cart(models.Model):
     after_cart = models.FloatField(default=0)
     price_without_skidka = models.FloatField(default=0)
     price = models.FloatField(default=0)
+    discount = models.FloatField(default=0)
+
+
     total_pack = models.FloatField(default=0)
     quantity = models.FloatField(default=0)
     total = models.FloatField(blank=True, null=True)
@@ -1427,7 +1526,7 @@ class Cart(models.Model):
     
     @property
     def total_price(self):
-        return float(self.quantity) * float(self.price)
+        return float(self.quantity) * float(self.price) - float(self.skidka)
 
     @property
     def for_call_center(self):
@@ -1507,7 +1606,6 @@ class Debtor(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, blank=True)
     price_type = models.ForeignKey('PriceType', on_delete=models.CASCADE, null=True, blank=True)
     naqd = models.BooleanField(default=False)
-    
     
     def __str__(self):
         return self.fio
@@ -1609,14 +1707,15 @@ class Debtor(models.Model):
     def refresh_debt(self):
         customer = self
         valyutalar = Valyuta.objects.filter(is_som_or_dollar=True)
+        PayHistory.objects.filter(for_start=True, wallet__isnull=True).delete()
 
         for valyuta in valyutalar:
             wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
             summa = wallet.start_summa * -1
-
             debt_start, created = PayHistory.objects.get_or_create(
                 # shop=shop,
                 for_start=True,
+                wallet=wallet,
                 debtor=customer,
                 valyuta=valyuta,
                 is_debt=True,
@@ -1733,18 +1832,18 @@ class Debtor(models.Model):
         bonus_to_update = []
 
         for valyuta in valyutalar:
-            debt_start, created = PayHistory.objects.get_or_create(
+            debt_start = PayHistory.objects.filter(
                 # shop=shop,
                 for_start=True,
                 debtor=customer,
                 valyuta=valyuta,
                 is_debt=True,
-            )
+            ).last()
             
             events = valyuta_events.get(valyuta.id, [])
 
             # So'nggi Wallet yoki yangisini topamiz
-            wallet, _ = Wallet.objects.get_or_create(customer=customer, valyuta=valyuta)
+            wallet = Wallet.objects.get(customer=customer, valyuta=valyuta)
             summa = -debt_start.rest_debt
             print("start: ", wallet.start_summa)
 
@@ -1870,6 +1969,7 @@ class Debt(models.Model):
 
 
 class PayHistory(models.Model):
+    payment_type = models.ForeignKey(PaymentTypeName, on_delete=models.SET_NULL, blank=True, null=True)
     for_debt = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='debt_children')
     main_pay = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='pay_children')
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, blank=True, null=True, related_name="shop_pays")
@@ -1904,6 +2004,7 @@ class PayHistory(models.Model):
     debt_new = models.IntegerField(default=0)
     is_debt = models.BooleanField(default=False)
     for_start = models.BooleanField(default=False)
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, blank=True, null=True)
     
     remaining = models.FloatField(default=0)
 
@@ -2306,6 +2407,7 @@ class KassaMerge(models.Model):
     summa = models.FloatField(default=0)
     start_date = models.DateField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_naqd = models.BooleanField(default=True)
 
 
     def save(self, *args, **kwargs):
@@ -2807,6 +2909,8 @@ class PriceType(models.Model):
     name = models.CharField(max_length=150)
     code = models.CharField(max_length=150)
     is_activate = models.BooleanField(default=True)
+    is_optom = models.BooleanField(default=False)
+    is_dona = models.BooleanField(default=False)
     def __str__(self):
         return self.name
 
@@ -2819,10 +2923,23 @@ class ProductPriceType(models.Model):
     product = models.ForeignKey(ProductFilial, on_delete=models.CASCADE, related_name='price_types')
     valyuta = models.ForeignKey(Valyuta, on_delete=models.CASCADE, related_name='price_types', blank=True, null=True)
     price = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.product.refresh_prices()
     # price_dollar = models.DecimalField(max_digits=20, decimal_places=2, default=0)
 
+    
     class Meta:
         verbose_name_plural = 'Maxsulot narx turi'
+        indexes = [
+            # Mahsulot va valyutani birga qidirishni 50x tezlashtiradi
+            models.Index(fields=['product', 'valyuta']), 
+            # Narx turi bo'yicha ham alohida indeks
+            models.Index(fields=['type']),
+        ]
+        unique_together = ['product', 'valyuta', 'type']
+
 
 
 class OneDayPice(models.Model):
@@ -2933,6 +3050,7 @@ class MoneyCirculation(models.Model):
 
     manba_turi = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
+    for_qabul = models.BooleanField(default=False)
 
 
 class WriteOff(models.Model):
@@ -3037,6 +3155,7 @@ class RejaChiqim(models.Model):
     plan_total = models.IntegerField(default=0)
     kurs = models.IntegerField(default=0)
     debtor = models.ForeignKey(Debtor, on_delete=models.CASCADE, null=True, blank=True)
+    deliver = models.ForeignKey(Deliver, on_delete=models.CASCADE, null=True, blank=True)
     money_circulation = models.ForeignKey(MoneyCirculation, on_delete=models.CASCADE, null=True, blank=True)
     kassa = models.ForeignKey(KassaNew, on_delete=models.CASCADE, null=True, blank=True)
     where = models.CharField(max_length=255, null=True, blank=True)

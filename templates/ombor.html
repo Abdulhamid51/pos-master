@@ -210,6 +210,8 @@
                                 <div id="newBarcodeContainer">
                                     <div class="input-group barcode-group">
                                         <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                                        <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
                                         <div class="input-group-append">
                                             <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
                                         </div>
@@ -499,6 +501,8 @@
                     var newGroup = $(`
                         <div class="input-group barcode-group">
                             <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                            <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
                             </div>
@@ -556,6 +560,9 @@
                         $('#newBarcodeContainer').html(`
                             <div class="input-group barcode-group">
                                 <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                                <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
+
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
                                 </div>
@@ -606,7 +613,7 @@
                         $('#editBarcodeContainer').empty();
                         if (product.barcodes && product.barcodes.length > 0) {
                             product.barcodes.forEach(function(barcode) {
-                                addEditBarcodeInput(barcode);
+                                addEditBarcodeInput(barcode.barcode, barcode.quantity);
                             });
                         } else {
                             addEditBarcodeInput();
@@ -622,10 +629,13 @@
         }
 
         // Edit modalida barcode input qo'shish
-        function addEditBarcodeInput(value = '') {
+        function addEditBarcodeInput(value = '', quantity=1) {
             var inputGroup = $(`
                 <div class="input-group barcode-group">
                     <input type="text" class="form-control edit-barcode-input" placeholder="Barcode..." value="${value}">
+
+                    <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="${quantity}">
+
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary edit-add-barcode-btn">+</button>
                     </div>
@@ -681,8 +691,12 @@
             var barcodes = [];
             $('#editBarcodeContainer .edit-barcode-input').each(function() {
                 var barcode = $(this).val().trim();
+                var quantity = $(this).closest('.barcode-group').find('.new-barcodeqty-input').val();
                 if (barcode) {
-                    barcodes.push(barcode);
+                    barcodes.push({
+                        "barcode": barcode,
+                        "quantity": quantity,
+                    });
                 }
             });
             
@@ -790,6 +804,9 @@
             $('#newBarcodeContainer').html(`
                 <div class="input-group barcode-group">
                     <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                    <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
+                    
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
                     </div>

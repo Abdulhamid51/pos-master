@@ -20,6 +20,24 @@
     {% block css %}
     {% endblock css %}
     
+    <style>
+        .small-table th,
+        .small-table td {
+            font-size: 10px !important;
+            padding: 5px;
+        }
+
+        .bg-primary {
+            background-color: #5a72e5 !important;
+        }
+        .text-primary {
+            color: #5a72e5 !important;
+        }
+
+        .btn-primary {
+            background-color: #5a72e5 !important;
+        }
+    </style>
 <style>
 
     body {
@@ -564,7 +582,25 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                     </svg>
                                 </div>
                             </a>
-                            <ul class="collapse submenu list-unstyled {% if url_name == 'ombor' %}show{% elif url_name == 'product_filail_zero' %}show{% elif url_name == 'omborqabul' %}show{% elif url_name == 'omborminus' %}show{% elif url_name == 'product_filial' %}show{% elif url_name == 'product_editing_page' %}show{% elif url_name == 'product' %}show{% elif url_name == 'tovar_prixod' %}show{% elif url_name == 'tovar_prixod_tarix' %}show{% elif url_name == 'write_off' %}show{% elif url_name == 'write_off_tarix' %}show{% elif url_name == 'recieve' %}show{% elif url_name == 'deliver_return' %}show{% elif url_name == 'deliver_return_item_detail' %}show{% elif url_name == 'deliver_return_tarix' %}show{% endif %}"
+                            <ul class="collapse submenu list-unstyled 
+                                {% if url_name == 'ombor' %}show
+                                {% elif url_name == 'product_filail_zero' %}show
+                                {% elif url_name == 'omborqabul' %}show
+                                {% elif url_name == 'omborminus' %}show
+                                {% elif url_name == 'product_filial' %}show
+                                {% elif url_name == 'product_editing_page' %}show
+                                {% elif url_name == 'product' %}show
+                                {% elif url_name == 'tovar_prixod' %}show
+                                {% elif url_name == 'tovar_prixod_tarix' %}show
+                                {% elif url_name == 'write_off' %}show
+                                {% elif url_name == 'write_off_tarix' %}show
+                                {% elif url_name == 'recieve' %}show
+                                {% elif url_name == 'new_qabul' %}show
+                                {% elif url_name == 'deliver_return' %}show
+                                {% elif url_name == 'deliver_return_item_detail' %}show
+                                {% elif url_name == 'deliver_return_tarix' %}show
+                                {% elif url_name == 'barcodes_list_view' %}show
+                            {% endif %}"
                                 id="components" data-parent="#accordionExample">
                                 {% if custom_user_profile.is_ombor_boshkaruvi_ombor %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'ombor'  %}active{% endif %}">
@@ -581,6 +617,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                         <a href="{% url 'omborminus' %}"> Omborda mahsulotlar analizi </a>
                                     </li>
                                 {% endif %}
+                                <li class="menu {% if request.resolver_match.url_name == 'barcodes_list_view'  %}active{% endif %}">
+                                    <a href="{% url 'barcodes_list_view' %}"> Narx teglari </a>
+                                </li>
                                 {% if custom_user_profile.is_maxsutlo_tahlili %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'product_filial'  %}active{% endif %}">
                                         <a href="{% url 'product_filial' %}"> Maxsulot tahlili </a>
@@ -621,6 +660,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
                                 {% if custom_user_profile.is_qabul %} 
                                     <li class="menu {% if request.resolver_match.url_name == 'recieve' %}active{% endif %}">
                                         <a href="{% url 'recieve' %}">Qabul</a>
+                                    </li>
+                                    <li class="menu {% if request.resolver_match.url_name == 'new_qabul' %}active{% endif %}">
+                                        <a href="{% url 'new_qabul' %}">Qabul 2</a>
                                     </li>
                                {% endif %}
                                {% if custom_user_profile.is_taminotchi_qaytuv %} 
@@ -918,11 +960,9 @@ body.sidebar-collapsed .sidebar-toggle svg {
 
 
 <script>
-    console.log('aaaaaaa')
 document.addEventListener("DOMContentLoaded", function () {
     const table = document.querySelector("table");
     if (!table) return;
-    console.log(table)
     const headers = table.querySelectorAll("thead th");
     const tfootCells = table.querySelectorAll("tfoot th");
     const calculateIndexes = [];
@@ -1188,6 +1228,9 @@ $(document).ready(function() {
 
 
     function cleanNumber(str) {
+        if (str == null) {
+            return 0
+        }
         return str.replace(/\s/g, '');
     }
 

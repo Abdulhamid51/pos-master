@@ -1,0 +1,1324 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load mathfilters %}
+{% block title %}
+    <title>Qabul </title>
+{% endblock title %}
+{% block css %}
+    <!-- BEGIN GLOBAL MANDATORY STYLES -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700" rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'assets/css/plugins.css'%}" rel="stylesheet" type="text/css" />
+    <!-- END GLOBAL MANDATORY STYLES -->
+        
+    <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/datatables.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/custom_dt_html5.css'%}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/table/datatable/dt-global_style.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap3.min.css" integrity="sha256-ze/OEYGcFbPRmvCnrSeKbRTtjG4vGLHXgOqsyLFTRjg=" crossorigin="anonymous" />
+
+    <!-- END PAGE LEVEL CUSTOM STYLES -->
+     <style>
+
+         #alert-container {
+             position: fixed;
+             top: 20px;
+             right: 20px;
+             z-index: 99999; /* Modal z-index'idan yuqori qilish */
+             width: 30rem;
+        }
+
+        .product-select{
+            cursor: pointer;
+        }
+        .product-select:hover{
+            background-color: rgb(207, 222, 255);
+        }
+        
+.table-scroll-wrapper {
+    max-height: 450px;
+    overflow-x: auto; /* horizontal scroll */
+    overflow-y: auto; /* vertical scroll */
+    position: relative;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+    
+    .table-scroll-wrapper table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+    
+    .table-scroll-wrapper thead {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+    }
+    
+    .table-scroll-wrapper thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6 !important;
+        vertical-align: middle;
+        padding: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    /* Table rowlarining hover effekti */
+    .table-scroll-wrapper tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+    }
+    
+    /* Har bir katakchaga border va paddingni to'g'rilash */
+    .table-scroll-wrapper tbody td {
+        vertical-align: middle;
+        padding: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        white-space: nowrap;
+    }
+    
+    /* Input fieldlar uchun styling */
+    /* .table-scroll-wrapper tbody td input {
+        width: 100%;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        text-align: right;
+    } */
+    
+    /* Tugmalar uchun container */
+    .table-scroll-wrapper .d-flex {
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    /* Tugmalar uchun styling */
+    .table-scroll-wrapper .btn-sm {
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Small textlar uchun */
+    .table-scroll-wrapper small {
+        font-size: 0.75rem;
+        color: #6c757d;
+        display: block;
+        margin-bottom: 2px;
+    }
+    
+    /* Bo'sh table uchun styling */
+    .table-scroll-wrapper .text-muted {
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    /* Firefox uchun sticky header fix */
+    @supports (-moz-appearance: none) {
+        .table-scroll-wrapper thead th {
+            position: -moz-sticky;
+        }
+    }
+    
+    /* Safari uchun sticky header fix */
+    @supports (-webkit-backdrop-filter: none) {
+        .table-scroll-wrapper thead th {
+            position: -webkit-sticky;
+        }
+    }
+    
+    /* Scroll bar uchun styling */
+    .table-scroll-wrapper::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .table-scroll-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .table-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    
+    .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    .table-scroll-wrapper tbody td input {
+    min-width: 120px;
+}
+    </style>
+<style>
+.table-select{
+  position: absolute;
+  bottom: calc(100% + 2px); /* TEPASIDAN */
+  top: auto;
+  left: 0;
+  right: auto;
+  z-index: 1000;
+  background: #fff;
+  border: 1px solid #ced4da;
+  max-height: 350px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.table-select table{
+  font-size: 12px;
+}
+
+.table-select th,
+.table-select td{
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+
+.btn-xs{
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+</style>
+
+<style>
+    a.active {
+        background-color: rgb(46, 119, 254) !important;
+        color: white !important;
+    }
+</style>
+
+{% endblock css %}
+{% block content %}
+        <!--  BEGIN CONTENT AREA  -->
+        <div id="content" class="main-content">
+            <div class="layout-px-spacing">
+                <div style="z-index: 100000000000; display: fixed;" id="alert-container"></div>
+                
+
+                <div class="row layout-top-spacing" id="cancel-row">
+                    <div class="col-xl-12 col-lg-12 col-sm-12  layout-spacing">
+                        <div class="widget-content widget-content-area br-6" style="">
+                            <form class="row" id="createRecieveForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="rec_id" value="{{rec.id}}">
+                                <div class="form-group col-md-2">
+                                    <label for="">Partiya raqami</label>
+                                    <input value="{{rec.name}}" type="text" class="form-control" name="name" style="height: 33px !important;">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">Yetkazib beruvchi</label>
+                                    <select name="deliver" id="" class="searchselect">
+                                        
+                                        {% for d in delivers %}
+                                            <option value="{{d.id}}" 
+                                            {% if rec.deliver.id == d.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{d.name}}</option>
+                                        {% endfor %}
+                                            
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">Filial</label>
+                                    <select name="filial" id="" class="searchselect">
+                                        {% for f in filial %}
+                                            <option value="{{f.id}}" 
+                                            {% if rec.filial.id == f.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{f.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">Valyuta</label>
+                                    <select name="valyuta" id="" class="searchselect">
+                                        {% for f in valyutas %}
+                                            <option value="{{f.id}}" 
+                                            {% if rec.valyuta.id == f.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{f.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">Kurs</label>
+                                    <input value="{{kurs}}" type="text" class="form-control make_intcomma" name="kurs" style="height: 33px !important;">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">Qabul sanasi</label>
+                                    <input value="{{rec_date}}" type="date" class="form-control" name="date" style="height: 33px !important;">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="">To'lov sanasi</label>
+                                    <input value="{{payment_date}}" type="date" class="form-control" name="deadline" style="height: 33px !important;">
+                                </div>
+                                
+                                <!-- <div class="form-group col-md-3">
+                                </div> -->
+                                
+                                {% if rec %}
+                                        
+                                   <div class="form-group col-md-2">
+                                        <label>Optom / Dona (%)</label>
+                                        <div class="input-group">
+                                            <input type="number" id="optom" class="form-control" value="0" style="height: 33px !important;">
+                                            <input type="number" id="dona" class="form-control" value="0" style="height: 33px !important;">
+                                            <button class="btn btn-outline-warning" type="button" onclick="refreshAllTypePrices()" style="height: 33px !important;">
+                                                <i class="fa fa-refresh"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                {% endif %}
+                                
+                                <div class="form-group col-md-2">
+                                    <button class="btn btn-success w-100" onclick="editRecieve()" type="button"
+                                        style="
+                                        position: fixed;
+                                        right: 20px;
+                                        bottom: 20px;
+                                        z-index: 999;
+                                        max-width: 200px;
+                                        "
+                                    ><i class="fa fa-check"></i></button>
+                                </div>
+                            </form>
+                            <hr>
+<!-- NAV TABS -->
+<ul class="nav nav-tabs w-100" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active"
+           data-toggle="tab"
+           href="#firstTab">
+            Mahsulotlar
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link"
+           data-toggle="tab"
+           href="#secondTab">
+            Chiqimlar
+        </a>
+    </li>
+</ul>
+
+<!-- TAB CONTENT -->
+<div class="tab-content w-100">
+
+    <!-- BIRINCHI TAB -->
+    <div class="tab-pane fade show active w-100" id="firstTab">
+
+        <div class="table-responsive">
+            <div class="table-scroll-wrapper" style="max-height: 450px;">
+                <table class="table table-bordered table-nowrap">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Mahsulot</th>
+                            <th>Kelish narxi</th>
+                            <th>Soni</th>
+                            <th>Jami</th>
+
+                            {% for i in price_types %}
+                            <th style="white-space: nowrap;">{{i.name}}</th>
+                            {% endfor %}
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="items-table-body">
+                        {% for item in rec.receiveitem.all %}
+                        <tr class="item-row" data-item-id="{{ item.id }}">
+
+                            <td>{{ forloop.counter }}</td>
+                            <td style="white-space: nowrap;">{{ item.product.name }}</td>
+
+                            <td>
+                                <input type="text"
+                                       class="make_intcomma item-price"
+                                       onkeyup="changeItem(this)"
+                                       value="{{ item.bring_price|intcomma }}">
+                            </td>
+
+                            <td>
+                                <input type="text"
+                                       class="make_intcomma item-qty"
+                                       onkeyup="changeItem(this)"
+                                       value="{{ item.quantity|intcomma }}">
+                            </td>
+
+                            <td style="white-space: nowrap;"
+                                class="item-total">
+                                {{ item.total_bring_price|intcomma }}
+                            </td>
+
+                            {% for i in price_types %}
+                            <td>
+                                {% for p in item.product.price_types.all %}
+                                    {% if i.id == p.type.id %}
+
+                                        {% if p.valyuta.is_som == True %}
+                                        <input type="text"
+                                               class="make_intcomma"
+                                               onkeyup="changePriceItem(this)"
+                                               data-pricetypeid="{{p.id}}"
+                                               value="{{ p.price|intcomma }}">
+                                        {% elif p.valyuta.is_dollar == True %}
+                                        {% endif %}
+
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            {% endfor %}
+
+                            <td>
+                                <div class="d-flex" style="gap: 10px;">
+                                    <button type="button"
+                                            class="btn btn-warning btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                            style="width:24px;height:24px;">
+                                        <i class="fas fa-pencil"
+                                           style="font-size:12px;"></i>
+                                    </button>
+
+                                    <button type="button"
+                                            onclick="deleteItem(this)"
+                                            class="btn btn-danger btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                            style="width:24px;height:24px;">
+                                        <i class="fas fa-times"
+                                           style="font-size:12px;"></i>
+                                    </button>
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="9"
+                                class="text-center text-muted">
+                                Hozircha mahsulotlar mavjud emas
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-start mt-3">
+
+            <div class="position-relative"
+                 style="max-width: 600px; min-width: 450px;">
+
+                <div class="input-group input-group-sm">
+                    <input type="text"
+                           id="searchInput"
+                           class="form-control"
+                           placeholder="Mahsulotni tanlang..."
+                           style="height: 33px;">
+
+                    {% if rec %}
+                    <button class="btn btn-outline-primary"
+                            type="button"
+                            data-bs-toggle="modal"
+                            data-bs-target="#new_product_add"
+                            style="height: 33px;">
+                        +
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="table-select d-none"
+                     id="tableSelect">
+                    <table class="table table-bordered table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mahsulot</th>
+                                <th>Shtrix</th>
+                                <th>Qoldiq</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTable">
+                            {% for i in products %}
+                            <tr class="product-select"
+                                data-id="{{i.id}}"
+                                data-rec-id="{{rec.id}}"
+                                onclick="addNewItem(this)">
+                                <td>{{i.name}}</td>
+                                <td>{{i.barcodes_text}}</td>
+                                <td>{{i.quantity}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div>
+                <div style="text-align: right;">
+                    <h6 style="font-weight: bold;">
+                        Jami soni:
+                        <span class="footer-total-qty"></span>
+                    </h6>
+                    <h6 style="font-weight: bold;">
+                        Jami kelish narxi:
+                        <span class="footer-total-sum"></span>
+                    </h6>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- IKINCHI TAB -->
+    <div class="tab-pane fade w-100" id="secondTab">
+        <div class="table-responsive">
+            <div class="table-scroll-wrapper" style="max-height: 450px;">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <!-- <th>Turi</th> -->
+                            <th>Turli shaxs</th>
+                            <th>Manba</th>
+                            <th>Valyuta</th>
+                            <th>Summa</th>
+                            <th>Izoh</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-table-body" >
+                        <tr id="addExpenseForm">
+                            
+                            <!-- <td>
+                                <select name="type" id="" class="searchselect" style="width: 150px;">
+                                    <option value=""></option>
+                                    {% for expanse_type in expanse_types %}
+                                    <option value="{{expanse_type.id}}">{{ expanse_type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td> -->
+                            <td>
+                                <select name="externaluser" id="" class="searchselect" style="width: 150px;">
+                                    <option value="0">-</option>
+                                    {% for ext in external_users %}
+                                    <option value="{{ext.id}}">{{ ext.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="circulation" id="" class="searchselect" style="width: 150px;">
+                                    <option value=""></option>
+                                    {% for circ in circulations %}
+                                    <option value="{{circ.id}}">{{ circ.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="valyuta" id="" class="searchselect" style="width: 100px;">
+                                    <option value=""></option>
+                                    {% for valyuta in valyutas %}
+                                    <option value="{{valyuta.id}}">{{ valyuta.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input name="summa" type="text" class="make_intcomma" style="height: 33px;">
+                            </td>
+                            <td>
+                                <input name="comment" type="text" class="" style="height: 33px;">
+                            </td>
+                            <td>
+                                <button style="padding: 10px !important;" class="btn btn-success btn-sm" onclick="addExpense()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% for expanse in rec.expanses.all %}
+                        <tr id="expense-{{ expanse.id }}">
+                            <!-- <td>{{ expanse.type.name }}</td> -->
+                            <td>{{ expanse.externaluser.full_name|default:"-" }}</td>
+                            <td>{{ expanse.circulation.name|default:"-" }}</td>
+                            <td>{{ expanse.valyuta.name }}</td>
+                            <td>{{ expanse.summa|intcomma }}</td>
+                            <td>{{ expanse.comment|default:"-" }}</td>
+                            <td style="white-space:nowrap;">
+                                <button style="padding: 10px !important;" class="btn btn-warning btn-sm" onclick="editExpense({{ expanse.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button style="padding: 10px !important;" class="btn btn-danger btn-sm" onclick="deleteExpense({{ expanse.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                Hozircha chiqimlar mavjud emas
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+<div class="modal fade" id="new_product_add" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form id="newProductForm" class="modal-content" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle1">Yangi mahsulot qo'shish</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="name">Nomi *</label>
+                                <input type="text" class="form-control" name="name" id="newName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="">Filial</label>
+                                
+                                {% if user.userprofile.staff == 1 %}
+                                <select class="form-control" name="filial_id" id="newFilial">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for filial in filial %}
+                                        <option value="{{ filial.id }}">{{ filial.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% else %}
+                                    <input type="hidden" name="filial_id" value="{{ user.userprofile.filial.id }}">
+                                {% endif %}
+                                    
+                            </div>
+                            <div class="col-md-6">
+                                <label for="deliver">Ishlab chiqaruvchi *</label>
+                                <select class="form-control" required name="deliver" id="newDeliver">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for deliver in delivers %}
+                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="measurement_type">O'lchov birligi *</label>
+                                <select class="form-control" required name="measurement_type" id="newMeasurementType">
+                                    {% for measurement in measurement_type %}
+                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ready">Turi *</label>
+                                <select class="form-control" required name="ready" id="newReady">
+                                    <option value="1">Xom ashyo</option>
+                                    <option value="2">Yarim tayyor</option>
+                                    <option value="3">Tayyor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="min_count">Minimal miqdor</label>
+                                <input type="number" class="form-control" name="min_count" id="newMinCount">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="group">Guruh *</label>
+                                <select class="form-control" required name="group" id="newGroup">
+                                    <option value="">- - - - - - - -</option>
+                                    {% for group in groups %}
+                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="shelf_code">Polka kodi</label>
+                                <input type="text" class="form-control" name="shelf_code" id="newShelfCode">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="pack">Paketdagi soni</label>
+                                <input type="number" step="any" class="form-control" name="pack" id="newPack">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quantity">Boshlang'ich miqdori</label>
+                                <input type="number" step="any" class="form-control" name="quantity" id="newQuantity">
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <label for="">Barcodes</label>
+                                <div id="newBarcodeContainer">
+                                    <div class="input-group barcode-group">
+                                        <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                                        <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Har bir barcode uchun + tugmasini bosing</small>
+                                <input type="hidden" id="newDataList" name="list_barcode" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block js %}
+<!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
+<script src="{% static 'plugins/table/datatable/datatables.js'%}"></script>
+<!-- NOTE TO Use Copy CSV Excel PDF Print Options You Must Include These Files  -->
+<script src="{% static 'plugins/table/datatable/button-ext/dataTables.buttons.min.js'%}"></script>
+<script src="{% static 'plugins/table/datatable/button-ext/jszip.min.js'%}"></script>
+<script src="{% static 'plugins/table/datatable/button-ext/buttons.html5.min.js'%}"></script>
+<script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
+<script>
+
+    function savePercentToLocal() {
+        let optom = $('#optom').val();
+        let dona = $('#dona').val();
+
+        localStorage.setItem('optom_percent', optom);
+        localStorage.setItem('dona_percent', dona);
+    }
+
+    $('#optom, #dona').on('keyup', function () {
+        savePercentToLocal();
+    });
+
+    function loadPercentFromLocal() {
+        let optom = localStorage.getItem('optom_percent');
+        let dona = localStorage.getItem('dona_percent');
+
+        if (optom !== null) $('#optom').val(optom);
+        if (dona !== null) $('#dona').val(dona);
+    }
+
+    $(document).ready(function () {
+        loadPercentFromLocal();
+    });
+
+        $('.searchselect').selectize({
+            normalize: true
+        });
+
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+
+    let currentRecieveId = '{{rec.id}}'
+
+    function resetExpenseInputs() {
+    $('#addExpenseForm').find('input, select').each(function(){
+        if(this.tagName === 'SELECT') {
+            this.selectedIndex = 0;  // birinchi option
+        } else if(this.tagName === 'INPUT') {
+            this.value = '';         // inputni bo‘shatish
+        }
+    });
+}
+
+    function refreshAllTypePrices(){
+        let optom = $('#optom').val();
+        let dona = $('#dona').val();
+        let rec_id = currentRecieveId
+        
+        $.ajax({
+            url: '/refresh_product_price_types/',
+            type: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            data: JSON.stringify({
+                rec_id: rec_id,
+                optom: optom,
+                dona: dona
+            }),
+            success: function(response) {
+                reloadTables(items=true, products=false)
+            },
+            error: function() {
+                showAlert('Xatolik', 'danger')
+            }
+            
+        })
+    }
+
+         // Chiqim qo'shish
+    function addExpense() {
+        if (!currentRecieveId) {
+            showAlert('Iltimos, avval qabulni yarating!', 'danger');
+            return;
+        }
+        
+        const formData = {
+            // type: $('#addExpenseForm select[name="type"]').val(),
+            summa: $('#addExpenseForm input[name="summa"]').val().replace(/\s/g, ''),
+            valyuta: $('#addExpenseForm select[name="valyuta"]').val(),
+            externaluser: $('#addExpenseForm select[name="externaluser"]').val(),
+            circulation: $('#addExpenseForm select[name="circulation"]').val(),
+            comment: $('#addExpenseForm input[name="comment"]').val()
+        };
+        
+        
+        $.ajax({
+            url: `/recieve/${currentRecieveId}/expenses/add/`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    resetExpenseInputs();
+                    updateExpenseTable()
+                    
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+                
+            },
+            error: function() {
+                showAlert('Xatolik yuz berdi!', 'danger');
+                
+            }
+        });
+    }
+    function updateExpenseTable() {
+        $.ajax({
+            url: window.location.href,  // hozirgi sahifa URL'si
+            type: 'GET',
+            success: function(response) {
+                // response ichida HTML kod keladi
+                const html = $('<div>').html(response);  // HTML’ni parse qilish
+                const newTbody = html.find('#expenses-table-body').html();  // yangi tbody
+                $('#expenses-table-body').html(newTbody);  // hozirgi tbody bilan almashtirish
+                setTimeout(() => {
+                    $('.searchselect').each(function () {
+                        var $el = $(this);
+
+                        if ($el.hasClass('selectized')) {
+                            $el[0].selectize.destroy();
+                        }
+                        
+                        $el.selectize();
+                    });
+                }, 100);
+            },
+            error: function() {
+                console.error('Expenses table yangilanmadi!');
+            }
+        });
+    }
+
+    // Chiqimni tahrirlash
+    function editExpense(expenseId) {
+        const row = $(`#expense-${expenseId}`);
+        const currentSumma = row.find('td').eq(1).text().replace(/\s/g, '');
+        const currentComment = row.find('td').eq(5).text();
+        
+        const editForm = `
+            <tr id="edit-expense-${expenseId}" class="edit-form">
+                <td colspan="6">
+                    <form id="edit-expense-form-${expenseId}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Yangi summa</label>
+                                    <input type="number" step="0.01" class="form-control" 
+                                           id="edit-summa-${expenseId}" value="${currentSumma}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Yangi izoh</label>
+                                    <input type="text" class="form-control" 
+                                           id="edit-comment-${expenseId}" value="${currentComment}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-success btn-block" 
+                                            onclick="saveExpenseEdit(${expenseId})">
+                                        <i class="fas fa-save"></i> Saqlash
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-secondary btn-block" 
+                                            onclick="cancelExpenseEdit(${expenseId})">
+                                        <i class="fas fa-times"></i> Bekor
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        `;
+        
+        row.after(editForm);
+        row.hide();
+    }
+
+    // Chiqimni o'chirish
+    function deleteExpense(expenseId) {
+        if (!confirm('Haqiqatan ham bu chiqimni o\'chirmoqchimisiz?')) return;
+        
+        $('#loading').show();
+        
+        $.ajax({
+            url: `/recieve/expenses/${expenseId}/delete/`,
+            type: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    updateExpenseTable()
+                } else {
+                    showAlert(response.message, 'danger');
+                }
+                $('#loading').hide();
+            },
+            error: function() {
+                showAlert('Xatolik yuz berdi!', 'danger');
+                $('#loading').hide();
+            }
+        });
+    }
+
+    // Chiqim tahririni saqlash
+    function saveExpenseEdit(expenseId) {
+        const newSumma = $(`#edit-summa-${expenseId}`).val();
+        const newComment = $(`#edit-comment-${expenseId}`).val();
+        
+        $('#loading').show();
+        
+        $.ajax({
+            url: `/recieve/expenses/${expenseId}/update/`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                summa: newSumma,
+                comment: newComment
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    updateExpenseTable();
+                    
+                } else {
+                    showAlert(response.message, 'error');
+                    cancelExpenseEdit(expenseId);
+                }
+                $('#loading').hide();
+            },
+            error: function() {
+                showAlert('Xatolik yuz berdi!', 'error');
+                cancelExpenseEdit(expenseId);
+                $('#loading').hide();
+            }
+        });
+    }
+    
+    // Chiqim tahririni bekor qilish
+    function cancelExpenseEdit(expenseId) {
+        $(`#edit-expense-${expenseId}`).remove();
+        $(`#expense-${expenseId}`).show();
+    }
+    
+    function checkBarcodeExists(barcode, excludeId, callback) {
+        if (!barcode.trim()) {
+            callback(false);
+            return;
+        }
+        
+        $.ajax({
+            url: "{% url 'filter_product_barcode' %}",
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ 
+                barcode: barcode,
+                exclude_id: excludeId 
+            }),
+            success: function(response) {
+                if (response.exists) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            },
+            error: function() {
+                callback(false);
+            }
+        });
+    }
+
+    
+        $('#newBarcodeContainer').on('click', '.new-add-barcode-btn', function() {
+            var container = $(this).closest('.barcode-group');
+            var input = container.find('.new-barcode-input');
+            var barcode = input.val().trim();
+            
+            if (!barcode) {
+                showAlert('Diqqat', 'Barcode kiritilmagan!', 'danger');
+                return;
+            }
+            
+            // Barcode mavjudligini tekshirish
+            checkBarcodeExists(barcode, null, function(exists) {
+                if (exists) {
+                    showAlert('Xatolik', 'Bu barcode allaqachon mavjud!', 'danger');
+                } else {
+                    // Yangi input qo'shish
+                    var newGroup = $(`
+                        <div class="input-group barcode-group">
+                            <input type="text" class="form-control new-barcode-input" placeholder="Barcode...">
+
+                            <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="1">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary new-add-barcode-btn">+</button>
+                            </div>
+                        </div>
+                    `);
+                    $('#newBarcodeContainer').append(newGroup);
+                }
+            });
+        });
+
+        $('#newProductForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Barcha barcodelarni yig'ish
+            var barcodes = [];
+            $('#newBarcodeContainer .new-barcode-input').each(function() {
+                var barcode = $(this).val().trim();
+                if (barcode) {
+                    barcodes.push(barcode);
+                }
+            });
+            
+            // FormData yaratish
+            var formData = new FormData(this);
+            formData.append('list_barcode', JSON.stringify(barcodes));
+            
+            // AJAX so'rov
+            $.ajax({
+                url: "{% url 'new_product_add' %}?from_ajax=true",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        reloadTables(items=false, products=true)
+                        // Modalni yopish
+                        $('#new_product_add').modal('hide');
+                        // Formani tozalash
+                        form[0].reset();
+
+                        
+                        showAlert("Mahsulot muvaffaqiyatli qo'shildi!", "success");
+                    } else {
+                        showAlert('Xatolik', response.message || 'Xatolik yuz berdi!', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Xatolik', 'Server bilan bog\'lanishda xatolik!', 'danger');
+                }
+            });
+        });
+
+        function reloadTables(items=true, products=true){
+            $.ajax({
+                url: '',
+                type: 'GET',
+                success: function(res){
+                    const html = $('<div>').html(res);
+                    if(items===true){
+                        $('#items-table-body')
+                            .html(html.find('#items-table-body').html());
+                    }
+                    if(products===true){
+                        $('#productTable')
+                            .html(html.find('#productTable').html());
+                        $('#tableSelect').addClass('d-none');
+                        $('#searchInput').val('');
+                    }
+                }
+            });
+        }
+        
+        function addNewItem(e){
+            let pr_id = $(e).data('id')
+            let rec_id = $(e).data('rec-id')
+            let optom = $('#optom').val()
+            let dona = $('#dona').val()
+            $.ajax({
+                url: "{% url 'add_new_item'  %}",
+                type: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                data: JSON.stringify({
+                    pr_id: pr_id,
+                    rec_id: rec_id,
+                    optom: optom,
+                    dona: dona
+                }),
+                success: function(response) {
+                    if (!response.success) {
+                        showAlert(response.message, 'danger');
+                    }else{
+                        reloadTables()
+                        updateTotals()
+                        
+                    }
+                },
+                error: function() {
+                    showAlert('Xatolik yuz berdi!', 'danger');
+                }
+            });
+        }
+
+        function changePriceItem(e){
+            let price = $(e).val().replace?.(/\s/g,'')
+            let pr_id = $(e).data('pricetypeid')
+            
+            $.ajax({
+                url: "{% url 'product_price_type_edit'  %}",
+                type: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                data: JSON.stringify({
+                    id: pr_id,
+                    price: price
+                }),
+                success: function(response) {
+                    if (!response.success) {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Xatolik yuz berdi!', 'danger');
+                }
+            });
+        }
+
+        function editRecieve() {
+            const formData = {};
+            $('#createRecieveForm')
+                .find('input, select, textarea')
+                .each(function(){
+                    formData[this.name] = $(this).val()?.replace?.(/,/g,'') || $(this).val();
+                });
+            
+            
+            $.ajax({
+                url: "{% url 'recieve_edit'  %}",
+                type: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        if(response.message === 'Saqlandi'){
+                            window.location.reload()
+                        }else{
+                            window.location.href = '/qabul_detail/' + response.rec_id
+                        }
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Xatolik yuz berdi!', 'danger');
+                }
+            });
+        }
+
+    function updateTotals() {
+        let totalQty = 0;
+        let totalSum = 0;
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            const priceInput = row.querySelector('.item-price');
+            const qtyInput   = row.querySelector('.item-qty');
+            const totalCell  = row.querySelector('.item-total');
+
+            const price = parseFloat(priceInput.value.replace(/\s/g, '')) || 0;
+            const qty   = parseFloat(qtyInput.value.replace(/\s/g, '')) || 0;
+
+            const rowTotal = price * qty;
+
+            totalCell.innerText = rowTotal.toLocaleString('ru-RU');
+
+            totalQty += qty;
+            totalSum += rowTotal;
+        });
+
+        document.querySelector('.footer-total-qty').innerText =
+            totalQty.toLocaleString('ru-RU');
+
+        document.querySelector('.footer-total-sum').innerText =
+            totalSum.toLocaleString('ru-RU');
+    }
+
+    updateTotals()
+
+    let changeTimeout = null;
+
+    function changeItem(el) {
+        clearTimeout(changeTimeout);
+
+        changeTimeout = setTimeout(() => {
+            const row = el.closest('.item-row');
+            const itemId = row.dataset.itemId;
+
+            const price = row.querySelector('.item-price').value.replace(/\s/g, '');
+            const qty   = row.querySelector('.item-qty').value.replace(/\s/g, '');
+
+            fetch('/receive-item/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    bring_price: price,
+                    quantity: qty
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
+
+                // 🔄 faqat shu itemni yangilash
+                row.querySelector('.item-total').innerText = data.total;
+                updateTotals(); // pastdagi jami
+                reloadTables(items=false, products=true)
+            });
+
+        }, 400);
+    }
+
+
+    function deleteItem(btn) {
+        if (!confirm("Bu mahsulotni o‘chirmoqchimisiz?")) return;
+
+        const row = btn.closest('.item-row');
+        const itemId = row.dataset.itemId;
+
+        fetch('/receive-item/delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({ item_id: itemId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                row.remove();      // 🗑️ faqat shu qator o‘chadi
+                updateTotals();    // 🔄 jami qayta hisob
+                reloadTables(items=false, products=true)
+            } else {
+                alert('Xatolik yuz berdi');
+            }
+        });
+    }
+
+
+    function showAlert(message, type) {
+        const alertElement = document.createElement('div');
+        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+        alertElement.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertElement.style.zIndex = '10000000';
+        alertElement.style.position = 'relative';
+
+        
+        document.getElementById('alert-container').appendChild(alertElement);
+        
+        setTimeout(() => {
+            alertElement.remove();
+        }, 3000);
+    }
+    </script>
+<script>
+$(function(){
+
+  // input fokus bo‘lsa ochiladi
+  $("#searchInput").on("focus", function(){
+    $("#tableSelect").removeClass("d-none");
+  });
+
+  // tashqariga bosilsa yopiladi
+  $(document).on("click", function(e){
+    if(!$(e.target).closest(".table-select, #searchInput").length){
+      $("#tableSelect").addClass("d-none");
+    }
+  });
+
+  // qidiruv
+  $("#searchInput").on("keyup", function(){
+    let val = $(this).val().toLowerCase();
+    $("#productTable tr").each(function(){
+      $(this).toggle($(this).text().toLowerCase().includes(val));
+    });
+  });
+
+  // tanlash
+  $(document).on("click", ".add-btn", function(){
+    let tr = $(this).closest("tr");
+    let text = tr.find("td:first").text();
+    $("#searchInput").val(text);
+    $("#tableSelect").addClass("d-none");
+  });
+
+});
+</script>
+
+
+
+{% endblock js %}

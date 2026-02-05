@@ -146,7 +146,7 @@
                                     </div>
                                     <div class="col-md-2">
                                         <label for="" style="color: black !important; font-weight: bold;">Yil</label>
-                                        <input type="number" class="form-control" value="{{filter.year}}" name="year">
+                                        <input type="text" class="form-control" value="{{filter.year}}" name="year">
                                     </div>
                                     <div class="col-md-2" style="margin: 0px;">
                                         <br>
@@ -168,90 +168,121 @@
                                 <div class="statbox widget box box-shadow">
                                     <div class="widget-content widget-content-area">
                                         <div class="table-responsive">
-                                            <table class="table table-bordered mb-4" id="example122">
-                                                <thead>
-                                                    <tr style="width: 200px;">
-                                                        <th rowspan="10" style="background-color: rgb(101, 101, 101); color: white !important; " >
-                                                            <p></p>
-                                                            Yil
-                                                            <br><br><p></p>
-                                                            Hafta boshlanishi
-                                                            <br><br><br>
-                                                            Hafta tugashi 
-                                                            <br><br>
-                                                            Hafta
-                                                            <br><br><p></p>
-                                                            <p style="color: white !important;" style="width: 200px;">Plan - Fakt</p>
-                                                        </th>
-                                                    </tr>
-                                                    
-                                                    <tr>
-                                                        {% for wek in weeks %}
-                                                            <th colspan="2">{{ wek.shanba|date:'Y' }}</th>
-                                                            <th></th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr>
-                                                        {% for wek in weeks %}
-                                                            <th class="silver-class">{{ wek.dushanba|date:'m-d' }}</th>
-                                                            <th class="silver-class">{{ wek.dushanba|date:'m-d' }}</th>
-                                                            <th></th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr>
-                                                        {% for wek in weeks %}
-                                                        <th class="silver-class">{{ wek.shanba|date:'m-d' }}</th>
-                                                        <th class="silver-class">{{ wek.shanba|date:'m-d' }}</th>
-                                                        <th></th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr>
-                                                        {% for wek in weeks %}
-                                                            <th class="silver-class">{{wek.count}}</th>
-                                                            <th class="silver-class">{{wek.count}}</th>
-                                                            <th></th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                    <tr style="background-color: blue; ">
-                                                        {% for wek in weeks %}
-                                                            <th style="color: white !important;">Plan</th>
-                                                            <th style="color: white !important;">Fakt</th>
-                                                            <th style="color: white !important;">Bajarilishi</th>
-                                                        {% endfor %}
-                                                    </tr>
-                                                   
-                                                </thead>
-                                                <tbody style="background-color: bisque !important;">
-                                                    {% for i in data_reja %}
-                                                    <tr class="{% if forloop.first %}header-row{% endif %}">
-                                                            <td >
-                                                                {% if forloop.first %}
-                                                                    Kirim
-                                                                {% endif %}
-                                                            </td>
-                                                            {% for wek in weeks %}
-                                                                <td > {% if i.count == wek.count %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
-                                                                <td ></td>
-                                                                <td >{% if i.count == wek.count  %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
-                                                            {% endfor %}
-                                                        </tr>
+                                        <table class="table table-bordered mb-4" id="example122">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="6" style="background-color: rgb(101,101,101); color: white;">
+                                                        Yil<br><br>
+                                                        Hafta boshlanishi<br><br>
+                                                        Hafta tugashi<br><br>
+                                                        Hafta<br><br>
+                                                        Plan - Fakt
+                                                    </th>
+                                                </tr>
+
+                                                <!-- Haftalarning yili -->
+                                                <tr>
+                                                    {% for wek in weeks %}
+                                                        <th colspan="3">{{ wek.shanba|date:'Y' }}</th>
                                                     {% endfor %}
-                                                    {% for i in data_chiqim %}
-                                                        <tr class="{% if forloop.first %}header-row{% endif %}">
-                                                            <td>
-                                                                {% if forloop.first %}
-                                                                    Chiqim
-                                                                {% endif %}
-                                                            </td>
-                                                            {% for wek in weeks %}
-                                                                <td > {% if i.count == wek.count %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
-                                                                <td ></td>
-                                                                <td >{% if i.count == wek.count  %} {{ i.plan|intcomma }} {% else %} 0 {% endif  %} </td>
-                                                            {% endfor %}
-                                                        </tr>
+                                                </tr>
+
+                                                <!-- Haftaning boshlanishi -->
+                                                <tr>
+                                                    {% for wek in weeks %}
+                                                        <th colspan="3" class="silver-class">{{ wek.dushanba|date:'m-d' }}</th>
                                                     {% endfor %}
-                                                </tbody>
-                                            </table>
+                                                </tr>
+
+                                                <!-- Haftaning tugashi -->
+                                                <tr>
+                                                    {% for wek in weeks %}
+                                                        <th colspan="3" class="silver-class">{{ wek.shanba|date:'m-d' }}</th>
+                                                    {% endfor %}
+                                                </tr>
+
+                                                <!-- Haftaning raqami -->
+                                                <tr>
+                                                    {% for wek in weeks %}
+                                                        <th colspan="3" class="silver-class">{{ wek.count }}</th>
+                                                    {% endfor %}
+                                                </tr>
+
+                                                <!-- Sarlavhalar: Plan, Fakt, Foiz -->
+                                                <tr style="background-color: blue;">
+                                                    {% for wek in weeks %}
+                                                        <th style="color: white;">Plan</th>
+                                                        <th style="color: white;">Fakt</th>
+                                                        <th style="color: white;">%</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+<tbody style="background-color: rgb(63, 108, 255);">
+
+    <!-- ================== KIRIM ================== -->
+    <tr>
+        <td style="color: white;">Kirim</td>
+        {% for i in data_reja %}
+            <td style="color: white;">{{ i.plan|intcomma }}</td>
+            <td style="color: white;">{{ i.total|intcomma }}</td>
+            <td style="color: white;">{{ i.percent|floatformat:2 }}%</td>
+        {% endfor %}
+    </tr>
+
+    <!-- Kirim objectlar -->
+    {% if data_reja %}
+        {% for obj in data_reja.0.objects %}
+            <tr style="background-color: white; color: black;">
+                <td style="padding-left:20px;">{{ obj.name }}</td>
+
+                {% for week in data_reja %}
+                    {% for o in week.objects %}
+                        {% if o.name == obj.name %}
+                            <td>{{ o.plan|intcomma }}</td>
+                            <td>{{ o.total|intcomma }}</td>
+                            <td>{{ o.percent|floatformat:2 }}%</td>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ================== CHIQIM ================== -->
+    <tr>
+        <td style="color: white;">Chiqim</td>
+        {% for i in data_chiqim %}
+            <td style="color: white;">{{ i.plan|intcomma }}</td>
+            <td style="color: white;">{{ i.total|intcomma }}</td>
+            <td style="color: white;">{{ i.percent|floatformat:2 }}%</td>
+        {% endfor %}
+    </tr>
+
+    <!-- Chiqim objectlar -->
+    {% if data_chiqim %}
+        {% for obj in data_chiqim.0.objects %}
+            <tr style="background-color: white; color: black;">
+                <td style="padding-left:20px;">{{ obj.name }}</td>
+
+                {% for week in data_chiqim %}
+                    {% for o in week.objects %}
+                        {% if o.name == obj.name %}
+                            <td>{{ o.plan|intcomma }}</td>
+                            <td>{{ o.total|intcomma }}</td>
+                            <td>{{ o.percent|floatformat:2 }}%</td>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endif %}
+
+</tbody>
+
+
+
+                                        </table>
+
                                         </div>
                                     </div>
                                 </div>

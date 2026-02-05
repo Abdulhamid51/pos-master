@@ -245,17 +245,21 @@
                                                     <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
                                                     <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba">
                                                 </div>
-                                                <div class="form-group">
+                                                <!-- <div class="form-group">
                                                     <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
                                                     <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
                                                         {% for i in chiqim_turi %}
                                                         <option value="{{ i.id }}">{{ i.nomi }}</option>
                                                         {% endfor %}
                                                     </select>
-                                                </div>
+                                                </div> -->
                                                 <div class="form-group">
                                                     <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
                                                     <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="recipient-manba_turi" class="col-form-label">Qabul uchun</label>
+                                                    <input type="checkbox" name="for_qabul" style="width: 20px; height: 20px;">
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
@@ -274,9 +278,10 @@
                                                 <th>Nomi</th>
                                                 <th>Manba Turi</th>
                                                 <th>Manba</th>
+                                                <th>Qabul uchun</th>
                                                 <th>Sub Manba</th>
-                                                <th>Xarajat Turi</th>
-                                                <th>Chiqim Turi</th>
+                                                <!-- <th>Xarajat Turi</th>
+                                                <th>Chiqim Turi</th> -->
                                                 <th>Tahrirlash</th>
                                                 <th>Ochirish</th>
                                             </tr>
@@ -287,10 +292,25 @@
                                                     <td>{{ forloop.counter }}</td>
                                                     <th>{{ money.name|default_if_none:''  }}</th>
                                                     <th>{{ money.manba }}</th>
-                                                    <th>{{ money.manba_turi|default_if_none:''  }}</th>
+                                                    <th>
+                                                        
+                                                        {% if money.manba_turi %}
+                                                            ✅
+                                                            {% else %}
+                                                            ❌
+                                                        {% endif %}
+                                                    </th>
+                                                    <th>
+                                                        
+                                                        {% if money.for_qabul %}
+                                                            ✅
+                                                            {% else %}
+                                                            ❌
+                                                        {% endif %}
+                                                    </th>
                                                     <th>{{ money.sub_manba|default_if_none:''  }}</th>
-                                                    <th>{{ money.xarajat_turi|default_if_none:''  }}</th>
-                                                    <th>{{ money.chiqim_turi|default_if_none:'' }}</th>
+                                                    <!-- <th>{{ money.xarajat_turi|default_if_none:''  }}</th>
+                                                    <th>{{ money.chiqim_turi|default_if_none:'' }}</th> -->
                                                     <th><button class="btn btn-warning" type="button" data-toggle="modal" data-target="#exampleModalEdit{{ money.id }}"><i class="fa-solid fa-pen-to-square"></i></button></th>
                                                     <th><button class="btn btn-danger" type="button" data-toggle="modal" data-target="#exampleModalDelete{{ money.id }}"><i class="fa-solid fa-trash"></i></button></th>
                                                 </tr>
@@ -309,10 +329,10 @@
                                                                         <label for="recipient-manba" class="col-form-label">Manba</label>
                                                                         <input type="text" class="form-control" id="recipient-manba" name="manba" value="{{ money.manba }}">
                                                                     </div>
-                                                                    <div class="form-group">
+                                                                    <!-- <div class="form-group">
                                                                         <label for="recipient-sub_manba" class="col-form-label">Sub manba</label>
                                                                         <input type="text" class="form-control" id="recipient-sub_manba" name="sub_manba" value="{{ money.sub_manba }}">
-                                                                    </div>
+                                                                    </div> -->
                                                                     <!-- <div class="form-group">
                                                                         <label for="recipient-chiqim_turi" class="col-form-label">Chiqim Turi</label>
                                                                         <select name="chiqim_turi" id="recipient-chiqim_turi"  class="form-control" >
@@ -324,6 +344,10 @@
                                                                     <div class="form-group">
                                                                         <label for="recipient-manba_turi" class="col-form-label">Sub manba</label>
                                                                         <input type="checkbox" name="manba_turi" style="width: 20px; height: 20px;" {% if money.manba_turi  %} checked {% endif %}>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="recipient-manba_turi" class="col-form-label">Qabul uchun</label>
+                                                                        <input type="checkbox" name="for_qabul" style="width: 20px; height: 20px;" {% if money.for_qabul  %} checked {% endif %}>
                                                                     </div>
                                                                     <div class="modal-footer">
                                                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
