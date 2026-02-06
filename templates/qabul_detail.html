@@ -153,7 +153,7 @@
         background: #555;
     }
     .table-scroll-wrapper tbody td input {
-    min-width: 120px;
+    max-width: 90px;
 }
     </style>
 <style>
@@ -210,8 +210,16 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="rec_id" value="{{rec.id}}">
                                 <div class="form-group col-md-2">
-                                    <label for="">Partiya raqami</label>
-                                    <input value="{{rec.name}}" type="text" class="form-control" name="name" style="height: 33px !important;">
+                                    <label for="">Filial</label>
+                                    <select name="filial" id="" class="searchselect">
+                                        {% for f in filial %}
+                                            <option value="{{f.id}}" 
+                                            {% if rec.filial.id == f.id %}
+                                                selected
+                                            {% endif %}
+                                                >{{f.name}}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                                 <div class="form-group col-md-2">
                                     <label for="">Yetkazib beruvchi</label>
@@ -225,18 +233,6 @@
                                                 >{{d.name}}</option>
                                         {% endfor %}
                                             
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-2">
-                                    <label for="">Filial</label>
-                                    <select name="filial" id="" class="searchselect">
-                                        {% for f in filial %}
-                                            <option value="{{f.id}}" 
-                                            {% if rec.filial.id == f.id %}
-                                                selected
-                                            {% endif %}
-                                                >{{f.name}}</option>
-                                        {% endfor %}
                                     </select>
                                 </div>
                                 <div class="form-group col-md-2">
@@ -256,6 +252,10 @@
                                     <input value="{{kurs}}" type="number" class="form-control" name="kurs" style="height: 33px !important;">
                                 </div>
                                 <div class="form-group col-md-2">
+                                    <label for="">Partiya raqami</label>
+                                    <input value="{{rec.name|default:''}}" type="text" class="form-control" name="name" style="height: 33px !important;">
+                                </div>
+                                <div class="form-group col-md-2">
                                     <label for="">Qabul sanasi</label>
                                     <input value="{{rec_date}}" type="date" class="form-control" name="date" style="height: 33px !important;">
                                 </div>
@@ -267,7 +267,6 @@
                                 <!-- <div class="form-group col-md-3">
                                 </div> -->
                                 
-                                {% if rec %}
                                         
                                    <div class="form-group col-md-2">
                                         <label>Optom / Dona (%)</label>
@@ -280,7 +279,6 @@
                                         </div>
                                     </div>
                                     
-                                {% endif %}
                                 
                                 <div class="form-group col-md-2">
                                     <button class="btn btn-success w-100" onclick="editRecieve()" type="button"
@@ -326,6 +324,7 @@
                         <tr>
                             <th>#</th>
                             <th>Mahsulot</th>
+                            <th>O'lchov birligi</th>
                             <th>Kelish narxi</th>
                             <th>Soni</th>
                             <th>Jami</th>
@@ -343,6 +342,7 @@
 
                             <td>{{ forloop.counter }}</td>
                             <td style="white-space: nowrap;">{{ item.product.name }}</td>
+                            <td>{{item.product.measurement_type.name}}</td>
 
                             <td>
                                 <input type="text"
@@ -385,8 +385,9 @@
                             <td>
                                 <div class="d-flex" style="gap: 10px;">
                                     <button type="button"
-                                            class="btn btn-warning btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
-                                            style="width:24px;height:24px;">
+                                            class="btn btn-warning btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center edit-product-btn"
+                                            style="width:24px;height:24px;"
+                                            data-id="{{item.product.id}}">
                                         <i class="fas fa-pencil"
                                            style="font-size:12px;"></i>
                                     </button>
@@ -428,7 +429,6 @@
                            placeholder="Mahsulotni tanlang..."
                            style="height: 33px;">
 
-                    {% if rec %}
                     <button class="btn btn-outline-primary"
                             type="button"
                             data-toggle="modal"
@@ -436,7 +436,6 @@
                             style="height: 33px;">
                         +
                     </button>
-                    {% endif %}
                 </div>
 
                 <div class="table-select d-none"
@@ -691,6 +690,113 @@
             </form>
         </div>
     </div>
+
+     <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form id="editProductForm" class="modal-content">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Mahsulotni tahrirlash</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editProductId" name="product_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editName">Nomi *</label>
+                                <input type="text" class="form-control" id="editName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editDeliverId">Ishlab chiqaruvchi *</label>
+                                <select class="form-control" id="editDeliverId" name="deliver_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for deliver in delivers %}
+                                        <option value="{{ deliver.id }}">{{ deliver.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editPack">Paketdagi soni</label>
+                                <input type="number" step="0.01" class="form-control" id="editPack" name="pack">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editGroupId">Guruh *</label>
+                                <select class="form-control" id="editGroupId" name="group_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for group in groups %}
+                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editMeasurementTypeId">O'lchov birligi *</label>
+                                <select class="form-control" id="editMeasurementTypeId" name="measurement_type_id" required>
+                                    <option value="">Tanlang...</option>
+                                    {% for measurement in measurement_type %}
+                                        <option value="{{ measurement.id }}">{{ measurement.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editMinCount">Minimal miqdor</label>
+                                <input type="number" step="0.01" class="form-control" id="editMinCount" name="min_count">
+                            </div>
+                        </div>
+                        <!-- <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editQuantity">Miqdori</label>
+                                <input type="number" step="0.01" class="form-control" id="editQuantity" name="quantity" readonly>
+                            </div>
+                        </div> -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editShelfCode">Polka kodi</label>
+                                <input type="text" class="form-control" id="editShelfCode" name="shelf_code">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editReady">Turi</label>
+                                <select class="form-control" id="editReady" name="ready">
+                                    <option value="1">Xom ashyo</option>
+                                    <option value="2">Yarim tayyor</option>
+                                    <option value="3">Tayyor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Barcodes</label>
+                                <div id="editBarcodeContainer">
+                                    <!-- Barcode inputlari bu yerda yaratiladi -->
+                                </div>
+                                <small class="form-text text-muted">Har bir barcode uchun + tugmasini bosing</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Yopish</button>
+                    <button type="submit" class="btn btn-primary">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock content %}
 {% block js %}
 <!-- BEGIN PAGE LEVEL CUSTOM SCRIPTS -->
@@ -703,29 +809,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js" integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk=" crossorigin="anonymous"></script>
 <script>
 
-    function savePercentToLocal() {
-        let optom = $('#optom').val();
-        let dona = $('#dona').val();
+    // function savePercentToLocal() {
+    //     let optom = $('#optom').val();
+    //     let dona = $('#dona').val();
 
-        localStorage.setItem('optom_percent', optom);
-        localStorage.setItem('dona_percent', dona);
-    }
+    //     localStorage.setItem('optom_percent', optom);
+    //     localStorage.setItem('dona_percent', dona);
+    // }
 
-    $('#optom, #dona').on('keyup', function () {
-        savePercentToLocal();
-    });
+    // $('#optom, #dona').on('keyup', function () {
+    //     savePercentToLocal();
+    // });
 
-    function loadPercentFromLocal() {
-        let optom = localStorage.getItem('optom_percent');
-        let dona = localStorage.getItem('dona_percent');
+    // function loadPercentFromLocal() {
+    //     let optom = localStorage.getItem('optom_percent');
+    //     let dona = localStorage.getItem('dona_percent');
 
-        if (optom !== null) $('#optom').val(optom);
-        if (dona !== null) $('#dona').val(dona);
-    }
+    //     if (optom !== null) $('#optom').val(optom);
+    //     if (dona !== null) $('#dona').val(dona);
+    // }
 
-    $(document).ready(function () {
-        loadPercentFromLocal();
-    });
+    // $(document).ready(function () {
+    //     loadPercentFromLocal();
+    // });
 
         $('.searchselect').selectize({
             normalize: true
@@ -1319,6 +1425,165 @@ $(function(){
 });
 </script>
 
+<script>
+    
+        // Edit modalini ochish
+        $(document).on('click', '.edit-product-btn', function() {
+            var productId = $(this).data('id');
+            loadProductForEdit(productId);
+        });
+
+        // Mahsulot ma'lumotlarini yuklash
+        function loadProductForEdit(productId) {
+            $.ajax({
+                url: "{% url 'get_product' %}",
+                type: 'GET',
+                data: { id: productId },
+                success: function(response) {
+                    if (response.success) {
+                        var product = response.product;
+                        
+                        // Formani to'ldirish
+                        $('#editProductId').val(product.id);
+                        $('#editName').val(product.name);
+                        $('#editDeliverId').val(product.deliver_id);
+                        $('#editPack').val(product.pack);
+                        $('#editGroupId').val(product.group_id);
+                        $('#editMeasurementTypeId').val(product.measurement_type_id);
+                        $('#editMinCount').val(product.min_count);
+                        // $('#editQuantity').val(product.quantity);
+                        $('#editShelfCode').val(product.shelf_code);
+                        $('#editReady').val(product.ready);
+                        
+                        // Barcodelarni to'ldirish
+                        $('#editBarcodeContainer').empty();
+                        if (product.barcodes && product.barcodes.length > 0) {
+                            product.barcodes.forEach(function(barcode) {
+                                addEditBarcodeInput(barcode.barcode, barcode.quantity);
+                            });
+                        } else {
+                            addEditBarcodeInput();
+                        }
+                        
+                        // Modalni ochish
+                        $('#editProductModal').modal('show');
+                    } else {
+                        showAlert('Xatolik', response.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // Edit modalida barcode input qo'shish
+        function addEditBarcodeInput(value = '', quantity=1) {
+            var inputGroup = $(`
+                <div class="input-group barcode-group">
+                    <input type="text" class="form-control edit-barcode-input" placeholder="Barcode..." value="${value}">
+
+                    <input type="number" class="form-control new-barcodeqty-input" placeholder="Soni" value="${quantity}">
+
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary edit-add-barcode-btn">+</button>
+                    </div>
+                </div>
+            `);
+            
+            $('#editBarcodeContainer').append(inputGroup);
+        }
+
+        // Edit barcode tekshirish
+        $('#editBarcodeContainer').on('input', '.edit-barcode-input', function() {
+            var barcode = $(this).val().trim();
+            var productId = $('#editProductId').val();
+            
+            if (barcode) {
+                checkBarcodeExists(barcode, productId, function(exists) {
+                    if (exists) {
+                        $(this).addClass('barcode-input-error');
+                        showAlert('Xatolik', 'Bu barcode boshqa mahsulotda mavjud!', 'error');
+                    } else {
+                        $(this).removeClass('barcode-input-error');
+                    }
+                }.bind(this));
+            }
+        });
+
+        // Edit modalida yangi barcode qo'shish
+        $('#editBarcodeContainer').on('click', '.edit-add-barcode-btn', function() {
+            var container = $(this).closest('.barcode-group');
+            var input = container.find('.edit-barcode-input');
+            var barcode = input.val().trim();
+            var productId = $('#editProductId').val();
+            
+            if (!barcode) {
+                showAlert('Diqqat', 'Barcode kiritilmagan!', 'warning');
+                return;
+            }
+            
+            checkBarcodeExists(barcode, productId, function(exists) {
+                if (exists) {
+                    showAlert('Xatolik', 'Bu barcode boshqa mahsulotda mavjud!', 'error');
+                } else {
+                    addEditBarcodeInput();
+                }
+            });
+        });
+
+        // Edit formani yuborish
+        $('#editProductForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Barcha barcodelarni yig'ish
+            var barcodes = [];
+            $('#editBarcodeContainer .edit-barcode-input').each(function() {
+                var barcode = $(this).val().trim();
+                var quantity = $(this).closest('.barcode-group').find('.new-barcodeqty-input').val();
+                if (barcode) {
+                    barcodes.push({
+                        "barcode": barcode,
+                        "quantity": quantity,
+                    });
+                }
+            });
+            
+            // FormData yaratish
+            var formData = new FormData();
+            formData.append('product_id', $('#editProductId').val());
+            formData.append('name', $('#editName').val());
+            formData.append('deliver_id', $('#editDeliverId').val());
+            formData.append('pack', $('#editPack').val() || 0);
+            formData.append('group_id', $('#editGroupId').val());
+            formData.append('measurement_type_id', $('#editMeasurementTypeId').val());
+            formData.append('min_count', $('#editMinCount').val() || 0);
+            // formData.append('quantity', $('#editQuantity').val() || 0);
+            formData.append('shelf_code', $('#editShelfCode').val() || 1);
+            formData.append('ready', $('#editReady').val());
+            formData.append('barcodes', JSON.stringify(barcodes));
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            // AJAX so'rov
+            $.ajax({
+                url: "{% url 'edit_product' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Muvaffaqiyatli', response.message || 'Mahsulot muvaffaqiyatli tahrirlandi!', 'success');
+                        $('#editProductModal').modal('hide');
+                        reloadTables(items=true, products=true)
+                    } else {
+                        showAlert('Xatolik', response.message || 'Xatolik yuz berdi!', 'error');
+                    }
+                },
+                error: function() {
+                    showAlert('Xatolik', 'Server bilan bog\'lanishda xatolik!', 'error');
+                }
+            });
+        });
+
+</script>
 
 
 {% endblock js %}

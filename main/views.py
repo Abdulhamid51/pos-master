@@ -16564,15 +16564,29 @@ def new_qabul(request):
 def new_qabul_detail(request, id):
     if request.user.userprofile.is_qabul == False:
         return redirect('/')
+    delivers = Deliver.objects.all().order_by('-id')
+    filials = Filial.objects.filter(is_activate=True)
+    valyutas = Valyuta.objects.filter(is_som_or_dollar=True)
     if id == 0:
-        rec = None
+        rec = Recieve.objects.filter().order_by('id').last()
         kurs = Course.objects.last().som
         payment_date = datetime.now().date() + timedelta(days=30)
         rec_date = datetime.now().date()
+        if rec.receiveitem.exists():
+            rec = Recieve.objects.create(
+                deliver=delivers.first(),
+                filial=filials.first(),
+                valyuta=valyutas.first(),
+                kurs=kurs,
+            )
+        rec.date = rec_date
+        rec.payment_date = payment_date
+        rec.save()
+        return redirect(f'/qabul_detail/{rec.id}')
     else:
         rec = Recieve.objects.get(id=id)
         kurs = rec.kurs
-        payment_date = rec.payment_date
+        payment_date = rec.payment_date if rec.payment_date else datetime.now().date() + timedelta(days=30)
         rec_date = rec.date
     context = {
         'rec': rec,
@@ -16580,17 +16594,16 @@ def new_qabul_detail(request, id):
         'payment_date': payment_date.strftime('%Y-%m-%d'),
         'rec_date': rec_date.strftime('%Y-%m-%d')
     }
-    context['products'] = ProductFilial.objects.filter() if rec else []
-    context['delivers'] = Deliver.objects.all().order_by('-id')
-    context['filial'] = Filial.objects.filter(is_activate=True)
-    context['valyutas'] = Valyuta.objects.filter(is_som_or_dollar=True)
+    context['products'] = ProductFilial.objects.filter()
+    context['filial'] = filials
+    context['valyutas'] = valyutas
     context['measurement_type'] = MeasurementType.objects.filter() if rec else []
     context['groups'] = Groups.objects.filter() if rec else []
     context['price_types'] = PriceType.objects.filter(is_activate=True) if rec else []
 
     # context['expanse_types'] = RecieveExpanseTypes.objects.all()
     context['external_users'] = ExternalIncomeUser.objects.filter(is_active=True)
-    context['delivers'] = Deliver.objects.all().order_by('-id')
+    context['delivers'] = delivers
     context['circulations'] = MoneyCirculation.objects.filter(is_delete=False, for_qabul=True)
     
     return render(request, 'qabul_detail.html', context)
