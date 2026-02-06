@@ -3869,8 +3869,9 @@
 
         // const isDollar = $('#qarzvalyuta option:selected').data('id_dollar');
         // $('#qarzsumma').val(formatNumber(isDollar ? totalSum / currentKurs : totalSum));
-
-        updateqarzsumma(totalSum)
+        console.log(totalSum, total, 'bbbbbbbb');
+        
+        updateqarzsumma(total)
         currentDatas.total_price = totalSum
 
     }
@@ -5440,6 +5441,8 @@
         // } else {
         //     $('#qarzsumma').val(0)
         // }
+        console.log(remaining, 'ccccccccc');
+        
         updateqarzsumma(remaining)
         updateTotals()
         return formatNumber(remaining > 0 ? remaining : 0);
@@ -5463,6 +5466,8 @@
             if (summa > 0) {
                 const isDollar = $('#qarzvalyuta option[value="' + $('#qarzvalyuta').val() + '"]').data('id_dollar');
                 $('#qarzsumma').val(formatNumber(isDollar == 'True' ? summa / currentKurs : summa));
+                console.log(summa, 'aaaaaaaa');
+                
             } else {
                 $('#qarzsumma').val(0)
             }
@@ -5470,6 +5475,7 @@
             if (summa > 0) {
                 const isDollar = $('#qarzvalyuta option[value="' + $('#qarzvalyuta').val() + '"]').data('id_dollar');
                 $('#qarzsumma').val(formatNumber(isDollar == 'True' ? summa : summa * currentKurs));
+                
             } else {
                 $('#qarzsumma').val(0)
             }
@@ -5716,6 +5722,7 @@
         const remaining = parseFloat(currentDatas.total_price) - parseFloat(total);
         // $('#tolash_summasi').text(formatNumber(remaining > 0 ? remaining : 0));
         // $('#qarzsumma').val(formatNumber(remaining > 0 ? remaining : 0));
+        console.log(remaining, 'rrrrrrr')
         return formatNumber(parseFloat(currentDatas.total_price) - parseFloat(total));
     }
 
