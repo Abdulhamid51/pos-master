@@ -253,7 +253,7 @@
                                 </div>
                                 <div class="form-group col-md-2">
                                     <label for="">Kurs</label>
-                                    <input value="{{kurs}}" type="text" class="form-control make_intcomma" name="kurs" style="height: 33px !important;">
+                                    <input value="{{kurs}}" type="number" class="form-control" name="kurs" style="height: 33px !important;">
                                 </div>
                                 <div class="form-group col-md-2">
                                     <label for="">Qabul sanasi</label>
@@ -431,8 +431,8 @@
                     {% if rec %}
                     <button class="btn btn-outline-primary"
                             type="button"
-                            data-bs-toggle="modal"
-                            data-bs-target="#new_product_add"
+                            data-toggle="modal"
+                            data-target="#new_product_add"
                             style="height: 33px;">
                         +
                     </button>
