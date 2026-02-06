@@ -90,10 +90,10 @@
                                     <tbody> 
                                         
                                         {% for sh in receives %}
-                                            <tr>
+                                            <tr onclick="window.location='{% url 'new_qabul_detail' sh.id %}'" style="cursor:pointer;">
                                                 <td>{{forloop.counter}}</td>
-                                                <td><a href="{% url 'new_qabul_detail' sh.id %}">{{sh.name|default:'------'}}</a></td>
-                                                <td><a href="{% url 'new_qabul_detail' sh.id %}">{{sh.deliver.name|default:'------'}}</a></td>
+                                                <td>{{sh.name|default:'------'}}</td>
+                                                <td>{{sh.deliver.name|default:'------'}}</td>
                                                 <td>{{sh.date|date:'Y-m-d'}}</td>
                                                 <td>{{sh.valyuta.name}}</td>
                                                 <td>{{sh.total_quantity|intcomma}}</td>
