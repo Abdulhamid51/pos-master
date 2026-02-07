@@ -456,4 +456,5 @@ urlpatterns = [
     path('add_new_item/', add_new_item, name='add_new_item'),
     path('product_price_type_edit/', product_price_type_edit, name='product_price_type_edit'),
     path('refresh_product_price_types/', refresh_product_price_types, name='refresh_product_price_types'),
+    path('get_recieve_data/', recieve_excel, name='recieve_excel'),
 ]

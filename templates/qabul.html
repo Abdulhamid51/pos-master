@@ -38,7 +38,8 @@
 
                         <div class="widget-content widget-content-area br-6">
                             <form method="get" class="row">
-                                <div class="col-md-10 d-flex">
+                                <div class="col-md-12 d-flex">
+                                    <input style="margin-left: 1rem;" value="{{search}}" type="text" class="form-control" name="search" placeholder="Qidirish">
                                     <input style="margin-left: 1rem;" value="{{start_date}}" type="date" class="form-control" name="start_date">
                                     <input style="margin-left: 1rem;" value="{{end_date}}" type="date" class="form-control" name="end_date">
                                     <select style="margin-left: 1rem;" name="filial" class="form-control" id="">
@@ -46,27 +47,25 @@
                                         {% for i in filial %}
                                         <option 
                                         {% if filial_selected == i.id %}
-                                            selected
+                                        selected
                                         {% endif %}
-                                             value="{{i.id}}">{{i.name}}</option>
+                                        value="{{i.id}}">{{i.name}}</option>
                                         {% endfor %}
-                                            
+                                        
                                     </select>
                                     <select style="margin-left: 1rem;" name="deliver" class="form-control" id="">
                                         <option value="">Yetkazib beruvchi</option>
                                         {% for i in delivers %}
                                         <option 
                                         {% if deliver_selected == i.id %}
-                                            selected
+                                        selected
                                         {% endif %}
-                                             value="{{i.id}}">{{i.name}}</option>
+                                        value="{{i.id}}">{{i.name}}</option>
                                         {% endfor %}
-                                            
+                                        
                                     </select>
                                     <button style="margin-left: 1rem;" type="submit" class="btn btn-primary">Filterlash </button>
-                                </div>
-                                <div class="col-md-2">
-                                    <a class="btn btn-primary" href="/qabul_detail/0">
+                                    <a class="btn btn-success" href="/qabul_detail/0" style="margin-left: 1rem; white-space: nowrap; padding-top: 12px;">
                                         <i class="fas fa-plus"></i> Yangi Qabul
                                     </a>
                                 </div>
@@ -100,6 +99,7 @@
                                                 <td>{{sh.total_bring_price|intcomma}}</td>
                                                 <td>{{sh.payment_date|date:'Y-m-d'}}</td>
                                                 <td>
+                                                    <button class="btn btn-success export-excel" type="button" data-recieve-id="{{sh.id}}"><i class="fa-solid fa-table"></i></button>
                                                     <button class="btn btn-danger" type="button" onclick="deleteRecieve({{ sh.id }})"><i class="fa fa-trash"></i></button>
                                                 </td>
                                             </tr>
@@ -194,6 +194,12 @@
     <script src="{% static 'plugins/table/datatable/button-ext/buttons.print.min.js'%}"></script>
     <script>
 
+
+    $(document).on('click', '.export-excel', function () {
+        const recieveId = $(this).data('recieve-id');
+        window.location.href = `/get_recieve_data/?recieve_id=${recieveId}`;
+    });
+
             // Qabulni o'chirish
     function deleteRecieve(recieveId) {
         if (!confirm('Haqiqatan ham bu qabulni o\'chirmoqchimisiz?')) return;
@@ -248,10 +254,9 @@
     }
         let trs = $('#html5-extension').DataTable( {
             dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
+            searching: false,
             buttons: {
                 buttons: [
-                    { extend: 'copy', className: 'btn' },
-                    { extend: 'csv', className: 'btn' },
                     { extend: 'excel', className: 'btn' },
                     { extend: 'print', className: 'btn' }
                 ]

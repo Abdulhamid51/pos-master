@@ -44,6 +44,9 @@
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
 }
+.table-scroll-wrapper::-webkit-scrollbar {
+    display: none;              /* Chrome / Safari */
+}
     
     .table-scroll-wrapper table {
         margin-bottom: 0;
@@ -154,13 +157,16 @@
     }
     .table-scroll-wrapper tbody td input {
     max-width: 90px;
+    max-height: 24px;
 }
     </style>
 <style>
 .table-select{
   position: absolute;
-  bottom: calc(100% + 2px); /* TEPASIDAN */
-  top: auto;
+  /* bottom: calc(100% + 2px); TEPASIDAN */
+  /* top: auto; */
+  top: calc(100% + 2px);   /* PASTDAN */
+  bottom: auto;
   left: 0;
   right: auto;
   z-index: 2000;
@@ -193,6 +199,93 @@
         background-color: rgb(46, 119, 254) !important;
         color: white !important;
     }
+</style>
+
+<style>
+    .table.table-bordered.table-nowrap th,
+.table.table-bordered.table-nowrap td {
+    padding: 4px 6px;       /* vertikal 4px, gorizontal 6px */
+    font-size: 13px;        /* matnni biroz kichraytirish */
+    white-space: nowrap;    /* matn satrga tushmasin */
+    vertical-align: middle; /* vertikal markazlashtirish */
+}
+
+.table.table-bordered.table-nowrap input {
+    padding: 2px 4px;      /* input ichidagi paddingni kamaytirish */
+    font-size: 13px;
+    height: 28px;           /* input balandligini kichraytirish */
+}
+
+.table-scroll-wrapper {
+    max-height: 450px;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.table-responsive {
+    margin-bottom: 0;       /* tashqi marginni kamaytirish */
+}
+
+</style>
+<style>
+    /* Jadvalning umumiy style */
+.table.table-bordered th,
+.table.table-bordered td {
+    padding: 4px 6px;       /* vertikal 4px, gorizontal 6px */
+    font-size: 13px;        /* matnni biroz kichraytirish */
+    vertical-align: middle; /* vertikal markazlashtirish */
+}
+
+/* Select va input elementlarini ixcham qilish */
+/* .table.table-bordered select,
+.table.table-bordered input {
+    padding: 2px 4px;
+    font-size: 13px;
+    height: 28px;           /* kichik balandlik */
+/* } */ 
+
+/* Iconli tugmalarni ixcham qilish */
+.table.table-bordered button.btn-sm {
+    padding: 3px 6px !important;
+    font-size: 12px;
+    height: 28px;
+    line-height: 1;
+}
+
+/* Scrollable container */
+.table-scroll-wrapper {
+    max-height: 750px;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* Jadval responsive container */
+.table-responsive {
+    margin-bottom: 0;
+}
+
+/* Agar satrlar orasidagi line-height ham ixcham bo‘lishi kerak bo‘lsa */
+.table.table-bordered td,
+.table.table-bordered th {
+    line-height: 1.2;
+}
+.selectize-dropdown {
+    z-index: 99999 !important;  /* yuqoriga chiqarish */
+}
+
+.selectize-dropdown-content {
+    max-height: 200px;         /* agar balandligi kerak bo‘lsa */
+    overflow-y: auto;
+}
+
+.selectize-control.single .selectize-input {
+    max-height: 20px;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+}
+
+
 </style>
 
 {% endblock css %}
@@ -324,6 +417,7 @@
                         <tr>
                             <th>#</th>
                             <th>Mahsulot</th>
+                            <th>Shtrix</th>
                             <th>O'lchov birligi</th>
                             <th>Kelish narxi</th>
                             <th>Soni</th>
@@ -342,6 +436,7 @@
 
                             <td>{{ forloop.counter }}</td>
                             <td style="white-space: nowrap;">{{ item.product.name }}</td>
+                            <td>{{item.product.barcodes_text}}</td>
                             <td>{{item.product.measurement_type.name}}</td>
 
                             <td>
@@ -478,7 +573,7 @@
     <!-- IKINCHI TAB -->
     <div class="tab-pane fade w-100" id="secondTab">
         <div class="table-responsive">
-            <div class="table-scroll-wrapper" style="max-height: 450px;">
+            <div class="table-scroll-wrapper">
                 <table class="table table-bordered">
                     <thead class="thead-light">
                         <tr>
@@ -503,7 +598,7 @@
                                 </select>
                             </td> -->
                             <td>
-                                <select name="externaluser" id="" class="searchselect" style="width: 150px;">
+                                <select name="externaluser" id="" class="searchselect" style="width: 100%;">
                                     <option value="0">-</option>
                                     {% for ext in external_users %}
                                     <option value="{{ext.id}}">{{ ext.full_name }}</option>
@@ -511,7 +606,7 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="circulation" id="" class="searchselect" style="width: 150px;">
+                                <select name="circulation" id="" class="searchselect" style="width: 100%;">
                                     <option value=""></option>
                                     {% for circ in circulations %}
                                     <option value="{{circ.id}}">{{ circ.name }}</option>
@@ -519,7 +614,7 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="valyuta" id="" class="searchselect" style="width: 100px;">
+                                <select name="valyuta" id="" class="searchselect" style="width: 100%;">
                                     <option value=""></option>
                                     {% for valyuta in valyutas %}
                                     <option value="{{valyuta.id}}">{{ valyuta.name }}</option>
@@ -527,10 +622,10 @@
                                 </select>
                             </td>
                             <td>
-                                <input name="summa" type="text" class="make_intcomma" style="height: 33px;">
+                                <input name="summa" type="text" class="make_intcomma" style="min-height: 36px; min-width: 200px;">
                             </td>
                             <td>
-                                <input name="comment" type="text" class="" style="height: 33px;">
+                                <input name="comment" type="text" class="" style="min-height: 36px; min-width: 200px;">
                             </td>
                             <td>
                                 <button style="padding: 10px !important;" class="btn btn-success btn-sm" onclick="addExpense()">
@@ -553,12 +648,6 @@
                                 <button style="padding: 10px !important;" class="btn btn-danger btn-sm" onclick="deleteExpense({{ expanse.id }})">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Hozircha chiqimlar mavjud emas
                             </td>
                         </tr>
                         {% endfor %}
@@ -827,7 +916,9 @@
     // });
 
         $('.searchselect').selectize({
-            normalize: true
+            normalize: true,
+            dropdownParent: 'body', // dropdownni to'g'ridan-to'g'ri body ga joylashtiradi
+            maxItems: 1
         });
 
         function getCSRFToken() {
@@ -929,7 +1020,10 @@
                             $el[0].selectize.destroy();
                         }
                         
-                        $el.selectize();
+                        $el.selectize({
+                            dropdownParent: 'body', // dropdownni to'g'ridan-to'g'ri body ga joylashtiradi
+                            maxItems: 1
+                        });
                     });
                 }, 100);
             },

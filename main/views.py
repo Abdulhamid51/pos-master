@@ -13685,9 +13685,9 @@ def update_receive_item(request):
         if main_bring_price:
             main_bring_price.price = float(new_bring_price)
             main_bring_price.save()
-    item.product.quantity += item.quantity
-    item.quantity = float(data.get('quantity', 0))
     item.product.quantity -= item.quantity
+    item.quantity = float(data.get('quantity', 0))
+    item.product.quantity += item.quantity
     item.product.save()
     item.save()
 
@@ -16536,17 +16536,26 @@ def new_qabul(request):
     end_date = request.GET.get('end_date') if request.GET.get('end_date') else datetime.today().strftime('%Y-%m-%d')
     deliver = request.GET.get('deliver')
     filial = request.GET.get('filial')
+    search = request.GET.get('search')
     receives = Recieve.objects.filter(date__date__gte=start_date, date__date__lte=end_date)
     if deliver:
         receives = receives.filter(deliver_id=deliver)
     if filial:
         receives = receives.filter(filial_id=filial)
+    if search:
+        receives = receives.filter(
+            Q(receiveitem__product__name__icontains=search) |
+            Q(deliver__name__icontains=search) |
+            Q(name__icontains=search) |
+            Q(receiveitem__product__barcodes_text__icontains=search)
+        ).distinct()
     context = {
-        'receives': receives,
+        'receives': receives.order_by('-date'),
         'start_date': start_date,
         'end_date': end_date,
         'filial_selected': int(filial) if filial else filial,
         'deliver_selected': int(deliver) if deliver else deliver,
+        'search': search if search else '',
         'rec_count': sum([i.total_quantity or 0 for i in receives]),
         'rec_total': sum([i.total_bring_price or 0 for i in receives]),
     }
@@ -16673,7 +16682,7 @@ def add_new_item(request):
         product=product,
         quantity=1
     )
-    re_item.product.quantity -= 1
+    re_item.product.quantity += 1
     re_item.product.save()
     ProductBringPrice.objects.create(
         recieveitem=re_item,
@@ -16723,3 +16732,86 @@ def refresh_product_price_types(request):
     return JsonResponse({
         'success': True
     })
+
+
+from openpyxl.styles import Font, Alignment
+
+def recieve_excel(request):
+    recieve_id = request.GET.get("recieve_id")
+    if not recieve_id:
+        return HttpResponse("Recieve ID not provided", status=400)
+
+    try:
+        recieve = Recieve.objects.prefetch_related("receiveitem__product__measurement_type").get(id=recieve_id)
+    except Recieve.DoesNotExist:
+        return HttpResponse("Recieve not found", status=404)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Nakladnoy"
+
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center")
+
+    # Header info
+    ws.append(["Partiya ID", recieve.id])
+    ws.append(["Yetkazib beruvchi", recieve.deliver.name if recieve.deliver else "N/A"])
+    ws.append(["Sanasi", recieve.date.strftime("%Y-%m-%d %H:%M")])
+    ws.append([])
+
+    # Items header
+    headers = ["#", "Maxsulot", "Shtrix kod", "O'lchov birligi", "Soni", "Kelish narxi", "Jami"]
+    price_types = PriceType.objects.filter(is_activate=True).order_by('id')
+    for i in price_types:
+        headers.append(i.name)
+    ws.append(headers)
+
+    for col in range(1, len(headers)+1):
+        ws.cell(row=ws.max_row, column=col).font = bold_font
+        ws.cell(row=ws.max_row, column=col).alignment = center_align
+
+    # Items data
+    for i, item in enumerate(recieve.receiveitem.all(), start=1):
+        total_bring = item.total_bring_price
+        total_sale = item.sotish_som * item.quantity
+        item_list = [
+            i,
+            item.product.name,
+            getattr(item.product, "barcodes_text", ""),
+            getattr(item.product.measurement_type, "name", ""),
+            item.quantity,
+            item.bring_price,
+            total_bring
+        ]
+        pts = ProductPriceType.objects.filter(product=item.product,
+                                            valyuta__is_som=True,
+                                            valyuta__is_som_or_dollar=True,
+                                            type__is_activate=True
+                                        ).order_by('type__id')
+        for p in pts:
+            item_list.append(p.price)
+        ws.append(item_list)
+
+    # Totals row
+    ws.append([])
+    ws.append([
+        "", "", "", "", "Jami:",
+        "",
+        sum(i.total_bring_price for i in recieve.receiveitem.all()),
+        ""
+    ])
+    for col in range(1, 10):
+        ws.cell(row=ws.max_row, column=col).font = bold_font
+
+    # Column width sozlash
+    column_widths = [15, 30, 20, 15, 10, 15, 18] + [20 for i in price_types]
+    for i, width in enumerate(column_widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    # Response
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="recieve_{recieve.id}.xlsx"'
+    wb.save(response)
+    return response
